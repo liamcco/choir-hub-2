@@ -1,0 +1,169 @@
+'use client'
+
+import { useForm } from '@tanstack/react-form'
+import { useMutation } from '@tanstack/react-query'
+import { UserPlus } from 'lucide-react'
+import z from 'zod'
+
+import { createUserFormSchema } from '@/api/models/user'
+
+import { createUsersMutation } from '@/lib/api-client/@tanstack/react-query.gen'
+
+import { getErrorMessage } from '@/common/errors/utils'
+import { FormTextInput } from '@/common/ui/form'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+
+import { CreateResult } from './CreateUsersResult'
+
+const defaultCreateFormValues: z.input<typeof createUserFormSchema> = {
+  name: '',
+  email: '',
+  password: '',
+  role: 'user',
+}
+
+type CreateUserFormProps = {
+  onUsersChanged: () => Promise<unknown>
+}
+
+export function CreateUserForm({ onUsersChanged }: CreateUserFormProps) {
+  const createMutation = useMutation(createUsersMutation())
+
+  const form = useForm({
+    defaultValues: defaultCreateFormValues,
+    validators: {
+      onSubmit: createUserFormSchema,
+    },
+    onSubmit: async ({ value }) => {
+      try {
+        await createMutation.mutateAsync({
+          body: {
+            users: [
+              {
+                name: value.name.trim(),
+                email: value.email.trim(),
+                password: value.password?.trim(),
+                role: value.role,
+              },
+            ],
+          },
+        })
+
+        form.reset()
+        await onUsersChanged()
+      } catch {
+        // The mutation stores the error for rendering below.
+      }
+    },
+  })
+
+  const isSaving = createMutation.isPending || form.state.isSubmitting
+  const createError = getErrorMessage(createMutation.error)
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Create User</CardTitle>
+        <CardDescription>Create a Better Auth user and matching application user.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form
+          onSubmit={(event) => {
+            event.preventDefault()
+            form.handleSubmit()
+          }}
+        >
+          <FieldGroup>
+            <form.Field name="name">
+              {(field) => (
+                <FormTextInput
+                  id={field.name}
+                  name={field.name}
+                  type="text"
+                  label="Name"
+                  disabled={isSaving}
+                  autoComplete="name"
+                  value={field.state.value}
+                  onBlur={field.handleBlur}
+                  onValueChange={field.handleChange}
+                  errors={field.state.meta.isTouched ? field.state.meta.errors : []}
+                />
+              )}
+            </form.Field>
+
+            <form.Field name="email">
+              {(field) => (
+                <FormTextInput
+                  id={field.name}
+                  name={field.name}
+                  type="email"
+                  label="Email"
+                  disabled={isSaving}
+                  autoComplete="email"
+                  value={field.state.value}
+                  onBlur={field.handleBlur}
+                  onValueChange={field.handleChange}
+                  errors={field.state.meta.isTouched ? field.state.meta.errors : []}
+                />
+              )}
+            </form.Field>
+
+            <form.Field name="password">
+              {(field) => (
+                <FormTextInput
+                  id={field.name}
+                  name={field.name}
+                  type="password"
+                  label="Temporary password optional"
+                  disabled={isSaving}
+                  autoComplete="new-password"
+                  value={field.state.value ?? ''}
+                  onBlur={field.handleBlur}
+                  onValueChange={field.handleChange}
+                  errors={field.state.meta.isTouched ? field.state.meta.errors : []}
+                />
+              )}
+            </form.Field>
+
+            <form.Field name="role">
+              {(field) => (
+                <Field>
+                  <FieldLabel htmlFor={field.name}>Role</FieldLabel>
+                  <Select
+                    value={field.state.value}
+                    disabled={isSaving}
+                    onValueChange={(value) => field.handleChange(value === 'admin' ? 'admin' : 'user')}
+                  >
+                    <SelectTrigger id={field.name} onBlur={field.handleBlur} className="w-full">
+                      <SelectValue placeholder="Select role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="user">User</SelectItem>
+                      <SelectItem value="admin">Admin</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FieldError errors={field.state.meta.isTouched ? field.state.meta.errors : []} />
+                </Field>
+              )}
+            </form.Field>
+
+            <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
+              {([canSubmit, isSubmitting]) => (
+                <Button disabled={!canSubmit || isSubmitting || isSaving} type="submit">
+                  <UserPlus />
+                  {isSaving ? 'Creating...' : 'Create'}
+                </Button>
+              )}
+            </form.Subscribe>
+          </FieldGroup>
+        </form>
+
+        {createError ? <p className="mt-4 text-sm text-destructive">{createError}</p> : null}
+        <CreateResult result={createMutation.data} />
+      </CardContent>
+    </Card>
+  )
+}

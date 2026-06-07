@@ -1,0 +1,47 @@
+{
+  "$schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json",
+  "ignorePatterns": [
+    "**/generated/**",
+    "**/api-client/**",
+    "openapi-ts.config.ts",
+    "src/lib/hey-api.ts",
+    "src/components/ui/**",
+    "src/hooks/use-mobile.ts",
+    "src/prisma/**"
+  ],
+  "ignoreDependencies": [
+    "@base-ui/react",
+    "@hono/standard-validator",
+    "class-variance-authority",
+    "cmdk",
+    "date-fns",
+    "embla-carousel-react",
+    "input-otp",
+    "pg",
+    "react-day-picker",
+    "react-resizable-panels",
+    "recharts",
+    "sonner",
+    "vaul"
+  ],
+  "duplicates": {
+    "minTokens": 200,
+    "minOccurrences": 2
+  },
+  "health": {
+    "maxCyclomatic": 20,
+    "maxCognitive": 20,
+    "maxCrap": 100,
+    "crapRefactorBand": 0,
+    "thresholdOverrides": [
+      {
+        "files": [
+          "src/app/admin/positions/**"
+        ],
+        "maxCrap": 250,
+        "reason": "Admin position screens are client UI flows without runtime coverage data; keep cyclomatic/cognitive gates active and avoid estimated CRAP noise."
+      }
+    ]
+  },
+  "rules": {}
+}
