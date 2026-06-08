@@ -31,4 +31,4 @@ bun run prisma:generate
 ## Notes
 
 - Keep `src/prisma/schema/auth.prisma` managed by Better Auth tooling.
-- Keep generated Prisma client output in `src/prisma/generated` (ignored by git).
+- Prisma client generation is configured to output to `src/prisma/generated`, and `src/prisma/.gitignore` excludes that folder from commits.
