@@ -1,9 +1,27 @@
-Forms should be client components to get nice interactivity.
+# Forms
 
-zod is your friend
+## Choose the right pattern
 
-Simple forms can use useActionState
-^ Example found at /login
+### 1) Simple auth/server forms
 
-Advanced forms may need Tanstack form
-^ Example found at /reources/create
+Use `useActionState` + server action for straightforward submissions.
+
+Example: `src/app/(auth)/login/login-form.tsx` + `src/app/(auth)/login/actions.ts`
+
+### 2) Rich interactive forms
+
+Use TanStack Form for field-level state/validation and TanStack Query for mutation handling.
+
+Example: `src/app/resources/create/page.tsx`
+
+## Validation
+
+- Define schemas with Zod.
+- Validate on submit at minimum.
+- Surface field and form errors in UI.
+
+## Submission behavior
+
+- Disable submit while pending.
+- Show clear success/error states.
+- Normalize optional fields before API calls (`""` -> `undefined` when needed).

@@ -1,22 +1,23 @@
-# explain the tech stach used
+# Stack Overview
 
-next.js + typescript
+## Core
 
-Frontend ->
-shadcn/ui components
+- **Framework:** Next.js 16 (App Router) + TypeScript
+- **Runtime / package manager:** Bun
+- **Styling:** Tailwind CSS v4 + shadcn/ui components
 
-Backend ->
-Api routes ->
-Hono
+## Backend
 
-Auth
-Better auth
+- **API framework:** Hono mounted under `src/app/api/[[...route]]/route.ts`
+- **Validation + docs:** Zod + `hono-openapi`
+- **Auth:** Better Auth (`src/lib/auth.ts`)
+- **Database ORM:** Prisma + PostgreSQL adapter (`@prisma/adapter-pg`)
 
-Db is Prisma + postgres
+## Frontend data and forms
 
-Deployed on Vercel connected to Supabase
+- **Data fetching/cache:** TanStack Query
+- **Forms:** React `useActionState` for simple server actions, TanStack Form for richer client forms
 
-Local development
-bun
+## Hosting
 
-dockerized postgres or installed postgres
+- Typical deployment target is Vercel with a Postgres database (for example Supabase).

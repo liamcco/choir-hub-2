@@ -1,9 +1,28 @@
-When to choose server vs client rendering?
+# Next.js Conventions
 
-server if you can
+## Server vs Client Components
 
-as long as you put use client as far down the tree as possible we're good.
+Default to **Server Components**. Move to Client Components only when you need browser-only behavior such as:
 
-Same with fetching data close to where it is needed!
+- hooks like `useState`, `useEffect`
+- client-side query/mutation hooks (`useQuery`, `useMutation`)
+- interactive form state
 
-Suspense!!!
+Examples in this repo:
+
+- Server page: `src/app/page.tsx`
+- Client page with React Query: `src/app/resources/page.tsx`
+- Client page with TanStack Form: `src/app/resources/create/page.tsx`
+
+## Keep `"use client"` low in the tree
+
+Put `"use client"` on the smallest component boundary that needs it.
+
+## Data loading
+
+- Server side: fetch in server components/actions where possible.
+- Client side: use generated TanStack Query hooks/options from `src/lib/api-client`.
+
+## Layout/providers
+
+Global providers live in `src/app/providers.tsx` (theme + QueryClient).
