@@ -81,9 +81,11 @@ export const auth = betterAuth({
         } else if (type === 'email-verification') {
           // Send the OTP for email verification
           console.log(`Sending OTP ${otp} to ${email} for email verification`);
-        } else {
+        } else if (type === 'forget-password') {
           // Send the OTP for password reset
-          console.log(`Sending OTP ${otp} to ${email} for password reset`);
+          console.log(`Password reset OTP for ${email}: ${otp}`);
+        } else {
+          console.log(`Sending OTP ${otp} to ${email} for ${type}`);
         }
       },
     }),

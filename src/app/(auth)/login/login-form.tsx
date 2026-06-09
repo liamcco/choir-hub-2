@@ -1,9 +1,11 @@
 "use client";
 
+import Link from "next/link";
+import { useActionState } from "react";
+
 import { Button } from "@/components/ui/button";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { useActionState } from "react";
 
 import { signInWithCredentialsAction } from "./actions";
 
@@ -28,7 +30,15 @@ export function LoginForm() {
         </Field>
 
         <Field>
-          <FieldLabel htmlFor="password">Password</FieldLabel>
+          <div className="flex items-center justify-between gap-3">
+            <FieldLabel htmlFor="password">Password</FieldLabel>
+            <Link
+              className="text-sm text-primary underline-offset-4 hover:underline"
+              href="/forgot"
+            >
+              Forgot password?
+            </Link>
+          </div>
           <Input
             autoComplete="current-password"
             id="password"
