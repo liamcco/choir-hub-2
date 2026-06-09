@@ -1,11 +1,11 @@
-import { headers } from "next/headers";
-import { redirect } from "next/navigation";
+import { headers } from 'next/headers';
+import { redirect } from 'next/navigation';
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FieldGroup, FieldSeparator } from "@/components/ui/field";
-import { auth } from "@/lib/auth";
-import { LoginForm } from "./login-form";
-import { PasskeySignInButton } from "./passkey-sign-in-button";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { FieldGroup, FieldSeparator } from '@/components/ui/field';
+import { auth } from '@/lib/auth';
+import { LoginForm } from './login-form';
+import { PasskeySignInButton } from './passkey-sign-in-button';
 
 export default async function LoginPage() {
   const session = await auth.api.getSession({
@@ -13,7 +13,7 @@ export default async function LoginPage() {
   });
 
   if (session) {
-    redirect("/");
+    redirect('/');
   }
 
   return (

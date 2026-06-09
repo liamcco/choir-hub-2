@@ -1,10 +1,10 @@
-"use server";
+'use server';
 
-import { auth } from "@/lib/auth";
-import { z } from "zod";
+import { auth } from '@/lib/auth';
+import { z } from 'zod';
 
 export type ForgotPasswordState = {
-  step: "email" | "otp" | "done";
+  step: 'email' | 'otp' | 'done';
   email?: string;
   error?: string;
 };
@@ -21,8 +21,8 @@ const resetSchema = z
     confirmPassword: z.string().min(8),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords do not match.",
-    path: ["confirmPassword"],
+    message: 'Passwords do not match.',
+    path: ['confirmPassword'],
   });
 
 export async function requestPasswordResetAction(
@@ -30,13 +30,13 @@ export async function requestPasswordResetAction(
   formData: FormData,
 ): Promise<ForgotPasswordState> {
   const parsed = emailSchema.safeParse({
-    email: formData.get("email"),
+    email: formData.get('email'),
   });
 
   if (!parsed.success) {
     return {
-      step: "email",
-      error: "Enter a valid email address.",
+      step: 'email',
+      error: 'Enter a valid email address.',
     };
   }
 
@@ -48,13 +48,13 @@ export async function requestPasswordResetAction(
     });
 
     return {
-      step: "otp",
+      step: 'otp',
       email: parsed.data.email,
     };
   } catch {
     return {
-      step: "email",
-      error: "Could not send reset code.",
+      step: 'email',
+      error: 'Could not send reset code.',
     };
   }
 }
@@ -64,17 +64,17 @@ export async function resetPasswordAction(
   formData: FormData,
 ): Promise<ForgotPasswordState> {
   const parsed = resetSchema.safeParse({
-    email: formData.get("email"),
-    otp: formData.get("otp"),
-    password: formData.get("password"),
-    confirmPassword: formData.get("confirmPassword"),
+    email: formData.get('email'),
+    otp: formData.get('otp'),
+    password: formData.get('password'),
+    confirmPassword: formData.get('confirmPassword'),
   });
 
   if (!parsed.success) {
     return {
-      step: "otp",
-      email: String(formData.get("email") ?? ""),
-      error: "Enter the code and a valid new password.",
+      step: 'otp',
+      email: String(formData.get('email') ?? ''),
+      error: 'Enter the code and a valid new password.',
     };
   }
 
@@ -88,14 +88,14 @@ export async function resetPasswordAction(
     });
 
     return {
-      step: "done",
+      step: 'done',
       email: parsed.data.email,
     };
   } catch {
     return {
-      step: "otp",
+      step: 'otp',
       email: parsed.data.email,
-      error: "Invalid or expired reset code.",
+      error: 'Invalid or expired reset code.',
     };
   }
 }

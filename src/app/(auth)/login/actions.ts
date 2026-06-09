@@ -1,8 +1,8 @@
-"use server";
+'use server';
 
-import { auth } from "@/lib/auth";
-import { redirect } from "next/navigation";
-import { z } from "zod";
+import { auth } from '@/lib/auth';
+import { redirect } from 'next/navigation';
+import { z } from 'zod';
 
 const loginSchema = z.object({
   email: z.email(),
@@ -13,17 +13,14 @@ export type LoginState = {
   error?: string;
 };
 
-export async function signInWithCredentialsAction(
-  _state: LoginState,
-  formData: FormData,
-): Promise<LoginState> {
+export async function signInWithCredentialsAction(_state: LoginState, formData: FormData): Promise<LoginState> {
   const parsed = loginSchema.safeParse({
-    email: formData.get("email"),
-    password: formData.get("password"),
+    email: formData.get('email'),
+    password: formData.get('password'),
   });
 
   if (!parsed.success) {
-    return { error: "Enter a valid email and password." };
+    return { error: 'Enter a valid email and password.' };
   }
 
   try {
@@ -31,8 +28,8 @@ export async function signInWithCredentialsAction(
       body: parsed.data,
     });
   } catch {
-    return { error: "Invalid email or password." };
+    return { error: 'Invalid email or password.' };
   }
 
-  redirect("/");
+  redirect('/');
 }

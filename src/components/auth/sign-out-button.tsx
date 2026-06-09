@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import { useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useQueryClient } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
-import { authClient } from "@/lib/auth-client";
-import { Button } from "@/components/ui/button";
+import { authClient } from '@/lib/auth-client';
+import { Button } from '@/components/ui/button';
 
 export function SignOutButton() {
   const router = useRouter();
@@ -24,19 +24,15 @@ export function SignOutButton() {
       await authClient.signOut();
       queryClient.removeQueries();
       await refetch();
-      router.replace("/login");
+      router.replace('/login');
     } finally {
       setIsSigningOut(false);
     }
   }
 
   return (
-    <Button
-      disabled={isSigningOut}
-      onClick={handleSignOut}
-      type="button"
-    >
-      {isSigningOut ? "Signing out..." : "Sign out"}
+    <Button disabled={isSigningOut} onClick={handleSignOut} type="button">
+      {isSigningOut ? 'Signing out...' : 'Sign out'}
     </Button>
   );
 }

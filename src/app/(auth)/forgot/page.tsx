@@ -1,15 +1,9 @@
-import { headers } from "next/headers";
-import { redirect } from "next/navigation";
+import { headers } from 'next/headers';
+import { redirect } from 'next/navigation';
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { auth } from "@/lib/auth";
-import { ForgotPasswordForm } from "./forgot-password-form";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { auth } from '@/lib/auth';
+import { ForgotPasswordForm } from './forgot-password-form';
 
 export default async function ForgotPasswordPage() {
   const session = await auth.api.getSession({
@@ -17,7 +11,7 @@ export default async function ForgotPasswordPage() {
   });
 
   if (session) {
-    redirect("/");
+    redirect('/');
   }
 
   return (
@@ -25,9 +19,7 @@ export default async function ForgotPasswordPage() {
       <CardHeader>
         <p className="text-sm font-medium text-zinc-500">CSK Choir Hub</p>
         <CardTitle>Reset password</CardTitle>
-        <CardDescription>
-          Use the reset code from the server console.
-        </CardDescription>
+        <CardDescription>Use the reset code from the server console.</CardDescription>
       </CardHeader>
 
       <CardContent>

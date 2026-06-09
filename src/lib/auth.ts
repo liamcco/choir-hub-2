@@ -9,7 +9,7 @@ import { prisma } from '@/db';
 
 const BASE_URL = process.env.BETTER_AUTH_URL;
 if (!BASE_URL) {
-  throw new Error("BETTER_AUTH_URL is required");
+  throw new Error('BETTER_AUTH_URL is required');
 }
 
 const isSecureCookie = BASE_URL.startsWith('https://');
@@ -18,16 +18,16 @@ export const auth = betterAuth({
   appName: 'CSK Choir Hub Auth',
   baseURL: BASE_URL,
   emailAndPassword: {
-		enabled: true,
-		disableSignUp: true,
-		requireEmailVerification: isProduction,
-		minPasswordLength: 8,
-		maxPasswordLength: 128,
-		autoSignIn: true,
-		sendResetPassword: async ({ user, url, token }) => {
-			// Send reset password email
+    enabled: true,
+    disableSignUp: true,
+    requireEmailVerification: isProduction,
+    minPasswordLength: 8,
+    maxPasswordLength: 128,
+    autoSignIn: true,
+    sendResetPassword: async ({ user, url, token }) => {
+      // Send reset password email
       console.log(`Send reset password email to ${user.email} with URL: ${url} and token: ${token}`);
-		},
+    },
     onPasswordReset: async ({ user }) => {
       // Handle any additional logic after a password reset, such as logging or notifications
       console.log(`Password reset for user: ${user.email}`);
@@ -40,7 +40,7 @@ export const auth = betterAuth({
     customSyntheticUser: ({ coreFields, additionalFields, id }) => ({
       ...coreFields,
       // Admin plugin fields (in schema order)
-      role: "user",
+      role: 'user',
       banned: false,
       banReason: null,
       banExpires: null,
@@ -49,7 +49,7 @@ export const auth = betterAuth({
       // ID must be last to match database output order
       id,
     }),
-	},
+  },
   session: {
     cookieCache: {
       enabled: true,
@@ -59,15 +59,15 @@ export const auth = betterAuth({
   advanced: {
     defaultCookieAttributes: {
       sameSite: 'lax',
-      secure: isSecureCookie
+      secure: isSecureCookie,
     },
   },
   plugins: [
     username(),
-    organization({ 
-      teams: { 
-        enabled: true 
-      } 
+    organization({
+      teams: {
+        enabled: true,
+      },
     }),
     admin(),
     openAPI(),
@@ -89,17 +89,17 @@ export const auth = betterAuth({
         }
       },
     }),
-    nextCookies()
+    nextCookies(),
   ],
   emailVerification: {
-		sendVerificationEmail: async ({ user, url, token }) => {
+    sendVerificationEmail: async ({ user, url, token }) => {
       // Send the verification email to the user with the provided URL and token
-			console.log(`Send verification email to ${user.email} with URL: ${url} and token: ${token}`);
-		},
-		sendOnSignUp: true,
-		autoSignInAfterVerification: true,
-		expiresIn: 3600 // 1 hour
-	},
+      console.log(`Send verification email to ${user.email} with URL: ${url} and token: ${token}`);
+    },
+    sendOnSignUp: true,
+    autoSignInAfterVerification: true,
+    expiresIn: 3600, // 1 hour
+  },
   database: prismaAdapter(prisma, {
     provider: 'postgresql',
   }),

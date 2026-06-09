@@ -15,6 +15,6 @@ export async function createResource(name: string, description?: string) {
 
 export async function getResourceById(id: string) {
   return await prisma.resource.findUnique({
-     where: { id },
+    where: { id },
   });
 }

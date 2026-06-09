@@ -1,18 +1,18 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import "./globals.css";
-import { Providers } from "./providers";
-import { cn } from "@/lib/utils";
-import { Navigation } from "@/components/nav/menu-bar";
+import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
+import './globals.css';
+import { Providers } from './providers';
+import { cn } from '@/lib/utils';
+import { Navigation } from '@/components/nav/menu-bar';
 
 const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-sans",
+  subsets: ['latin'],
+  variable: '--font-sans',
 });
 
 export const metadata: Metadata = {
-  title: "CSK Choir Hub",
-  description: "Chalmers Sångkörs digitala nav",
+  title: 'CSK Choir Hub',
+  description: 'Chalmers Sångkörs digitala nav',
 };
 
 export default function RootLayout({
@@ -21,11 +21,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="sv"
-      className={cn("h-full", "antialiased", inter.variable)}
-      suppressHydrationWarning
-    >
+    <html lang="sv" className={cn('h-full', 'antialiased', inter.variable)} suppressHydrationWarning>
       <body className="min-h-full flex flex-col">
         <Providers>
           <header className="border-b bg-background">

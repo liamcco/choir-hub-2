@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import { useActionState } from "react";
-import { Spinner } from "@/components/ui/spinner";
+import { useActionState } from 'react';
+import { Spinner } from '@/components/ui/spinner';
 
-import { Button } from "@/components/ui/button";
-import { signOutAction } from "@/lib/auth-actions";
+import { Button } from '@/components/ui/button';
+import { signOutAction } from '@/lib/auth-actions';
 
 export function SignOutButton() {
   const [, action, isPending] = useActionState(signOutAction, null);
@@ -18,7 +18,7 @@ export function SignOutButton() {
             <span>Signing out...</span>
           </>
         ) : (
-          "Sign out"
+          'Sign out'
         )}
       </Button>
     </form>

@@ -1,16 +1,16 @@
-import { Context, Hono } from 'hono'
+import { Context, Hono } from 'hono';
 
 import { auth } from '@/lib/auth';
 
-import { openAPIRouteHandler } from 'hono-openapi'
+import { swaggerUI } from '@hono/swagger-ui';
+import { Scalar } from '@scalar/hono-api-reference';
 import { betterAuthStudio } from 'better-auth-studio/hono';
-import { Scalar } from '@scalar/hono-api-reference'
-import { swaggerUI } from '@hono/swagger-ui'
+import { openAPIRouteHandler } from 'hono-openapi';
 import { HTTPException } from 'hono/http-exception';
 import { logger } from 'hono/logger';
 
-import routes from '@/api/routes';
 import { openApiOptions } from '@/api/docs/openapi';
+import routes from '@/api/routes';
 import studioConfig from '@/lib/studio.config';
 
 const app = new Hono<{
@@ -18,14 +18,16 @@ const app = new Hono<{
     user: typeof auth.$Infer.Session.user | null;
     session: typeof auth.$Infer.Session.session | null;
   };
-}>().basePath('/api');;
+}>().basePath('/api');
 
 /* ---- Logging Middleware ---- */
 app.use(logger());
 
 /* ---- Authentication ---- */
 app.use('*', async (c: Context, next) => {
-  const session = await auth.api.getSession({ headers: c.req.raw.headers });
+  const session = await auth.api.getSession({
+    headers: c.req.raw.headers,
+  });
 
   if (!session) {
     c.set('user', null);
@@ -46,33 +48,39 @@ app.on(['POST', 'GET'], '/auth/*', (c: Context) => auth.handler(c.req.raw));
 app.on(['POST', 'GET', 'PUT', 'DELETE'], '/studio/*', betterAuthStudio(studioConfig));
 
 // Public route for testing
-app.get('/', (c: Context) => c.json({ message: 'Welcome to the CSK Choir Hub API!' }));
+app.get('/', (c: Context) =>
+  c.json({
+    message: 'Welcome to the CSK Choir Hub API!',
+  }),
+);
 
 /* ---- Only authenticated users can access the following routes ---- */
 app.use('*', async (c: Context, next) => {
   const user = c.get('user');
   if (!user) {
-    return c.json({ error: 'Unauthorized' }, 401);
+    return c.json(
+      {
+        error: 'Unauthorized',
+      },
+      401,
+    );
   }
   await next();
 });
 
 /* ---- OpenAPI Documentation Routes ---- */
-app.get(
-  '/openapi',
-  openAPIRouteHandler(app, openApiOptions)
-)
+app.get('/openapi', openAPIRouteHandler(app, openApiOptions));
 
 app.get(
   '/scalar',
   Scalar(() => {
     return {
       url: '/api/openapi',
-    }
-  })
-)
+    };
+  }),
+);
 
-app.get('/swagger', swaggerUI({ url: '/api/openapi' }))
+app.get('/swagger', swaggerUI({ url: '/api/openapi' }));
 
 /* ---- API Routes ---- */
 app.route('/', routes); // Main API routes
@@ -83,7 +91,12 @@ app.onError((err: unknown, c: Context) => {
     return c.json({ error: err.message }, err.status);
   }
 
-  return c.json({ error: 'Internal Server Error' }, 500);
+  return c.json(
+    {
+      error: 'Internal Server Error',
+    },
+    500,
+  );
 });
 
-export default app
+export default app;

@@ -1,21 +1,15 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
-import { redirect } from "next/navigation";
-import { PasskeyManager } from "./passkey-manager";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { auth } from '@/lib/auth';
+import { headers } from 'next/headers';
+import { redirect } from 'next/navigation';
+import { PasskeyManager } from './passkey-manager';
 
 export default async function TabsDemo() {
   const session = await auth.api.getSession({ headers: await headers() });
 
   if (!session) {
-    redirect("/login");
+    redirect('/login');
   }
 
   const passkeys = await auth.api.listPasskeys({
@@ -46,11 +40,7 @@ export default async function TabsDemo() {
                 Your email is <strong>{session.user.email}</strong>.
               </p>
               <p>
-                Your account was created on{" "}
-                <strong>
-                  {new Date(session.user.createdAt).toLocaleDateString()}
-                </strong>
-                .
+                Your account was created on <strong>{new Date(session.user.createdAt).toLocaleDateString()}</strong>.
               </p>
             </CardContent>
           </Card>
@@ -60,9 +50,7 @@ export default async function TabsDemo() {
           <Card>
             <CardHeader>
               <CardTitle>Security</CardTitle>
-              <CardDescription>
-                Add a passkey to sign in with your device lock or security key.
-              </CardDescription>
+              <CardDescription>Add a passkey to sign in with your device lock or security key.</CardDescription>
             </CardHeader>
             <CardContent>
               <PasskeyManager passkeys={passkeys} />
@@ -74,8 +62,7 @@ export default async function TabsDemo() {
             <CardHeader>
               <CardTitle>Reports</CardTitle>
               <CardDescription>
-                Generate and download your detailed reports. Export data in
-                multiple formats for analysis.
+                Generate and download your detailed reports. Export data in multiple formats for analysis.
               </CardDescription>
             </CardHeader>
             <CardContent className="text-sm text-muted-foreground">
@@ -88,8 +75,7 @@ export default async function TabsDemo() {
             <CardHeader>
               <CardTitle>Settings</CardTitle>
               <CardDescription>
-                Manage your account preferences and options. Customize your
-                experience to fit your needs.
+                Manage your account preferences and options. Customize your experience to fit your needs.
               </CardDescription>
             </CardHeader>
             <CardContent className="text-sm text-muted-foreground">

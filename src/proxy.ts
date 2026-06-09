@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { getSessionCookie } from "better-auth/cookies";
+import { getSessionCookie } from 'better-auth/cookies';
 import { headers } from 'next/headers';
 
 const publicRoutes = new Set(['/login', '/forgot']);
@@ -26,8 +26,8 @@ export default async function proxy(req: NextRequest) {
 
   if (isProtectedRoute) {
     const session = await auth.api.getSession({
-        headers: await headers()
-    })
+      headers: await headers(),
+    });
 
     if (!session) {
       const url = req.nextUrl.clone();

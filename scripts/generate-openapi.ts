@@ -1,15 +1,12 @@
-import { mkdir, writeFile } from "node:fs/promises";
-import path from "node:path";
+import { mkdir, writeFile } from 'node:fs/promises';
+import path from 'node:path';
 
-import { generateSpecs } from "hono-openapi";
+import { generateSpecs } from 'hono-openapi';
 
-import app from "@/api";
-import { openApiOptions } from "@/api/docs/openapi";
+import app from '@/api';
+import { openApiOptions } from '@/api/docs/openapi';
 
-const outputPath = path.resolve(
-  process.cwd(),
-  process.env.OPENAPI_SPEC_PATH ?? ".openapi/openapi.json",
-);
+const outputPath = path.resolve(process.cwd(), process.env.OPENAPI_SPEC_PATH ?? '.openapi/openapi.json');
 
 const spec = await generateSpecs(app, openApiOptions);
 

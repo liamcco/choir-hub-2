@@ -2,11 +2,11 @@ import { Hono } from 'hono';
 
 const router = new Hono();
 
-import * as z from 'zod'
+import * as z from 'zod';
 
-const responseSchema = z.string()
+const responseSchema = z.string();
 
-import { describeRoute, resolver } from 'hono-openapi'
+import { describeRoute, resolver } from 'hono-openapi';
 import { checkHealth } from '@/services/healthService';
 
 router.get(
@@ -23,9 +23,9 @@ router.get(
     },
   }),
   async (c) => {
-    const status = await checkHealth()
-    return c.text(`Health status: ${status}`)
-  }
-)
+    const status = await checkHealth();
+    return c.text(`Health status: ${status}`);
+  },
+);
 
 export default router;
