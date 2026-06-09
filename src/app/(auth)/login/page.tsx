@@ -2,9 +2,10 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FieldGroup, FieldSeparator } from "@/components/ui/field";
 import { auth } from "@/lib/auth";
 import { LoginForm } from "./login-form";
-import { signInAction } from "./actions";
+import { PasskeySignInButton } from "./passkey-sign-in-button";
 
 export default async function LoginPage() {
   const session = await auth.api.getSession({
@@ -22,8 +23,12 @@ export default async function LoginPage() {
         <CardTitle>Sign in</CardTitle>
       </CardHeader>
 
-      <CardContent>
-        <LoginForm action={signInAction} />
+      <CardContent className="space-y-4">
+        <FieldGroup>
+          <LoginForm />
+          <FieldSeparator>or</FieldSeparator>
+          <PasskeySignInButton />
+        </FieldGroup>
       </CardContent>
     </Card>
   );

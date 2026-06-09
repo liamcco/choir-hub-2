@@ -1,8 +1,8 @@
 "use server";
 
+import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { auth } from "@/lib/auth";
 
 const loginSchema = z.object({
   email: z.email(),
@@ -13,7 +13,7 @@ export type LoginState = {
   error?: string;
 };
 
-export async function signInAction(
+export async function signInWithCredentialsAction(
   _state: LoginState,
   formData: FormData,
 ): Promise<LoginState> {

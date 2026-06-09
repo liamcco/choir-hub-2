@@ -1,13 +1,17 @@
 "use client";
 
-import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { useActionState } from "react";
 
-import { signInAction } from "./actions";
-export function LoginForm({ action }: { action: typeof signInAction }) {
-  const [state, formAction, pending] = useActionState(action, {});
+import { signInWithCredentialsAction } from "./actions";
+
+export function LoginForm() {
+  const [state, formAction, pending] = useActionState(
+    signInWithCredentialsAction,
+    {},
+  );
 
   return (
     <form action={formAction}>
@@ -39,14 +43,13 @@ export function LoginForm({ action }: { action: typeof signInAction }) {
         <p className="text-sm text-red-700">{state.error}</p>
       ) : null}
 
-      <Button 
-      className="my-2 w-full"
-      disabled={pending} 
-      type="submit"
-      variant="default">
-        {pending ? 
-        "Signing in..." 
-        : "Sign in"}
+      <Button
+        className="my-2 w-full"
+        disabled={pending}
+        type="submit"
+        variant="default"
+      >
+        {pending ? "Signing in..." : "Sign in"}
       </Button>
     </form>
   );
