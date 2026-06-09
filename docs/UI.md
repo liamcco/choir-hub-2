@@ -9,11 +9,3 @@
 ## Styling
 
 - Use Tailwind utility classes.
-- Prefer existing patterns from nearby components before introducing new structure.
-
-## Existing examples
-
-- Cards/buttons/inputs in auth and resources pages:
-  - `src/app/(auth)/login/page.tsx`
-  - `src/app/resources/page.tsx`
-  - `src/app/resources/create/page.tsx`

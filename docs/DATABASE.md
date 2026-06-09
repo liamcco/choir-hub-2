@@ -12,16 +12,6 @@
 - Prisma schema: `src/prisma/schema/schema.prisma`
 - Auth schema (managed separately): `src/prisma/schema/auth.prisma`
 
-## Current app model
-
-`Resource` model fields:
-
-- `id` (uuid)
-- `name`
-- `description` (nullable)
-- `createdAt`
-- `updatedAt`
-
 ## Useful commands
 
 ```bash

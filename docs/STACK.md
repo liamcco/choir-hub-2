@@ -17,7 +17,3 @@
 
 - **Data fetching/cache:** TanStack Query
 - **Forms:** React `useActionState` for simple server actions, TanStack Form for richer client forms
-
-## Hosting
-
-- Typical deployment target is Vercel with a Postgres database (for example Supabase).

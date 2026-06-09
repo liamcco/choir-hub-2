@@ -2,15 +2,6 @@
 
 This project uses **Better Auth** with the Prisma adapter.
 
-## Key files
-
-- Server auth config: `src/lib/auth.ts`
-- Client auth helpers: `src/lib/auth-client.ts`
-- Login page/action:
-  - `src/app/(auth)/login/page.tsx`
-  - `src/app/(auth)/login/login-form.tsx`
-  - `src/app/(auth)/login/actions.ts`
-
 ## Behavior
 
 - Session is read from request headers/cookies.

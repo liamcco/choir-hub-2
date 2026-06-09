@@ -29,4 +29,4 @@ Protected docs endpoints:
 
 - Use Zod schemas from `src/api/models/*`.
 - Use `validator(...)` for params/body validation.
-- Keep response metadata defined with `describeRoute` / `describeResponse`.
+- Keep response metadata defined with `describeRoute` / `describeResponse` (GET).
