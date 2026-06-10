@@ -51,7 +51,7 @@ export default function ResourceDetailPage() {
             <CardDescription>Something went wrong while fetching this resource.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-sm text-red-700">{error.error}</p>
+            <p className="text-sm text-red-700">{error.message}</p>
             <Button type="button" onClick={() => refetch()}>
               Try again
             </Button>

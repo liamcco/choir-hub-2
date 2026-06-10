@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import * as React from 'react';
 
+import { SignOutButton } from '@/components/auth/sign-out-button';
+import { ModeToggle } from '@/components/theme/mode-toggle';
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -9,8 +11,6 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from '@/components/ui/navigation-menu';
-import { ModeToggle } from '../theme/mode-toggle';
-import { SignOutButton } from './sign-out-button';
 
 const components: { title: string; href: string; description: string }[] = [
   {

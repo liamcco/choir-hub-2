@@ -1,38 +1,45 @@
 'use client';
 
-import { useQueryClient } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { Spinner } from '@/components/ui/spinner';
+import { useActionState } from 'react';
 
-import { authClient } from '@/lib/auth-client';
 import { Button } from '@/components/ui/button';
+import { signOutAction } from '@/lib/auth-actions';
+import { authClient } from '@/lib/auth-client';
+import Link from 'next/link';
 
 export function SignOutButton() {
-  const router = useRouter();
-  const queryClient = useQueryClient();
-  const { data: session, isPending, refetch } = authClient.useSession();
-  const [isSigningOut, setIsSigningOut] = useState(false);
+  const [, action, isSigningOut] = useActionState(signOutAction, null);
+  const { data, isPending } = authClient.useSession();
 
-  if (isPending || !session) {
-    return null;
+  if (isPending) {
+    return (
+      <Button variant="default" disabled>
+        <Spinner />
+      </Button>
+    );
   }
 
-  async function handleSignOut() {
-    setIsSigningOut(true);
-
-    try {
-      await authClient.signOut();
-      queryClient.removeQueries();
-      await refetch();
-      router.replace('/login');
-    } finally {
-      setIsSigningOut(false);
-    }
+  if (!data) {
+    return (
+      <Link href="/login">
+        <Button variant="default">Sign in</Button>
+      </Link>
+    );
   }
 
   return (
-    <Button disabled={isSigningOut} onClick={handleSignOut} type="button">
-      {isSigningOut ? 'Signing out...' : 'Sign out'}
-    </Button>
+    <form action={action}>
+      <Button aria-busy={isSigningOut} disabled={isSigningOut} variant="default" type="submit">
+        {isPending ? (
+          <>
+            <Spinner />
+            <span>Signing out...</span>
+          </>
+        ) : (
+          'Sign out'
+        )}
+      </Button>
+    </form>
   );
 }

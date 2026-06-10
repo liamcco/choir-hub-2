@@ -50,7 +50,7 @@ router.get(
       const resource = await getResourceById(id);
 
       if (!resource) {
-        return c.json({ error: 'Resource not found' }, 404);
+        return c.json({ message: 'Resource not found' }, 404);
       }
 
       return c.json(resource, 200);

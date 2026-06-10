@@ -4,14 +4,10 @@ import { CheckCircle2, MailCheck } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { FormEvent, useState } from 'react';
 
+import { EmailVerificationState, requestEmailVerificationAction, verifyEmailOtpAction } from '@/app/profile/actions';
 import { Button } from '@/components/ui/button';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import {
-  EmailVerificationState,
-  requestEmailVerificationAction,
-  verifyEmailOtpAction,
-} from '@/app/profile/actions';
 
 type EmailVerificationFormProps = {
   email: string;
@@ -61,7 +57,7 @@ export function EmailVerificationForm({ email, emailVerified }: EmailVerificatio
           <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-700" />
           <div className="min-w-0 space-y-1">
             <p className="text-sm font-medium">Email verified</p>
-            <p className="break-words text-sm text-muted-foreground">{email}</p>
+            <p className="wrap-break-word text-sm text-muted-foreground">{email}</p>
           </div>
         </div>
       </div>
@@ -73,7 +69,7 @@ export function EmailVerificationForm({ email, emailVerified }: EmailVerificatio
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 space-y-1">
           <p className="text-sm font-medium">Email not verified</p>
-          <p className="break-words text-sm text-muted-foreground">{email}</p>
+          <p className="wrap-break-word text-sm text-muted-foreground">{email}</p>
         </div>
 
         <Button disabled={isRequesting || isVerifying} onClick={requestCode} type="button" variant="outline">
@@ -105,7 +101,9 @@ export function EmailVerificationForm({ email, emailVerified }: EmailVerificatio
                 required
                 value={otp}
               />
-              <FieldDescription>The OTP is printed by the Better Auth email callback in the server logs.</FieldDescription>
+              <FieldDescription>
+                The OTP is printed by the Better Auth email callback in the server logs.
+              </FieldDescription>
             </Field>
           </FieldGroup>
 

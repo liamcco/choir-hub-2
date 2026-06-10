@@ -3,9 +3,7 @@
 import { useForm } from '@tanstack/react-form';
 import { useMutation } from '@tanstack/react-query';
 
-import type { CreateResourceError } from '@/lib/api-client';
 import { createResourceMutation } from '@/lib/api-client/@tanstack/react-query.gen';
-import { getApiErrorMessage } from '@/lib/errors';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -42,7 +40,7 @@ export default function CreatePage() {
     },
   });
 
-  const errorMessage = getApiErrorMessage<CreateResourceError>(mutation.error);
+  const errorMessage = mutation.error?.message;
   const isSaving = mutation.isPending || form.state.isSubmitting;
 
   return (
