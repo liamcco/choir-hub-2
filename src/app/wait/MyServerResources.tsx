@@ -9,7 +9,7 @@ export async function MyServerResources() {
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
   return (
-    <Card className="w-full max-w-md mx-auto my-4">
+    <Card>
       <CardContent>
         <p>This is the server resources component.</p>
         <p>{resources.length} resources found.</p>
@@ -20,7 +20,7 @@ export async function MyServerResources() {
 
 export function MyServerResourcesSkeleton() {
   return (
-    <Card className="w-full max-w-md mx-auto my-4">
+    <Card>
       <CardContent>
         <p>This is the server resources component.</p>
         <Skeleton className="h-5 w-48" />

@@ -1,5 +1,6 @@
 'use client';
 
+import { PageHeader, PageShell } from '@/components/layout/page-shell';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -10,7 +11,7 @@ import { useParams } from 'next/navigation';
 
 function ResourceDetailSkeleton() {
   return (
-    <Card className="mx-auto w-full sm:max-w-md">
+    <Card>
       <CardHeader>
         <Skeleton className="h-6 w-48" />
         <Skeleton className="h-4 w-64" />
@@ -29,23 +30,19 @@ export default function ResourceDetailPage() {
   const { data, error, isPending, refetch } = useQuery(getResourceByIdOptions({ path: { id: params.id } }));
 
   return (
-    <div className="mx-auto w-full px-8">
-      <div className="m-6 flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold">Resource Detail</h1>
-          <p className="text-sm text-muted-foreground">View details for a protected resource.</p>
-        </div>
-        <Button
-          variant="outline"
-          nativeButton={false}
-          render={<Link href="/resources">Back to resources</Link>}
-        ></Button>
-      </div>
+    <PageShell size="content">
+      <PageHeader
+        title="Resource Detail"
+        description="View details for a protected resource."
+        actions={
+          <Button variant="outline" nativeButton={false} render={<Link href="/resources">Back to resources</Link>} />
+        }
+      />
 
       {isPending ? <ResourceDetailSkeleton /> : null}
 
       {error ? (
-        <Card className="mx-auto w-full sm:max-w-md">
+        <Card>
           <CardHeader>
             <CardTitle>Could not load resource</CardTitle>
             <CardDescription>Something went wrong while fetching this resource.</CardDescription>
@@ -60,7 +57,7 @@ export default function ResourceDetailPage() {
       ) : null}
 
       {data && !isPending ? (
-        <Card className="mx-auto w-full sm:max-w-md">
+        <Card>
           <CardHeader>
             <CardTitle>{data.name}</CardTitle>
             <CardDescription>{data.description || 'No description provided.'}</CardDescription>
@@ -81,6 +78,6 @@ export default function ResourceDetailPage() {
           </CardContent>
         </Card>
       ) : null}
-    </div>
+    </PageShell>
   );
 }

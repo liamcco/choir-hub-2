@@ -3,6 +3,7 @@ import { CalendarDays, Mail, UserCircle } from 'lucide-react';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
+import { PageHeader, PageShell } from '@/components/layout/page-shell';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -14,11 +15,8 @@ import { UsernameForm } from './username-form';
 
 export default function ProfilePage() {
   return (
-    <main className="mx-auto my-10 w-full max-w-3xl px-4 sm:my-16">
-      <div className="mb-6 space-y-2">
-        <h1 className="text-2xl font-semibold tracking-normal">Profile</h1>
-        <p className="text-sm text-muted-foreground">Manage your account identity and sign-in options.</p>
-      </div>
+    <PageShell size="content">
+      <PageHeader title="Profile" description="Manage your account identity and sign-in options." />
 
       <Tabs defaultValue="profile" className="w-full">
         <TabsList className="w-full sm:w-fit">
@@ -38,7 +36,7 @@ export default function ProfilePage() {
           </Suspense>
         </TabsContent>
       </Tabs>
-    </main>
+    </PageShell>
   );
 }
 

@@ -13,14 +13,9 @@ interface ResourceListProps {
 
 export default function ResourceList({ resources }: ResourceListProps) {
   return (
-    <div className="w-full mx-auto px-8">
-      <div className="m-6">
-        <h1 className="text-2xl font-bold">Resources</h1>
-        <p className="text-sm text-muted-foreground">List of protected resources</p>
-      </div>
-
+    <>
       {resources.length === 0 ? (
-        <p className="text-center py-10 text-muted-foreground">No resources found.</p>
+        <p className="py-10 text-center text-muted-foreground">No resources found.</p>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
           {resources.map((resource) => (
@@ -38,6 +33,6 @@ export default function ResourceList({ resources }: ResourceListProps) {
           ))}
         </div>
       )}
-    </div>
+    </>
   );
 }

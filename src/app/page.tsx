@@ -1,8 +1,10 @@
+import { PageShell } from '@/components/layout/page-shell';
+
 export default async function HomePage() {
   return (
-    <div className="max-w-2xl mx-auto my-20 text-center space-y-6">
+    <PageShell size="content" className="py-16 text-center sm:py-20">
       <h1 className="text-2xl font-bold">Welcome to CSK Choir Hub</h1>
       <p>You can only see this content if you are signed in.</p>
-    </div>
+    </PageShell>
   );
 }

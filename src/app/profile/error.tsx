@@ -2,12 +2,13 @@
 
 import { RotateCcw } from 'lucide-react';
 
+import { PageShell } from '@/components/layout/page-shell';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function ProfileError({ reset }: { reset: () => void }) {
   return (
-    <main className="mx-auto my-16 w-full max-w-2xl px-4">
+    <PageShell size="content" className="py-16">
       <Card>
         <CardHeader>
           <CardTitle>Profile unavailable</CardTitle>
@@ -20,6 +21,6 @@ export default function ProfileError({ reset }: { reset: () => void }) {
           </Button>
         </CardContent>
       </Card>
-    </main>
+    </PageShell>
   );
 }

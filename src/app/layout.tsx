@@ -23,15 +23,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="sv" className={cn('h-full', 'antialiased', inter.variable)} suppressHydrationWarning>
-      <body className="min-h-full flex flex-col">
+      <body className="flex min-h-full flex-col">
         <Providers>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <header className="border-b bg-background">
-              <div className="mx-auto flex h-16 max-w-7xl items-center px-4">
+              <div className="mx-auto flex h-16 w-full max-w-7xl items-center px-4 sm:px-6 lg:px-8">
                 <Navigation />
               </div>
             </header>
-            <main id="main-content" className="mx-auto w-full max-w-7xl p-4">
+            <main id="main-content" className="flex-1">
               {children}
             </main>
           </ThemeProvider>

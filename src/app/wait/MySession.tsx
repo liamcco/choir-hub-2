@@ -12,7 +12,7 @@ export async function MySession() {
   await new Promise((resolve) => setTimeout(resolve, 500));
 
   return (
-    <Card className="w-full max-w-md mx-auto my-4">
+    <Card>
       <CardContent>
         <p>This is the session component.</p>
         <p>{session?.user?.email}</p>
@@ -23,7 +23,7 @@ export async function MySession() {
 
 export function MySessionSkeleton() {
   return (
-    <Card className="w-full max-w-md mx-auto my-4">
+    <Card>
       <CardContent>
         <p>This is the session component.</p>
         <Skeleton className="h-5 w-48" />
