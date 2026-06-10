@@ -1,5 +1,5 @@
-import * as React from 'react';
 import Link from 'next/link';
+import * as React from 'react';
 
 import {
   NavigationMenu,
@@ -8,13 +8,9 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger,
-  navigationMenuTriggerStyle,
 } from '@/components/ui/navigation-menu';
-
-import { SignOutButton } from '@/components/nav/sign-out-button';
-
-import { auth } from '@/lib/auth';
-import { headers } from 'next/headers';
+import { ModeToggle } from '../theme/mode-toggle';
+import { SignOutButton } from './sign-out-button';
 
 const components: { title: string; href: string; description: string }[] = [
   {
@@ -32,18 +28,20 @@ const components: { title: string; href: string; description: string }[] = [
     href: '/resources/create',
     description: 'A component for creating new resources, such as articles, videos, or links.',
   },
+  {
+    title: 'Server streaming',
+    href: '/wait',
+    description:
+      'A component that demonstrates server streaming with React Suspense, showing how to handle loading states for multiple components.',
+  },
 ];
 
-export async function Navigation() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
+export function Navigation() {
   return (
     <NavigationMenu>
-      <NavigationMenuList>
+      <NavigationMenuList className="gap-4">
         <NavigationMenuItem>
-          <NavigationMenuTrigger>Components</NavigationMenuTrigger>
+          <NavigationMenuTrigger>Links</NavigationMenuTrigger>
           <NavigationMenuContent>
             <ul className="grid w-100 gap-2 md:w-125 md:grid-cols-2 lg:w-150">
               {components.map((component) => (
@@ -55,10 +53,10 @@ export async function Navigation() {
           </NavigationMenuContent>
         </NavigationMenuItem>
         <NavigationMenuItem>
-          <NavigationMenuLink
-            className={navigationMenuTriggerStyle()}
-            render={session ? <SignOutButton /> : <Link href="/login">Sign in</Link>}
-          />
+          <SignOutButton />
+        </NavigationMenuItem>
+        <NavigationMenuItem>
+          <ModeToggle />
         </NavigationMenuItem>
       </NavigationMenuList>
     </NavigationMenu>

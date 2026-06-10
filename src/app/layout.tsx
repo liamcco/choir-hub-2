@@ -1,9 +1,10 @@
+import { Navigation } from '@/components/nav/menu-bar';
+import { cn } from '@/lib/utils';
+import { ThemeProvider } from '@wrksz/themes/next';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
-import { cn } from '@/lib/utils';
-import { Navigation } from '@/components/nav/menu-bar';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -24,14 +25,16 @@ export default function RootLayout({
     <html lang="sv" className={cn('h-full', 'antialiased', inter.variable)} suppressHydrationWarning>
       <body className="min-h-full flex flex-col">
         <Providers>
-          <header className="border-b bg-background">
-            <div className="mx-auto flex h-16 max-w-7xl items-center px-4">
-              <Navigation />
-            </div>
-          </header>
-          <main id="main-content" className="mx-auto w-full max-w-7xl p-4">
-            {children}
-          </main>
+          <ThemeProvider storage="cookie" attribute="class" defaultTheme="system" enableSystem>
+            <header className="border-b bg-background">
+              <div className="mx-auto flex h-16 max-w-7xl items-center px-4">
+                <Navigation />
+              </div>
+            </header>
+            <main id="main-content" className="mx-auto w-full max-w-7xl p-4">
+              {children}
+            </main>
+          </ThemeProvider>
         </Providers>
       </body>
     </html>

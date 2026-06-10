@@ -3,23 +3,24 @@
 import { useForm } from '@tanstack/react-form';
 import { useMutation } from '@tanstack/react-query';
 
-import type { PostApiResourcesError } from '@/lib/api-client';
-import { postApiResourcesMutation } from '@/lib/api-client/@tanstack/react-query.gen';
+import type { CreateResourceError } from '@/lib/api-client';
+import { createResourceMutation } from '@/lib/api-client/@tanstack/react-query.gen';
 import { getApiErrorMessage } from '@/lib/errors';
 
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { Skeleton } from '@/components/ui/skeleton';
 import z from 'zod';
 
-export default function CreatePage() {
-  const mutation = useMutation(postApiResourcesMutation());
+const createResourceFormSchema = z.object({
+  name: z.string().trim().min(1, 'Name is required'),
+  description: z.string().trim(),
+});
 
-  const createResourceFormSchema = z.object({
-    name: z.string().min(1),
-    description: z.string(),
-  });
+export default function CreatePage() {
+  const mutation = useMutation(createResourceMutation());
 
   const form = useForm({
     defaultValues: {
@@ -30,19 +31,22 @@ export default function CreatePage() {
       onSubmit: createResourceFormSchema,
     },
     onSubmit: async ({ value }) => {
-      mutation.mutate({
+      await mutation.mutateAsync({
         body: {
-          name: value.name,
-          description: value.description || undefined,
+          name: value.name.trim(),
+          description: value.description.trim() || undefined,
         },
       });
+
+      form.reset();
     },
   });
 
-  const errorMessage = getApiErrorMessage<PostApiResourcesError>(mutation.error);
+  const errorMessage = getApiErrorMessage<CreateResourceError>(mutation.error);
+  const isSaving = mutation.isPending || form.state.isSubmitting;
 
   return (
-    <Card className="w-full sm:max-w-md">
+    <Card className="w-full sm:max-w-md mx-auto">
       <CardHeader>
         <CardTitle>Create Resource</CardTitle>
         <CardDescription>If you ever need more resources.</CardDescription>
@@ -64,13 +68,17 @@ export default function CreatePage() {
                     id={field.name}
                     name={field.name}
                     type="text"
+                    disabled={isSaving}
+                    autoComplete="off"
                     value={field.state.value}
                     onBlur={field.handleBlur}
                     onChange={(event) => field.handleChange(event.target.value)}
                   />
 
-                  {field.state.meta.errors.length ? (
-                    <p className="text-red-600">{field.state.meta.errors.map((error) => error?.message).join(', ')}</p>
+                  {field.state.meta.isTouched && field.state.meta.errors.length ? (
+                    <p className="text-sm text-red-600">
+                      {field.state.meta.errors.map((error) => error?.message).join(', ')}
+                    </p>
                   ) : null}
                 </Field>
               )}
@@ -84,13 +92,18 @@ export default function CreatePage() {
                   <Input
                     id={field.name}
                     name={field.name}
+                    type="text"
+                    disabled={isSaving}
+                    autoComplete="off"
                     value={field.state.value}
                     onBlur={field.handleBlur}
                     onChange={(event) => field.handleChange(event.target.value)}
                   />
 
-                  {field.state.meta.errors.length ? (
-                    <p className="text-red-600">{field.state.meta.errors.map((error) => error?.message).join(', ')}</p>
+                  {field.state.meta.isTouched && field.state.meta.errors.length ? (
+                    <p className="text-sm text-red-600">
+                      {field.state.meta.errors.map((error) => error?.message).join(', ')}
+                    </p>
                   ) : null}
                 </Field>
               )}
@@ -98,21 +111,35 @@ export default function CreatePage() {
 
             <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
               {([canSubmit, isSubmitting]) => (
-                <Button variant="default" disabled={!canSubmit || isSubmitting || mutation.isPending} type="submit">
-                  {mutation.isPending ? 'Saving...' : 'Save'}
+                <Button variant="default" disabled={!canSubmit || isSubmitting || isSaving} type="submit">
+                  {isSaving ? 'Saving...' : 'Save'}
                 </Button>
               )}
             </form.Subscribe>
           </FieldGroup>
         </form>
 
-        {errorMessage ? <p className="text-red-700">{errorMessage}</p> : null}
+        {errorMessage ? <p className="mt-4 text-sm text-red-700">{errorMessage}</p> : null}
 
-        {mutation.data ? (
-          <div className="rounded-lg border border-zinc-200 bg-white p-4 text-sm">
-            <p className="font-medium">{mutation.data.name}</p>
-            <p className="mt-1 text-zinc-600">{mutation.data.description}</p>
-          </div>
+        {mutation.isPending ? (
+          <Card className="mt-4">
+            <CardContent className="space-y-3">
+              <Skeleton className="h-5 w-48" />
+              <Skeleton className="h-5 w-32" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-3/4" />
+            </CardContent>
+          </Card>
+        ) : null}
+
+        {mutation.data && !mutation.isPending ? (
+          <Card className="mt-4">
+            <CardContent>
+              <p className="font-medium text-green-700">Resource created successfully.</p>
+              <p className="mt-2 font-medium">{mutation.data.name}</p>
+              {mutation.data.description ? <p className="mt-1 text-zinc-600">{mutation.data.description}</p> : null}
+            </CardContent>
+          </Card>
         ) : null}
       </CardContent>
     </Card>

@@ -1,9 +1,9 @@
+import { isProduction } from '@/lib/environment';
 import { passkey } from '@better-auth/passkey';
 import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
-import { admin, emailOTP, openAPI, organization, twoFactor, username } from 'better-auth/plugins';
 import { nextCookies } from 'better-auth/next-js';
-import { isProduction } from '@/lib/environment';
+import { admin, emailOTP, openAPI, organization, twoFactor, username } from 'better-auth/plugins';
 
 import { prisma } from '@/db';
 

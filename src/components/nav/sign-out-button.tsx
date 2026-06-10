@@ -1,17 +1,36 @@
 'use client';
 
-import { useActionState } from 'react';
 import { Spinner } from '@/components/ui/spinner';
+import { useActionState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { signOutAction } from '@/lib/auth-actions';
+import { authClient } from '@/lib/auth-client';
+import Link from 'next/link';
 
 export function SignOutButton() {
-  const [, action, isPending] = useActionState(signOutAction, null);
+  const [, action, isSigningOut] = useActionState(signOutAction, null);
+  const { data, isPending } = authClient.useSession();
+
+  if (isPending) {
+    return (
+      <Button variant="default" disabled>
+        <Spinner />
+      </Button>
+    );
+  }
+
+  if (!data) {
+    return (
+      <Link href="/login">
+        <Button variant="default">Sign in</Button>
+      </Link>
+    );
+  }
 
   return (
     <form action={action}>
-      <Button aria-busy={isPending} disabled={isPending} type="submit">
+      <Button aria-busy={isSigningOut} disabled={isSigningOut} variant="default" type="submit">
         {isPending ? (
           <>
             <Spinner />

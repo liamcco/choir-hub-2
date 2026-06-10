@@ -4,8 +4,8 @@ export const resourceSchema = z.object({
   id: z.string(),
   name: z.string(),
   description: z.string().nullable(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
 });
 
 export const resourcesResponseSchema = z.object({

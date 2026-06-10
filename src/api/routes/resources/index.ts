@@ -11,6 +11,7 @@ router.get(
   '/',
 
   describeRoute({
+    operationId: 'getResources',
     description: 'Get protected resources for the authenticated user',
   }),
 
@@ -37,6 +38,7 @@ router.get(
   '/:id',
 
   describeRoute({
+    operationId: 'getResourceById',
     description: 'Get a specific protected resource by ID for the authenticated user',
   }),
 
@@ -78,6 +80,7 @@ router.post(
   '/',
 
   describeRoute({
+    operationId: 'createResource',
     description: 'Create a new resource',
     responses: {
       201: {
