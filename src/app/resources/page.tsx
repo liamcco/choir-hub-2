@@ -1,5 +1,5 @@
-import ResourceCard from './ResourceCard';
+import { ResourceContainer } from './ResourceContainer';
 
 export default async function ResourcesPage() {
-  return <ResourceCard />;
+  return <ResourceContainer />;
 }
