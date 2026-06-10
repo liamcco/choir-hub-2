@@ -1,25 +1,23 @@
 model User {
-  id               String       @id
+  id               String      @id
   name             String
   email            String
-  emailVerified    Boolean      @default(false)
+  emailVerified    Boolean     @default(false)
   image            String?
-  createdAt        DateTime     @default(now())
-  updatedAt        DateTime     @updatedAt
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
   username         String?
   displayUsername  String?
   role             String?
-  banned           Boolean?     @default(false)
+  banned           Boolean?    @default(false)
   banReason        String?
   banExpires       DateTime?
-  twoFactorEnabled Boolean?     @default(false)
+  twoFactorEnabled Boolean?    @default(false)
   sessions         Session[]
   accounts         Account[]
-  teammembers      TeamMember[]
-  members          Member[]
-  invitations      Invitation[]
   twofactors       TwoFactor[]
   passkeys         Passkey[]
+  person           Person?
 
   @@unique([email])
   @@unique([username])
@@ -27,18 +25,16 @@ model User {
 }
 
 model Session {
-  id                   String   @id
-  expiresAt            DateTime
-  token                String
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
-  ipAddress            String?
-  userAgent            String?
-  userId               String
-  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  activeOrganizationId String?
-  activeTeamId         String?
-  impersonatedBy       String?
+  id             String   @id
+  expiresAt      DateTime
+  token          String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  ipAddress      String?
+  userAgent      String?
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  impersonatedBy String?
 
   @@unique([token])
   @@index([userId])
@@ -75,79 +71,6 @@ model Verification {
 
   @@index([identifier])
   @@map("verification")
-}
-
-model Organization {
-  id          String       @id
-  name        String
-  slug        String
-  logo        String?
-  createdAt   DateTime
-  metadata    String?
-  teams       Team[]
-  members     Member[]
-  invitations Invitation[]
-
-  @@unique([slug])
-  @@map("organization")
-}
-
-model Team {
-  id             String       @id
-  name           String
-  organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  createdAt      DateTime
-  updatedAt      DateTime?    @updatedAt
-  teammembers    TeamMember[]
-
-  @@index([organizationId])
-  @@map("team")
-}
-
-model TeamMember {
-  id        String    @id
-  teamId    String
-  team      Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  userId    String
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt DateTime?
-
-  @@index([teamId])
-  @@index([userId])
-  @@map("teamMember")
-}
-
-model Member {
-  id             String       @id
-  organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  userId         String
-  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  role           String       @default("member")
-  createdAt      DateTime
-
-  @@index([organizationId])
-  @@index([userId])
-  @@map("member")
-}
-
-model Invitation {
-  id             String       @id
-  organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  email          String
-  role           String?
-  teamId         String?
-  status         String       @default("pending")
-  expiresAt      DateTime
-  createdAt      DateTime     @default(now())
-  inviterId      String
-  user           User         @relation(fields: [inviterId], references: [id], onDelete: Cascade)
-
-  @@index([organizationId])
-  @@index([email])
-  @@map("invitation")
 }
 
 model TwoFactor {

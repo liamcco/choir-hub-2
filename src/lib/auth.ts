@@ -3,7 +3,7 @@ import { passkey } from '@better-auth/passkey';
 import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { nextCookies } from 'better-auth/next-js';
-import { admin, emailOTP, openAPI, organization, twoFactor, username } from 'better-auth/plugins';
+import { admin, emailOTP, openAPI, twoFactor, username } from 'better-auth/plugins';
 
 import { prisma } from '@/db';
 
@@ -64,11 +64,6 @@ export const auth = betterAuth({
   },
   plugins: [
     username(),
-    organization({
-      teams: {
-        enabled: true,
-      },
-    }),
     admin(),
     openAPI(),
     twoFactor(),
