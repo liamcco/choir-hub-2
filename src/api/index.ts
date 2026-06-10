@@ -21,7 +21,15 @@ const app = new Hono<{
 }>().basePath('/api');
 
 /* ---- Logging Middleware ---- */
-app.use(logger());
+app.use('*', async (c, next) => {
+  // Skip Better Auth Studio requests
+  if (c.req.path.startsWith('/api/studio') || c.req.path.startsWith('/studio')) {
+    await next();
+    return;
+  }
+
+  return logger()(c, next);
+});
 
 /* ---- Authentication ---- */
 app.use('*', async (c: Context, next) => {

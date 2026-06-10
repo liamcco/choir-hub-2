@@ -79,8 +79,13 @@ export const auth = betterAuth({
           // Send the OTP for sign in
           console.log(`Sending OTP ${otp} to ${email} for sign-in`);
         } else if (type === 'email-verification') {
-          // Send the OTP for email verification
-          console.log(`Sending OTP ${otp} to ${email} for email verification`);
+          console.log(
+            [
+              `To: ${email}`,
+              'Subject: Verify your CSK Choir Hub email',
+              `Your verification code is ${otp}.`,
+            ].join('\n'),
+          );
         } else if (type === 'forget-password') {
           // Send the OTP for password reset
           console.log(`Password reset OTP for ${email}: ${otp}`);

@@ -1,89 +1,168 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { auth } from '@/lib/auth';
+import { Suspense } from 'react';
+import { CalendarDays, Mail, UserCircle } from 'lucide-react';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { PasskeyManager } from './passkey-manager';
 
-export default async function TabsDemo() {
-  const session = await auth.api.getSession({ headers: await headers() });
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { auth } from '@/lib/auth';
+
+import { EmailVerificationForm } from './email-verification-form';
+import { PasskeyManager } from './passkey-manager';
+import { UsernameForm } from './username-form';
+
+export default function ProfilePage() {
+  return (
+    <main className="mx-auto my-10 w-full max-w-3xl px-4 sm:my-16">
+      <div className="mb-6 space-y-2">
+        <h1 className="text-2xl font-semibold tracking-normal">Profile</h1>
+        <p className="text-sm text-muted-foreground">Manage your account identity and sign-in options.</p>
+      </div>
+
+      <Tabs defaultValue="profile" className="w-full">
+        <TabsList className="w-full sm:w-fit">
+          <TabsTrigger value="profile">Profile</TabsTrigger>
+          <TabsTrigger value="security">Security</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="profile">
+          <Suspense fallback={<ProfileCardSkeleton />}>
+            <ProfileCard />
+          </Suspense>
+        </TabsContent>
+
+        <TabsContent value="security">
+          <Suspense fallback={<SecurityCardSkeleton />}>
+            <SecurityCard />
+          </Suspense>
+        </TabsContent>
+      </Tabs>
+    </main>
+  );
+}
+
+async function ProfileCard() {
+  const { session } = await getSessionOrRedirect();
+  const user = session.user;
+  const userFields = user as typeof user & Record<string, unknown>;
+  const username = toNonEmptyString(userFields.username);
+  const displayUsername = toNonEmptyString(userFields.displayUsername);
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Account</CardTitle>
+        <CardDescription>Your personal profile details.</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="grid gap-3 sm:grid-cols-3">
+          <ProfileFact icon={<UserCircle className="size-4" />} label="Name" value={user.name} />
+          <ProfileFact icon={<Mail className="size-4" />} label="Email" value={user.email} />
+          <ProfileFact icon={<CalendarDays className="size-4" />} label="Joined" value={formatDate(user.createdAt)} />
+        </div>
+
+        <div className="grid gap-4">
+          <EmailVerificationForm email={user.email} emailVerified={user.emailVerified} />
+          <UsernameForm displayUsername={displayUsername} username={username} />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+async function SecurityCard() {
+  const { requestHeaders } = await getSessionOrRedirect();
+  const passkeys = await auth.api.listPasskeys({
+    headers: requestHeaders,
+  });
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Security</CardTitle>
+        <CardDescription>Add a passkey to sign in with your device lock or security key.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <PasskeyManager passkeys={passkeys} />
+      </CardContent>
+    </Card>
+  );
+}
+
+function ProfileFact({
+  icon,
+  label,
+  value,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="min-w-0 rounded-lg border bg-muted/30 p-3">
+      <div className="mb-2 flex items-center gap-2 text-xs font-medium uppercase text-muted-foreground">
+        {icon}
+        {label}
+      </div>
+      <p className="truncate text-sm font-medium">{value}</p>
+    </div>
+  );
+}
+
+function ProfileCardSkeleton() {
+  return (
+    <Card>
+      <CardHeader>
+        <Skeleton className="h-5 w-24" />
+        <Skeleton className="h-4 w-56" />
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="grid gap-3 sm:grid-cols-3">
+          <Skeleton className="h-20" />
+          <Skeleton className="h-20" />
+          <Skeleton className="h-20" />
+        </div>
+        <Skeleton className="h-28" />
+        <Skeleton className="h-32" />
+      </CardContent>
+    </Card>
+  );
+}
+
+function SecurityCardSkeleton() {
+  return (
+    <Card>
+      <CardHeader>
+        <Skeleton className="h-5 w-24" />
+        <Skeleton className="h-4 w-72 max-w-full" />
+      </CardHeader>
+      <CardContent className="space-y-5">
+        <Skeleton className="h-20" />
+        <Skeleton className="h-8 w-32" />
+        <Skeleton className="h-24" />
+      </CardContent>
+    </Card>
+  );
+}
+
+async function getSessionOrRedirect() {
+  const requestHeaders = await headers();
+  const session = await auth.api.getSession({
+    headers: requestHeaders,
+  });
 
   if (!session) {
     redirect('/login');
   }
 
-  const passkeys = await auth.api.listPasskeys({
-    headers: await headers(),
-  });
+  return { requestHeaders, session };
+}
 
-  return (
-    <div className="max-w-2xl mx-auto my-20">
-      <Tabs defaultValue="profile" className="w-full">
-        <TabsList>
-          <TabsTrigger value="profile">Profile</TabsTrigger>
-          <TabsTrigger value="security">Security</TabsTrigger>
-          <TabsTrigger value="reports">Danger</TabsTrigger>
-          <TabsTrigger value="settings">Settings</TabsTrigger>
-        </TabsList>
+function formatDate(value: string | Date) {
+  return new Date(value).toLocaleDateString();
+}
 
-        <TabsContent value="profile">
-          <Card>
-            <CardHeader>
-              <CardTitle>Profile</CardTitle>
-              <CardDescription>View your personal information.</CardDescription>
-            </CardHeader>
-            <CardContent className="text-sm text-muted-foreground">
-              <p>
-                You are signed in as <strong>{session.user.name}</strong>.
-              </p>
-              <p>
-                Your email is <strong>{session.user.email}</strong>.
-              </p>
-              <p>
-                Your account was created on <strong>{new Date(session.user.createdAt).toLocaleDateString()}</strong>.
-              </p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="security">
-          <Card>
-            <CardHeader>
-              <CardTitle>Security</CardTitle>
-              <CardDescription>Add a passkey to sign in with your device lock or security key.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <PasskeyManager passkeys={passkeys} />
-            </CardContent>
-          </Card>
-        </TabsContent>
-        <TabsContent value="reports">
-          <Card>
-            <CardHeader>
-              <CardTitle>Reports</CardTitle>
-              <CardDescription>
-                Generate and download your detailed reports. Export data in multiple formats for analysis.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="text-sm text-muted-foreground">
-              You have 5 reports ready and available to export.
-            </CardContent>
-          </Card>
-        </TabsContent>
-        <TabsContent value="settings">
-          <Card>
-            <CardHeader>
-              <CardTitle>Settings</CardTitle>
-              <CardDescription>
-                Manage your account preferences and options. Customize your experience to fit your needs.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="text-sm text-muted-foreground">
-              Configure notifications, security, and themes.
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </div>
-  );
+function toNonEmptyString(value: unknown) {
+  return typeof value === 'string' && value.length > 0 ? value : null;
 }

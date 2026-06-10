@@ -67,6 +67,7 @@ function ListItem({ title, children, href, ...props }: React.ComponentPropsWitho
   return (
     <li {...props}>
       <NavigationMenuLink
+        closeOnClick
         render={
           <Link href={href}>
             <div className="flex flex-col gap-1 text-sm">
