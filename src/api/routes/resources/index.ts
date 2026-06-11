@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import { describeResponse, describeRoute, resolver, validator } from 'hono-openapi'
 
-import { createResourceSchema, resourceSchema, resourcesResponseSchema } from '@/api/models/resources'
+import { createResourceItemSchema, resourceSchema, resourcesResponseSchema } from '@/api/models/resources'
 import { errorResponseSchema, idParamsSchema } from '@/api/models/utils'
 import { createResource, getResourceById, getResources } from '@/api/services/resourceService'
 
@@ -102,7 +102,7 @@ router.post(
     },
   }),
 
-  validator('json', createResourceSchema),
+  validator('json', createResourceItemSchema),
 
   async (c) => {
     const body = c.req.valid('json')

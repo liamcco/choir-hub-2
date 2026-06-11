@@ -34,20 +34,20 @@ export const adminPeopleResponseSchema = z.object({
   people: z.array(adminPersonSchema),
 })
 
-export const provisionPersonItemSchema = z.object({
+export const provisionPersonInputSchema = z.object({
   name: z.string().trim().min(1, 'Name is required'),
   email: z.email('Email must be valid'),
   password: z
     .string()
+    .trim()
     .max(128, 'Password is too long')
-    .optional()
-    .transform((password) => {
-      const trimmedPassword = password?.trim()
-
-      return trimmedPassword || undefined
-    })
+    .transform((password) => password || undefined)
     .refine((password) => !password || password.length >= 8, 'Password must be at least 8 characters'),
-  role: z.enum(['user', 'admin']).optional(),
+  role: z.enum(['user', 'admin']).default('user'),
+})
+
+export const provisionPersonItemSchema = provisionPersonInputSchema.extend({
+  password: provisionPersonInputSchema.shape.password.optional(),
 })
 
 export const provisionPeopleSchema = z.object({

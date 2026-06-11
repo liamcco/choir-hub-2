@@ -3,7 +3,6 @@
 import { useForm } from '@tanstack/react-form'
 import { useMutation } from '@tanstack/react-query'
 import { UserPlus } from 'lucide-react'
-import z from 'zod'
 
 import { provisionPeopleMutation } from '@/lib/api-client/@tanstack/react-query.gen'
 
@@ -15,19 +14,10 @@ import { Input } from '@/components/ui/input'
 
 import { ProvisionResult } from './ProvisionResult'
 
-const provisionFormSchema = z.object({
-  name: z.string().trim().min(1, 'Name is required'),
-  email: z.email('Email must be valid'),
-  password: z
-    .string()
-    .max(128, 'Password is too long')
-    .refine((password) => !password || password.length >= 8, 'Password must be at least 8 characters'),
-  role: z.enum(['user', 'admin']),
-})
+import { provisionPersonInputSchema } from '@/api/models/people'
+import z from 'zod'
 
-type ProvisionFormValues = z.infer<typeof provisionFormSchema>
-
-const defaultProvisionFormValues: ProvisionFormValues = {
+const defaultProvisionFormValues: z.input<typeof provisionPersonInputSchema> = {
   name: '',
   email: '',
   password: '',
@@ -44,7 +34,7 @@ export function AdminPersonCreateForm({ onPeopleChanged }: AdminPersonCreateForm
   const form = useForm({
     defaultValues: defaultProvisionFormValues,
     validators: {
-      onSubmit: provisionFormSchema,
+      onSubmit: provisionPersonInputSchema,
     },
     onSubmit: async ({ value }) => {
       try {
