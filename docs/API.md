@@ -16,6 +16,10 @@ API routes are implemented with Hono under `/api`.
   - `GET /api/resources`
   - `GET /api/resources/:id`
   - `POST /api/resources`
+- Admin person provisioning routes:
+  - `GET /api/people`
+  - `GET /api/admin/people/:id`
+  - `POST /api/admin/people`
 
 ## OpenAPI docs
 

@@ -29,6 +29,11 @@ const components: { title: string; href: string; description: string }[] = [
     description: 'A component for creating new resources, such as articles, videos, or links.',
   },
   {
+    title: 'Admin',
+    href: '/admin',
+    description: 'Provision users and manage application persons.',
+  },
+  {
     title: 'Server streaming',
     href: '/wait',
     description:
