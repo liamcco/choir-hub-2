@@ -1,13 +1,13 @@
-'use client';
+'use client'
 
-import { PageHeader, PageShell } from '@/components/layout/page-shell';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { getResourceByIdOptions } from '@/lib/api-client/@tanstack/react-query.gen';
-import { useQuery } from '@tanstack/react-query';
-import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { PageHeader, PageShell } from '@/components/layout/page-shell'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
+import { getResourceByIdOptions } from '@/lib/api-client/@tanstack/react-query.gen'
+import { useQuery } from '@tanstack/react-query'
+import Link from 'next/link'
+import { useParams } from 'next/navigation'
 
 function ResourceDetailSkeleton() {
   return (
@@ -22,12 +22,12 @@ function ResourceDetailSkeleton() {
         <Skeleton className="h-4 w-1/2" />
       </CardContent>
     </Card>
-  );
+  )
 }
 
 export default function ResourceDetailPage() {
-  const params = useParams<{ id: string }>();
-  const { data, error, isPending, refetch } = useQuery(getResourceByIdOptions({ path: { id: params.id } }));
+  const params = useParams<{ id: string }>()
+  const { data, error, isPending, refetch } = useQuery(getResourceByIdOptions({ path: { id: params.id } }))
 
   return (
     <PageShell size="content">
@@ -79,5 +79,5 @@ export default function ResourceDetailPage() {
         </Card>
       ) : null}
     </PageShell>
-  );
+  )
 }

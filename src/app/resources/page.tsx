@@ -1,5 +1,5 @@
-import { PageHeader, PageShell } from '@/components/layout/page-shell';
-import { ResourceContainer } from './ResourceContainer';
+import { PageHeader, PageShell } from '@/components/layout/page-shell'
+import { ResourceContainer } from './ResourceContainer'
 
 export default async function ResourcesPage() {
   return (
@@ -7,5 +7,5 @@ export default async function ResourcesPage() {
       <PageHeader title="Resources" description="List of protected resources" />
       <ResourceContainer />
     </PageShell>
-  );
+  )
 }

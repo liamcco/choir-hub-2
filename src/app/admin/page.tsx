@@ -1,6 +1,6 @@
-import { PageHeader, PageShell } from '@/components/layout/page-shell';
+import { PageHeader, PageShell } from '@/components/layout/page-shell'
 
-import { AdminPeoplePanel } from './AdminPeoplePanel';
+import { AdminPeoplePanel } from './AdminPeoplePanel'
 
 export default function AdminPage() {
   return (
@@ -8,5 +8,5 @@ export default function AdminPage() {
       <PageHeader title="Admin" description="Provision and manage application persons." />
       <AdminPeoplePanel />
     </PageShell>
-  );
+  )
 }

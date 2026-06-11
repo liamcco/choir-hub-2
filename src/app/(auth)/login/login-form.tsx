@@ -1,16 +1,16 @@
-'use client';
+'use client'
 
-import Link from 'next/link';
-import { useActionState } from 'react';
+import Link from 'next/link'
+import { useActionState } from 'react'
 
-import { Button } from '@/components/ui/button';
-import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button'
+import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { Input } from '@/components/ui/input'
 
-import { signInWithCredentialsAction } from './actions';
+import { signInWithCredentialsAction } from './actions'
 
 export function LoginForm() {
-  const [state, formAction, pending] = useActionState(signInWithCredentialsAction, {});
+  const [state, formAction, pending] = useActionState(signInWithCredentialsAction, {})
 
   return (
     <form action={formAction}>
@@ -37,5 +37,5 @@ export function LoginForm() {
         {pending ? 'Signing in...' : 'Sign in'}
       </Button>
     </form>
-  );
+  )
 }

@@ -1,12 +1,12 @@
-import { getResources } from '@/api/services/resourceService';
-import { Card, CardContent } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
+import { getResources } from '@/api/services/resourceService'
+import { Card, CardContent } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
 
 export async function MyServerResources() {
-  const resources = await getResources();
+  const resources = await getResources()
 
   // Simulate a delay for demonstration purposes
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+  await new Promise((resolve) => setTimeout(resolve, 1000))
 
   return (
     <Card>
@@ -15,7 +15,7 @@ export async function MyServerResources() {
         <p>{resources.length} resources found.</p>
       </CardContent>
     </Card>
-  );
+  )
 }
 
 export function MyServerResourcesSkeleton() {
@@ -26,5 +26,5 @@ export function MyServerResourcesSkeleton() {
         <Skeleton className="h-5 w-48" />
       </CardContent>
     </Card>
-  );
+  )
 }

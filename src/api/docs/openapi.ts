@@ -1,4 +1,4 @@
-import type { GenerateSpecOptions } from 'hono-openapi';
+import type { GenerateSpecOptions } from 'hono-openapi'
 
 export const openApiOptions = {
   // includeEmptyPaths: true,
@@ -15,4 +15,4 @@ export const openApiOptions = {
       },
     ],
   },
-} satisfies Partial<GenerateSpecOptions>;
+} satisfies Partial<GenerateSpecOptions>

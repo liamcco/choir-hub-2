@@ -1,23 +1,23 @@
-'use client';
+'use client'
 
-import Link from 'next/link';
-import { useActionState } from 'react';
+import Link from 'next/link'
+import { useActionState } from 'react'
 
-import { requestPasswordResetAction, resetPasswordAction } from './actions';
+import { requestPasswordResetAction, resetPasswordAction } from './actions'
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
 const initialState = {
   step: 'email' as const,
-};
+}
 
 export function ForgotPasswordForm() {
-  const [requestState, requestAction, requestPending] = useActionState(requestPasswordResetAction, initialState);
+  const [requestState, requestAction, requestPending] = useActionState(requestPasswordResetAction, initialState)
 
-  const [resetState, resetAction, resetPending] = useActionState(resetPasswordAction, requestState);
+  const [resetState, resetAction, resetPending] = useActionState(resetPasswordAction, requestState)
 
-  const state = resetState.step !== 'email' ? resetState : requestState;
+  const state = resetState.step !== 'email' ? resetState : requestState
 
   if (state.step === 'done') {
     return (
@@ -28,7 +28,7 @@ export function ForgotPasswordForm() {
           Back to sign in
         </Button>
       </div>
-    );
+    )
   }
 
   if (state.step === 'otp') {
@@ -46,7 +46,7 @@ export function ForgotPasswordForm() {
           {resetPending ? 'Resetting...' : 'Reset password'}
         </Button>
       </form>
-    );
+    )
   }
 
   return (
@@ -59,5 +59,5 @@ export function ForgotPasswordForm() {
         {requestPending ? 'Sending...' : 'Send reset code'}
       </Button>
     </form>
-  );
+  )
 }

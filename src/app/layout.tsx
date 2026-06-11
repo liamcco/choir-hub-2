@@ -1,25 +1,25 @@
-import { Navigation } from '@/components/nav/menu-bar';
-import { cn } from '@/lib/utils';
-import { ThemeProvider } from '@wrksz/themes/next';
-import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
-import './globals.css';
-import { Providers } from './providers';
+import { Navigation } from '@/components/nav/menu-bar'
+import { cn } from '@/lib/utils'
+import { ThemeProvider } from '@wrksz/themes/next'
+import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
+import './globals.css'
+import { Providers } from './providers'
 
 const inter = Inter({
   subsets: ['latin'],
   variable: '--font-sans',
-});
+})
 
 export const metadata: Metadata = {
   title: 'CSK Choir Hub',
   description: 'Chalmers Sångkörs digitala nav',
-};
+}
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
+  children: React.ReactNode
 }>) {
   return (
     <html lang="sv" className={cn('h-full', 'antialiased', inter.variable)} suppressHydrationWarning>
@@ -38,5 +38,5 @@ export default function RootLayout({
         </Providers>
       </body>
     </html>
-  );
+  )
 }

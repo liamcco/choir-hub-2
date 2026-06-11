@@ -1,20 +1,20 @@
-import { headers } from 'next/headers';
-import { redirect } from 'next/navigation';
+import { headers } from 'next/headers'
+import { redirect } from 'next/navigation'
 
-import { PageShell } from '@/components/layout/page-shell';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FieldGroup, FieldSeparator } from '@/components/ui/field';
-import { auth } from '@/lib/auth';
-import { LoginForm } from './login-form';
-import { PasskeySignInButton } from './passkey-sign-in-button';
+import { PageShell } from '@/components/layout/page-shell'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { FieldGroup, FieldSeparator } from '@/components/ui/field'
+import { auth } from '@/lib/auth'
+import { LoginForm } from './login-form'
+import { PasskeySignInButton } from './passkey-sign-in-button'
 
 export default async function LoginPage() {
   const session = await auth.api.getSession({
     headers: await headers(),
-  });
+  })
 
   if (session) {
-    redirect('/');
+    redirect('/')
   }
 
   return (
@@ -34,5 +34,5 @@ export default async function LoginPage() {
         </CardContent>
       </Card>
     </PageShell>
-  );
+  )
 }

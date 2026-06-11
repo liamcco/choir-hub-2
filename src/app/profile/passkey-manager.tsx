@@ -1,51 +1,51 @@
-'use client';
+'use client'
 
-import { KeyRound, Plus } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { KeyRound, Plus } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 
-import { Button } from '@/components/ui/button';
-import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
-import { authClient } from '@/lib/auth-client';
-import { Passkey } from '@better-auth/passkey/client';
+import { Button } from '@/components/ui/button'
+import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { Input } from '@/components/ui/input'
+import { authClient } from '@/lib/auth-client'
+import { Passkey } from '@better-auth/passkey/client'
 
 type PasskeyManagerProps = {
-  passkeys: Passkey[];
-};
+  passkeys: Passkey[]
+}
 
 export function PasskeyManager({ passkeys }: PasskeyManagerProps) {
-  const router = useRouter();
-  const [name, setName] = useState('');
-  const [isPending, setIsPending] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const router = useRouter()
+  const [name, setName] = useState('')
+  const [isPending, setIsPending] = useState(false)
+  const [message, setMessage] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   async function addPasskey() {
-    setIsPending(true);
-    setMessage(null);
-    setError(null);
+    setIsPending(true)
+    setMessage(null)
+    setError(null)
 
     if (!('PublicKeyCredential' in window)) {
-      setError('This browser does not support passkeys.');
-      setIsPending(false);
-      return;
+      setError('This browser does not support passkeys.')
+      setIsPending(false)
+      return
     }
 
     const result = await authClient.passkey.addPasskey({
       name: name.trim() || undefined,
-    });
+    })
 
-    setIsPending(false);
+    setIsPending(false)
 
     if (result.error) {
-      setError(result.error.message || 'Could not add passkey.');
-      return;
+      setError(result.error.message || 'Could not add passkey.')
+      return
     }
 
-    setName('');
-    setMessage('Passkey added.');
-    router.refresh();
+    setName('')
+    setMessage('Passkey added.')
+    router.refresh()
   }
 
   return (
@@ -102,19 +102,19 @@ export function PasskeyManager({ passkeys }: PasskeyManagerProps) {
         )}
       </div>
     </div>
-  );
+  )
 }
 
 function formatPasskeyMeta(passkey: Passkey) {
-  const parts = [formatDeviceType(passkey.deviceType), passkey.backedUp ? 'synced' : 'device-bound'];
+  const parts = [formatDeviceType(passkey.deviceType), passkey.backedUp ? 'synced' : 'device-bound']
 
   if (passkey.createdAt) {
-    parts.push(`added ${new Date(passkey.createdAt).toLocaleDateString()}`);
+    parts.push(`added ${new Date(passkey.createdAt).toLocaleDateString()}`)
   }
 
-  return parts.join(' / ');
+  return parts.join(' / ')
 }
 
 function formatDeviceType(deviceType: string) {
-  return deviceType === 'multiDevice' ? 'multi-device' : 'single-device';
+  return deviceType === 'multiDevice' ? 'multi-device' : 'single-device'
 }

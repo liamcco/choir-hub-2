@@ -1,25 +1,25 @@
-'use client';
+'use client'
 
-import { useForm } from '@tanstack/react-form';
-import { useMutation } from '@tanstack/react-query';
+import { useForm } from '@tanstack/react-form'
+import { useMutation } from '@tanstack/react-query'
 
-import { createResourceMutation } from '@/lib/api-client/@tanstack/react-query.gen';
+import { createResourceMutation } from '@/lib/api-client/@tanstack/react-query.gen'
 
-import { PageShell } from '@/components/layout/page-shell';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
-import { Skeleton } from '@/components/ui/skeleton';
-import z from 'zod';
+import { PageShell } from '@/components/layout/page-shell'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { Input } from '@/components/ui/input'
+import { Skeleton } from '@/components/ui/skeleton'
+import z from 'zod'
 
 const createResourceFormSchema = z.object({
   name: z.string().trim().min(1, 'Name is required'),
   description: z.string().trim(),
-});
+})
 
 export default function CreatePage() {
-  const mutation = useMutation(createResourceMutation());
+  const mutation = useMutation(createResourceMutation())
 
   const form = useForm({
     defaultValues: {
@@ -35,14 +35,14 @@ export default function CreatePage() {
           name: value.name.trim(),
           description: value.description.trim() || undefined,
         },
-      });
+      })
 
-      form.reset();
+      form.reset()
     },
-  });
+  })
 
-  const errorMessage = mutation.error?.message;
-  const isSaving = mutation.isPending || form.state.isSubmitting;
+  const errorMessage = mutation.error?.message
+  const isSaving = mutation.isPending || form.state.isSubmitting
 
   return (
     <PageShell size="narrow">
@@ -54,8 +54,8 @@ export default function CreatePage() {
         <CardContent>
           <form
             onSubmit={(event) => {
-              event.preventDefault();
-              form.handleSubmit();
+              event.preventDefault()
+              form.handleSubmit()
             }}
           >
             <FieldGroup>
@@ -144,5 +144,5 @@ export default function CreatePage() {
         </CardContent>
       </Card>
     </PageShell>
-  );
+  )
 }

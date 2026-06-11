@@ -1,11 +1,11 @@
-import { Hono } from 'hono';
-import { describeResponse, describeRoute, resolver, validator } from 'hono-openapi';
+import { Hono } from 'hono'
+import { describeResponse, describeRoute, resolver, validator } from 'hono-openapi'
 
-import { createResourceSchema, resourceSchema, resourcesResponseSchema } from '@/api/models/resources';
-import { errorResponseSchema, idParamsSchema } from '@/api/models/utils';
-import { createResource, getResourceById, getResources } from '@/api/services/resourceService';
+import { createResourceSchema, resourceSchema, resourcesResponseSchema } from '@/api/models/resources'
+import { errorResponseSchema, idParamsSchema } from '@/api/models/utils'
+import { createResource, getResourceById, getResources } from '@/api/services/resourceService'
 
-const router = new Hono();
+const router = new Hono()
 
 router.get(
   '/',
@@ -17,9 +17,9 @@ router.get(
 
   describeResponse(
     async (c) => {
-      const resources = await getResources();
+      const resources = await getResources()
 
-      return c.json({ resources }, 200);
+      return c.json({ resources }, 200)
     },
     {
       200: {
@@ -32,7 +32,7 @@ router.get(
       },
     },
   ),
-);
+)
 
 router.get(
   '/:id',
@@ -46,14 +46,14 @@ router.get(
 
   describeResponse(
     async (c) => {
-      const id = c.req.param('id');
-      const resource = await getResourceById(id);
+      const id = c.req.param('id')
+      const resource = await getResourceById(id)
 
       if (!resource) {
-        return c.json({ message: 'Resource not found' }, 404);
+        return c.json({ message: 'Resource not found' }, 404)
       }
 
-      return c.json(resource, 200);
+      return c.json(resource, 200)
     },
     {
       200: {
@@ -74,7 +74,7 @@ router.get(
       },
     },
   ),
-);
+)
 
 router.post(
   '/',
@@ -105,12 +105,12 @@ router.post(
   validator('json', createResourceSchema),
 
   async (c) => {
-    const body = c.req.valid('json');
+    const body = c.req.valid('json')
 
-    const createdResource = await createResource(body.name, body.description);
+    const createdResource = await createResource(body.name, body.description)
 
-    return c.json(createdResource, 201);
+    return c.json(createdResource, 201)
   },
-);
+)
 
-export default router;
+export default router

@@ -1,15 +1,15 @@
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils'
 
 const pageShellSizes = {
   narrow: 'max-w-md',
   content: 'max-w-3xl',
   wide: 'max-w-7xl',
-} as const;
+} as const
 
 interface PageShellProps {
-  children: React.ReactNode;
-  className?: string;
-  size?: keyof typeof pageShellSizes;
+  children: React.ReactNode
+  className?: string
+  size?: keyof typeof pageShellSizes
 }
 
 export function PageShell({ children, className, size = 'wide' }: PageShellProps) {
@@ -17,14 +17,14 @@ export function PageShell({ children, className, size = 'wide' }: PageShellProps
     <div className={cn('mx-auto w-full px-4 py-6 sm:px-6 sm:py-10 lg:px-8', pageShellSizes[size], className)}>
       {children}
     </div>
-  );
+  )
 }
 
 interface PageHeaderProps {
-  actions?: React.ReactNode;
-  className?: string;
-  description?: React.ReactNode;
-  title: React.ReactNode;
+  actions?: React.ReactNode
+  className?: string
+  description?: React.ReactNode
+  title: React.ReactNode
 }
 
 export function PageHeader({ actions, className, description, title }: PageHeaderProps) {
@@ -36,5 +36,5 @@ export function PageHeader({ actions, className, description, title }: PageHeade
       </div>
       {actions ? <div className="flex shrink-0 items-center gap-2">{actions}</div> : null}
     </div>
-  );
+  )
 }

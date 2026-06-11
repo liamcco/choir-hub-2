@@ -1,10 +1,10 @@
-'use client';
+'use client'
 
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/button'
 
 interface ErrorDisplayProps {
-  error: Error | null;
-  onRetry: () => void;
+  error: Error | null
+  onRetry: () => void
 }
 
 export default function ErrorDisplay({ error, onRetry }: ErrorDisplayProps) {
@@ -17,5 +17,5 @@ export default function ErrorDisplay({ error, onRetry }: ErrorDisplayProps) {
         Retry
       </Button>
     </div>
-  );
+  )
 }

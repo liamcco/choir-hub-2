@@ -1,17 +1,17 @@
-import { Suspense } from 'react';
-import { CalendarDays, Mail, UserCircle } from 'lucide-react';
-import { headers } from 'next/headers';
-import { redirect } from 'next/navigation';
+import { Suspense } from 'react'
+import { CalendarDays, Mail, UserCircle } from 'lucide-react'
+import { headers } from 'next/headers'
+import { redirect } from 'next/navigation'
 
-import { PageHeader, PageShell } from '@/components/layout/page-shell';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { auth } from '@/lib/auth';
+import { PageHeader, PageShell } from '@/components/layout/page-shell'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { auth } from '@/lib/auth'
 
-import { EmailVerificationForm } from './email-verification-form';
-import { PasskeyManager } from './passkey-manager';
-import { UsernameForm } from './username-form';
+import { EmailVerificationForm } from './email-verification-form'
+import { PasskeyManager } from './passkey-manager'
+import { UsernameForm } from './username-form'
 
 export default function ProfilePage() {
   return (
@@ -37,15 +37,15 @@ export default function ProfilePage() {
         </TabsContent>
       </Tabs>
     </PageShell>
-  );
+  )
 }
 
 async function ProfileCard() {
-  const { session } = await getSessionOrRedirect();
-  const user = session.user;
-  const userFields = user as typeof user & Record<string, unknown>;
-  const username = toNonEmptyString(userFields.username);
-  const displayUsername = toNonEmptyString(userFields.displayUsername);
+  const { session } = await getSessionOrRedirect()
+  const user = session.user
+  const userFields = user as typeof user & Record<string, unknown>
+  const username = toNonEmptyString(userFields.username)
+  const displayUsername = toNonEmptyString(userFields.displayUsername)
 
   return (
     <Card>
@@ -66,14 +66,14 @@ async function ProfileCard() {
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }
 
 async function SecurityCard() {
-  const { requestHeaders } = await getSessionOrRedirect();
+  const { requestHeaders } = await getSessionOrRedirect()
   const passkeys = await auth.api.listPasskeys({
     headers: requestHeaders,
-  });
+  })
 
   return (
     <Card>
@@ -85,18 +85,10 @@ async function SecurityCard() {
         <PasskeyManager passkeys={passkeys} />
       </CardContent>
     </Card>
-  );
+  )
 }
 
-function ProfileFact({
-  icon,
-  label,
-  value,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-}) {
+function ProfileFact({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
     <div className="min-w-0 rounded-lg border bg-muted/30 p-3">
       <div className="mb-2 flex items-center gap-2 text-xs font-medium uppercase text-muted-foreground">
@@ -105,7 +97,7 @@ function ProfileFact({
       </div>
       <p className="truncate text-sm font-medium">{value}</p>
     </div>
-  );
+  )
 }
 
 function ProfileCardSkeleton() {
@@ -125,7 +117,7 @@ function ProfileCardSkeleton() {
         <Skeleton className="h-32" />
       </CardContent>
     </Card>
-  );
+  )
 }
 
 function SecurityCardSkeleton() {
@@ -141,26 +133,26 @@ function SecurityCardSkeleton() {
         <Skeleton className="h-24" />
       </CardContent>
     </Card>
-  );
+  )
 }
 
 async function getSessionOrRedirect() {
-  const requestHeaders = await headers();
+  const requestHeaders = await headers()
   const session = await auth.api.getSession({
     headers: requestHeaders,
-  });
+  })
 
   if (!session) {
-    redirect('/login');
+    redirect('/login')
   }
 
-  return { requestHeaders, session };
+  return { requestHeaders, session }
 }
 
 function formatDate(value: string | Date) {
-  return new Date(value).toLocaleDateString();
+  return new Date(value).toLocaleDateString()
 }
 
 function toNonEmptyString(value: unknown) {
-  return typeof value === 'string' && value.length > 0 ? value : null;
+  return typeof value === 'string' && value.length > 0 ? value : null
 }

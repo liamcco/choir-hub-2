@@ -1,7 +1,7 @@
-import type { StudioConfig } from 'better-auth-studio';
+import type { StudioConfig } from 'better-auth-studio'
 
-import { auth } from '@/lib/auth';
-import { prisma } from '@/db';
+import { auth } from '@/lib/auth'
+import { prisma } from '@/db'
 
 const config: StudioConfig = {
   auth,
@@ -21,6 +21,6 @@ const config: StudioConfig = {
     colors: { primary: '#0ea5e9' },
     company: { name: 'CSK', supportEmail: 'webmästeriet@choir.chs.chalmers.se' },
   },
-};
+}
 
-export default config;
+export default config

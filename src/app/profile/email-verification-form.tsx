@@ -1,52 +1,52 @@
-'use client';
+'use client'
 
-import { CheckCircle2, MailCheck } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { FormEvent, useState } from 'react';
+import { CheckCircle2, MailCheck } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { FormEvent, useState } from 'react'
 
-import { EmailVerificationState, requestEmailVerificationAction, verifyEmailOtpAction } from '@/app/profile/actions';
-import { Button } from '@/components/ui/button';
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
+import { EmailVerificationState, requestEmailVerificationAction, verifyEmailOtpAction } from '@/app/profile/actions'
+import { Button } from '@/components/ui/button'
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { Input } from '@/components/ui/input'
 
 type EmailVerificationFormProps = {
-  email: string;
-  emailVerified: boolean;
-};
+  email: string
+  emailVerified: boolean
+}
 
 export function EmailVerificationForm({ email, emailVerified }: EmailVerificationFormProps) {
-  const router = useRouter();
-  const [otp, setOtp] = useState('');
+  const router = useRouter()
+  const [otp, setOtp] = useState('')
   const [state, setState] = useState<EmailVerificationState>({
     status: emailVerified ? 'verified' : 'idle',
-  });
-  const [isRequesting, setIsRequesting] = useState(false);
-  const [isVerifying, setIsVerifying] = useState(false);
-  const isVerified = emailVerified || state.status === 'verified';
+  })
+  const [isRequesting, setIsRequesting] = useState(false)
+  const [isVerifying, setIsVerifying] = useState(false)
+  const isVerified = emailVerified || state.status === 'verified'
 
   async function requestCode() {
-    setIsRequesting(true);
-    setState({ status: state.status });
+    setIsRequesting(true)
+    setState({ status: state.status })
 
-    const nextState = await requestEmailVerificationAction();
+    const nextState = await requestEmailVerificationAction()
 
-    setState(nextState);
-    setIsRequesting(false);
+    setState(nextState)
+    setIsRequesting(false)
   }
 
   async function verifyCode(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setIsVerifying(true);
-    setState({ status: 'otp-sent' });
+    event.preventDefault()
+    setIsVerifying(true)
+    setState({ status: 'otp-sent' })
 
-    const nextState = await verifyEmailOtpAction(otp);
+    const nextState = await verifyEmailOtpAction(otp)
 
-    setState(nextState);
-    setIsVerifying(false);
+    setState(nextState)
+    setIsVerifying(false)
 
     if (nextState.status === 'verified') {
-      setOtp('');
-      router.refresh();
+      setOtp('')
+      router.refresh()
     }
   }
 
@@ -61,7 +61,7 @@ export function EmailVerificationForm({ email, emailVerified }: EmailVerificatio
           </div>
         </div>
       </div>
-    );
+    )
   }
 
   return (
@@ -113,5 +113,5 @@ export function EmailVerificationForm({ email, emailVerified }: EmailVerificatio
         </form>
       ) : null}
     </div>
-  );
+  )
 }

@@ -1,11 +1,11 @@
-import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaPg } from '@prisma/adapter-pg'
 
-import { isProduction } from '@/common/environment/environment';
-import { PrismaClient } from '@/prisma/generated/client';
+import { isProduction } from '@/common/environment/environment'
+import { PrismaClient } from '@/prisma/generated/client'
 
-const globalForPrisma = global as unknown as { prisma?: PrismaClient };
+const globalForPrisma = global as unknown as { prisma?: PrismaClient }
 
-const logPrismaQueries = process.env.LOG_PRISMA === 'true';
+const logPrismaQueries = process.env.LOG_PRISMA === 'true'
 
 export const prisma =
   globalForPrisma.prisma ??
@@ -14,8 +14,8 @@ export const prisma =
     adapter: new PrismaPg({
       connectionString: process.env.DATABASE_URL,
     }),
-  });
+  })
 
 if (!isProduction) {
-  globalForPrisma.prisma = prisma;
+  globalForPrisma.prisma = prisma
 }

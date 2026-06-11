@@ -1,41 +1,41 @@
-'use client';
+'use client'
 
-import { CheckCircle2, UserRoundCheck } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { FormEvent, useState } from 'react';
+import { CheckCircle2, UserRoundCheck } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { FormEvent, useState } from 'react'
 
-import { UsernameState, claimUsernameAction } from '@/app/profile/actions';
-import { Button } from '@/components/ui/button';
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
+import { UsernameState, claimUsernameAction } from '@/app/profile/actions'
+import { Button } from '@/components/ui/button'
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { Input } from '@/components/ui/input'
 
 type UsernameFormProps = {
-  displayUsername: string | null;
-  username: string | null;
-};
+  displayUsername: string | null
+  username: string | null
+}
 
 export function UsernameForm({ displayUsername, username }: UsernameFormProps) {
-  const router = useRouter();
-  const hasUsername = Boolean(username);
-  const [value, setValue] = useState('');
+  const router = useRouter()
+  const hasUsername = Boolean(username)
+  const [value, setValue] = useState('')
   const [state, setState] = useState<UsernameState>({
     status: hasUsername ? 'saved' : 'idle',
-  });
-  const [isSaving, setIsSaving] = useState(false);
-  const isUsernameSaved = hasUsername || state.status === 'saved';
+  })
+  const [isSaving, setIsSaving] = useState(false)
+  const isUsernameSaved = hasUsername || state.status === 'saved'
 
   async function saveUsername(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setIsSaving(true);
-    setState({ status: 'idle' });
+    event.preventDefault()
+    setIsSaving(true)
+    setState({ status: 'idle' })
 
-    const nextState = await claimUsernameAction(value);
+    const nextState = await claimUsernameAction(value)
 
-    setState(nextState);
-    setIsSaving(false);
+    setState(nextState)
+    setIsSaving(false)
 
     if (nextState.status === 'saved') {
-      router.refresh();
+      router.refresh()
     }
   }
 
@@ -52,7 +52,7 @@ export function UsernameForm({ displayUsername, username }: UsernameFormProps) {
 
         {state.message ? <p className="mt-3 text-sm text-emerald-700">{state.message}</p> : null}
       </div>
-    );
+    )
   }
 
   return (
@@ -89,5 +89,5 @@ export function UsernameForm({ displayUsername, username }: UsernameFormProps) {
         )}
       </Button>
     </form>
-  );
+  )
 }

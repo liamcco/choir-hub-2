@@ -1,41 +1,41 @@
-'use client';
+'use client'
 
-import { Button } from '@/components/ui/button';
-import { Spinner } from '@/components/ui/spinner';
-import { authClient } from '@/lib/auth-client';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { Button } from '@/components/ui/button'
+import { Spinner } from '@/components/ui/spinner'
+import { authClient } from '@/lib/auth-client'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 
 export function SignOutButton() {
-  const router = useRouter();
-  const [isSigningOut, setIsSigningOut] = useState(false);
-  const { data, isPending: isLoadingSession } = authClient.useSession();
+  const router = useRouter()
+  const [isSigningOut, setIsSigningOut] = useState(false)
+  const { data, isPending: isLoadingSession } = authClient.useSession()
 
   if (isLoadingSession) {
     return (
       <Button variant="default" disabled>
         <Spinner />
       </Button>
-    );
+    )
   }
 
   const handleSignOut = async () => {
-    setIsSigningOut(true);
+    setIsSigningOut(true)
 
     await authClient.signOut({
       fetchOptions: {
         onSuccess: () => {
-          router.refresh();
+          router.refresh()
         },
       },
-    });
+    })
 
-    setIsSigningOut(false);
-  };
+    setIsSigningOut(false)
+  }
 
   if (!data) {
-    return <Button variant="default" render={<Link href="/login">Sign in</Link>}></Button>;
+    return <Button variant="default" render={<Link href="/login">Sign in</Link>}></Button>
   }
 
   return (
@@ -49,5 +49,5 @@ export function SignOutButton() {
         'Sign out'
       )}
     </Button>
-  );
+  )
 }

@@ -1,10 +1,10 @@
-'use client';
+'use client'
 
-import { RotateCcw } from 'lucide-react';
+import { RotateCcw } from 'lucide-react'
 
-import { PageShell } from '@/components/layout/page-shell';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { PageShell } from '@/components/layout/page-shell'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 export default function ProfileError({ reset }: { reset: () => void }) {
   return (
@@ -22,5 +22,5 @@ export default function ProfileError({ reset }: { reset: () => void }) {
         </CardContent>
       </Card>
     </PageShell>
-  );
+  )
 }

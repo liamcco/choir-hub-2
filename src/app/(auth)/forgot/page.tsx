@@ -1,18 +1,18 @@
-import { headers } from 'next/headers';
-import { redirect } from 'next/navigation';
+import { headers } from 'next/headers'
+import { redirect } from 'next/navigation'
 
-import { PageShell } from '@/components/layout/page-shell';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { auth } from '@/lib/auth';
-import { ForgotPasswordForm } from './forgot-password-form';
+import { PageShell } from '@/components/layout/page-shell'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { auth } from '@/lib/auth'
+import { ForgotPasswordForm } from './forgot-password-form'
 
 export default async function ForgotPasswordPage() {
   const session = await auth.api.getSession({
     headers: await headers(),
-  });
+  })
 
   if (session) {
-    redirect('/');
+    redirect('/')
   }
 
   return (
@@ -29,5 +29,5 @@ export default async function ForgotPasswordPage() {
         </CardContent>
       </Card>
     </PageShell>
-  );
+  )
 }

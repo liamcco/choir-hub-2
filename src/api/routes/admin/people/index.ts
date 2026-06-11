@@ -1,5 +1,5 @@
-import { Hono } from 'hono';
-import { describeResponse, describeRoute, resolver, validator } from 'hono-openapi';
+import { Hono } from 'hono'
+import { describeResponse, describeRoute, resolver, validator } from 'hono-openapi'
 
 import {
   adminPeopleResponseSchema,
@@ -7,11 +7,11 @@ import {
   personSchema,
   provisionPeopleResponseSchema,
   provisionPeopleSchema,
-} from '@/api/models/people';
-import { errorResponseSchema } from '@/api/models/utils';
-import { getAdminPeople, getPersonById, provisionPeople } from '@/api/services/personService';
+} from '@/api/models/people'
+import { errorResponseSchema } from '@/api/models/utils'
+import { getAdminPeople, getPersonById, provisionPeople } from '@/api/services/personService'
 
-const router = new Hono();
+const router = new Hono()
 
 router.get(
   '/',
@@ -23,9 +23,9 @@ router.get(
 
   describeResponse(
     async (c) => {
-      const people = await getAdminPeople();
+      const people = await getAdminPeople()
 
-      return c.json({ people }, 200);
+      return c.json({ people }, 200)
     },
     {
       200: {
@@ -38,7 +38,7 @@ router.get(
       },
     },
   ),
-);
+)
 
 router.get(
   '/:id',
@@ -52,14 +52,14 @@ router.get(
 
   describeResponse(
     async (c) => {
-      const id = c.req.param('id');
-      const person = await getPersonById(id);
+      const id = c.req.param('id')
+      const person = await getPersonById(id)
 
       if (!person) {
-        return c.json({ message: 'Person not found' }, 404);
+        return c.json({ message: 'Person not found' }, 404)
       }
 
-      return c.json(person, 200);
+      return c.json(person, 200)
     },
     {
       200: {
@@ -80,7 +80,7 @@ router.get(
       },
     },
   ),
-);
+)
 
 router.post(
   '/',
@@ -103,11 +103,11 @@ router.post(
   validator('json', provisionPeopleSchema),
 
   async (c) => {
-    const body = c.req.valid('json');
-    const provisionedPeople = await provisionPeople(body);
+    const body = c.req.valid('json')
+    const provisionedPeople = await provisionPeople(body)
 
-    return c.json(provisionedPeople, 200);
+    return c.json(provisionedPeople, 200)
   },
-);
+)
 
-export default router;
+export default router

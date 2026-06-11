@@ -1,11 +1,11 @@
-import { PageShell } from '@/components/layout/page-shell';
-import { Suspense } from 'react';
-import { MyServerResources, MyServerResourcesSkeleton } from './MyServerResources';
-import { MySession, MySessionSkeleton } from './MySession';
+import { PageShell } from '@/components/layout/page-shell'
+import { Suspense } from 'react'
+import { MyServerResources, MyServerResourcesSkeleton } from './MyServerResources'
+import { MySession, MySessionSkeleton } from './MySession'
 
 export default async function Posts() {
   // Demonstrate Loading, then suspense for multiple components.
-  await new Promise((resolve) => setTimeout(resolve, 500));
+  await new Promise((resolve) => setTimeout(resolve, 500))
 
   // Suspense does not start until above promise is resolved, so the loading UI will show for 3 seconds, then both components will suspend until they are ready.
   return (
@@ -17,5 +17,5 @@ export default async function Posts() {
         <MyServerResources />
       </Suspense>
     </PageShell>
-  );
+  )
 }

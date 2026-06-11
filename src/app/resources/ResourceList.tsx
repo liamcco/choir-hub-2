@@ -1,14 +1,14 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import Link from 'next/link';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import Link from 'next/link'
 
 interface Resource {
-  id: string;
-  name: string;
-  description: string | null;
+  id: string
+  name: string
+  description: string | null
 }
 
 interface ResourceListProps {
-  resources: Resource[];
+  resources: Resource[]
 }
 
 export default function ResourceList({ resources }: ResourceListProps) {
@@ -34,5 +34,5 @@ export default function ResourceList({ resources }: ResourceListProps) {
         </div>
       )}
     </>
-  );
+  )
 }

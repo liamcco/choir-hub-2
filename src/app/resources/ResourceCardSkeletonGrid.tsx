@@ -1,7 +1,7 @@
-'use client';
+'use client'
 
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
 
 export default function ResourceCardSkeletonGrid() {
   return (
@@ -19,5 +19,5 @@ export default function ResourceCardSkeletonGrid() {
         </Card>
       ))}
     </div>
-  );
+  )
 }

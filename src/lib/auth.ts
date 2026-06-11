@@ -1,18 +1,18 @@
-import { isProduction } from '@/common/environment/environment';
-import { passkey } from '@better-auth/passkey';
-import { betterAuth } from 'better-auth';
-import { prismaAdapter } from 'better-auth/adapters/prisma';
-import { nextCookies } from 'better-auth/next-js';
-import { admin, emailOTP, openAPI, twoFactor, username } from 'better-auth/plugins';
+import { isProduction } from '@/common/environment/environment'
+import { passkey } from '@better-auth/passkey'
+import { betterAuth } from 'better-auth'
+import { prismaAdapter } from 'better-auth/adapters/prisma'
+import { nextCookies } from 'better-auth/next-js'
+import { admin, emailOTP, openAPI, twoFactor, username } from 'better-auth/plugins'
 
-import { prisma } from '@/db';
+import { prisma } from '@/db'
 
-const BASE_URL = process.env.BETTER_AUTH_URL;
+const BASE_URL = process.env.BETTER_AUTH_URL
 if (!BASE_URL) {
-  throw new Error('BETTER_AUTH_URL is required');
+  throw new Error('BETTER_AUTH_URL is required')
 }
 
-const isSecureCookie = BASE_URL.startsWith('https://');
+const isSecureCookie = BASE_URL.startsWith('https://')
 
 export const auth = betterAuth({
   appName: 'CSK Choir Hub Auth',
@@ -26,16 +26,16 @@ export const auth = betterAuth({
     autoSignIn: true,
     sendResetPassword: async ({ user, url, token }) => {
       // Send reset password email
-      console.log(`Send reset password email to ${user.email} with URL: ${url} and token: ${token}`);
+      console.log(`Send reset password email to ${user.email} with URL: ${url} and token: ${token}`)
     },
     onPasswordReset: async ({ user }) => {
       // Handle any additional logic after a password reset, such as logging or notifications
-      console.log(`Password reset for user: ${user.email}`);
+      console.log(`Password reset for user: ${user.email}`)
     },
     revokeSessionsOnPasswordReset: true,
     onExistingUserSignUp: async ({ user }) => {
       // Handle the case where a user tries to sign up with an email that already exists
-      console.log(`User with email ${user.email} already exists. Sign-up attempt blocked.`);
+      console.log(`User with email ${user.email} already exists. Sign-up attempt blocked.`)
     },
     customSyntheticUser: ({ coreFields, additionalFields, id }) => ({
       ...coreFields,
@@ -72,18 +72,18 @@ export const auth = betterAuth({
       async sendVerificationOTP({ email, otp, type }) {
         if (type === 'sign-in') {
           // Send the OTP for sign in
-          console.log(`Sending OTP ${otp} to ${email} for sign-in`);
+          console.log(`Sending OTP ${otp} to ${email} for sign-in`)
         } else if (type === 'email-verification') {
           console.log(
             [`To: ${email}`, 'Subject: Verify your CSK Choir Hub email', `Your verification code is ${otp}.`].join(
               '\n',
             ),
-          );
+          )
         } else if (type === 'forget-password') {
           // Send the OTP for password reset
-          console.log(`Password reset OTP for ${email}: ${otp}`);
+          console.log(`Password reset OTP for ${email}: ${otp}`)
         } else {
-          console.log(`Sending OTP ${otp} to ${email} for ${type}`);
+          console.log(`Sending OTP ${otp} to ${email} for ${type}`)
         }
       },
     }),
@@ -92,7 +92,7 @@ export const auth = betterAuth({
   emailVerification: {
     sendVerificationEmail: async ({ user, url, token }) => {
       // Send the verification email to the user with the provided URL and token
-      console.log(`Send verification email to ${user.email} with URL: ${url} and token: ${token}`);
+      console.log(`Send verification email to ${user.email} with URL: ${url} and token: ${token}`)
     },
     sendOnSignUp: true,
     autoSignInAfterVerification: true,
@@ -104,4 +104,4 @@ export const auth = betterAuth({
   experimental: {
     joins: true, // Enable database joins for better performance
   },
-});
+})

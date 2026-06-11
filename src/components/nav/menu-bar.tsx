@@ -1,8 +1,8 @@
-import Link from 'next/link';
-import * as React from 'react';
+import Link from 'next/link'
+import * as React from 'react'
 
-import { SignOutButton } from '@/components/auth/sign-out-button';
-import { ModeToggle } from '@/components/theme/mode-toggle';
+import { SignOutButton } from '@/components/auth/sign-out-button'
+import { ModeToggle } from '@/components/theme/mode-toggle'
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -10,7 +10,7 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger,
-} from '@/components/ui/navigation-menu';
+} from '@/components/ui/navigation-menu'
 
 const components: { title: string; href: string; description: string }[] = [
   {
@@ -39,7 +39,7 @@ const components: { title: string; href: string; description: string }[] = [
     description:
       'A component that demonstrates server streaming with React Suspense, showing how to handle loading states for multiple components.',
   },
-];
+]
 
 export function Navigation() {
   return (
@@ -65,7 +65,7 @@ export function Navigation() {
         </NavigationMenuItem>
       </NavigationMenuList>
     </NavigationMenu>
-  );
+  )
 }
 
 function ListItem({ title, children, href, ...props }: React.ComponentPropsWithoutRef<'li'> & { href: string }) {
@@ -83,5 +83,5 @@ function ListItem({ title, children, href, ...props }: React.ComponentPropsWitho
         }
       />
     </li>
-  );
+  )
 }

@@ -1,40 +1,40 @@
-'use client';
+'use client'
 
-import { KeyRound } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { KeyRound } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 
-import { Button } from '@/components/ui/button';
-import { authClient } from '@/lib/auth-client';
+import { Button } from '@/components/ui/button'
+import { authClient } from '@/lib/auth-client'
 
 export function PasskeySignInButton() {
-  const router = useRouter();
-  const [pending, setPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const router = useRouter()
+  const [pending, setPending] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   async function signInWithPasskey() {
-    setPending(true);
-    setError(null);
+    setPending(true)
+    setError(null)
 
     if (!('PublicKeyCredential' in window)) {
-      setError('This browser does not support passkeys.');
-      setPending(false);
-      return;
+      setError('This browser does not support passkeys.')
+      setPending(false)
+      return
     }
 
     try {
       await authClient.signIn.passkey({
         fetchOptions: {
           onSuccess() {
-            router.replace('/');
+            router.replace('/')
           },
           onError(context) {
-            setError(context.error.message || 'Could not sign in with Passkey.');
+            setError(context.error.message || 'Could not sign in with Passkey.')
           },
         },
-      });
+      })
     } finally {
-      setPending(false);
+      setPending(false)
     }
   }
 
@@ -52,5 +52,5 @@ export function PasskeySignInButton() {
         )}
       </Button>
     </div>
-  );
+  )
 }
