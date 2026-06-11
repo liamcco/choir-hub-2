@@ -6,7 +6,7 @@ import * as z from 'zod';
 
 const responseSchema = z.string();
 
-import { checkHealth } from '@/services/healthService';
+import { checkHealth } from '@/api/services/healthService';
 import { describeRoute, resolver } from 'hono-openapi';
 
 router.get(

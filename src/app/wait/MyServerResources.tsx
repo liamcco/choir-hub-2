@@ -1,6 +1,6 @@
+import { getResources } from '@/api/services/resourceService';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { getResources } from '@/services/resourceService';
 
 export async function MyServerResources() {
   const resources = await getResources();

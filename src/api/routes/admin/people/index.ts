@@ -9,7 +9,7 @@ import {
   provisionPeopleSchema,
 } from '@/api/models/people';
 import { errorResponseSchema } from '@/api/models/utils';
-import { getAdminPeople, getPersonById, provisionPeople } from '@/services/personService';
+import { getAdminPeople, getPersonById, provisionPeople } from '@/api/services/personService';
 
 const router = new Hono();
 

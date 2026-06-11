@@ -5,7 +5,7 @@ import {
   provisionPeopleResponseSchema,
   provisionPeopleSchema,
   provisionPersonItemSchema,
-} from '@/api/models/adminPeople';
+} from '@/api/models/people';
 import { personSchema } from '@/api/models/people';
 import { prisma } from '@/db';
 import { auth } from '@/lib/auth';
@@ -94,7 +94,9 @@ export async function provisionPeople(input: ProvisionPeopleInput): Promise<Prov
   return result;
 }
 
-async function provisionPerson(input: ProvisionPersonInput): Promise<
+async function provisionPerson(
+  input: ProvisionPersonInput,
+): Promise<
   | { status: 'succeeded'; data: ProvisionPeopleResponse['succeeded'][number] }
   | { status: 'skipped'; data: ProvisionPeopleResponse['skipped'][number] }
   | { status: 'failed'; data: ProvisionPeopleResponse['failed'][number] }
@@ -116,14 +118,16 @@ async function provisionPerson(input: ProvisionPersonInput): Promise<
     };
   }
 
-  const createdUser = await auth.api.createUser({
-    body: {
-      email,
-      password: input.password ?? generateTemporaryPassword(),
-      name: input.name,
-      role: input.role ?? 'user',
-    },
-  }).catch((error: unknown) => nullifyExistingUserError(error, input.name, email));
+  const createdUser = await auth.api
+    .createUser({
+      body: {
+        email,
+        password: input.password ?? generateTemporaryPassword(),
+        name: input.name,
+        role: input.role ?? 'user',
+      },
+    })
+    .catch((error: unknown) => nullifyExistingUserError(error, input.name, email));
 
   if ('status' in createdUser) {
     return createdUser;
@@ -209,7 +213,17 @@ function nullifyExistingUserError(
   name: string,
   email: string,
 ):
-  | { user: { id: string; name: string; email: string; emailVerified: boolean; role?: string | null; createdAt: Date; updatedAt: Date } }
+  | {
+      user: {
+        id: string;
+        name: string;
+        email: string;
+        emailVerified: boolean;
+        role?: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+      };
+    }
   | { status: 'skipped'; data: ProvisionPeopleResponse['skipped'][number] }
   | { status: 'failed'; data: ProvisionPeopleResponse['failed'][number] } {
   const message = getErrorMessage(error);

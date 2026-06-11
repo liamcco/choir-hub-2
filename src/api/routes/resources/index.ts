@@ -3,7 +3,7 @@ import { describeResponse, describeRoute, resolver, validator } from 'hono-opena
 
 import { createResourceSchema, resourceSchema, resourcesResponseSchema } from '@/api/models/resources';
 import { errorResponseSchema, idParamsSchema } from '@/api/models/utils';
-import { createResource, getResourceById, getResources } from '@/services/resourceService';
+import { createResource, getResourceById, getResources } from '@/api/services/resourceService';
 
 const router = new Hono();
 
