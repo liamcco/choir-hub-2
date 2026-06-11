@@ -1,19 +1,12 @@
 import type { StudioConfig } from 'better-auth-studio'
 
 import { auth } from '@/lib/auth'
-import { prisma } from '@/db'
 
 const config: StudioConfig = {
   auth,
   basePath: '/api/studio',
   access: {
     roles: ['admin'],
-  },
-  events: {
-    enabled: true,
-    client: prisma,
-    clientType: 'prisma',
-    tableName: 'auth_events',
   },
   metadata: {
     title: 'CSK Admin',
