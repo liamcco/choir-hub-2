@@ -16,5 +16,60 @@ model Resource {
 }
 
 model Person {
-  id String @id
+  id               String                  @id
+  groupMemberships PersonGroupMembership[]
+}
+
+model GroupKind {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  groups      Group[]
+}
+
+model Group {
+  id            String                  @id @default(uuid())
+  kindId        String
+  kind          GroupKind               @relation(fields: [kindId], references: [id])
+  name          String
+  description   String?
+  active        Boolean                 @default(true)
+  isContainer   Boolean                 @default(false)
+  parentGroupId String?
+  parentGroup   Group?                  @relation("GroupHierarchy", fields: [parentGroupId], references: [id], onDelete: SetNull)
+  childGroups   Group[]                 @relation("GroupHierarchy")
+  memberships   PersonGroupMembership[]
+  positions     Position[]
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @updatedAt
+
+  @@unique([parentGroupId, name])
+}
+
+model PersonGroupMembership {
+  id        String     @id @default(uuid())
+  personId  String
+  person    Person     @relation(fields: [personId], references: [id], onDelete: Cascade)
+  groupId   String
+  group     Group      @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  addedAt   DateTime   @default(now())
+  positions Position[]
+
+  @@unique([personId, groupId])
+}
+
+model Position {
+  id                      String                 @id @default(uuid())
+  groupId                 String
+  group                   Group                  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  name                    String
+  description             String?
+  personGroupMembershipId String?
+  personGroupMembership   PersonGroupMembership? @relation(fields: [personGroupMembershipId], references: [id], onDelete: SetNull)
+  heldSince               DateTime?
+  updatedAt               DateTime               @updatedAt
+
+  @@unique([groupId, name])
 }
