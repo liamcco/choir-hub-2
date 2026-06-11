@@ -1,4 +1,4 @@
-import { isProduction } from '@/lib/environment';
+import { isProduction } from '@/common/environment/environment';
 import { passkey } from '@better-auth/passkey';
 import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
@@ -75,11 +75,9 @@ export const auth = betterAuth({
           console.log(`Sending OTP ${otp} to ${email} for sign-in`);
         } else if (type === 'email-verification') {
           console.log(
-            [
-              `To: ${email}`,
-              'Subject: Verify your CSK Choir Hub email',
-              `Your verification code is ${otp}.`,
-            ].join('\n'),
+            [`To: ${email}`, 'Subject: Verify your CSK Choir Hub email', `Your verification code is ${otp}.`].join(
+              '\n',
+            ),
           );
         } else if (type === 'forget-password') {
           // Send the OTP for password reset

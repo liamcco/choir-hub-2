@@ -1,7 +1,7 @@
 import { PrismaPg } from '@prisma/adapter-pg';
 
+import { isProduction } from '@/common/environment/environment';
 import { PrismaClient } from '@/prisma/generated/client';
-import { isProduction } from '@/lib/environment';
 
 const globalForPrisma = global as unknown as { prisma?: PrismaClient };
 
