@@ -1,32 +1,33 @@
 import { Hono } from 'hono'
+import * as z from 'zod'
+
+import { checkHealth } from '@/api/services/healthService'
+import { describeResponse, describeRoute } from 'hono-openapi'
 
 const router = new Hono()
 
-import * as z from 'zod'
-
 const responseSchema = z.string()
-
-import { checkHealth } from '@/api/services/healthService'
-import { describeRoute, resolver } from 'hono-openapi'
 
 router.get(
   '/',
   describeRoute({
     operationId: 'checkHealth',
     description: 'Get system health status',
-    responses: {
+  }),
+  describeResponse(
+    async (c) => {
+      const status = await checkHealth()
+      return c.text(`Health status: ${status}`)
+    },
+    {
       200: {
         description: 'Successful response',
         content: {
-          'text/plain': { schema: resolver(responseSchema) },
+          'text/plain': { vSchema: responseSchema },
         },
       },
     },
-  }),
-  async (c) => {
-    const status = await checkHealth()
-    return c.text(`Health status: ${status}`)
-  },
+  ),
 )
 
 export default router

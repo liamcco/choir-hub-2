@@ -1,8 +1,9 @@
 import { Hono } from 'hono'
 import { describeResponse, describeRoute, resolver, validator } from 'hono-openapi'
 
+import { returnsErrors, returnsResponseErrors } from '@/api/docs/errors'
 import { createResourceItemSchema, resourceSchema, resourcesResponseSchema } from '@/api/models/resources'
-import { errorResponseSchema, idParamsSchema } from '@/api/models/utils'
+import { idParamsSchema } from '@/api/models/utils'
 import { createResource, getResourceById, getResources } from '@/api/services/resourceService'
 
 const router = new Hono()
@@ -64,14 +65,7 @@ router.get(
           },
         },
       },
-      404: {
-        description: 'Resource not found',
-        content: {
-          'application/json': {
-            vSchema: errorResponseSchema,
-          },
-        },
-      },
+      ...returnsResponseErrors([[404, 'Resource not found']]),
     },
   ),
 )
@@ -91,14 +85,7 @@ router.post(
           },
         },
       },
-      400: {
-        description: 'Invalid request body',
-        content: {
-          'application/json': {
-            schema: resolver(errorResponseSchema),
-          },
-        },
-      },
+      ...returnsErrors([[400, 'Invalid request body']]),
     },
   }),
 

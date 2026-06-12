@@ -1,8 +1,14 @@
 import { Context, Hono } from 'hono'
-import { describeRoute, resolver, validator } from 'hono-openapi'
+import { describeResponse, describeRoute, resolver, validator } from 'hono-openapi'
 
-import { createGroupKindSchema, groupKindSchema, groupKindsResponseSchema, updateGroupKindSchema } from '@/api/models/groups'
-import { errorResponseSchema, idParamsSchema } from '@/api/models/utils'
+import { returnsErrors, returnsResponseErrors } from '@/api/docs/errors'
+import {
+  createGroupKindSchema,
+  groupKindSchema,
+  groupKindsResponseSchema,
+  updateGroupKindSchema,
+} from '@/api/models/groups'
+import { idParamsSchema } from '@/api/models/utils'
 import {
   createGroupKind,
   deleteGroupKind,
@@ -16,65 +22,69 @@ const router = new Hono()
 
 router.get(
   '/',
+
   describeRoute({
     operationId: 'getGroupKinds',
-    description: 'List group kind records that classify groups, such as choir, voice part, board, committee, or project',
-    responses: {
+    description:
+      'List group kind records that classify groups, such as choir, voice part, board, committee, or project',
+  }),
+
+  describeResponse(
+    async (c) => {
+      const groupKinds = await getGroupKinds()
+
+      return c.json({ groupKinds }, 200)
+    },
+    {
       200: {
         description: 'Group kinds',
         content: {
           'application/json': {
-            schema: resolver(groupKindsResponseSchema),
+            vSchema: groupKindsResponseSchema,
           },
         },
       },
     },
-  }),
-  async (c) => {
-    const groupKinds = await getGroupKinds()
-
-    return c.json({ groupKinds }, 200)
-  },
+  ),
 )
 
 router.get(
   '/:id',
+
   describeRoute({
     operationId: 'getGroupKindById',
     description: 'Get a group kind by ID',
-    responses: {
+  }),
+
+  validator('param', idParamsSchema),
+
+  describeResponse(
+    async (c) => {
+      const groupKind = await getGroupKindById(c.req.param('id'))
+
+      if (!groupKind) {
+        return c.json({ message: 'Group kind not found' }, 404)
+      }
+
+      return c.json(groupKind, 200)
+    },
+    {
       200: {
         description: 'Group kind',
         content: {
           'application/json': {
-            schema: resolver(groupKindSchema),
+            vSchema: groupKindSchema,
           },
         },
       },
-      404: {
-        description: 'Group kind not found',
-        content: {
-          'application/json': {
-            schema: resolver(errorResponseSchema),
-          },
-        },
-      },
+      ...returnsResponseErrors([[404, 'Group kind not found']]),
     },
-  }),
-  validator('param', idParamsSchema),
-  async (c) => {
-    const groupKind = await getGroupKindById(c.req.param('id'))
-
-    if (!groupKind) {
-      return c.json({ message: 'Group kind not found' }, 404)
-    }
-
-    return c.json(groupKind, 200)
-  },
+  ),
 )
 
 router.post(
   '/',
+
   describeRoute({
     operationId: 'createGroupKind',
     description: 'Create a group kind',
@@ -87,25 +97,15 @@ router.post(
           },
         },
       },
-      400: {
-        description: 'Invalid request body',
-        content: {
-          'application/json': {
-            schema: resolver(errorResponseSchema),
-          },
-        },
-      },
-      409: {
-        description: 'Group kind name already exists',
-        content: {
-          'application/json': {
-            schema: resolver(errorResponseSchema),
-          },
-        },
-      },
+      ...returnsErrors([
+        [400, 'Invalid request body'],
+        [409, 'Group kind name already exists'],
+      ]),
     },
   }),
+
   validator('json', createGroupKindSchema),
+
   async (c) => {
     try {
       const groupKind = await createGroupKind(c.req.valid('json'))
@@ -119,6 +119,7 @@ router.post(
 
 router.patch(
   '/:id',
+
   describeRoute({
     operationId: 'updateGroupKind',
     description: 'Update a group kind',
@@ -131,26 +132,17 @@ router.patch(
           },
         },
       },
-      404: {
-        description: 'Group kind not found',
-        content: {
-          'application/json': {
-            schema: resolver(errorResponseSchema),
-          },
-        },
-      },
-      409: {
-        description: 'Group kind name already exists',
-        content: {
-          'application/json': {
-            schema: resolver(errorResponseSchema),
-          },
-        },
-      },
+      ...returnsErrors([
+        [404, 'Group kind not found'],
+        [409, 'Group kind name already exists'],
+      ]),
     },
   }),
+
   validator('param', idParamsSchema),
+
   validator('json', updateGroupKindSchema),
+
   async (c) => {
     try {
       const groupKind = await updateGroupKind(c.req.param('id'), c.req.valid('json'))
@@ -164,6 +156,7 @@ router.patch(
 
 router.delete(
   '/:id',
+
   describeRoute({
     operationId: 'deleteGroupKind',
     description: 'Delete an unused group kind',
@@ -171,25 +164,15 @@ router.delete(
       204: {
         description: 'Group kind deleted',
       },
-      404: {
-        description: 'Group kind not found',
-        content: {
-          'application/json': {
-            schema: resolver(errorResponseSchema),
-          },
-        },
-      },
-      409: {
-        description: 'Group kind is used by groups',
-        content: {
-          'application/json': {
-            schema: resolver(errorResponseSchema),
-          },
-        },
-      },
+      ...returnsErrors([
+        [404, 'Group kind not found'],
+        [409, 'Group kind is used by groups'],
+      ]),
     },
   }),
+
   validator('param', idParamsSchema),
+
   async (c) => {
     try {
       await deleteGroupKind(c.req.param('id'))

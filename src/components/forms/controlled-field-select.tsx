@@ -42,6 +42,42 @@ type ControlledFieldSelectProps<T> = {
   value: string
 }
 
+/**
+ * Reusable field + shadcn Select wrapper for controlled form state.
+ *
+ * Use `items` for a flat option list:
+ * <ControlledFieldSelect
+ *   id={field.name}
+ *   label="Kind"
+ *   items={groupKinds}
+ *   getValue={(kind) => kind.id}
+ *   getLabel={(kind) => kind.name}
+ *   value={field.state.value}
+ *   onValueChange={field.handleChange}
+ * />
+ *
+ * Use `sections` instead of `items` when options should be grouped:
+ * <ControlledFieldSelect
+ *   id="group"
+ *   label="Group"
+ *   sections={groupSectionsByKind(groups)}
+ *   getValue={(group) => group.id}
+ *   getLabel={(group) => group.name}
+ *   value={selectedGroupId}
+ *   onValueChange={setSelectedGroupId}
+ * />
+ *
+ * Use `emptyItem` for explicit "none" choices, then translate the sentinel
+ * value at the call site when the domain value is nullable:
+ * <ControlledFieldSelect
+ *   id={field.name}
+ *   label="Parent optional"
+ *   items={groups}
+ *   emptyItem={{ value: '', label: 'Root group' }}
+ *   value={field.state.value ?? ''}
+ *   onValueChange={(value) => field.handleChange(value || null)}
+ * />
+ */
 export function ControlledFieldSelect<T>({
   className,
   disabled,
@@ -79,25 +115,23 @@ export function ControlledFieldSelect<T>({
         </SelectTrigger>
         <SelectContent>
           {emptyItem ? <SelectItem value={emptyItem.value}>{emptyItem.label}</SelectItem> : null}
-          {sections ? (
-            sections.map((section, index) => (
-              <SelectGroup key={section.key}>
-                {index > 0 ? <SelectSeparator /> : null}
-                <SelectLabel>{section.label}</SelectLabel>
-                {section.items.map((item) => (
-                  <SelectItem key={getValue(item)} value={getValue(item)}>
-                    {getLabel(item)}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            ))
-          ) : (
-            items.map((item) => (
-              <SelectItem key={getValue(item)} value={getValue(item)}>
-                {getLabel(item)}
-              </SelectItem>
-            ))
-          )}
+          {sections
+            ? sections.map((section, index) => (
+                <SelectGroup key={section.key}>
+                  {index > 0 ? <SelectSeparator /> : null}
+                  <SelectLabel>{section.label}</SelectLabel>
+                  {section.items.map((item) => (
+                    <SelectItem key={getValue(item)} value={getValue(item)}>
+                      {getLabel(item)}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              ))
+            : items.map((item) => (
+                <SelectItem key={getValue(item)} value={getValue(item)}>
+                  {getLabel(item)}
+                </SelectItem>
+              ))}
         </SelectContent>
       </Select>
       <FieldError errors={errors} />

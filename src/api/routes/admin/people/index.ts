@@ -1,6 +1,7 @@
 import { Hono } from 'hono'
 import { describeResponse, describeRoute, resolver, validator } from 'hono-openapi'
 
+import { returnsResponseErrors } from '@/api/docs/errors'
 import {
   adminPeopleResponseSchema,
   personIdParamsSchema,
@@ -8,7 +9,6 @@ import {
   provisionPeopleResponseSchema,
   provisionPeopleSchema,
 } from '@/api/models/people'
-import { errorResponseSchema } from '@/api/models/utils'
 import { getAdminPeople, getPersonById, provisionPeople } from '@/api/services/personService'
 
 const router = new Hono()
@@ -70,14 +70,7 @@ router.get(
           },
         },
       },
-      404: {
-        description: 'Person not found',
-        content: {
-          'application/json': {
-            vSchema: errorResponseSchema,
-          },
-        },
-      },
+      ...returnsResponseErrors([[404, 'Person not found']]),
     },
   ),
 )
