@@ -3,8 +3,8 @@
 import type { Group, GroupKind } from '@/common/groups/types'
 
 import { CreateGroupCard } from './CreateGroupCard'
-import { GroupSettingsCard } from './GroupSettingsCard'
 import { GroupsTable } from './GroupsTable'
+import { OrgStructure } from './OrgStructure'
 
 type GroupsQueryState = {
   isPending: boolean
@@ -16,18 +16,12 @@ type GroupsQueryState = {
 export function GroupsAdmin({
   groupKinds,
   groups,
-  selectedGroup,
-  selectedGroupId,
   groupsQuery,
-  onSelectGroup,
   onGroupsChanged,
 }: {
   groupKinds: GroupKind[]
   groups: Group[]
-  selectedGroup: Group | null
-  selectedGroupId: string | null
   groupsQuery: GroupsQueryState
-  onSelectGroup: (id: string) => void
   onGroupsChanged: () => Promise<unknown>
 }) {
   return (
@@ -35,23 +29,22 @@ export function GroupsAdmin({
       <CreateGroupCard
         groupKinds={groupKinds}
         groups={groups}
-        onChanged={async (createdGroupId) => {
+        onChanged={async () => {
           await onGroupsChanged()
-          onSelectGroup(createdGroupId)
         }}
       />
       <GroupsTable
         groups={groups}
-        selectedGroupId={selectedGroupId}
         isPending={groupsQuery.isPending}
         isFetching={groupsQuery.isFetching}
         error={groupsQuery.error}
-        onSelectGroup={onSelectGroup}
         onRefresh={() => {
           void groupsQuery.refetch()
         }}
       />
-      <GroupSettingsCard group={selectedGroup} groupKinds={groupKinds} groups={groups} onChanged={onGroupsChanged} />
+      <div className="lg:col-start-2">
+        <OrgStructure groups={groups} />
+      </div>
     </div>
   )
 }

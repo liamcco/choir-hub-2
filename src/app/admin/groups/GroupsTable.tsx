@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useMemo } from 'react'
 import { RefreshCw } from 'lucide-react'
 
@@ -10,19 +11,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 
 export function GroupsTable({
   groups,
-  selectedGroupId,
   isPending,
   isFetching,
   error,
-  onSelectGroup,
   onRefresh,
 }: {
   groups: Group[]
-  selectedGroupId: string | null
   isPending: boolean
   isFetching: boolean
   error: unknown
-  onSelectGroup: (id: string) => void
   onRefresh: () => void
 }) {
   const groupsById = useMemo(() => new Map(groups.map((group) => [group.id, group])), [groups])
@@ -60,12 +57,12 @@ export function GroupsTable({
               </thead>
               <tbody className="divide-y">
                 {groups.map((group) => (
-                  <tr
-                    key={group.id}
-                    className={selectedGroupId === group.id ? 'bg-muted/60' : undefined}
-                    onClick={() => onSelectGroup(group.id)}
-                  >
-                    <td className="py-3 pr-4 font-medium">{group.name}</td>
+                  <tr key={group.id}>
+                    <td className="py-3 pr-4 font-medium">
+                      <Link href={`/admin/groups/${group.id}`} className="text-primary hover:underline">
+                        {group.name}
+                      </Link>
+                    </td>
                     <td className="py-3 pr-4 text-muted-foreground">{group.kind?.name ?? '-'}</td>
                     <td className="py-3 pr-4 text-muted-foreground">
                       {group.parentGroupId ? (groupsById.get(group.parentGroupId)?.name ?? 'Missing parent') : 'Root'}
