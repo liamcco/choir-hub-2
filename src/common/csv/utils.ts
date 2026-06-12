@@ -1,13 +1,37 @@
 import z from 'zod'
 
-export function parsePeopleCsv(csv: string): Array<{ name: string; email: string }> {
+type ParsedPeopleCsvPerson = {
+  email: string
+  name: string
+}
+
+export type ParsedPeopleCsvFailedRow = {
+  email: string
+  message: string
+  name: string
+  rowNumber: number
+}
+
+export type ParsedPeopleCsv = {
+  failed: ParsedPeopleCsvFailedRow[]
+  people: ParsedPeopleCsvPerson[]
+}
+
+type ParsedCsvRow = {
+  cells: string[]
+  rowNumber: number
+}
+
+const emailSchema = z.email()
+
+export function parsePeopleCsv(csv: string): ParsedPeopleCsv {
   const rows = parseCsvRows(csv)
 
-  if (rows.length < 2) {
-    throw new Error('CSV must include a header row and at least one person.')
+  if (rows.length === 0) {
+    throw new Error('CSV must include a header row.')
   }
 
-  const headers = rows[0].map((header) => header.trim().toLowerCase())
+  const headers = rows[0].cells.map((header) => header.trim().toLowerCase())
   const nameIndex = headers.indexOf('name')
   const emailIndex = headers.indexOf('email')
 
@@ -15,32 +39,54 @@ export function parsePeopleCsv(csv: string): Array<{ name: string; email: string
     throw new Error('CSV must include name and email columns.')
   }
 
-  const people = rows
-    .slice(1)
-    .map((row) => ({
-      name: row[nameIndex]?.trim() ?? '',
-      email: row[emailIndex]?.trim() ?? '',
-    }))
-    .filter((person) => person.name || person.email)
+  const people: ParsedPeopleCsvPerson[] = []
+  const failed: ParsedPeopleCsvFailedRow[] = []
 
-  const invalidPerson = people.find((person) => !person.name || !z.email().safeParse(person.email).success)
+  for (const row of rows.slice(1)) {
+    const name = row.cells[nameIndex]?.trim() ?? ''
+    const email = row.cells[emailIndex]?.trim() ?? ''
 
-  if (invalidPerson) {
-    throw new Error(`Invalid CSV row for ${invalidPerson.email || invalidPerson.name || 'unknown person'}.`)
+    if (!name && !email && row.cells.every((cell) => !cell.trim())) {
+      continue
+    }
+
+    if (!name) {
+      failed.push({
+        rowNumber: row.rowNumber,
+        name,
+        email,
+        message: 'Name is required',
+      })
+      continue
+    }
+
+    if (!emailSchema.safeParse(email).success) {
+      failed.push({
+        rowNumber: row.rowNumber,
+        name,
+        email,
+        message: 'Invalid email address',
+      })
+      continue
+    }
+
+    people.push({ name, email })
   }
 
-  if (!people.length) {
+  if (!people.length && !failed.length) {
     throw new Error('CSV did not contain any people.')
   }
 
-  return people
+  return { people, failed }
 }
 
-function parseCsvRows(csv: string): string[][] {
-  const rows: string[][] = []
+function parseCsvRows(csv: string): ParsedCsvRow[] {
+  const rows: ParsedCsvRow[] = []
   let row: string[] = []
   let field = ''
   let isQuoted = false
+  let rowNumber = 1
+  let currentLineNumber = 1
 
   for (let index = 0; index < csv.length; index += 1) {
     const character = csv[index]
@@ -69,9 +115,23 @@ function parseCsvRows(csv: string): string[][] {
       }
 
       row.push(field)
-      rows.push(row)
+      rows.push({ rowNumber, cells: row })
       row = []
       field = ''
+      currentLineNumber += 1
+      rowNumber = currentLineNumber
+      continue
+    }
+
+    if ((character === '\n' || character === '\r') && isQuoted) {
+      if (character === '\r' && nextCharacter === '\n') {
+        field += '\r\n'
+        index += 1
+      } else {
+        field += character
+      }
+
+      currentLineNumber += 1
       continue
     }
 
@@ -79,7 +139,7 @@ function parseCsvRows(csv: string): string[][] {
   }
 
   row.push(field)
-  rows.push(row)
+  rows.push({ rowNumber, cells: row })
 
-  return rows.filter((csvRow) => csvRow.some((cell) => cell.trim()))
+  return rows.filter((csvRow) => csvRow.cells.some((cell) => cell.trim()))
 }
