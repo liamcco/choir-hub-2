@@ -5,7 +5,6 @@ import { useState } from 'react'
 
 import {
   getDirectGroupMembershipsOptions,
-  getGroupPositionsOptions,
   getGroupPositionsQueryKey,
   getGroupsOptions,
   getPeopleOptions,
@@ -14,39 +13,23 @@ import {
 import { groupSectionsByKind } from '@/common/groups/utils'
 import { ControlledFieldSelect } from '@/components/forms/controlled-field-select'
 
-import { PositionsTable } from './PositionsTable'
+import { CreatePositionCard } from './CreatePositionCard'
 
-export function PositionsPagePanel() {
-  // Featch groups and people
+export function CreatePositionPagePanel() {
   const queryClient = useQueryClient()
+  const [selectedGroupId, setSelectedGroupId] = useState<string>('')
   const groupsQuery = useQuery(getGroupsOptions())
   const peopleQuery = useQuery(getPeopleOptions())
-
-  // All groups
   const groups = groupsQuery.data?.groups ?? []
   const groupSections = groupSectionsByKind(groups)
-
-  // Keep track of the selected group
-  const [selectedGroupId, setSelectedGroupId] = useState<string>('')
-
-  // If the selected group is not in the list of groups, default to the first group (if available)
-  // TODO: Really? Wierd? No?
   const effectiveGroupId = groups.some((group) => group.id === selectedGroupId)
     ? selectedGroupId
     : (groups[0]?.id ?? '')
-  const selectedGroup = groups.find((group) => group.id === effectiveGroupId) ?? null
-
   const membershipsQuery = useQuery({
     ...getDirectGroupMembershipsOptions({ path: { id: effectiveGroupId } }),
-    // Only refetch memberships if a group is selected
     enabled: Boolean(effectiveGroupId),
   })
-  const positionsQuery = useQuery({
-    ...getGroupPositionsOptions({ path: { id: effectiveGroupId } }),
-    // Only refetch positions if a group is selected
-    enabled: Boolean(effectiveGroupId),
-  })
-
+  const selectedGroup = groups.find((group) => group.id === effectiveGroupId) ?? null
   const invalidatePositions = () =>
     effectiveGroupId
       ? queryClient.invalidateQueries({ queryKey: getGroupPositionsQueryKey({ path: { id: effectiveGroupId } }) })
@@ -55,8 +38,7 @@ export function PositionsPagePanel() {
   return (
     <div className="space-y-6">
       <ControlledFieldSelect
-        id="positions-group"
-        className="max-w-sm"
+        id="create-position-group"
         label="Group"
         sections={groupSections}
         getValue={(group) => group.id}
@@ -65,17 +47,12 @@ export function PositionsPagePanel() {
         value={effectiveGroupId}
         onValueChange={setSelectedGroupId}
       />
-      <div className="grid gap-6">
-        <PositionsTable
-          group={selectedGroup}
-          positions={positionsQuery.data?.positions ?? []}
-          memberships={membershipsQuery.data?.memberships ?? []}
-          people={peopleQuery.data?.people ?? []}
-          isPending={positionsQuery.isPending && Boolean(effectiveGroupId)}
-          error={positionsQuery.error}
-          onChanged={invalidatePositions}
-        />
-      </div>
+      <CreatePositionCard
+        group={selectedGroup}
+        memberships={membershipsQuery.data?.memberships ?? []}
+        people={peopleQuery.data?.people ?? []}
+        onChanged={invalidatePositions}
+      />
     </div>
   )
 }

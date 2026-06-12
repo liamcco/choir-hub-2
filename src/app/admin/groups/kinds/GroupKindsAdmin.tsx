@@ -1,6 +1,6 @@
 'use client'
 
-import { FormEvent, useState } from 'react'
+import { useForm } from '@tanstack/react-form'
 import { useMutation } from '@tanstack/react-query'
 import { Plus, Trash2 } from 'lucide-react'
 
@@ -12,12 +12,19 @@ import {
 import { createGroupKindSchema } from '@/api/models/groups'
 import { getErrorMessage } from '@/common/errors/utils'
 import type { Group, GroupKind } from '@/common/groups/types'
-import { AsyncState } from '@/common/ui/async-state'
 import { FormError } from '@/common/ui/form'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import z from 'zod'
+
+const defaultGroupKindFormValues: z.input<typeof createGroupKindSchema> = {
+  name: '',
+  description: '',
+}
 
 export function GroupKindsAdmin({
   groupKinds,
@@ -48,31 +55,28 @@ export function GroupKindsAdmin({
 
 function CreateGroupKindCard({ onChanged }: { onChanged: () => Promise<unknown> }) {
   const mutation = useMutation(createGroupKindMutation())
-  const [error, setError] = useState<string | null>(null)
+  const form = useForm({
+    defaultValues: defaultGroupKindFormValues,
+    validators: {
+      onSubmit: createGroupKindSchema,
+    },
+    onSubmit: async ({ value }) => {
+      try {
+        await mutation.mutateAsync({
+          body: {
+            name: value.name.trim(),
+            description: value.description?.trim() || undefined,
+          },
+        })
+        form.reset()
+        await onChanged()
+      } catch {
+        // The mutation stores the error for rendering below.
+      }
+    },
+  })
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setError(null)
-    const form = event.currentTarget
-    const formData = new FormData(form)
-    const parsed = createGroupKindSchema.safeParse({
-      name: String(formData.get('name') ?? ''),
-      description: String(formData.get('description') ?? ''),
-    })
-
-    if (!parsed.success) {
-      setError(parsed.error.issues[0]?.message ?? 'Invalid group kind')
-      return
-    }
-
-    try {
-      await mutation.mutateAsync({ body: parsed.data })
-      form.reset()
-      await onChanged()
-    } catch (submitError) {
-      setError(getErrorMessage(submitError))
-    }
-  }
+  const isSaving = mutation.isPending || form.state.isSubmitting
 
   return (
     <Card>
@@ -81,23 +85,54 @@ function CreateGroupKindCard({ onChanged }: { onChanged: () => Promise<unknown> 
         <CardDescription>Add a controlled group classification.</CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit}>
+        <form
+          onSubmit={(event) => {
+            event.preventDefault()
+            form.handleSubmit()
+          }}
+        >
           <FieldGroup>
-            <Field>
-              <FieldLabel htmlFor="kind-name">Name</FieldLabel>
-              <Input id="kind-name" name="name" disabled={mutation.isPending} />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="kind-description">Description optional</FieldLabel>
-              <Input id="kind-description" name="description" disabled={mutation.isPending} />
-            </Field>
-            <Button type="submit" disabled={mutation.isPending}>
-              <Plus />
-              Create
-            </Button>
+            <form.Field name="name">
+              {(field) => (
+                <Field>
+                  <FieldLabel htmlFor={field.name}>Name</FieldLabel>
+                  <Input
+                    id={field.name}
+                    value={field.state.value}
+                    disabled={isSaving}
+                    onBlur={field.handleBlur}
+                    onChange={(event) => field.handleChange(event.target.value)}
+                  />
+                  <FieldError errors={field.state.meta.isTouched ? field.state.meta.errors : []} />
+                </Field>
+              )}
+            </form.Field>
+            <form.Field name="description">
+              {(field) => (
+                <Field>
+                  <FieldLabel htmlFor={field.name}>Description optional</FieldLabel>
+                  <Input
+                    id={field.name}
+                    value={field.state.value ?? ''}
+                    disabled={isSaving}
+                    onBlur={field.handleBlur}
+                    onChange={(event) => field.handleChange(event.target.value)}
+                  />
+                  <FieldError errors={field.state.meta.isTouched ? field.state.meta.errors : []} />
+                </Field>
+              )}
+            </form.Field>
+            <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
+              {([canSubmit, isSubmitting]) => (
+                <Button type="submit" disabled={!canSubmit || isSubmitting || isSaving}>
+                  <Plus />
+                  Create
+                </Button>
+              )}
+            </form.Subscribe>
           </FieldGroup>
         </form>
-        <FormError error={error ?? getErrorMessage(mutation.error)} />
+        <FormError error={getErrorMessage(mutation.error)} />
       </CardContent>
     </Card>
   )
@@ -125,25 +160,33 @@ function GroupKindsTable({
         <CardDescription>{groupKinds.length} configured</CardDescription>
       </CardHeader>
       <CardContent>
-        <AsyncState isPending={isPending} error={error}>
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-120 text-left text-sm">
-              <thead className="border-b text-xs text-muted-foreground uppercase">
-                <tr>
-                  <th className="py-2 pr-4 font-medium">Name</th>
-                  <th className="py-2 pr-4 font-medium">Used By</th>
-                  <th className="py-2 pr-0 text-right font-medium">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
+        {isPending ? (
+          <div className="space-y-3">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+        ) : getErrorMessage(error) ? (
+          <p className="text-sm text-destructive">{getErrorMessage(error)}</p>
+        ) : (
+          <>
+            <Table className="min-w-120">
+              <TableHeader className="text-xs text-muted-foreground uppercase">
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Used By</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {groupKinds.map((kind) => {
                   const usedByCount = groups.filter((group) => group.kindId === kind.id).length
 
                   return (
-                    <tr key={kind.id}>
-                      <td className="py-3 pr-4 font-medium">{kind.name}</td>
-                      <td className="py-3 pr-4 text-muted-foreground">{usedByCount}</td>
-                      <td className="py-3 pr-0 text-right">
+                    <TableRow key={kind.id}>
+                      <TableCell className="font-medium">{kind.name}</TableCell>
+                      <TableCell className="text-muted-foreground">{usedByCount}</TableCell>
+                      <TableCell className="text-right">
                         <Button
                           type="button"
                           size="icon-sm"
@@ -158,15 +201,15 @@ function GroupKindsTable({
                         >
                           <Trash2 />
                         </Button>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   )
                 })}
-              </tbody>
-            </table>
-          </div>
-          <FormError error={getErrorMessage(deleteMutation.error)} />
-        </AsyncState>
+              </TableBody>
+            </Table>
+            <FormError error={getErrorMessage(deleteMutation.error)} />
+          </>
+        )}
       </CardContent>
     </Card>
   )

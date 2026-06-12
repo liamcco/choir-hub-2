@@ -21,20 +21,18 @@ export function PageShell({ children, className, size = 'wide' }: PageShellProps
 }
 
 interface PageHeaderProps {
-  actions?: React.ReactNode
   className?: string
   description?: React.ReactNode
   title: React.ReactNode
 }
 
-export function PageHeader({ actions, className, description, title }: PageHeaderProps) {
+export function PageHeader({ className, description, title }: PageHeaderProps) {
   return (
-    <div className={cn('mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between', className)}>
+    <div className={cn('mb-6 space-y-2', className)}>
       <div className="min-w-0 space-y-2">
         <h1 className="text-2xl font-semibold tracking-normal">{title}</h1>
         {description ? <p className="text-sm text-muted-foreground">{description}</p> : null}
       </div>
-      {actions ? <div className="flex shrink-0 items-center gap-2">{actions}</div> : null}
     </div>
   )
 }

@@ -1,35 +1,8 @@
 import Link from 'next/link'
-import { BriefcaseBusiness, FolderTree, Layers, Users } from 'lucide-react'
 
 import { PageHeader, PageShell } from '@/components/layout/page-shell'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-
-const adminSections = [
-  {
-    title: 'Members',
-    description: 'Provision and review application people.',
-    href: '/admin/members',
-    icon: Users,
-  },
-  {
-    title: 'Groups',
-    description: 'Create groups and inspect the organization structure.',
-    href: '/admin/groups',
-    icon: FolderTree,
-  },
-  {
-    title: 'Group Kinds',
-    description: 'Manage the controlled list of group classifications.',
-    href: '/admin/groups/kinds',
-    icon: Layers,
-  },
-  {
-    title: 'Positions',
-    description: 'Create positions and assign current holders.',
-    href: '/admin/positions',
-    icon: BriefcaseBusiness,
-  },
-]
+import { adminSections } from './admin.config'
 
 export default function AdminPage() {
   return (

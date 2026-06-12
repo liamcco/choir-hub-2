@@ -31,13 +31,10 @@ export default function ResourceDetailPage() {
 
   return (
     <PageShell size="content">
-      <PageHeader
-        title="Resource Detail"
-        description="View details for a protected resource."
-        actions={
-          <Button variant="outline" nativeButton={false} render={<Link href="/resources">Back to resources</Link>} />
-        }
-      />
+      <PageHeader title="Resource Detail" description="View details for a protected resource." />
+      <div className="mb-6 flex items-center gap-2">
+        <Button variant="outline" nativeButton={false} render={<Link href="/resources">Back to resources</Link>} />
+      </div>
 
       {isPending ? <ResourceDetailSkeleton /> : null}
 

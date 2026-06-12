@@ -1,13 +1,14 @@
 'use client'
 
 import Link from 'next/link'
-import { useMemo } from 'react'
 import { RefreshCw } from 'lucide-react'
 
+import { getErrorMessage } from '@/common/errors/utils'
 import type { Group } from '@/common/groups/types'
-import { AsyncState } from '@/common/ui/async-state'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
 export function GroupsTable({
   groups,
@@ -22,7 +23,7 @@ export function GroupsTable({
   error: unknown
   onRefresh: () => void
 }) {
-  const groupsById = useMemo(() => new Map(groups.map((group) => [group.id, group])), [groups])
+  const groupsById = new Map(groups.map((group) => [group.id, group]))
 
   return (
     <Card className="lg:row-span-2">
@@ -44,40 +45,48 @@ export function GroupsTable({
         </Button>
       </CardHeader>
       <CardContent>
-        <AsyncState isPending={isPending} error={error}>
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-160 text-left text-sm">
-              <thead className="border-b text-xs text-muted-foreground uppercase">
-                <tr>
-                  <th className="py-2 pr-4 font-medium">Name</th>
-                  <th className="py-2 pr-4 font-medium">Kind</th>
-                  <th className="py-2 pr-4 font-medium">Parent</th>
-                  <th className="py-2 pr-4 font-medium">State</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
+        {isPending ? (
+          <div className="space-y-3">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+        ) : getErrorMessage(error) ? (
+          <p className="text-sm text-destructive">{getErrorMessage(error)}</p>
+        ) : (
+          <>
+            <Table className="min-w-160">
+              <TableHeader className="text-xs text-muted-foreground uppercase">
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Kind</TableHead>
+                  <TableHead>Parent</TableHead>
+                  <TableHead>State</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {groups.map((group) => (
-                  <tr key={group.id}>
-                    <td className="py-3 pr-4 font-medium">
+                  <TableRow key={group.id}>
+                    <TableCell className="font-medium">
                       <Link href={`/admin/groups/${group.id}`} className="text-primary hover:underline">
                         {group.name}
                       </Link>
-                    </td>
-                    <td className="py-3 pr-4 text-muted-foreground">{group.kind?.name ?? '-'}</td>
-                    <td className="py-3 pr-4 text-muted-foreground">
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{group.kind?.name ?? '-'}</TableCell>
+                    <TableCell className="text-muted-foreground">
                       {group.parentGroupId ? (groupsById.get(group.parentGroupId)?.name ?? 'Missing parent') : 'Root'}
-                    </td>
-                    <td className="py-3 pr-4 text-muted-foreground">
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
                       {group.active ? 'Active' : 'Inactive'}
                       {group.isContainer ? ' / Container' : ''}
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
-          </div>
-          {!groups.length ? <p className="text-sm text-muted-foreground">No groups configured.</p> : null}
-        </AsyncState>
+              </TableBody>
+            </Table>
+            {!groups.length ? <p className="text-sm text-muted-foreground">No groups configured.</p> : null}
+          </>
+        )}
       </CardContent>
     </Card>
   )

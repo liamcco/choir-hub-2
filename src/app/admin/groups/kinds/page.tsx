@@ -9,16 +9,13 @@ import { GroupKindsPagePanel } from './GroupKindsPagePanel'
 export default function AdminGroupKindsPage() {
   return (
     <PageShell size="wide">
-      <PageHeader
-        title="Group Kinds"
-        description="Manage the controlled list of group classifications."
-        actions={
-          <Button variant="outline" nativeButton={false} render={<Link href="/admin/groups" />}>
-            <ArrowLeft />
-            Groups
-          </Button>
-        }
-      />
+      <PageHeader title="Group Kinds" description="Manage the controlled list of group classifications." />
+      <div className="mb-6 flex items-center gap-2">
+        <Button variant="outline" nativeButton={false} render={<Link href="/admin/groups" />}>
+          <ArrowLeft />
+          Groups
+        </Button>
+      </div>
       <GroupKindsPagePanel />
     </PageShell>
   )

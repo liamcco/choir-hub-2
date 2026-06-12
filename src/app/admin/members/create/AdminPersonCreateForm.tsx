@@ -3,6 +3,9 @@
 import { useForm } from '@tanstack/react-form'
 import { useMutation } from '@tanstack/react-query'
 import { UserPlus } from 'lucide-react'
+import z from 'zod'
+
+import { provisionPersonInputSchema } from '@/api/models/people'
 
 import { provisionPeopleMutation } from '@/lib/api-client/@tanstack/react-query.gen'
 
@@ -11,11 +14,9 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 import { ProvisionResult } from './ProvisionResult'
-
-import { provisionPersonInputSchema } from '@/api/models/people'
-import z from 'zod'
 
 const defaultProvisionFormValues: z.input<typeof provisionPersonInputSchema> = {
   name: '',
@@ -137,18 +138,19 @@ export function AdminPersonCreateForm({ onPeopleChanged }: AdminPersonCreateForm
               {(field) => (
                 <Field>
                   <FieldLabel htmlFor={field.name}>Role</FieldLabel>
-                  <select
-                    id={field.name}
-                    name={field.name}
-                    disabled={isSaving}
-                    className="h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 dark:bg-input/30"
+                  <Select
                     value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onChange={(event) => field.handleChange(event.target.value as 'user' | 'admin')}
+                    disabled={isSaving}
+                    onValueChange={(value) => field.handleChange(value === 'admin' ? 'admin' : 'user')}
                   >
-                    <option value="user">User</option>
-                    <option value="admin">Admin</option>
-                  </select>
+                    <SelectTrigger id={field.name} onBlur={field.handleBlur} className="w-full">
+                      <SelectValue placeholder="Select role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="user">User</SelectItem>
+                      <SelectItem value="admin">Admin</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <FieldError errors={field.state.meta.isTouched ? field.state.meta.errors : []} />
                 </Field>
               )}

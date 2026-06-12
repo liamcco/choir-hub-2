@@ -16,9 +16,10 @@ import {
   getPeopleOptions,
 } from '@/lib/api-client/@tanstack/react-query.gen'
 
-import { AsyncState } from '@/common/ui/async-state'
-import { GroupSettingsCard } from '../GroupSettingsCard'
-import { MembershipsAdmin } from '../MembershipsAdmin'
+import { getErrorMessage } from '@/common/errors/utils'
+import { Skeleton } from '@/components/ui/skeleton'
+import { GroupSettingsCard } from './GroupSettingsCard'
+import { MembershipsAdmin } from './MembershipsAdmin'
 
 export function GroupDetailPanel({ groupId }: { groupId: string }) {
   const queryClient = useQueryClient()
@@ -42,25 +43,39 @@ export function GroupDetailPanel({ groupId }: { groupId: string }) {
       queryClient.invalidateQueries({ queryKey: getGroupPositionsQueryKey({ path: { id: groupId } }) }),
     ])
 
-  return (
-    <AsyncState isPending={groupQuery.isPending} error={groupQuery.error}>
-      <div className="grid gap-6 lg:grid-cols-[minmax(320px,420px)_1fr]">
-        <GroupSettingsCard
-          group={groupQuery.data ?? null}
-          groupKinds={groupKindsQuery.data?.groupKinds ?? []}
-          groups={groupsQuery.data?.groups ?? []}
-          onChanged={invalidateGroup}
-        />
-        <MembershipsAdmin
-          group={groupQuery.data ?? null}
-          people={peopleQuery.data?.people ?? []}
-          memberships={membershipsQuery.data?.memberships ?? []}
-          effectiveCount={effectiveMembersQuery.data?.members.length ?? 0}
-          isPending={membershipsQuery.isPending}
-          error={membershipsQuery.error ?? effectiveMembersQuery.error}
-          onMembershipsChanged={invalidateMemberships}
-        />
+  if (groupQuery.isPending) {
+    return (
+      <div className="space-y-3">
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
       </div>
-    </AsyncState>
+    )
+  }
+
+  const groupError = getErrorMessage(groupQuery.error)
+
+  if (groupError) {
+    return <p className="text-sm text-destructive">{groupError}</p>
+  }
+
+  return (
+    <div className="grid gap-6 lg:grid-cols-[minmax(320px,420px)_1fr]">
+      <GroupSettingsCard
+        group={groupQuery.data ?? null}
+        groupKinds={groupKindsQuery.data?.groupKinds ?? []}
+        groups={groupsQuery.data?.groups ?? []}
+        onChanged={invalidateGroup}
+      />
+      <MembershipsAdmin
+        group={groupQuery.data ?? null}
+        people={peopleQuery.data?.people ?? []}
+        memberships={membershipsQuery.data?.memberships ?? []}
+        effectiveCount={effectiveMembersQuery.data?.members.length ?? 0}
+        isPending={membershipsQuery.isPending}
+        error={membershipsQuery.error ?? effectiveMembersQuery.error}
+        onMembershipsChanged={invalidateMemberships}
+      />
+    </div>
   )
 }
