@@ -36,9 +36,9 @@ export async function assertGroupExists(id: string) {
  * Asserts that multiple groups exist
  * @param groupIds
  */
-export async function assertGroupsExist(groupIds: string[]) {
+export async function assertGroupsExist(groupIds: string[]): Promise<void> {
   if (!groupIds.length) {
-    throw new ApiError('At least one group is required')
+    return
   }
 
   const groups = await prisma.group.findMany({

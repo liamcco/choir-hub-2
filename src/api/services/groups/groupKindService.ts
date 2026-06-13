@@ -6,18 +6,18 @@ import { prisma } from '@/db'
 import { ApiError } from '../errors'
 import { assertUniqueGroupKindName } from './assertions'
 
-import * as groupKindsRepository from '@/db/groupKinds/groupKindsRepository'
-
 type CreateGroupKindInput = z.infer<typeof createGroupKindRequestSchema>
 type UpdateGroupKindInput = z.infer<typeof updateGroupKindRequestSchema>
 type GroupKind = z.infer<typeof groupKindSchema>
 
 export async function getGroupKinds(): Promise<GroupKind[]> {
-  return groupKindsRepository.getGroupKinds()
+  return prisma.groupKind.findMany({})
 }
 
 export async function getGroupKindById(id: string): Promise<GroupKind> {
-  const groupKind = await groupKindsRepository.getGroupKindById(id)
+  const groupKind = await prisma.groupKind.findUnique({
+    where: { id },
+  })
 
   if (!groupKind) {
     throw new ApiError('Group kind not found', 404)
@@ -70,5 +70,7 @@ export async function deleteGroupKind(id: string): Promise<void> {
     throw new ApiError('A group kind used by groups cannot be deleted', 409)
   }
 
-  await groupKindsRepository.deleteGroupKind(id)
+  await prisma.groupKind.delete({
+    where: { id },
+  })
 }
