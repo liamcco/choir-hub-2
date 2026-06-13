@@ -1,15 +1,15 @@
 import { returnsErrors, returnsResponseErrors } from '@/api/docs/errors'
 import { groupKindSchema, updateGroupKindRequestSchema } from '@/api/models/group'
-import { idParamsSchema } from '@/api/models/utils'
 import { deleteGroupKind, getGroupKindById, updateGroupKind } from '@/api/services/groups'
 import { handleGroupServiceError } from '@/api/services/groups/errors'
 import { Hono } from 'hono'
 import { describeResponse, describeRoute, resolver, validator } from 'hono-openapi'
+import z from 'zod'
 
 const router = new Hono()
 
 router.get(
-  '/:id',
+  '/:kindId',
 
   describeRoute({
     operationId: 'getGroupKindById',
@@ -17,11 +17,11 @@ router.get(
     tags: ['Group Kinds'],
   }),
 
-  validator('param', idParamsSchema),
+  validator('param', z.object({ kindId: z.string() })),
 
   describeResponse(
     async (c) => {
-      const groupKind = await getGroupKindById(c.req.param('id'))
+      const groupKind = await getGroupKindById(c.req.param('kindId'))
 
       if (!groupKind) {
         return c.json({ message: 'Group kind not found' }, 404)
@@ -44,7 +44,7 @@ router.get(
 )
 
 router.patch(
-  '/:id',
+  '/:kindId',
 
   describeRoute({
     operationId: 'updateGroupKind',
@@ -66,13 +66,13 @@ router.patch(
     },
   }),
 
-  validator('param', idParamsSchema),
+  validator('param', z.object({ kindId: z.string() })),
 
   validator('json', updateGroupKindRequestSchema),
 
   async (c) => {
     try {
-      const groupKind = await updateGroupKind(c.req.param('id'), c.req.valid('json'))
+      const groupKind = await updateGroupKind(c.req.param('kindId'), c.req.valid('json'))
 
       return c.json(groupKind, 200)
     } catch (error) {
@@ -82,7 +82,7 @@ router.patch(
 )
 
 router.delete(
-  '/:id',
+  '/:kindId',
 
   describeRoute({
     operationId: 'deleteGroupKind',
@@ -99,11 +99,11 @@ router.delete(
     },
   }),
 
-  validator('param', idParamsSchema),
+  validator('param', z.object({ kindId: z.string() })),
 
   async (c) => {
     try {
-      await deleteGroupKind(c.req.param('id'))
+      await deleteGroupKind(c.req.param('kindId'))
 
       return c.body(null, 204)
     } catch (error) {

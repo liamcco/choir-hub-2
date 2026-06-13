@@ -1,6 +1,5 @@
 import { returnsErrors, returnsResponseErrors } from '@/api/docs/errors'
 import { createMembershipRequestSchema, groupMemberSchema } from '@/api/models/group'
-import { idParamsSchema } from '@/api/models/utils'
 import { createGroupMembership, deleteGroupMembership, getGroupMembers } from '@/api/services/groups'
 import { handleGroupServiceError, handleGroupServiceGetError } from '@/api/services/groups/errors'
 import { describeResponse, describeRoute, validator } from 'hono-openapi'
@@ -12,7 +11,7 @@ import z from 'zod'
 const router = new Hono()
 
 router.get(
-  '/:id/members',
+  '/:groupId/members',
 
   describeRoute({
     operationId: 'getGroupMembers',
@@ -21,14 +20,14 @@ router.get(
     tags: ['Groups'],
   }),
 
-  validator('param', idParamsSchema),
+  validator('param', z.object({ groupId: z.string() })),
   validator('query', membersQuerySchema),
 
   describeResponse(
     async (c) => {
       try {
         const { onlyDirectMembers = false }: { onlyDirectMembers?: boolean } = c.req.query()
-        const groupId = c.req.param('id')
+        const groupId = c.req.param('groupId')
 
         const members = await getGroupMembers(groupId, onlyDirectMembers)
 
@@ -52,7 +51,7 @@ router.get(
 )
 
 router.post(
-  '/:id/memberships',
+  '/:groupId/members',
 
   describeRoute({
     operationId: 'createGroupMembership',
@@ -69,13 +68,13 @@ router.post(
     },
   }),
 
-  validator('param', idParamsSchema),
+  validator('param', z.object({ groupId: z.string() })),
 
   validator('json', createMembershipRequestSchema),
 
   async (c) => {
     try {
-      const membership = await createGroupMembership(c.req.param('id'), c.req.valid('json'))
+      const membership = await createGroupMembership(c.req.param('groupId'), c.req.valid('json'))
 
       return c.json(membership, 201)
     } catch (error) {
@@ -85,7 +84,7 @@ router.post(
 )
 
 router.delete(
-  '/:id/memberships/:userId',
+  '/:groupId/members/:userId',
 
   describeRoute({
     operationId: 'deleteGroupMembership',
@@ -99,11 +98,11 @@ router.delete(
     },
   }),
 
-  validator('param', idParamsSchema.extend({ userId: idParamsSchema.shape.id })),
+  validator('param', z.object({ groupId: z.string(), userId: z.string() })),
 
   async (c) => {
     try {
-      await deleteGroupMembership(c.req.param('id'), c.req.param('userId'))
+      await deleteGroupMembership(c.req.param('groupId'), c.req.param('userId'))
 
       return c.body(null, 204)
     } catch (error) {

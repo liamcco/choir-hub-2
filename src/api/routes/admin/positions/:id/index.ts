@@ -3,15 +3,15 @@ import { describeResponse, describeRoute, resolver, validator } from 'hono-opena
 
 import { returnsErrors, returnsResponseErrors } from '@/api/docs/errors'
 import { positionSchema, updatePositionRequestSchema } from '@/api/models/group'
-import { idParamsSchema } from '@/api/models/utils'
 import { GroupServiceError } from '@/api/services/groups/errors'
 import { deletePosition, getPositionById, updatePosition } from '@/api/services/positions/positionService'
+import z from 'zod'
 import positionHolderRouter from './holder'
 
 const router = new Hono()
 
 router.get(
-  '/:id',
+  '/:positionId',
 
   describeRoute({
     operationId: 'getPositionById',
@@ -19,11 +19,11 @@ router.get(
     tags: ['Positions'],
   }),
 
-  validator('param', idParamsSchema),
+  validator('param', z.object({ positionId: z.string() })),
 
   describeResponse(
     async (c) => {
-      const position = await getPositionById(c.req.param('id'))
+      const position = await getPositionById(c.req.param('positionId'))
 
       if (!position) {
         return c.json({ message: 'Position not found' }, 404)
@@ -46,7 +46,7 @@ router.get(
 )
 
 router.patch(
-  '/:id',
+  '/:positionId',
 
   describeRoute({
     operationId: 'updatePosition',
@@ -68,13 +68,13 @@ router.patch(
     },
   }),
 
-  validator('param', idParamsSchema),
+  validator('param', z.object({ positionId: z.string() })),
 
   validator('json', updatePositionRequestSchema),
 
   async (c) => {
     try {
-      const position = await updatePosition(c.req.param('id'), c.req.valid('json'))
+      const position = await updatePosition(c.req.param('positionId'), c.req.valid('json'))
 
       return c.json(position, 200)
     } catch (error) {
@@ -84,7 +84,7 @@ router.patch(
 )
 
 router.delete(
-  '/:id',
+  '/:positionId',
 
   describeRoute({
     operationId: 'deletePosition',
@@ -98,11 +98,11 @@ router.delete(
     },
   }),
 
-  validator('param', idParamsSchema),
+  validator('param', z.object({ positionId: z.string() })),
 
   async (c) => {
     try {
-      await deletePosition(c.req.param('id'))
+      await deletePosition(c.req.param('positionId'))
 
       return c.body(null, 204)
     } catch (error) {

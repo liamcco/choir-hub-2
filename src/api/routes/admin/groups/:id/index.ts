@@ -1,17 +1,17 @@
 import { returnsErrors, returnsResponseErrors } from '@/api/docs/errors'
 import { groupSchema, updateGroupRequestSchema } from '@/api/models/group'
-import { idParamsSchema } from '@/api/models/utils'
 import { deleteGroup, getGroupById, updateGroup } from '@/api/services/groups'
 import { handleGroupServiceError } from '@/api/services/groups/errors'
 import { Hono } from 'hono'
 import { describeResponse, describeRoute, resolver, validator } from 'hono-openapi'
-import groupMembershipsRouter from './memberships'
+import z from 'zod'
+import groupMembershipsRouter from './members'
 import groupPositionsRouter from './positions'
 
 const router = new Hono()
 
 router.get(
-  '/:id',
+  '/:groupId',
 
   describeRoute({
     operationId: 'getGroupById',
@@ -19,11 +19,11 @@ router.get(
     tags: ['Groups'],
   }),
 
-  validator('param', idParamsSchema),
+  validator('param', z.object({ groupId: z.string() })),
 
   describeResponse(
     async (c) => {
-      const group = await getGroupById(c.req.param('id'))
+      const group = await getGroupById(c.req.param('groupId'))
 
       if (!group) {
         return c.json({ message: 'Group not found' }, 404)
@@ -46,7 +46,7 @@ router.get(
 )
 
 router.patch(
-  '/:id',
+  '/:groupId',
 
   describeRoute({
     operationId: 'updateGroup',
@@ -68,13 +68,13 @@ router.patch(
     },
   }),
 
-  validator('param', idParamsSchema),
+  validator('param', z.object({ groupId: z.string() })),
 
   validator('json', updateGroupRequestSchema),
 
   async (c) => {
     try {
-      const group = await updateGroup(c.req.param('id'), c.req.valid('json'))
+      const group = await updateGroup(c.req.param('groupId'), c.req.valid('json'))
 
       return c.json(group, 200)
     } catch (error) {
@@ -84,7 +84,7 @@ router.patch(
 )
 
 router.delete(
-  '/:id',
+  '/:groupId',
 
   describeRoute({
     operationId: 'deleteGroup',
@@ -101,11 +101,11 @@ router.delete(
     },
   }),
 
-  validator('param', idParamsSchema),
+  validator('param', z.object({ groupId: z.string() })),
 
   async (c) => {
     try {
-      await deleteGroup(c.req.param('id'))
+      await deleteGroup(c.req.param('groupId'))
 
       return c.body(null, 204)
     } catch (error) {

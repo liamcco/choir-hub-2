@@ -7,6 +7,7 @@ import { createGroup, getGroups } from '@/api/services/groups'
 import { handleGroupServiceError } from '@/api/services/groups/errors'
 import z from 'zod'
 import groupsByIdRouter from './:id'
+import groupKindsRoute from './kinds'
 
 const router = new Hono()
 
@@ -75,5 +76,6 @@ router.post(
   },
 )
 
+router.route('/kinds', groupKindsRoute)
 router.route('/', groupsByIdRouter)
 export default router

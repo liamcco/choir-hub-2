@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 
-import groupKindsRoute from './group-kinds'
+import groupKindsRoute from './groups/kinds'
 import groupsRoute from './groups'
 import peopleRoute from './people'
 import positionsRoute from './positions'

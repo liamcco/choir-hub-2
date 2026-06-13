@@ -92,6 +92,29 @@ export async function createGroupPosition(groupId: string, input: CreatePosition
   })
 }
 
+export async function deletePositionFromGroup(positionId: string, groupId: string) {
+  await assertGroupExists(groupId)
+
+  const position = await getPositionById(positionId)
+
+  if (!position) {
+    throw new GroupServiceError('Position not found', 404)
+  }
+
+  const isAssociatedWithGroup = position.groups.some((association) => association.groupId === groupId)
+
+  if (!isAssociatedWithGroup) {
+    throw new GroupServiceError('Position is not associated with the specified group', 404)
+  }
+
+  await prisma.positionGroup.deleteMany({
+    where: {
+      positionId,
+      groupId,
+    },
+  })
+}
+
 export async function updatePosition(id: string, input: UpdatePositionInput) {
   const position = await getExistingPosition(id)
   const nextName = input.name ?? position.name
