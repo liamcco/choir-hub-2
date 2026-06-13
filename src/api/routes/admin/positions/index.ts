@@ -1,9 +1,10 @@
 import { Hono } from 'hono'
-import { describeResponse, describeRoute, resolver } from 'hono-openapi'
+import { describeResponse, describeRoute, resolver, validator } from 'hono-openapi'
 
 import { returnsErrors } from '@/api/docs/errors'
-import { positionSchema } from '@/api/models/position'
-import { getPositions } from '@/api/services/positions/positionService'
+import { createPositionRequestSchema, positionSchema } from '@/api/models/position'
+import { handleServiceError } from '@/api/services/errors'
+import { createPosition, getPositions } from '@/api/services/positions/positionService'
 import z from 'zod'
 import positionByIdRouter from './:id'
 
@@ -57,9 +58,17 @@ router.post(
     },
   }),
 
+  validator('json', createPositionRequestSchema),
+
   async (c) => {
-    // Implementation for creating a new position would go here
-    return c.json({ message: 'Not implemented' }, 501)
+    try {
+      const input = await c.req.valid('json')
+      const position = await createPosition(input)
+
+      return c.json(position, 201)
+    } catch (error) {
+      return handleServiceError(c, error)
+    }
   },
 )
 

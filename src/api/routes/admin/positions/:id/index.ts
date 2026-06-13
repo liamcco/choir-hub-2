@@ -2,9 +2,8 @@ import { Context, Hono } from 'hono'
 import { describeResponse, describeRoute, resolver, validator } from 'hono-openapi'
 
 import { returnsErrors, returnsResponseErrors } from '@/api/docs/errors'
-import { updatePositionRequestSchema } from '@/api/models/group'
-import { positionSchema } from '@/api/models/position'
-import { GroupServiceError } from '@/api/services/groups/errors'
+import { positionSchema, updatePositionRequestSchema } from '@/api/models/position'
+import { ApiError } from '@/api/services/errors'
 import { deletePosition, getPositionById, updatePosition } from '@/api/services/positions/positionService'
 import z from 'zod'
 import positionHolderRouter from './holder'
@@ -79,7 +78,7 @@ router.patch(
 
       return c.json(position, 200)
     } catch (error) {
-      return handleGroupServiceError(c, error)
+      return handleServiceError(c, error)
     }
   },
 )
@@ -107,13 +106,13 @@ router.delete(
 
       return c.body(null, 204)
     } catch (error) {
-      return handleGroupServiceError(c, error)
+      return handleServiceError(c, error)
     }
   },
 )
 
-function handleGroupServiceError(c: Context, error: unknown) {
-  if (error instanceof GroupServiceError) {
+function handleServiceError(c: Context, error: unknown) {
+  if (error instanceof ApiError) {
     return c.json({ message: error.message }, error.status)
   }
 

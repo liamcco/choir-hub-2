@@ -3,8 +3,8 @@ import { describeResponse, describeRoute, resolver, validator } from 'hono-opena
 
 import { returnsErrors } from '@/api/docs/errors'
 import { createGroupKindRequestSchema, groupKindSchema } from '@/api/models/group'
+import { handleServiceError } from '@/api/services/errors'
 import { createGroupKind, getGroupKinds } from '@/api/services/groups'
-import { handleGroupServiceError } from '@/api/services/groups/errors'
 
 import z from 'zod'
 import groupKindByIdRouter from './:id'
@@ -71,7 +71,7 @@ router.post(
 
       return c.json(groupKind, 201)
     } catch (error) {
-      return handleGroupServiceError(c, error)
+      return handleServiceError(c, error)
     }
   },
 )

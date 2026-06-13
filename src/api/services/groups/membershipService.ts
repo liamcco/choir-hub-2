@@ -3,8 +3,8 @@ import { z } from 'zod'
 import { prisma } from '@/db'
 
 import { groupMemberSchema } from '@/api/models/group'
+import { ApiError } from '../errors'
 import { assertGroupExists } from './assertions'
-import { GroupServiceError } from './errors'
 
 type GroupMember = z.infer<typeof groupMemberSchema>
 
@@ -105,15 +105,15 @@ export async function createGroupMembership(groupId: string, userId: string) {
   ])
 
   if (!group) {
-    throw new GroupServiceError('Group not found', 404)
+    throw new ApiError('Group not found', 404)
   }
 
   if (group.isContainer) {
-    throw new GroupServiceError('Direct memberships cannot be added to container groups', 409)
+    throw new ApiError('Direct memberships cannot be added to container groups', 409)
   }
 
   if (!user) {
-    throw new GroupServiceError('User not found', 404)
+    throw new ApiError('User not found', 404)
   }
 
   const existingMembership = await prisma.userGroupMembership.findUnique({
@@ -126,7 +126,7 @@ export async function createGroupMembership(groupId: string, userId: string) {
   })
 
   if (existingMembership) {
-    throw new GroupServiceError('User is already a direct member of this group', 409)
+    throw new ApiError('User is already a direct member of this group', 409)
   }
 
   return await prisma.userGroupMembership.create({
@@ -143,7 +143,7 @@ export async function deleteGroupMembership(groupId: string, userId: string) {
   })
 
   if (!membership || membership.groupId !== groupId) {
-    throw new GroupServiceError('Membership not found', 404)
+    throw new ApiError('Membership not found', 404)
   }
 
   await prisma.userGroupMembership.delete({

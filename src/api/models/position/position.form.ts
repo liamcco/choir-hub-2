@@ -1,4 +1,4 @@
-import { assignPositionHolderRequestSchema, createPositionRequestSchema, updatePositionRequestSchema } from '../group'
+import { createPositionRequestSchema, updatePositionRequestSchema } from './position.mutate'
 
 export const createPositionFormSchema = createPositionRequestSchema.extend({
   description: createPositionRequestSchema.shape.description.transform((description) => description || undefined),
@@ -6,6 +6,5 @@ export const createPositionFormSchema = createPositionRequestSchema.extend({
 
 export const updatePositionFormSchema = updatePositionRequestSchema.extend({
   description: updatePositionRequestSchema.shape.description.transform((description) => description || null),
+  currentHolderUserId: updatePositionRequestSchema.shape.currentHolderUserId.transform((userId) => userId || null),
 })
-
-export const assignPositionHolderFormSchema = assignPositionHolderRequestSchema.extend({})

@@ -5,9 +5,9 @@ import { useMutation } from '@tanstack/react-query'
 import { Plus } from 'lucide-react'
 import z from 'zod'
 
-import { createPositionFormSchema } from '@/api/models/group'
+import { createPositionFormSchema } from '@/api/models/position'
 
-import { createGroupPositionMutation } from '@/lib/api-client/@tanstack/react-query.gen'
+import { createPositionMutation } from '@/lib/api-client/@tanstack/react-query.gen'
 
 import { getErrorMessage } from '@/common/errors/utils'
 import type { Group, User } from '@/common/groups/types'
@@ -25,7 +25,7 @@ const defaultPositionFormValues: z.input<typeof createPositionFormSchema> = {
   name: '',
   description: '',
   groupIds: [],
-  currentHolderUserId: undefined,
+  currentHolderUserId: null,
 }
 
 export function CreatePositionCard({
@@ -39,7 +39,7 @@ export function CreatePositionCard({
   users: User[]
   onChanged: () => Promise<unknown>
 }) {
-  const mutation = useMutation(createGroupPositionMutation())
+  const mutation = useMutation(createPositionMutation())
 
   const form = useForm({
     defaultValues: defaultPositionFormValues,
@@ -53,12 +53,11 @@ export function CreatePositionCard({
 
       try {
         await mutation.mutateAsync({
-          path: { groupId: group.id },
           body: {
             name: value.name.trim(),
-            description: value.description?.trim() || undefined,
+            description: value.description?.trim(),
             groupIds: value.groupIds?.filter((groupId) => groupId !== group.id),
-            currentHolderUserId: value.currentHolderUserId,
+            currentHolderUserId: value.currentHolderUserId ?? undefined,
           },
         })
         form.reset()

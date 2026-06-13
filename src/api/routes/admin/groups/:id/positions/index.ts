@@ -1,6 +1,6 @@
 import { returnsErrors, returnsResponseErrors } from '@/api/docs/errors'
 import { positionSchema } from '@/api/models/position'
-import { handleGroupServiceError, handleGroupServiceGetError } from '@/api/services/groups/errors'
+import { handleServiceError, handleServiceQueryError } from '@/api/services/errors'
 import { addPositionToGroup, deletePositionFromGroup, getPositionsInGroup } from '@/api/services/positions'
 import { Hono } from 'hono'
 import { describeResponse, describeRoute, resolver, validator } from 'hono-openapi'
@@ -27,7 +27,7 @@ router.get(
 
         return c.json(positions, 200)
       } catch (error) {
-        return handleGroupServiceGetError(c, error)
+        return handleServiceQueryError(c, error)
       }
     },
     {
@@ -77,7 +77,7 @@ router.post(
 
       return c.json(position, 201)
     } catch (error) {
-      return handleGroupServiceError(c, error)
+      return handleServiceError(c, error)
     }
   },
 )
@@ -109,7 +109,7 @@ router.delete(
 
       return c.status(204)
     } catch (error) {
-      return handleGroupServiceError(c, error)
+      return handleServiceError(c, error)
     }
   },
 )

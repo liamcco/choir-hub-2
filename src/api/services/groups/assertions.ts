@@ -1,6 +1,6 @@
 import { prisma } from '@/db'
 
-import { GroupServiceError } from './errors'
+import { ApiError } from '../errors'
 
 /**
  * Asserts that a group kind exists
@@ -13,7 +13,7 @@ export async function assertGroupKindExists(id: string) {
   })
 
   if (!groupKind) {
-    throw new GroupServiceError('Group kind not found', 404)
+    throw new ApiError('Group kind not found', 404)
   }
 }
 
@@ -28,7 +28,7 @@ export async function assertGroupExists(id: string) {
   })
 
   if (!group) {
-    throw new GroupServiceError('Group not found', 404)
+    throw new ApiError('Group not found', 404)
   }
 }
 
@@ -38,7 +38,7 @@ export async function assertGroupExists(id: string) {
  */
 export async function assertGroupsExist(groupIds: string[]) {
   if (!groupIds.length) {
-    throw new GroupServiceError('At least one group is required')
+    throw new ApiError('At least one group is required')
   }
 
   const groups = await prisma.group.findMany({
@@ -51,7 +51,7 @@ export async function assertGroupsExist(groupIds: string[]) {
   })
 
   if (groups.length !== groupIds.length) {
-    throw new GroupServiceError('One or more groups were not found', 404)
+    throw new ApiError('One or more groups were not found', 404)
   }
 }
 
@@ -78,7 +78,7 @@ export async function assertUserExists(userId: string) {
   })
 
   if (!user) {
-    throw new GroupServiceError('User not found', 404)
+    throw new ApiError('User not found', 404)
   }
 }
 
@@ -93,7 +93,7 @@ export async function assertUniqueGroupKindName(name: string) {
   })
 
   if (existingGroupKind) {
-    throw new GroupServiceError('Group kind name already exists', 409)
+    throw new ApiError('Group kind name already exists', 409)
   }
 }
 
@@ -114,7 +114,7 @@ export async function assertUniqueGroupName(name: string, parentGroupId: string 
   })
 
   if (existingGroup) {
-    throw new GroupServiceError('Group name already exists under this parent', 409)
+    throw new ApiError('Group name already exists under this parent', 409)
   }
 }
 
@@ -124,14 +124,14 @@ export async function assertGroupParentDoesNotCreateCycle(groupId: string, paren
   }
 
   if (groupId === parentGroupId) {
-    throw new GroupServiceError('A group cannot be its own parent', 409)
+    throw new ApiError('A group cannot be its own parent', 409)
   }
 
   let currentParentId: string | null = parentGroupId
 
   while (currentParentId) {
     if (currentParentId === groupId) {
-      throw new GroupServiceError('Group hierarchy cannot contain cycles', 409)
+      throw new ApiError('Group hierarchy cannot contain cycles', 409)
     }
 
     const parent: { parentGroupId: string | null } | null = await prisma.group.findUnique({

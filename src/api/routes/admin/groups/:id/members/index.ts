@@ -1,7 +1,7 @@
 import { returnsErrors, returnsResponseErrors } from '@/api/docs/errors'
 import { addUserToGroupRequestSchema, groupMemberSchema } from '@/api/models/group'
+import { handleServiceError, handleServiceQueryError } from '@/api/services/errors'
 import { createGroupMembership, deleteGroupMembership, getGroupMembers } from '@/api/services/groups'
-import { handleGroupServiceError, handleGroupServiceGetError } from '@/api/services/groups/errors'
 import { describeResponse, describeRoute, validator } from 'hono-openapi'
 
 import { membersQuerySchema } from '@/api/models/group'
@@ -33,7 +33,7 @@ router.get(
 
         return c.json(members, 200)
       } catch (error) {
-        return handleGroupServiceGetError(c, error)
+        return handleServiceQueryError(c, error)
       }
     },
     {
@@ -78,7 +78,7 @@ router.post(
 
       return c.json(membership, 201)
     } catch (error) {
-      return handleGroupServiceError(c, error)
+      return handleServiceError(c, error)
     }
   },
 )
@@ -106,7 +106,7 @@ router.delete(
 
       return c.body(null, 204)
     } catch (error) {
-      return handleGroupServiceError(c, error)
+      return handleServiceError(c, error)
     }
   },
 )

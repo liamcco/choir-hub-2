@@ -3,8 +3,8 @@ import { z } from 'zod'
 import { createGroupKindRequestSchema, groupKindSchema, updateGroupKindRequestSchema } from '@/api/models/group'
 import { prisma } from '@/db'
 
+import { ApiError } from '../errors'
 import { assertUniqueGroupKindName } from './assertions'
-import { GroupServiceError } from './errors'
 
 import * as groupKindsRepository from '@/db/groupKinds/groupKindsRepository'
 
@@ -20,7 +20,7 @@ export async function getGroupKindById(id: string): Promise<GroupKind> {
   const groupKind = await groupKindsRepository.getGroupKindById(id)
 
   if (!groupKind) {
-    throw new GroupServiceError('Group kind not found', 404)
+    throw new ApiError('Group kind not found', 404)
   }
 
   return groupKind
@@ -38,7 +38,7 @@ export async function updateGroupKind(id: string, input: UpdateGroupKindInput): 
   const groupKind = await getGroupKindById(id)
 
   if (!groupKind) {
-    throw new GroupServiceError('Group kind not found', 404)
+    throw new ApiError('Group kind not found', 404)
   }
 
   if (input.name && input.name !== groupKind.name) {
@@ -63,11 +63,11 @@ export async function deleteGroupKind(id: string): Promise<void> {
   })
 
   if (!groupKind) {
-    throw new GroupServiceError('Group kind not found', 404)
+    throw new ApiError('Group kind not found', 404)
   }
 
   if (groupKind.groups.length > 0) {
-    throw new GroupServiceError('A group kind used by groups cannot be deleted', 409)
+    throw new ApiError('A group kind used by groups cannot be deleted', 409)
   }
 
   await groupKindsRepository.deleteGroupKind(id)

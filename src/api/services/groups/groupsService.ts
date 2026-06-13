@@ -3,13 +3,13 @@ import { z } from 'zod'
 import { prisma } from '@/db'
 
 import { createGroupRequestSchema, groupSchema, updateGroupRequestSchema } from '@/api/models/group'
+import { ApiError } from '../errors'
 import {
   assertGroupKindExists,
   assertGroupParentDoesNotCreateCycle,
   assertParentGroupExists,
   assertUniqueGroupName,
 } from './assertions'
-import { GroupServiceError } from './errors'
 
 type Group = z.infer<typeof groupSchema>
 
@@ -37,7 +37,7 @@ export async function getGroupById(id: string): Promise<Group> {
   })
 
   if (!groupsWithKinds) {
-    throw new GroupServiceError('Group not found', 404)
+    throw new ApiError('Group not found', 404)
   }
 
   return groupSchema.parse({
@@ -88,7 +88,7 @@ export async function updateGroup(groupId: string, input: UpdateGroupInput): Pro
   })
 
   if (!group) {
-    throw new GroupServiceError('Group not found', 404)
+    throw new ApiError('Group not found', 404)
   }
 
   const parentGroupId = Object.hasOwn(input, 'parentGroupId') ? (input.parentGroupId ?? null) : group.parentGroupId
@@ -106,7 +106,7 @@ export async function updateGroup(groupId: string, input: UpdateGroupInput): Pro
   }
 
   if (input.isContainer === true && group.memberships.length > 0) {
-    throw new GroupServiceError('A group with direct memberships cannot be converted to a container group', 409)
+    throw new ApiError('A group with direct memberships cannot be converted to a container group', 409)
   }
 
   const { kind, ...updatedGroup } = await prisma.group.update({
@@ -141,11 +141,11 @@ export async function deleteGroup(groupId: string): Promise<void> {
   })
 
   if (!group) {
-    throw new GroupServiceError('Group not found', 404)
+    throw new ApiError('Group not found', 404)
   }
 
   if (group.childGroups.length > 0) {
-    throw new GroupServiceError('A group with child groups cannot be deleted', 409)
+    throw new ApiError('A group with child groups cannot be deleted', 409)
   }
 
   await prisma.group.delete({

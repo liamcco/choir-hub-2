@@ -2,10 +2,14 @@ import { z } from 'zod'
 
 import { prisma } from '@/db'
 
-import { assignPositionHolderRequestSchema, updatePositionRequestSchema } from '@/api/models/group'
-import { createPositionRequestSchema, positionSchema } from '@/api/models/position'
+import {
+  assignPositionHolderRequestSchema,
+  createPositionRequestSchema,
+  positionSchema,
+  updatePositionRequestSchema,
+} from '@/api/models/position'
+import { ApiError } from '@/api/services/errors'
 import { assertGroupExists, assertGroupsExist, assertUserExists, uniqueIds } from '@/api/services/groups/assertions'
-import { GroupServiceError } from '@/api/services/groups/errors'
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client'
 
 type CreatePositionInput = z.infer<typeof createPositionRequestSchema>
@@ -33,7 +37,7 @@ export async function getPositionById(id: string): Promise<z.infer<typeof positi
   })
 
   if (!position) {
-    throw new GroupServiceError('Position not found', 404)
+    throw new ApiError('Position not found', 404)
   }
 
   return position
@@ -53,7 +57,7 @@ export async function createPosition(input: CreatePositionInput): Promise<z.infe
   }
 
   if (!input.currentHolderUserId && input.heldSince) {
-    throw new GroupServiceError('A vacant position cannot have heldSince set')
+    throw new ApiError('A vacant position cannot have heldSince set')
   }
 
   return await prisma.position.create({
@@ -101,7 +105,7 @@ export async function addPositionToGroup(positionId: string, groupId: string): P
   const position = await getPositionById(positionId)
 
   if (!position) {
-    throw new GroupServiceError('Position not found', 404)
+    throw new ApiError('Position not found', 404)
   }
 
   try {
@@ -124,7 +128,7 @@ export async function deletePositionFromGroup(positionId: string, groupId: strin
   const position = await getPositionById(positionId)
 
   if (!position) {
-    throw new GroupServiceError('Position not found', 404)
+    throw new ApiError('Position not found', 404)
   }
 
   await prisma.positionGroup.deleteMany({
@@ -147,7 +151,7 @@ export async function updatePosition(id: string, input: UpdatePositionInput): Pr
 
   if (groupIds) {
     if (!groupIds.length) {
-      throw new GroupServiceError('At least one group is required')
+      throw new ApiError('At least one group is required')
     }
 
     await assertGroupsExist(groupIds)
@@ -161,7 +165,7 @@ export async function updatePosition(id: string, input: UpdatePositionInput): Pr
   }
 
   if (!currentHolderUserId && input.heldSince) {
-    throw new GroupServiceError('A vacant position cannot have heldSince set')
+    throw new ApiError('A vacant position cannot have heldSince set')
   }
 
   if (!currentHolderUserId && Object.hasOwn(input, 'heldSince') && input.heldSince === null) {
@@ -271,6 +275,6 @@ async function assertUniquePositionName(name: string, ignorePositionId?: string)
   })
 
   if (existingPosition) {
-    throw new GroupServiceError('Position name already exists', 409)
+    throw new ApiError('Position name already exists', 409)
   }
 }

@@ -1,7 +1,7 @@
 import { returnsErrors, returnsResponseErrors } from '@/api/docs/errors'
 import { groupKindSchema, updateGroupKindRequestSchema } from '@/api/models/group'
+import { handleServiceError } from '@/api/services/errors'
 import { deleteGroupKind, getGroupKindById, updateGroupKind } from '@/api/services/groups'
-import { handleGroupServiceError } from '@/api/services/groups/errors'
 import { Hono } from 'hono'
 import { describeResponse, describeRoute, resolver, validator } from 'hono-openapi'
 import z from 'zod'
@@ -76,7 +76,7 @@ router.patch(
 
       return c.json(groupKind, 200)
     } catch (error) {
-      return handleGroupServiceError(c, error)
+      return handleServiceError(c, error)
     }
   },
 )
@@ -107,7 +107,7 @@ router.delete(
 
       return c.body(null, 204)
     } catch (error) {
-      return handleGroupServiceError(c, error)
+      return handleServiceError(c, error)
     }
   },
 )
