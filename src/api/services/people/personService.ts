@@ -1,15 +1,14 @@
 import { randomBytes } from 'node:crypto'
 
-import {
-  adminPersonSchema,
-  provisionPeopleResponseSchema,
-  provisionPeopleSchema,
-  provisionPersonItemSchema,
-} from '@/api/models/people'
-import { personSchema } from '@/api/models/people'
+import { adminPersonSchema, personSchema } from '@/api/models/people'
 import { prisma } from '@/db'
 import { auth } from '@/lib/auth'
 import z from 'zod'
+import {
+  provisionPersonItemSchema,
+  provisionPeopleSchema,
+  provisionPeopleResponseSchema,
+} from '@/api/models/people.mutate'
 
 type Person = z.infer<typeof personSchema>
 type AdminPerson = z.infer<typeof adminPersonSchema>

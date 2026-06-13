@@ -1,13 +1,13 @@
 'use client'
 
-import { useState } from 'react'
 import { useForm } from '@tanstack/react-form'
 import { useMutation } from '@tanstack/react-query'
 import { Check, Trash2 } from 'lucide-react'
+import { useState } from 'react'
 
 import { deleteGroupMutation, updateGroupMutation } from '@/lib/api-client/@tanstack/react-query.gen'
 
-import { updateGroupSchema } from '@/api/models/groups'
+import { updateGroupSchema } from '@/api/models/group'
 import { getErrorMessage } from '@/common/errors/utils'
 import type { Group, GroupKind } from '@/common/groups/types'
 import { FormError } from '@/common/ui/form'
@@ -47,7 +47,13 @@ export function GroupSettingsCard({
       </CardHeader>
       <CardContent>
         {group ? (
-          <GroupSettingsForm key={group.id} group={group} groupKinds={groupKinds} groups={groups} onChanged={onChanged} />
+          <GroupSettingsForm
+            key={group.id}
+            group={group}
+            groupKinds={groupKinds}
+            groups={groups}
+            onChanged={onChanged}
+          />
         ) : (
           <p className="text-sm text-muted-foreground">No group selected.</p>
         )}

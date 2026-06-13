@@ -9,7 +9,7 @@ import {
   deleteGroupMembershipMutation,
 } from '@/lib/api-client/@tanstack/react-query.gen'
 
-import { createMembershipSchema } from '@/api/models/groups'
+import { createMembershipSchema } from '@/api/models/group'
 import { getErrorMessage } from '@/common/errors/utils'
 import type { Group, Membership, Person } from '@/common/groups/types'
 import { formatDate, personLabel } from '@/common/groups/utils'
@@ -99,7 +99,9 @@ function AddMembershipCard({
     <Card>
       <CardHeader>
         <CardTitle>Add Member</CardTitle>
-        <CardDescription>{group?.isContainer ? 'Container groups reject direct memberships.' : group?.name}</CardDescription>
+        <CardDescription>
+          {group?.isContainer ? 'Container groups reject direct memberships.' : group?.name}
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <form
@@ -130,7 +132,14 @@ function AddMembershipCard({
               {([canSubmit, isSubmitting]) => (
                 <Button
                   type="submit"
-                  disabled={!group || group.isContainer || !canSubmit || isSubmitting || isSaving || availablePeople.length === 0}
+                  disabled={
+                    !group ||
+                    group.isContainer ||
+                    !canSubmit ||
+                    isSubmitting ||
+                    isSaving ||
+                    availablePeople.length === 0
+                  }
                 >
                   <UserPlus />
                   Add

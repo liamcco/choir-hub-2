@@ -2,12 +2,7 @@ import { Context, Hono } from 'hono'
 import { describeResponse, describeRoute, resolver, validator } from 'hono-openapi'
 
 import { returnsErrors, returnsResponseErrors } from '@/api/docs/errors'
-import {
-  createGroupKindSchema,
-  groupKindSchema,
-  groupKindsResponseSchema,
-  updateGroupKindSchema,
-} from '@/api/models/groups'
+import { groupKindSchema, groupKindsResponseSchema } from '@/api/models/groups'
 import { idParamsSchema } from '@/api/models/utils'
 import {
   createGroupKind,
@@ -16,7 +11,8 @@ import {
   getGroupKinds,
   GroupServiceError,
   updateGroupKind,
-} from '@/api/services/groupService'
+} from '@/api/services/groups'
+import { createGroupKindSchema, updateGroupKindSchema } from '@/api/models/groups.mutate'
 
 const router = new Hono()
 

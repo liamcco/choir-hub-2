@@ -2,16 +2,17 @@ import { Context, Hono } from 'hono'
 import { describeResponse, describeRoute, resolver, validator } from 'hono-openapi'
 
 import { returnsErrors, returnsResponseErrors } from '@/api/docs/errors'
-import { assignPositionHolderSchema, positionSchema, updatePositionSchema } from '@/api/models/groups'
+import { positionSchema } from '@/api/models/groups'
 import { idParamsSchema } from '@/api/models/utils'
+import { GroupServiceError } from '@/api/services/groups/errors'
 import {
   assignPositionHolder,
   deletePosition,
   getPositionById,
-  GroupServiceError,
   updatePosition,
   vacatePosition,
-} from '@/api/services/groupService'
+} from '@/api/services/positions/positionService'
+import { updatePositionSchema, assignPositionHolderSchema } from '@/api/models/groups.mutate'
 
 const router = new Hono()
 
@@ -128,9 +129,7 @@ router.post(
           },
         },
       },
-      ...returnsErrors([
-        [404, 'Position or holder person not found'],
-      ]),
+      ...returnsErrors([[404, 'Position or holder person not found']]),
     },
   }),
 

@@ -3,7 +3,7 @@
 import { useMutation } from '@tanstack/react-query'
 import { Trash2, X } from 'lucide-react'
 
-import { updatePositionSchema } from '@/api/models/groups'
+import { updatePositionSchema } from '@/api/models/group'
 
 import {
   deletePositionMutation,

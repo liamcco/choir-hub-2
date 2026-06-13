@@ -6,7 +6,7 @@ import { Plus } from 'lucide-react'
 
 import { createGroupMutation } from '@/lib/api-client/@tanstack/react-query.gen'
 
-import { createGroupSchema } from '@/api/models/groups'
+import { createGroupSchema } from '@/api/models/group'
 import { getErrorMessage } from '@/common/errors/utils'
 import type { Group, GroupKind } from '@/common/groups/types'
 import { FormError } from '@/common/ui/form'

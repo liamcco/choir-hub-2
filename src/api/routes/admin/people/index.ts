@@ -2,14 +2,9 @@ import { Hono } from 'hono'
 import { describeResponse, describeRoute, resolver, validator } from 'hono-openapi'
 
 import { returnsResponseErrors } from '@/api/docs/errors'
-import {
-  adminPeopleResponseSchema,
-  personIdParamsSchema,
-  personSchema,
-  provisionPeopleResponseSchema,
-  provisionPeopleSchema,
-} from '@/api/models/people'
-import { getAdminPeople, getPersonById, provisionPeople } from '@/api/services/personService'
+import { adminPeopleResponseSchema, personIdParamsSchema, personSchema } from '@/api/models/people'
+import { getAdminPeople, getPersonById, provisionPeople } from '@/api/services/people/personService'
+import { provisionPeopleResponseSchema, provisionPeopleSchema } from '@/api/models/people.mutate'
 
 const router = new Hono()
 

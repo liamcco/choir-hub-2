@@ -3,31 +3,32 @@ import { describeResponse, describeRoute, resolver, validator } from 'hono-opena
 
 import { returnsErrors, returnsResponseErrors } from '@/api/docs/errors'
 import {
-  createGroupSchema,
-  createMembershipSchema,
-  createPositionSchema,
   effectiveMembershipsResponseSchema,
   groupMembershipsResponseSchema,
   groupSchema,
   groupsResponseSchema,
   positionsResponseSchema,
-  updateGroupSchema,
 } from '@/api/models/groups'
 import { idParamsSchema } from '@/api/models/utils'
 import {
   createGroup,
   createGroupMembership,
-  createGroupPosition,
   deleteGroup,
   deleteGroupMembership,
   getDirectGroupMemberships,
   getEffectiveGroupMembers,
   getGroupById,
-  getGroupPositions,
   getGroups,
-  GroupServiceError,
   updateGroup,
-} from '@/api/services/groupService'
+} from '@/api/services/groups'
+import { GroupServiceError } from '@/api/services/groups/errors'
+import { createGroupPosition, getGroupPositions } from '@/api/services/positions/positionService'
+import {
+  createGroupSchema,
+  updateGroupSchema,
+  createMembershipSchema,
+  createPositionSchema,
+} from '@/api/models/groups.mutate'
 
 const router = new Hono()
 

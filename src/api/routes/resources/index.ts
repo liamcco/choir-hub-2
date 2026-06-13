@@ -2,9 +2,10 @@ import { Hono } from 'hono'
 import { describeResponse, describeRoute, resolver, validator } from 'hono-openapi'
 
 import { returnsErrors, returnsResponseErrors } from '@/api/docs/errors'
-import { createResourceItemSchema, resourceSchema, resourcesResponseSchema } from '@/api/models/resources'
+import { resourceSchema, resourcesResponseSchema } from '@/api/models/resources'
 import { idParamsSchema } from '@/api/models/utils'
 import { createResource, getResourceById, getResources } from '@/api/services/resourceService'
+import { createResourceItemSchema } from '@/api/models/resources.mutate'
 
 const router = new Hono()
 

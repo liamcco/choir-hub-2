@@ -5,7 +5,7 @@ import { useMutation } from '@tanstack/react-query'
 import { Plus } from 'lucide-react'
 import z from 'zod'
 
-import { createPositionSchema } from '@/api/models/groups'
+import { createPositionSchema } from '@/api/models/group'
 
 import { createGroupPositionMutation } from '@/lib/api-client/@tanstack/react-query.gen'
 

@@ -4,12 +4,9 @@ import { useForm } from '@tanstack/react-form'
 import { useMutation } from '@tanstack/react-query'
 import { Plus, Trash2 } from 'lucide-react'
 
-import {
-  createGroupKindMutation,
-  deleteGroupKindMutation,
-} from '@/lib/api-client/@tanstack/react-query.gen'
+import { createGroupKindMutation, deleteGroupKindMutation } from '@/lib/api-client/@tanstack/react-query.gen'
 
-import { createGroupKindSchema } from '@/api/models/groups'
+import { createGroupKindSchema } from '@/api/models/group'
 import { getErrorMessage } from '@/common/errors/utils'
 import type { Group, GroupKind } from '@/common/groups/types'
 import { FormError } from '@/common/ui/form'

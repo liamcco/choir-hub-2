@@ -33,12 +33,6 @@ const components: { title: string; href: string; description: string }[] = [
     href: '/admin',
     description: 'Provision users and manage application persons.',
   },
-  {
-    title: 'Server streaming',
-    href: '/wait',
-    description:
-      'A component that demonstrates server streaming with React Suspense, showing how to handle loading states for multiple components.',
-  },
 ]
 
 export function Navigation() {
