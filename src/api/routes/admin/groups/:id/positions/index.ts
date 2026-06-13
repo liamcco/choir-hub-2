@@ -1,8 +1,7 @@
 import { returnsErrors, returnsResponseErrors } from '@/api/docs/errors'
-import { createPositionRequestSchema } from '@/api/models/group'
 import { positionSchema } from '@/api/models/position'
 import { handleGroupServiceError, handleGroupServiceGetError } from '@/api/services/groups/errors'
-import { createGroupPosition, deletePositionFromGroup, getPositionsInGroup } from '@/api/services/positions'
+import { addPositionToGroup, deletePositionFromGroup, getPositionsInGroup } from '@/api/services/positions'
 import { Hono } from 'hono'
 import { describeResponse, describeRoute, resolver, validator } from 'hono-openapi'
 import z from 'zod'
@@ -49,8 +48,8 @@ router.post(
   '/:groupId/positions',
 
   describeRoute({
-    operationId: 'createGroupPosition',
-    description: 'Create a global position and associate it with this group plus any extra groups in the request body',
+    operationId: 'addPositionToGroup',
+    description: 'Associate a position with this group',
     tags: ['Groups', 'Positions'],
     responses: {
       201: {
@@ -70,11 +69,11 @@ router.post(
 
   validator('param', z.object({ groupId: z.string() })),
 
-  validator('json', createPositionRequestSchema),
+  validator('query', z.object({ positionId: z.string() })),
 
   async (c) => {
     try {
-      const position = await createGroupPosition(c.req.param('groupId'), c.req.valid('json'))
+      const position = await addPositionToGroup(c.req.valid('param').groupId, c.req.valid('query').positionId)
 
       return c.json(position, 201)
     } catch (error) {

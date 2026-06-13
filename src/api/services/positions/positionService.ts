@@ -2,70 +2,51 @@ import { z } from 'zod'
 
 import { prisma } from '@/db'
 
-import {
-  assignPositionHolderRequestSchema,
-  createPositionRequestSchema,
-  updatePositionRequestSchema,
-} from '@/api/models/group'
+import { assignPositionHolderRequestSchema, updatePositionRequestSchema } from '@/api/models/group'
+import { createPositionRequestSchema, positionSchema } from '@/api/models/position'
 import { assertGroupExists, assertGroupsExist, assertUserExists, uniqueIds } from '@/api/services/groups/assertions'
 import { GroupServiceError } from '@/api/services/groups/errors'
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client'
 
 type CreatePositionInput = z.infer<typeof createPositionRequestSchema>
 type UpdatePositionInput = z.infer<typeof updatePositionRequestSchema>
 type AssignPositionHolderInput = z.infer<typeof assignPositionHolderRequestSchema>
 
-const positionInclude = {
-  groups: {
+export async function getPositions(): Promise<z.infer<typeof positionSchema>[]> {
+  return await prisma.position.findMany({
     include: {
-      group: {
-        include: {
-          kind: true,
-        },
+      currentHolder: {
+        select: { id: true, name: true },
       },
-    },
-    orderBy: {
-      group: {
-        name: 'asc',
-      },
-    },
-  },
-} as const
-
-export async function getPositions() {
-  return await prisma.position.findMany({
-    include: positionInclude,
-  })
-}
-
-export async function getPositionsInGroup(groupId: string) {
-  await assertGroupExists(groupId)
-
-  return await prisma.position.findMany({
-    where: {
-      groups: {
-        some: {
-          groupId,
-        },
-      },
-    },
-    orderBy: {
-      name: 'asc',
     },
   })
 }
 
-export async function getPositionById(id: string) {
-  return await prisma.position.findUnique({
+export async function getPositionById(id: string): Promise<z.infer<typeof positionSchema>> {
+  const position = await prisma.position.findUnique({
     where: { id },
-    include: positionInclude,
+    include: {
+      currentHolder: {
+        select: { id: true, name: true },
+      },
+    },
   })
+
+  if (!position) {
+    throw new GroupServiceError('Position not found', 404)
+  }
+
+  return position
 }
 
-export async function createGroupPosition(groupId: string, input: CreatePositionInput) {
-  const groupIds = uniqueIds([groupId, ...(input.groupIds ?? [])])
-
-  await assertGroupsExist(groupIds)
+export async function createPosition(input: CreatePositionInput): Promise<z.infer<typeof positionSchema>> {
   await assertUniquePositionName(input.name)
+
+  const groupIds = uniqueIds(input.groupIds || [])
+
+  if (groupIds.length) {
+    await assertGroupsExist(groupIds)
+  }
 
   if (input.currentHolderUserId) {
     await assertUserExists(input.currentHolderUserId)
@@ -79,19 +60,42 @@ export async function createGroupPosition(groupId: string, input: CreatePosition
     data: {
       name: input.name,
       description: input.description,
-      currentHolderUserId: input.currentHolderUserId,
+      currentHolderUserId: input.currentHolderUserId ?? null,
       heldSince: input.currentHolderUserId ? (input.heldSince ?? new Date()) : null,
-      groups: {
-        create: groupIds.map((associatedGroupId) => ({
-          groupId: associatedGroupId,
-        })),
+      groups: groupIds.length
+        ? {
+            create: groupIds.map((groupId) => ({ groupId })),
+          }
+        : undefined,
+    },
+    include: {
+      currentHolder: {
+        select: { id: true, name: true },
       },
     },
-    include: positionInclude,
   })
 }
 
-export async function deletePositionFromGroup(positionId: string, groupId: string) {
+export async function getPositionsInGroup(groupId: string): Promise<z.infer<typeof positionSchema>[]> {
+  await assertGroupExists(groupId)
+
+  return await prisma.position.findMany({
+    where: {
+      groups: {
+        some: {
+          groupId,
+        },
+      },
+    },
+    include: {
+      currentHolder: {
+        select: { id: true, name: true },
+      },
+    },
+  })
+}
+
+export async function addPositionToGroup(positionId: string, groupId: string): Promise<void> {
   await assertGroupExists(groupId)
 
   const position = await getPositionById(positionId)
@@ -100,10 +104,27 @@ export async function deletePositionFromGroup(positionId: string, groupId: strin
     throw new GroupServiceError('Position not found', 404)
   }
 
-  const isAssociatedWithGroup = position.groups.some((association) => association.groupId === groupId)
+  try {
+    await prisma.positionGroup.create({
+      data: {
+        positionId,
+        groupId,
+      },
+    })
+  } catch (error) {
+    if (error instanceof PrismaClientKnownRequestError && error.code === 'P2002') {
+      return
+    }
 
-  if (!isAssociatedWithGroup) {
-    throw new GroupServiceError('Position is not associated with the specified group', 404)
+    throw error
+  }
+}
+
+export async function deletePositionFromGroup(positionId: string, groupId: string): Promise<void> {
+  const position = await getPositionById(positionId)
+
+  if (!position) {
+    throw new GroupServiceError('Position not found', 404)
   }
 
   await prisma.positionGroup.deleteMany({
@@ -114,8 +135,8 @@ export async function deletePositionFromGroup(positionId: string, groupId: strin
   })
 }
 
-export async function updatePosition(id: string, input: UpdatePositionInput) {
-  const position = await getExistingPosition(id)
+export async function updatePosition(id: string, input: UpdatePositionInput): Promise<z.infer<typeof positionSchema>> {
+  const position = await getPositionById(id)
   const nextName = input.name ?? position.name
 
   if (nextName !== position.name) {
@@ -133,7 +154,7 @@ export async function updatePosition(id: string, input: UpdatePositionInput) {
   }
 
   const isHolderUpdate = Object.hasOwn(input, 'currentHolderUserId')
-  const currentHolderUserId = isHolderUpdate ? (input.currentHolderUserId ?? null) : position.currentHolderUserId
+  const currentHolderUserId = isHolderUpdate ? (input.currentHolderUserId ?? null) : position.currentHolder?.id
 
   if (currentHolderUserId) {
     await assertUserExists(currentHolderUserId)
@@ -158,7 +179,11 @@ export async function updatePosition(id: string, input: UpdatePositionInput) {
             }
           : undefined,
       },
-      include: positionInclude,
+      include: {
+        currentHolder: {
+          select: { id: true, name: true },
+        },
+      },
     })
   }
 
@@ -184,12 +209,19 @@ export async function updatePosition(id: string, input: UpdatePositionInput) {
           }
         : undefined,
     },
-    include: positionInclude,
+    include: {
+      currentHolder: {
+        select: { id: true, name: true },
+      },
+    },
   })
 }
 
-export async function assignPositionHolder(id: string, input: AssignPositionHolderInput) {
-  await getExistingPosition(id)
+export async function assignPositionHolder(
+  id: string,
+  input: AssignPositionHolderInput,
+): Promise<z.infer<typeof positionSchema>> {
+  await getPositionById(id)
   await assertUserExists(input.currentHolderUserId)
 
   return await prisma.position.update({
@@ -198,12 +230,16 @@ export async function assignPositionHolder(id: string, input: AssignPositionHold
       currentHolderUserId: input.currentHolderUserId,
       heldSince: input.heldSince ?? new Date(),
     },
-    include: positionInclude,
+    include: {
+      currentHolder: {
+        select: { id: true, name: true },
+      },
+    },
   })
 }
 
-export async function vacatePosition(id: string) {
-  await getExistingPosition(id)
+export async function vacatePosition(id: string): Promise<z.infer<typeof positionSchema>> {
+  await getPositionById(id)
 
   return await prisma.position.update({
     where: { id },
@@ -211,13 +247,15 @@ export async function vacatePosition(id: string) {
       currentHolderUserId: null,
       heldSince: null,
     },
-    include: positionInclude,
+    include: {
+      currentHolder: {
+        select: { id: true, name: true },
+      },
+    },
   })
 }
 
-export async function deletePosition(id: string) {
-  await getExistingPosition(id)
-
+export async function deletePosition(id: string): Promise<void> {
   await prisma.position.delete({
     where: { id },
   })
@@ -235,17 +273,4 @@ async function assertUniquePositionName(name: string, ignorePositionId?: string)
   if (existingPosition) {
     throw new GroupServiceError('Position name already exists', 409)
   }
-}
-
-async function getExistingPosition(id: string) {
-  const position = await prisma.position.findUnique({
-    where: { id },
-    include: positionInclude,
-  })
-
-  if (!position) {
-    throw new GroupServiceError('Position not found', 404)
-  }
-
-  return position
 }

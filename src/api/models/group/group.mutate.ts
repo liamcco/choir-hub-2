@@ -30,14 +30,6 @@ export const addUserToGroupRequestSchema = z.object({
   userId: z.string().min(1, 'User is required'),
 })
 
-export const createPositionRequestSchema = z.object({
-  name: z.string().trim().min(1, 'Name is required'),
-  description: z.string().trim().optional(),
-  groupIds: z.array(z.string().min(1)).optional(),
-  currentHolderUserId: z.string().min(1).optional(),
-  heldSince: z.coerce.date().optional(),
-})
-
 export const updatePositionRequestSchema = z.object({
   name: z.string().trim().min(1, 'Name is required').optional(),
   description: z.string().trim().nullable().optional(),

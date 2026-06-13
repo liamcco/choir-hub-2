@@ -11,7 +11,9 @@ import {
 } from './assertions'
 import { GroupServiceError } from './errors'
 
-export async function getGroups(): Promise<Array<z.infer<typeof groupSchema>>> {
+type Group = z.infer<typeof groupSchema>
+
+export async function getGroups(): Promise<Array<Group>> {
   const groups = await prisma.group.findMany({
     include: {
       kind: true,
@@ -26,7 +28,7 @@ export async function getGroups(): Promise<Array<z.infer<typeof groupSchema>>> {
   )
 }
 
-export async function getGroupById(id: string): Promise<z.infer<typeof groupSchema>> {
+export async function getGroupById(id: string): Promise<Group> {
   const groupsWithKinds = await prisma.group.findUnique({
     where: { id },
     include: {
@@ -46,14 +48,14 @@ export async function getGroupById(id: string): Promise<z.infer<typeof groupSche
 
 type CreateGroupInput = z.infer<typeof createGroupRequestSchema>
 
-export async function createGroup(input: CreateGroupInput) {
+export async function createGroup(input: CreateGroupInput): Promise<Group> {
   const parentGroupId = input.parentGroupId ?? null
 
   await assertGroupKindExists(input.kindId)
   await assertParentGroupExists(parentGroupId)
   await assertUniqueGroupName(input.name, parentGroupId)
 
-  return await prisma.group.create({
+  const { kind, ...createdGroup } = await prisma.group.create({
     data: {
       kindId: input.kindId,
       name: input.name,
@@ -62,14 +64,20 @@ export async function createGroup(input: CreateGroupInput) {
       parentGroupId,
     },
     include: {
-      kind: true,
+      kind: {
+        select: { name: true },
+      },
     },
   })
+  return {
+    ...createdGroup,
+    kindName: kind.name,
+  }
 }
 
 type UpdateGroupInput = z.infer<typeof updateGroupRequestSchema>
 
-export async function updateGroup(groupId: string, input: UpdateGroupInput) {
+export async function updateGroup(groupId: string, input: UpdateGroupInput): Promise<Group> {
   const group = await prisma.group.findUnique({
     where: { id: groupId },
     include: {
@@ -101,7 +109,7 @@ export async function updateGroup(groupId: string, input: UpdateGroupInput) {
     throw new GroupServiceError('A group with direct memberships cannot be converted to a container group', 409)
   }
 
-  return await prisma.group.update({
+  const { kind, ...updatedGroup } = await prisma.group.update({
     where: { id: groupId },
     data: {
       kindId: input.kindId,
@@ -114,9 +122,14 @@ export async function updateGroup(groupId: string, input: UpdateGroupInput) {
       kind: true,
     },
   })
+
+  return {
+    ...updatedGroup,
+    kindName: kind.name,
+  }
 }
 
-export async function deleteGroup(groupId: string) {
+export async function deleteGroup(groupId: string): Promise<void> {
   const group = await prisma.group.findUnique({
     where: { id: groupId },
     select: {

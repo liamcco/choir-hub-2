@@ -173,5 +173,5 @@ export async function getDescendantGroupIds(groupId: string) {
 }
 
 export function uniqueIds(ids: string[]) {
-  return [...new Set(ids.filter(Boolean))]
+  return [...new Set(ids?.filter(Boolean))]
 }

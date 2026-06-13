@@ -1,29 +1,32 @@
 import { z } from 'zod'
 
-import { createGroupKindRequestSchema, updateGroupKindRequestSchema } from '@/api/models/group'
+import { createGroupKindRequestSchema, groupKindSchema, updateGroupKindRequestSchema } from '@/api/models/group'
 import { prisma } from '@/db'
 
 import { assertUniqueGroupKindName } from './assertions'
 import { GroupServiceError } from './errors'
 
+import * as groupKindsRepository from '@/db/groupKinds/groupKindsRepository'
+
 type CreateGroupKindInput = z.infer<typeof createGroupKindRequestSchema>
 type UpdateGroupKindInput = z.infer<typeof updateGroupKindRequestSchema>
+type GroupKind = z.infer<typeof groupKindSchema>
 
-export async function getGroupKinds() {
-  return await prisma.groupKind.findMany({
-    orderBy: {
-      name: 'asc',
-    },
-  })
+export async function getGroupKinds(): Promise<GroupKind[]> {
+  return groupKindsRepository.getGroupKinds()
 }
 
-export async function getGroupKindById(id: string) {
-  return await prisma.groupKind.findUnique({
-    where: { id },
-  })
+export async function getGroupKindById(id: string): Promise<GroupKind> {
+  const groupKind = await groupKindsRepository.getGroupKindById(id)
+
+  if (!groupKind) {
+    throw new GroupServiceError('Group kind not found', 404)
+  }
+
+  return groupKind
 }
 
-export async function createGroupKind(input: CreateGroupKindInput) {
+export async function createGroupKind(input: CreateGroupKindInput): Promise<GroupKind> {
   await assertUniqueGroupKindName(input.name)
 
   return await prisma.groupKind.create({
@@ -31,7 +34,7 @@ export async function createGroupKind(input: CreateGroupKindInput) {
   })
 }
 
-export async function updateGroupKind(id: string, input: UpdateGroupKindInput) {
+export async function updateGroupKind(id: string, input: UpdateGroupKindInput): Promise<GroupKind> {
   const groupKind = await getGroupKindById(id)
 
   if (!groupKind) {
@@ -48,7 +51,7 @@ export async function updateGroupKind(id: string, input: UpdateGroupKindInput) {
   })
 }
 
-export async function deleteGroupKind(id: string) {
+export async function deleteGroupKind(id: string): Promise<void> {
   const groupKind = await prisma.groupKind.findUnique({
     where: { id },
     select: {
@@ -67,7 +70,5 @@ export async function deleteGroupKind(id: string) {
     throw new GroupServiceError('A group kind used by groups cannot be deleted', 409)
   }
 
-  await prisma.groupKind.delete({
-    where: { id },
-  })
+  await groupKindsRepository.deleteGroupKind(id)
 }

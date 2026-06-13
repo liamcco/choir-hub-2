@@ -1,5 +1,5 @@
 import { resourceSchema } from '@/api/models/resource'
-import { resourceDb } from '@/db/resources/resourceRepository'
+import * as resourceDb from '@/db/resources/resourceRepository'
 import z from 'zod'
 
 export const resourceService = {

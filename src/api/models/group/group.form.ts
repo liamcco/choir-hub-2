@@ -1,12 +1,10 @@
-import z from 'zod'
+import { createPositionRequestSchema } from '../position'
 import {
   addUserToGroupRequestSchema,
   assignPositionHolderRequestSchema,
   createGroupKindRequestSchema,
   createGroupRequestSchema,
-  createPositionRequestSchema,
   updateGroupKindRequestSchema,
-  updateGroupRequestSchema,
   updatePositionRequestSchema,
 } from './group.mutate'
 
