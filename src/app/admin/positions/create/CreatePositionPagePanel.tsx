@@ -6,7 +6,7 @@ import { useState } from 'react'
 import {
   getGroupPositionsQueryKey,
   getGroupsOptions,
-  getPeopleOptions,
+  getUsersOptions,
 } from '@/lib/api-client/@tanstack/react-query.gen'
 
 import { groupSectionsByKind } from '@/common/groups/utils'
@@ -18,7 +18,7 @@ export function CreatePositionPagePanel() {
   const queryClient = useQueryClient()
   const [selectedGroupId, setSelectedGroupId] = useState<string>('')
   const groupsQuery = useQuery(getGroupsOptions())
-  const peopleQuery = useQuery(getPeopleOptions())
+  const usersQuery = useQuery(getUsersOptions())
   const groups = groupsQuery.data ?? []
   const groupSections = groupSectionsByKind(groups)
   const effectiveGroupId = groups.some((group) => group.id === selectedGroupId)
@@ -27,7 +27,7 @@ export function CreatePositionPagePanel() {
   const selectedGroup = groups.find((group) => group.id === effectiveGroupId) ?? null
   const invalidatePositions = () =>
     effectiveGroupId
-      ? queryClient.invalidateQueries({ queryKey: getGroupPositionsQueryKey({ path: { id: effectiveGroupId } }) })
+      ? queryClient.invalidateQueries({ queryKey: getGroupPositionsQueryKey({ path: { groupId: effectiveGroupId } }) })
       : Promise.resolve()
 
   return (
@@ -45,7 +45,7 @@ export function CreatePositionPagePanel() {
       <CreatePositionCard
         group={selectedGroup}
         groups={groups}
-        people={peopleQuery.data?.people ?? []}
+        users={usersQuery.data ?? []}
         onChanged={invalidatePositions}
       />
     </div>

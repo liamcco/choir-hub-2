@@ -7,7 +7,7 @@ import {
   getGroupPositionsOptions,
   getGroupPositionsQueryKey,
   getGroupsOptions,
-  getPeopleOptions,
+  getUsersOptions,
 } from '@/lib/api-client/@tanstack/react-query.gen'
 
 import { groupSectionsByKind } from '@/common/groups/utils'
@@ -16,10 +16,10 @@ import { ControlledFieldSelect } from '@/components/forms/controlled-field-selec
 import { PositionsTable } from './PositionsTable'
 
 export function PositionsPagePanel() {
-  // Featch groups and people
+  // Featch groups and users
   const queryClient = useQueryClient()
   const groupsQuery = useQuery(getGroupsOptions())
-  const peopleQuery = useQuery(getPeopleOptions())
+  const usersQuery = useQuery(getUsersOptions())
 
   // All groups
   const groups = groupsQuery.data ?? []
@@ -36,14 +36,14 @@ export function PositionsPagePanel() {
   const selectedGroup = groups.find((group) => group.id === effectiveGroupId) ?? null
 
   const positionsQuery = useQuery({
-    ...getGroupPositionsOptions({ path: { id: effectiveGroupId } }),
+    ...getGroupPositionsOptions({ path: { groupId: effectiveGroupId } }),
     // Only refetch positions if a group is selected
     enabled: Boolean(effectiveGroupId),
   })
 
   const invalidatePositions = () =>
     effectiveGroupId
-      ? queryClient.invalidateQueries({ queryKey: getGroupPositionsQueryKey({ path: { id: effectiveGroupId } }) })
+      ? queryClient.invalidateQueries({ queryKey: getGroupPositionsQueryKey({ path: { groupId: effectiveGroupId } }) })
       : Promise.resolve()
 
   return (
@@ -63,7 +63,7 @@ export function PositionsPagePanel() {
         <PositionsTable
           group={selectedGroup}
           positions={positionsQuery.data ?? []}
-          people={peopleQuery.data?.people ?? []}
+          users={usersQuery.data ?? []}
           isPending={positionsQuery.isPending && Boolean(effectiveGroupId)}
           error={positionsQuery.error}
           onChanged={invalidatePositions}

@@ -2,7 +2,7 @@ import { z } from 'zod'
 
 import { prisma } from '@/db'
 
-import { createGroupRequestSchema, updateGroupRequestSchema } from '@/api/models/group'
+import { createGroupRequestSchema, groupSchema, updateGroupRequestSchema } from '@/api/models/group'
 import {
   assertGroupKindExists,
   assertGroupParentDoesNotCreateCycle,
@@ -11,26 +11,40 @@ import {
 } from './assertions'
 import { GroupServiceError } from './errors'
 
-type CreateGroupInput = z.infer<typeof createGroupRequestSchema>
-type UpdateGroupInput = z.infer<typeof updateGroupRequestSchema>
-
-export async function getGroups() {
-  return await prisma.group.findMany({
+export async function getGroups(): Promise<Array<z.infer<typeof groupSchema>>> {
+  const groups = await prisma.group.findMany({
     include: {
       kind: true,
     },
-    orderBy: [{ parentGroupId: 'asc' }, { name: 'asc' }],
   })
+
+  return groups.map((group) =>
+    groupSchema.parse({
+      ...group,
+      kindName: group.kind.name,
+    }),
+  )
 }
 
-export async function getGroupById(id: string) {
-  return await prisma.group.findUnique({
+export async function getGroupById(id: string): Promise<z.infer<typeof groupSchema>> {
+  const groupsWithKinds = await prisma.group.findUnique({
     where: { id },
     include: {
       kind: true,
     },
   })
+
+  if (!groupsWithKinds) {
+    throw new GroupServiceError('Group not found', 404)
+  }
+
+  return groupSchema.parse({
+    ...groupsWithKinds,
+    kindName: groupsWithKinds.kind.name,
+  })
 }
+
+type CreateGroupInput = z.infer<typeof createGroupRequestSchema>
 
 export async function createGroup(input: CreateGroupInput) {
   const parentGroupId = input.parentGroupId ?? null
@@ -44,7 +58,6 @@ export async function createGroup(input: CreateGroupInput) {
       kindId: input.kindId,
       name: input.name,
       description: input.description,
-      active: input.active,
       isContainer: input.isContainer,
       parentGroupId,
     },
@@ -54,9 +67,11 @@ export async function createGroup(input: CreateGroupInput) {
   })
 }
 
-export async function updateGroup(id: string, input: UpdateGroupInput) {
+type UpdateGroupInput = z.infer<typeof updateGroupRequestSchema>
+
+export async function updateGroup(groupId: string, input: UpdateGroupInput) {
   const group = await prisma.group.findUnique({
-    where: { id },
+    where: { id: groupId },
     include: {
       memberships: {
         select: { id: true },
@@ -76,10 +91,10 @@ export async function updateGroup(id: string, input: UpdateGroupInput) {
   }
 
   await assertParentGroupExists(parentGroupId)
-  await assertGroupParentDoesNotCreateCycle(id, parentGroupId)
+  await assertGroupParentDoesNotCreateCycle(groupId, parentGroupId)
 
   if (name !== group.name || parentGroupId !== group.parentGroupId) {
-    await assertUniqueGroupName(name, parentGroupId, id)
+    await assertUniqueGroupName(name, parentGroupId, groupId)
   }
 
   if (input.isContainer === true && group.memberships.length > 0) {
@@ -87,12 +102,11 @@ export async function updateGroup(id: string, input: UpdateGroupInput) {
   }
 
   return await prisma.group.update({
-    where: { id },
+    where: { id: groupId },
     data: {
       kindId: input.kindId,
       name: input.name,
       description: input.description,
-      active: input.active,
       isContainer: input.isContainer,
       parentGroupId,
     },
@@ -102,9 +116,9 @@ export async function updateGroup(id: string, input: UpdateGroupInput) {
   })
 }
 
-export async function deleteGroup(id: string) {
+export async function deleteGroup(groupId: string) {
   const group = await prisma.group.findUnique({
-    where: { id },
+    where: { id: groupId },
     select: {
       id: true,
       childGroups: {
@@ -122,6 +136,6 @@ export async function deleteGroup(id: string) {
   }
 
   await prisma.group.delete({
-    where: { id },
+    where: { id: groupId },
   })
 }

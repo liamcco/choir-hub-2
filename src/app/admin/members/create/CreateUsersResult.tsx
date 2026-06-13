@@ -1,6 +1,6 @@
-import { ProvisionPeopleResponse } from '@/lib/api-client'
+import { CreateUsersResponse } from '@/lib/api-client'
 
-export function ProvisionResult({ result }: { result?: ProvisionPeopleResponse }) {
+export function CreateResult({ result }: { result?: CreateUsersResponse }) {
   if (!result) {
     return null
   }
@@ -17,11 +17,11 @@ export function ProvisionResult({ result }: { result?: ProvisionPeopleResponse }
         Created {result.succeeded.length}. Skipped {result.skipped.length}. Failed {result.failed.length}.
       </p>
       {result.skipped.length ? (
-        <p className="text-muted-foreground">Skipped: {result.skipped.map((person) => person.email).join(', ')}</p>
+        <p className="text-muted-foreground">Skipped: {result.skipped.map((user) => user.email).join(', ')}</p>
       ) : null}
       {result.failed.length ? (
         <p className="text-destructive">
-          Failed: {result.failed.map((person) => `${person.email} (${person.message})`).join(', ')}
+          Failed: {result.failed.map((user) => `${user.email} (${user.message})`).join(', ')}
         </p>
       ) : null}
     </div>

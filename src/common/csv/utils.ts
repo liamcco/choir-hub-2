@@ -1,20 +1,20 @@
 import z from 'zod'
 
-type ParsedPeopleCsvPerson = {
+type ParsedUsersCsvUser = {
   email: string
   name: string
 }
 
-export type ParsedPeopleCsvFailedRow = {
+export type ParsedUsersCsvFailedRow = {
   email: string
   message: string
   name: string
   rowNumber: number
 }
 
-export type ParsedPeopleCsv = {
-  failed: ParsedPeopleCsvFailedRow[]
-  people: ParsedPeopleCsvPerson[]
+export type ParsedUsersCsv = {
+  failed: ParsedUsersCsvFailedRow[]
+  users: ParsedUsersCsvUser[]
 }
 
 type ParsedCsvRow = {
@@ -24,7 +24,7 @@ type ParsedCsvRow = {
 
 const emailSchema = z.email()
 
-export function parsePeopleCsv(csv: string): ParsedPeopleCsv {
+export function parseUsersCsv(csv: string): ParsedUsersCsv {
   const rows = parseCsvRows(csv)
 
   if (rows.length === 0) {
@@ -39,8 +39,8 @@ export function parsePeopleCsv(csv: string): ParsedPeopleCsv {
     throw new Error('CSV must include name and email columns.')
   }
 
-  const people: ParsedPeopleCsvPerson[] = []
-  const failed: ParsedPeopleCsvFailedRow[] = []
+  const users: ParsedUsersCsvUser[] = []
+  const failed: ParsedUsersCsvFailedRow[] = []
 
   for (const row of rows.slice(1)) {
     const name = row.cells[nameIndex]?.trim() ?? ''
@@ -70,14 +70,14 @@ export function parsePeopleCsv(csv: string): ParsedPeopleCsv {
       continue
     }
 
-    people.push({ name, email })
+    users.push({ name, email })
   }
 
-  if (!people.length && !failed.length) {
-    throw new Error('CSV did not contain any people.')
+  if (!users.length && !failed.length) {
+    throw new Error('CSV did not contain any users.')
   }
 
-  return { people, failed }
+  return { users, failed }
 }
 
 function parseCsvRows(csv: string): ParsedCsvRow[] {

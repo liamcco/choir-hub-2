@@ -1,22 +1,22 @@
-import Link from 'next/link'
 import { UserPlus } from 'lucide-react'
+import Link from 'next/link'
 
 import { PageHeader, PageShell } from '@/components/layout/page-shell'
 import { Button } from '@/components/ui/button'
 
-import { AdminPeoplePanel } from './AdminPeoplePanel'
+import { UsersPanel } from './UsersPanel'
 
 export default function AdminPage() {
   return (
     <PageShell size="wide">
-      <PageHeader title="Members" description="View provisioned application persons." />
+      <PageHeader title="Members" description="View created application users." />
       <div className="mb-6 flex items-center gap-2">
         <Button nativeButton={false} render={<Link href="/admin/members/create" />}>
           <UserPlus />
           Create
         </Button>
       </div>
-      <AdminPeoplePanel />
+      <UsersPanel />
     </PageShell>
   )
 }

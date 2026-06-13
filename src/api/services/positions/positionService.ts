@@ -7,7 +7,7 @@ import {
   createPositionRequestSchema,
   updatePositionRequestSchema,
 } from '@/api/models/group'
-import { assertGroupExists, assertGroupsExist, assertPersonExists, uniqueIds } from '@/api/services/groups/assertions'
+import { assertGroupExists, assertGroupsExist, assertUserExists, uniqueIds } from '@/api/services/groups/assertions'
 import { GroupServiceError } from '@/api/services/groups/errors'
 
 type CreatePositionInput = z.infer<typeof createPositionRequestSchema>
@@ -37,7 +37,7 @@ export async function getPositions() {
   })
 }
 
-export async function getGroupPositions(groupId: string) {
+export async function getPositionsInGroup(groupId: string) {
   await assertGroupExists(groupId)
 
   return await prisma.position.findMany({
@@ -48,7 +48,6 @@ export async function getGroupPositions(groupId: string) {
         },
       },
     },
-    include: positionInclude,
     orderBy: {
       name: 'asc',
     },
@@ -68,11 +67,11 @@ export async function createGroupPosition(groupId: string, input: CreatePosition
   await assertGroupsExist(groupIds)
   await assertUniquePositionName(input.name)
 
-  if (input.currentHolderPersonId) {
-    await assertPersonExists(input.currentHolderPersonId)
+  if (input.currentHolderUserId) {
+    await assertUserExists(input.currentHolderUserId)
   }
 
-  if (!input.currentHolderPersonId && input.heldSince) {
+  if (!input.currentHolderUserId && input.heldSince) {
     throw new GroupServiceError('A vacant position cannot have heldSince set')
   }
 
@@ -80,8 +79,8 @@ export async function createGroupPosition(groupId: string, input: CreatePosition
     data: {
       name: input.name,
       description: input.description,
-      currentHolderPersonId: input.currentHolderPersonId,
-      heldSince: input.currentHolderPersonId ? (input.heldSince ?? new Date()) : null,
+      currentHolderUserId: input.currentHolderUserId,
+      heldSince: input.currentHolderUserId ? (input.heldSince ?? new Date()) : null,
       groups: {
         create: groupIds.map((associatedGroupId) => ({
           groupId: associatedGroupId,
@@ -133,24 +132,24 @@ export async function updatePosition(id: string, input: UpdatePositionInput) {
     await assertGroupsExist(groupIds)
   }
 
-  const isHolderUpdate = Object.hasOwn(input, 'currentHolderPersonId')
-  const currentHolderPersonId = isHolderUpdate ? (input.currentHolderPersonId ?? null) : position.currentHolderPersonId
+  const isHolderUpdate = Object.hasOwn(input, 'currentHolderUserId')
+  const currentHolderUserId = isHolderUpdate ? (input.currentHolderUserId ?? null) : position.currentHolderUserId
 
-  if (currentHolderPersonId) {
-    await assertPersonExists(currentHolderPersonId)
+  if (currentHolderUserId) {
+    await assertUserExists(currentHolderUserId)
   }
 
-  if (!currentHolderPersonId && input.heldSince) {
+  if (!currentHolderUserId && input.heldSince) {
     throw new GroupServiceError('A vacant position cannot have heldSince set')
   }
 
-  if (!currentHolderPersonId && Object.hasOwn(input, 'heldSince') && input.heldSince === null) {
+  if (!currentHolderUserId && Object.hasOwn(input, 'heldSince') && input.heldSince === null) {
     return await prisma.position.update({
       where: { id },
       data: {
         name: input.name,
         description: input.description,
-        currentHolderPersonId: null,
+        currentHolderUserId: null,
         heldSince: null,
         groups: groupIds
           ? {
@@ -168,8 +167,8 @@ export async function updatePosition(id: string, input: UpdatePositionInput) {
     data: {
       name: input.name,
       description: input.description,
-      currentHolderPersonId: isHolderUpdate ? currentHolderPersonId : undefined,
-      heldSince: currentHolderPersonId
+      currentHolderUserId: isHolderUpdate ? currentHolderUserId : undefined,
+      heldSince: currentHolderUserId
         ? Object.hasOwn(input, 'heldSince')
           ? (input.heldSince ?? new Date())
           : isHolderUpdate
@@ -191,12 +190,12 @@ export async function updatePosition(id: string, input: UpdatePositionInput) {
 
 export async function assignPositionHolder(id: string, input: AssignPositionHolderInput) {
   await getExistingPosition(id)
-  await assertPersonExists(input.currentHolderPersonId)
+  await assertUserExists(input.currentHolderUserId)
 
   return await prisma.position.update({
     where: { id },
     data: {
-      currentHolderPersonId: input.currentHolderPersonId,
+      currentHolderUserId: input.currentHolderUserId,
       heldSince: input.heldSince ?? new Date(),
     },
     include: positionInclude,
@@ -209,7 +208,7 @@ export async function vacatePosition(id: string) {
   return await prisma.position.update({
     where: { id },
     data: {
-      currentHolderPersonId: null,
+      currentHolderUserId: null,
       heldSince: null,
     },
     include: positionInclude,

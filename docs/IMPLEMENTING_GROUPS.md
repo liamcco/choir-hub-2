@@ -1,13 +1,13 @@
 # Groups and Memberships
 
-This first implementation phase is only concerned with modeling people, groups, memberships, and group nesting. Authorization and access control are explicitly out of scope for this phase. Accounts are provisioned by admins and there is no self-service signup. Any authenticated user may access the application; group data is being introduced only to establish the choir directory structure.
+This first implementation phase is only concerned with modeling people, groups, memberships, and group nesting. Authorization and access control are explicitly out of scope for this phase. Accounts are created by admins and there is no self-service signup. Any authenticated user may access the application; group data is being introduced only to establish the choir directory structure.
 
 ## Model
 
 - `GroupKind`: controlled admin-managed list, e.g. choir, voice part, board, committee, project.
 - `Group`: a choir group with kind, name, optional description, active flag, and optional parentGroupId.
-- PersonGroupMembership: direct person membership connecting one Person to one Group, with an addedAt timestamp. Membership rows are deleted when a person leaves a group.
-- PersonGroupMembership is unique on (personId, groupId).
+- UserGroupMembership: direct person membership connecting one User to one Group, with an addedAt timestamp. Membership rows are deleted when a person leaves a group.
+- UserGroupMembership is unique on (userId, groupId).
 - Groups form a tree through parentGroupId. A group may have one parent and many children.
 - Some groups are container groups and do not allow direct memberships.
 - Some groups are container-only, while others may have both direct memberships and child groups.

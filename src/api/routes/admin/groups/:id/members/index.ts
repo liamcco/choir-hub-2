@@ -1,5 +1,5 @@
 import { returnsErrors, returnsResponseErrors } from '@/api/docs/errors'
-import { createMembershipRequestSchema, groupMemberSchema } from '@/api/models/group'
+import { addUserToGroupRequestSchema, groupMemberSchema } from '@/api/models/group'
 import { createGroupMembership, deleteGroupMembership, getGroupMembers } from '@/api/services/groups'
 import { handleGroupServiceError, handleGroupServiceGetError } from '@/api/services/groups/errors'
 import { describeResponse, describeRoute, validator } from 'hono-openapi'
@@ -54,15 +54,15 @@ router.post(
   '/:groupId/members',
 
   describeRoute({
-    operationId: 'createGroupMembership',
-    description: 'Add a direct person membership to a non-container group',
+    operationId: 'addUserToGroup',
+    description: 'Add a direct user membership to a non-container group',
     tags: ['Groups'],
     responses: {
       201: {
         description: 'Created direct membership',
       },
       ...returnsErrors([
-        [404, 'Group or person not found'],
+        [404, 'Group or user not found'],
         [409, 'Container group or duplicate membership conflict'],
       ]),
     },
@@ -70,11 +70,11 @@ router.post(
 
   validator('param', z.object({ groupId: z.string() })),
 
-  validator('json', createMembershipRequestSchema),
+  validator('json', addUserToGroupRequestSchema),
 
   async (c) => {
     try {
-      const membership = await createGroupMembership(c.req.param('groupId'), c.req.valid('json'))
+      const membership = await createGroupMembership(c.req.param('groupId'), c.req.valid('json').userId)
 
       return c.json(membership, 201)
     } catch (error) {

@@ -12,8 +12,8 @@ import {
 } from '@/lib/api-client/@tanstack/react-query.gen'
 
 import { getErrorMessage } from '@/common/errors/utils'
-import type { Group, Person, Position } from '@/common/groups/types'
-import { formatDate, personLabel } from '@/common/groups/utils'
+import type { Group, Position, User } from '@/common/groups/types'
+import { formatDate, userLabel } from '@/common/groups/utils'
 import { FormError } from '@/common/ui/form'
 
 import { Button } from '@/components/ui/button'
@@ -25,14 +25,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 export function PositionsTable({
   group,
   positions,
-  people,
+  users,
   isPending,
   error,
   onChanged,
 }: {
   group: Group | null
   positions: Position[]
-  people: Person[]
+  users: User[]
   isPending: boolean
   error: unknown
   onChanged: () => Promise<unknown>
@@ -41,11 +41,11 @@ export function PositionsTable({
   const vacateMutation = useMutation(vacatePositionMutation())
   const deleteMutation = useMutation(deletePositionMutation())
 
-  const peopleById = new Map(people.map((person) => [person.id, person]))
+  const usersById = new Map(users.map((user) => [user.id, user]))
 
-  async function assignHolder(position: Position, currentHolderPersonId: string) {
+  async function assignHolder(position: Position, currentHolderUserId: string) {
     const parsed = updatePositionFormSchema.safeParse({
-      currentHolderPersonId: currentHolderPersonId || null,
+      currentHolderUserId: currentHolderUserId || null,
     })
 
     if (!parsed.success) {
@@ -55,9 +55,9 @@ export function PositionsTable({
     const body = {
       name: parsed.data.name,
       description: parsed.data.description,
-      currentHolderPersonId: parsed.data.currentHolderPersonId,
+      currentHolderUserId: parsed.data.currentHolderUserId,
     }
-    await updateMutation.mutateAsync({ path: { id: position.id }, body })
+    await updateMutation.mutateAsync({ path: { positionId: position.id }, body })
     await onChanged()
   }
 
@@ -82,7 +82,6 @@ export function PositionsTable({
               <TableHeader className="text-xs text-muted-foreground uppercase">
                 <TableRow>
                   <TableHead>Position</TableHead>
-                  <TableHead>Groups</TableHead>
                   <TableHead>Holder</TableHead>
                   <TableHead>Held Since</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
@@ -92,14 +91,9 @@ export function PositionsTable({
                 {positions.map((position) => (
                   <TableRow key={position.id}>
                     <TableCell className="font-medium">{position.name}</TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {(position.groups ?? [])
-                        .map((positionGroup) => positionGroup.group?.name ?? positionGroup.groupId)
-                        .join(', ')}
-                    </TableCell>
                     <TableCell>
                       <Select
-                        value={position.currentHolderPersonId ?? ''}
+                        value={position.currentHolderUserId ?? ''}
                         disabled={!group || updateMutation.isPending}
                         onValueChange={(value) => {
                           void assignHolder(position, value ?? '')
@@ -107,21 +101,21 @@ export function PositionsTable({
                       >
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="Vacant">
-                            {(value) => (value ? personLabel(peopleById.get(String(value))) : 'Vacant')}
+                            {(value) => (value ? userLabel(usersById.get(String(value))) : 'Vacant')}
                           </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="">Vacant</SelectItem>
-                          {people.map((person) => (
-                            <SelectItem key={person.id} value={person.id}>
-                              {personLabel(person)}
+                          {users.map((user) => (
+                            <SelectItem key={user.id} value={user.id}>
+                              {userLabel(user)}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {position.currentHolderPersonId ? formatDate(position.heldSince) : '-'}
+                      {position.currentHolderUserId ? formatDate(position.heldSince) : '-'}
                     </TableCell>
                     <TableCell>
                       <div className="flex justify-end gap-2">
@@ -131,9 +125,9 @@ export function PositionsTable({
                           variant="outline"
                           title="Vacate position"
                           aria-label="Vacate position"
-                          disabled={!position.currentHolderPersonId || vacateMutation.isPending}
+                          disabled={!position.currentHolderUserId || vacateMutation.isPending}
                           onClick={async () => {
-                            await vacateMutation.mutateAsync({ path: { id: position.id } })
+                            await vacateMutation.mutateAsync({ path: { positionId: position.id } })
                             await onChanged()
                           }}
                         >
@@ -147,7 +141,7 @@ export function PositionsTable({
                           aria-label="Delete position"
                           disabled={deleteMutation.isPending}
                           onClick={async () => {
-                            await deleteMutation.mutateAsync({ path: { id: position.id } })
+                            await deleteMutation.mutateAsync({ path: { positionId: position.id } })
                             await onChanged()
                           }}
                         >

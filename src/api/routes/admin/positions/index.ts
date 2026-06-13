@@ -2,7 +2,7 @@ import { Hono } from 'hono'
 import { describeResponse, describeRoute, resolver } from 'hono-openapi'
 
 import { returnsErrors } from '@/api/docs/errors'
-import { positionSchema } from '@/api/models/group'
+import { positionSchema } from '@/api/models/position'
 import { getPositions } from '@/api/services/positions/positionService'
 import z from 'zod'
 import positionByIdRouter from './:id'

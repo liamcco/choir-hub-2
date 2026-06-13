@@ -3,51 +3,51 @@
 import { useMutation } from '@tanstack/react-query'
 import { useState } from 'react'
 
-import { provisionPeopleMutation } from '@/lib/api-client/@tanstack/react-query.gen'
+import { createUsersMutation } from '@/lib/api-client/@tanstack/react-query.gen'
 
-import { parsePeopleCsv, type ParsedPeopleCsvFailedRow } from '@/common/csv/utils'
+import { parseUsersCsv, type ParsedUsersCsvFailedRow } from '@/common/csv/utils'
 import { getErrorMessage } from '@/common/errors/utils'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 
-import { ProvisionResult } from './ProvisionResult'
+import { CreateResult } from './CreateUsersResult'
 
-type AdminPeopleCsvImportProps = {
-  onPeopleChanged: () => Promise<unknown>
+type UsersCsvImportProps = {
+  onUsersChanged: () => Promise<unknown>
 }
 
-export function AdminPeopleCsvImport({ onPeopleChanged }: AdminPeopleCsvImportProps) {
-  const provisionMutation = useMutation(provisionPeopleMutation())
+export function UsersCsvImport({ onUsersChanged }: UsersCsvImportProps) {
+  const createMutation = useMutation(createUsersMutation())
   const [csvError, setCsvError] = useState<string | null>(null)
-  const [failedRows, setFailedRows] = useState<ParsedPeopleCsvFailedRow[]>([])
+  const [failedRows, setFailedRows] = useState<ParsedUsersCsvFailedRow[]>([])
 
   async function handleCsvUpload(file: File | undefined) {
     setCsvError(null)
     setFailedRows([])
-    provisionMutation.reset()
+    createMutation.reset()
 
     if (!file) {
       return
     }
 
     try {
-      const { people, failed } = parsePeopleCsv(await file.text())
+      const { users, failed } = parseUsersCsv(await file.text())
 
       setFailedRows(failed)
 
-      if (people.length > 0) {
-        await provisionMutation.mutateAsync({
+      if (users.length > 0) {
+        await createMutation.mutateAsync({
           body: {
-            people: people.map((person) => ({
-              name: person.name,
-              email: person.email,
+            users: users.map((user) => ({
+              name: user.name,
+              email: user.email,
               role: 'user',
             })),
           },
         })
 
-        await onPeopleChanged()
+        await onUsersChanged()
       }
     } catch (error) {
       setCsvError(getErrorMessage(error) ?? 'Could not import CSV.')
@@ -62,12 +62,12 @@ export function AdminPeopleCsvImport({ onPeopleChanged }: AdminPeopleCsvImportPr
       </CardHeader>
       <CardContent>
         <Field>
-          <FieldLabel htmlFor="people-csv">CSV file</FieldLabel>
+          <FieldLabel htmlFor="users-csv">CSV file</FieldLabel>
           <Input
-            id="people-csv"
+            id="users-csv"
             type="file"
             accept=".csv,text/csv"
-            disabled={provisionMutation.isPending}
+            disabled={createMutation.isPending}
             onChange={(event) => {
               void handleCsvUpload(event.target.files?.[0])
               event.target.value = ''
@@ -77,13 +77,13 @@ export function AdminPeopleCsvImport({ onPeopleChanged }: AdminPeopleCsvImportPr
           {csvError ? <FieldError>{csvError}</FieldError> : null}
         </Field>
         <CsvImportFailures failedRows={failedRows} />
-        <ProvisionResult result={provisionMutation.data} />
+        <CreateResult result={createMutation.data} />
       </CardContent>
     </Card>
   )
 }
 
-function CsvImportFailures({ failedRows }: { failedRows: ParsedPeopleCsvFailedRow[] }) {
+function CsvImportFailures({ failedRows }: { failedRows: ParsedUsersCsvFailedRow[] }) {
   if (!failedRows.length) {
     return null
   }
@@ -102,7 +102,7 @@ function CsvImportFailures({ failedRows }: { failedRows: ParsedPeopleCsvFailedRo
   )
 }
 
-function formatCsvFailure(failedRow: ParsedPeopleCsvFailedRow) {
+function formatCsvFailure(failedRow: ParsedUsersCsvFailedRow) {
   if (failedRow.message === 'Invalid email address' && failedRow.email) {
     return `${failedRow.message} (${failedRow.email})`
   }

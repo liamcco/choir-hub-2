@@ -11,7 +11,7 @@ import {
   getGroupPositionsQueryKey,
   getGroupsOptions,
   getGroupsQueryKey,
-  getPeopleOptions,
+  getUsersOptions,
 } from '@/lib/api-client/@tanstack/react-query.gen'
 
 import { getErrorMessage } from '@/common/errors/utils'
@@ -21,28 +21,28 @@ import { MembershipsAdmin } from './MembershipsAdmin'
 
 export function GroupDetailPanel({ groupId }: { groupId: string }) {
   const queryClient = useQueryClient()
-  const groupQuery = useQuery(getGroupByIdOptions({ path: { id: groupId } }))
+  const groupQuery = useQuery(getGroupByIdOptions({ path: { groupId } }))
   const groupsQuery = useQuery(getGroupsOptions())
   const groupKindsQuery = useQuery(getGroupKindsOptions())
-  const peopleQuery = useQuery(getPeopleOptions())
-  const effectiveMembersQuery = useQuery(getGroupMembersOptions({ path: { id: groupId } }))
+  const usersQuery = useQuery(getUsersOptions())
+  const effectiveMembersQuery = useQuery(getGroupMembersOptions({ path: { groupId } }))
   const directMembershipsQuery = useQuery(
-    getGroupMembersOptions({ path: { id: groupId }, query: { onlyDirectMembers: true } }),
+    getGroupMembersOptions({ path: { groupId }, query: { onlyDirectMembers: true } }),
   )
 
   const invalidateGroup = () =>
     Promise.all([
-      queryClient.invalidateQueries({ queryKey: getGroupByIdQueryKey({ path: { id: groupId } }) }),
+      queryClient.invalidateQueries({ queryKey: getGroupByIdQueryKey({ path: { groupId } }) }),
       queryClient.invalidateQueries({ queryKey: getGroupsQueryKey() }),
     ])
 
   const invalidateMemberships = () =>
     Promise.all([
       queryClient.invalidateQueries({
-        queryKey: getGroupMembersQueryKey({ path: { id: groupId }, query: { onlyDirectMembers: true } }),
+        queryKey: getGroupMembersQueryKey({ path: { groupId }, query: { onlyDirectMembers: true } }),
       }),
-      queryClient.invalidateQueries({ queryKey: getGroupMembersQueryKey({ path: { id: groupId } }) }),
-      queryClient.invalidateQueries({ queryKey: getGroupPositionsQueryKey({ path: { id: groupId } }) }),
+      queryClient.invalidateQueries({ queryKey: getGroupMembersQueryKey({ path: { groupId } }) }),
+      queryClient.invalidateQueries({ queryKey: getGroupPositionsQueryKey({ path: { groupId } }) }),
     ])
 
   if (groupQuery.isPending) {
@@ -71,7 +71,7 @@ export function GroupDetailPanel({ groupId }: { groupId: string }) {
       />
       <MembershipsAdmin
         group={groupQuery.data ?? null}
-        people={peopleQuery.data?.people ?? []}
+        users={usersQuery.data ?? []}
         members={directMembershipsQuery.data ?? []}
         isPending={directMembershipsQuery.isPending}
         error={directMembershipsQuery.error ?? effectiveMembersQuery.error}

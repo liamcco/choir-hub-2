@@ -25,6 +25,8 @@ router.get(
     async (c) => {
       const group = await getGroupById(c.req.param('groupId'))
 
+      console.log('Fetched group:', group)
+
       if (!group) {
         return c.json({ message: 'Group not found' }, 404)
       }

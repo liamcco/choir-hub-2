@@ -1,8 +1,8 @@
 import { returnsErrors, returnsResponseErrors } from '@/api/docs/errors'
-import { createPositionRequestSchema, positionSchema } from '@/api/models/group'
-import { positionsResponseSchema } from '@/api/models/position'
+import { createPositionRequestSchema } from '@/api/models/group'
+import { positionSchema } from '@/api/models/position'
 import { handleGroupServiceError, handleGroupServiceGetError } from '@/api/services/groups/errors'
-import { createGroupPosition, deletePositionFromGroup, getGroupPositions } from '@/api/services/positions'
+import { createGroupPosition, deletePositionFromGroup, getPositionsInGroup } from '@/api/services/positions'
 import { Hono } from 'hono'
 import { describeResponse, describeRoute, resolver, validator } from 'hono-openapi'
 import z from 'zod'
@@ -23,7 +23,8 @@ router.get(
   describeResponse(
     async (c) => {
       try {
-        const positions = await getGroupPositions(c.req.param('groupId'))
+        const groupId = c.req.param('groupId')
+        const positions = await getPositionsInGroup(groupId)
 
         return c.json(positions, 200)
       } catch (error) {
@@ -56,12 +57,12 @@ router.post(
         description: 'Created position',
         content: {
           'application/json': {
-            schema: resolver(positionsResponseSchema.shape.positions.element),
+            schema: resolver(positionSchema),
           },
         },
       },
       ...returnsErrors([
-        [404, 'Group or holder person not found'],
+        [404, 'Group or holder user not found'],
         [409, 'Position name or holder conflict'],
       ]),
     },

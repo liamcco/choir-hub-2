@@ -1,12 +1,11 @@
-import type { Person } from './types'
-import type { Group } from './types'
+import type { Group, User } from './types'
 
-export function personLabel(person: Person | undefined) {
-  if (!person) {
-    return 'Missing person'
+export function userLabel(user: User | undefined) {
+  if (!user) {
+    return 'Missing user'
   }
 
-  return person.user ? `${person.user.name} <${person.user.email}>` : person.id
+  return `${user.name} <${user.email}>`
 }
 
 export function formatDate(value: string | null) {
@@ -23,7 +22,7 @@ export function groupSectionsByKind(groups: Group[]) {
   const sectionsByKind = new Map<string, Group[]>()
 
   for (const group of groups) {
-    const kindName = group.kind?.name ?? 'Unknown kind'
+    const kindName = group.kindName ?? 'Unknown kind'
     sectionsByKind.set(kindName, [...(sectionsByKind.get(kindName) ?? []), group])
   }
 

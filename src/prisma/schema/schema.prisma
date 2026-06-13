@@ -15,12 +15,6 @@ model Resource {
   updatedAt   DateTime @updatedAt
 }
 
-model Person {
-  id               String                  @id
-  groupMemberships PersonGroupMembership[]
-  positionsHeld    Position[]              @relation("PositionCurrentHolder")
-}
-
 model GroupKind {
   id          String   @id @default(uuid())
   name        String   @unique
@@ -31,45 +25,44 @@ model GroupKind {
 }
 
 model Group {
-  id            String                  @id @default(uuid())
+  id            String                @id @default(uuid())
   kindId        String
-  kind          GroupKind               @relation(fields: [kindId], references: [id])
+  kind          GroupKind             @relation(fields: [kindId], references: [id])
   name          String
   description   String?
-  active        Boolean                 @default(true)
-  isContainer   Boolean                 @default(false)
+  isContainer   Boolean               @default(false)
   parentGroupId String?
-  parentGroup   Group?                  @relation("GroupHierarchy", fields: [parentGroupId], references: [id], onDelete: SetNull)
-  childGroups   Group[]                 @relation("GroupHierarchy")
-  memberships   PersonGroupMembership[]
+  parentGroup   Group?                @relation("GroupHierarchy", fields: [parentGroupId], references: [id], onDelete: SetNull)
+  childGroups   Group[]               @relation("GroupHierarchy")
+  memberships   UserGroupMembership[]
   positions     PositionGroup[]
-  createdAt     DateTime                @default(now())
-  updatedAt     DateTime                @updatedAt
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
 
   @@unique([parentGroupId, name])
 }
 
-model PersonGroupMembership {
-  id       String   @id @default(uuid())
-  personId String
-  person   Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
-  groupId  String
-  group    Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  addedAt  DateTime @default(now())
+model UserGroupMembership {
+  id      String   @id @default(uuid())
+  userId  String
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  groupId String
+  group   Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  addedAt DateTime @default(now())
 
-  @@unique([personId, groupId])
+  @@unique([userId, groupId])
 }
 
 model Position {
-  id                    String          @id @default(uuid())
-  name                  String          @unique
-  description           String?
-  currentHolderPersonId String?
-  currentHolder         Person?         @relation("PositionCurrentHolder", fields: [currentHolderPersonId], references: [id], onDelete: SetNull)
-  heldSince             DateTime?
-  groups                PositionGroup[]
-  createdAt             DateTime        @default(now())
-  updatedAt             DateTime        @updatedAt
+  id                  String          @id @default(uuid())
+  name                String          @unique
+  description         String?
+  currentHolderUserId String?
+  currentHolder       User?           @relation("PositionCurrentHolder", fields: [currentHolderUserId], references: [id], onDelete: SetNull)
+  heldSince           DateTime?
+  groups              PositionGroup[]
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
 }
 
 model PositionGroup {

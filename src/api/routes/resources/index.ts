@@ -4,8 +4,8 @@ import { describeResponse, describeRoute, resolver, validator } from 'hono-opena
 import { returnsErrors, returnsResponseErrors } from '@/api/docs/errors'
 
 import { createResourceFormSchema, resourceSchema, resourcesResponseSchema } from '@/api/models/resource'
-import { idParamsSchema } from '@/api/models/utils'
 import { resourceService } from '@/api/services/resourceService'
+import z from 'zod'
 
 const router = new Hono()
 
@@ -46,7 +46,7 @@ router.get(
     tags: ['Testing'],
   }),
 
-  validator('param', idParamsSchema),
+  validator('param', z.object({ id: z.string() })),
 
   describeResponse(
     async (c) => {

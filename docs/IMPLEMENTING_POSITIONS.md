@@ -9,26 +9,26 @@
 - Choir-wide or miscellaneous positions may be associated only with the CSK root group.
 - PositionGroup: association connecting a Position to one or more Groups.
 - PositionGroup is unique on (positionId, groupId).
-- Position.currentHolderPersonId: nullable reference to the Person currently holding the position.
-- Position.currentHolderPersonId uses ON DELETE SET NULL semantics at the database level.
+- Position.currentHolderUserId: nullable reference to the User currently holding the position.
+- Position.currentHolderUserId uses ON DELETE SET NULL semantics at the database level.
 - Position.heldSince: nullable timestamp recording when the current holder assumed the position.
 - Position.updatedAt: timestamp recording when the position record was last changed.
 - The current holder is stored directly on Position for v1 rather than in a separate history/holding table.
-- A position may have at most one current holder in v1. This is enforced by the Position.currentHolderPersonId field and supporting application logic.
+- A position may have at most one current holder in v1. This is enforced by the Position.currentHolderUserId field and supporting application logic.
 - A person may hold multiple positions simultaneously.
-- A position is vacant when currentHolderPersonId and heldSince are null.
-- Position assignments and PersonGroupMemberships are separate concepts and are managed independently.
-- Holding a position does not create, modify, or remove PersonGroupMembership rows.
+- A position is vacant when currentHolderUserId and heldSince are null.
+- Position assignments and UserGroupMemberships are separate concepts and are managed independently.
+- Holding a position does not create, modify, or remove UserGroupMembership rows.
 - Group membership does not automatically grant or imply any position.
 
 ## Behavior
 
 - Positions are managed globally rather than per group.
-- Assigning a person to a position sets Position.currentHolderPersonId and Position.heldSince.
+- Assigning a person to a position sets Position.currentHolderUserId and Position.heldSince.
 - Application logic is responsible for preventing invalid position updates and preserving the one-current-holder invariant.
 - Position holders are surfaced in all associated groups when querying group positions. This does not imply group membership.
-- Assigning or removing a position never creates, updates, or deletes PersonGroupMembership rows.
-- Deleting a Person automatically vacates all positions currently held by that person through ON DELETE SET NULL semantics on Position.currentHolderPersonId.
+- Assigning or removing a position never creates, updates, or deletes UserGroupMembership rows.
+- Deleting a User automatically vacates all positions currently held by that person through ON DELETE SET NULL semantics on Position.currentHolderUserId.
 - Membership and position assignment are independent administrative actions.
 - Vacant positions remain visible even when no person currently holds them.
 - Position.updatedAt changes whenever the position holder or position details change.
@@ -45,7 +45,7 @@
 - Assigning a position does not create membership in any group.
 - Removing a position does not remove any memberships.
 - Removing a membership does not affect a person's positions.
-- Deleting a Person sets Position.currentHolderPersonId to null for all positions currently held by that person.
+- Deleting a User sets Position.currentHolderUserId to null for all positions currently held by that person.
 - Position.updatedAt changes when the position holder or position details change.
 
 ## Assumptions
@@ -72,7 +72,7 @@
 
 ## Changelog
 
-This document originally modeled positions as roles that belonged to exactly one group and were held through a PersonGroupMembership.
+This document originally modeled positions as roles that belonged to exactly one group and were held through a UserGroupMembership.
 
 The model was revised to better reflect the choir's organizational structure.
 
@@ -85,11 +85,11 @@ The model was revised to better reflect the choir's organizational structure.
 
 ### Position holders
 
-- Positions are now held directly by a Person rather than through a PersonGroupMembership.
-- Position.currentHolderPersonId replaces the previous membership-based holder reference.
+- Positions are now held directly by a User rather than through a UserGroupMembership.
+- Position.currentHolderUserId replaces the previous membership-based holder reference.
 - A person may hold multiple positions simultaneously.
 - A position may have at most one current holder.
-- Vacant positions are represented by a null currentHolderPersonId and heldSince.
+- Vacant positions are represented by a null currentHolderUserId and heldSince.
 
 ### Relationship to memberships
 
@@ -101,8 +101,8 @@ The model was revised to better reflect the choir's organizational structure.
 
 ### Deletion behavior
 
-- Position.currentHolderPersonId uses ON DELETE SET NULL semantics.
-- Deleting a Person automatically vacates all positions held by that person.
+- Position.currentHolderUserId uses ON DELETE SET NULL semantics.
+- Deleting a User automatically vacates all positions held by that person.
 
 ### Future evolution
 

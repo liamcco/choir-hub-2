@@ -40,7 +40,7 @@ function GroupBranch({ group, groups, depth }: { group: Group; groups: Group[]; 
         style={{ marginLeft: depth * 16 }}
       >
         <span className="font-medium">{group.name}</span>
-        <span className="text-muted-foreground">{group.kind?.name ?? 'Unknown kind'}</span>
+        <span className="text-muted-foreground">{group.kindName}</span>
         {group.isContainer ? <span className="text-muted-foreground">Container</span> : null}
       </Link>
       {children.map((child) => (

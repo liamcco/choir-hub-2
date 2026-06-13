@@ -3,7 +3,7 @@ import { BriefcaseBusiness, FolderTree, Users } from 'lucide-react'
 export const adminSections = [
   {
     title: 'Members',
-    description: 'Provision and review application people.',
+    description: 'Create and review application users.',
     href: '/admin/members',
     icon: Users,
   },

@@ -4,15 +4,12 @@ import { useForm } from '@tanstack/react-form'
 import { useMutation } from '@tanstack/react-query'
 import { Trash2, UserPlus } from 'lucide-react'
 
-import {
-  createGroupMembershipMutation,
-  deleteGroupMembershipMutation,
-} from '@/lib/api-client/@tanstack/react-query.gen'
+import { addUserToGroupMutation, deleteGroupMembershipMutation } from '@/lib/api-client/@tanstack/react-query.gen'
 
-import { createMembershipFormSchema } from '@/api/models/group'
+import { addUserToGroupRequestSchema } from '@/api/models/group'
 import { getErrorMessage } from '@/common/errors/utils'
-import type { Group, Membership, Person } from '@/common/groups/types'
-import { formatDate, personLabel } from '@/common/groups/utils'
+import type { Group, Membership, User } from '@/common/groups/types'
+import { formatDate, userLabel } from '@/common/groups/utils'
 import { FormError } from '@/common/ui/form'
 import { ControlledFieldSelect } from '@/components/forms/controlled-field-select'
 import { Button } from '@/components/ui/button'
@@ -20,22 +17,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { FieldGroup } from '@/components/ui/field'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import z from 'zod'
-
-const defaultMembershipFormValues: z.input<typeof createMembershipFormSchema> = {
-  personId: '',
-}
 
 export function MembershipsAdmin({
   group,
-  people,
+  users,
   members,
   isPending,
   error,
   onMembershipsChanged,
 }: {
   group: Group | null
-  people: Person[]
+  users: User[]
   members: Membership[]
   isPending: boolean
   error: unknown
@@ -43,11 +35,11 @@ export function MembershipsAdmin({
 }) {
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(320px,420px)_1fr]">
-      <AddMembershipCard group={group} people={people} memberships={members} onChanged={onMembershipsChanged} />
+      <AddMembershipCard group={group} users={users} memberships={members} onChanged={onMembershipsChanged} />
       <MembershipsTable
         group={group}
         members={members}
-        people={people}
+        users={users}
         isPending={isPending}
         error={error}
         onChanged={onMembershipsChanged}
@@ -58,22 +50,24 @@ export function MembershipsAdmin({
 
 function AddMembershipCard({
   group,
-  people,
+  users,
   memberships,
   onChanged,
 }: {
   group: Group | null
-  people: Person[]
+  users: User[]
   memberships: Membership[]
   onChanged: () => Promise<unknown>
 }) {
-  const mutation = useMutation(createGroupMembershipMutation())
-  const memberPersonIds = new Set(memberships.map((membership) => membership.userId))
-  const availablePeople = people.filter((person) => !memberPersonIds.has(person.id))
+  const mutation = useMutation(addUserToGroupMutation())
+  const memberUserIds = new Set(memberships.map((membership) => membership.userId))
+  const availableUsers = users.filter((user) => !memberUserIds.has(user.id))
   const form = useForm({
-    defaultValues: defaultMembershipFormValues,
+    defaultValues: {
+      userId: '',
+    },
     validators: {
-      onSubmit: createMembershipFormSchema,
+      onSubmit: addUserToGroupRequestSchema,
     },
     onSubmit: async ({ value }) => {
       if (!group) {
@@ -81,7 +75,7 @@ function AddMembershipCard({
       }
 
       try {
-        await mutation.mutateAsync({ path: { id: group.id }, body: value })
+        await mutation.mutateAsync({ path: { groupId: group.id }, body: value })
         form.reset()
         await onChanged()
       } catch {
@@ -108,15 +102,15 @@ function AddMembershipCard({
           }}
         >
           <FieldGroup>
-            <form.Field name="personId">
+            <form.Field name="userId">
               {(field) => (
                 <ControlledFieldSelect
                   id={field.name}
-                  label="Person"
-                  items={availablePeople}
-                  getValue={(person) => person.id}
-                  getLabel={personLabel}
-                  placeholder="Select person"
+                  label="User"
+                  items={availableUsers}
+                  getValue={(user) => user.id}
+                  getLabel={userLabel}
+                  placeholder="Select user"
                   value={field.state.value}
                   disabled={!group || group.isContainer || isSaving}
                   onBlur={field.handleBlur}
@@ -130,12 +124,7 @@ function AddMembershipCard({
                 <Button
                   type="submit"
                   disabled={
-                    !group ||
-                    group.isContainer ||
-                    !canSubmit ||
-                    isSubmitting ||
-                    isSaving ||
-                    availablePeople.length === 0
+                    !group || group.isContainer || !canSubmit || isSubmitting || isSaving || availableUsers.length === 0
                   }
                 >
                   <UserPlus />
@@ -154,20 +143,20 @@ function AddMembershipCard({
 function MembershipsTable({
   group,
   members,
-  people,
+  users,
   isPending,
   error,
   onChanged,
 }: {
   group: Group | null
   members: Membership[]
-  people: Person[]
+  users: User[]
   isPending: boolean
   error: unknown
   onChanged: () => Promise<unknown>
 }) {
   const deleteMutation = useMutation(deleteGroupMembershipMutation())
-  const peopleById = new Map(people.map((person) => [person.id, person]))
+  const usersById = new Map(users.map((user) => [user.id, user]))
 
   return (
     <Card>
@@ -191,7 +180,7 @@ function MembershipsTable({
             <Table className="min-w-130">
               <TableHeader className="text-xs text-muted-foreground uppercase">
                 <TableRow>
-                  <TableHead>Person</TableHead>
+                  <TableHead>User</TableHead>
                   <TableHead>Added</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -199,7 +188,7 @@ function MembershipsTable({
               <TableBody>
                 {members.map((member) => (
                   <TableRow key={member.userId}>
-                    <TableCell className="font-medium">{personLabel(peopleById.get(member.userId))}</TableCell>
+                    <TableCell className="font-medium">{userLabel(usersById.get(member.userId))}</TableCell>
                     <TableCell className="text-muted-foreground">{formatDate(member.addedAt)}</TableCell>
                     <TableCell className="text-right">
                       <Button
@@ -214,7 +203,7 @@ function MembershipsTable({
                             return
                           }
 
-                          await deleteMutation.mutateAsync({ path: { id: group.id, userId: member.userId } })
+                          await deleteMutation.mutateAsync({ path: { groupId: group.id, userId: member.userId } })
                           await onChanged()
                         }}
                       >

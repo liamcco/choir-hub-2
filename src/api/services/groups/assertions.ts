@@ -2,6 +2,10 @@ import { prisma } from '@/db'
 
 import { GroupServiceError } from './errors'
 
+/**
+ * Asserts that a group kind exists
+ * @param id
+ */
 export async function assertGroupKindExists(id: string) {
   const groupKind = await prisma.groupKind.findUnique({
     where: { id },
@@ -13,6 +17,10 @@ export async function assertGroupKindExists(id: string) {
   }
 }
 
+/**
+ * Asserts that a group exists
+ * @param id
+ */
 export async function assertGroupExists(id: string) {
   const group = await prisma.group.findUnique({
     where: { id },
@@ -24,6 +32,10 @@ export async function assertGroupExists(id: string) {
   }
 }
 
+/**
+ * Asserts that multiple groups exist
+ * @param groupIds
+ */
 export async function assertGroupsExist(groupIds: string[]) {
   if (!groupIds.length) {
     throw new GroupServiceError('At least one group is required')
@@ -43,6 +55,10 @@ export async function assertGroupsExist(groupIds: string[]) {
   }
 }
 
+/**
+ * Asserts that a parent group exists
+ * @param parentGroupId
+ */
 export async function assertParentGroupExists(parentGroupId: string | null) {
   if (!parentGroupId) {
     return
@@ -51,17 +67,25 @@ export async function assertParentGroupExists(parentGroupId: string | null) {
   await assertGroupExists(parentGroupId)
 }
 
-export async function assertPersonExists(personId: string) {
-  const person = await prisma.person.findUnique({
-    where: { id: personId },
+/**
+ *
+ * @param userId
+ */
+export async function assertUserExists(userId: string) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
     select: { id: true },
   })
 
-  if (!person) {
-    throw new GroupServiceError('Person not found', 404)
+  if (!user) {
+    throw new GroupServiceError('User not found', 404)
   }
 }
 
+/**
+ *
+ * @param name
+ */
 export async function assertUniqueGroupKindName(name: string) {
   const existingGroupKind = await prisma.groupKind.findUnique({
     where: { name },
@@ -73,6 +97,12 @@ export async function assertUniqueGroupKindName(name: string) {
   }
 }
 
+/**
+ * Asserts that a group name is unique
+ * @param name
+ * @param parentGroupId
+ * @param ignoreGroupId
+ */
 export async function assertUniqueGroupName(name: string, parentGroupId: string | null, ignoreGroupId?: string) {
   const existingGroup = await prisma.group.findFirst({
     where: {

@@ -1,7 +1,7 @@
 'use client'
 
-import Link from 'next/link'
 import { RefreshCw } from 'lucide-react'
+import Link from 'next/link'
 
 import { getErrorMessage } from '@/common/errors/utils'
 import type { Group } from '@/common/groups/types'
@@ -72,14 +72,11 @@ export function GroupsTable({
                         {group.name}
                       </Link>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">{group.kind?.name ?? '-'}</TableCell>
+                    <TableCell className="text-muted-foreground">{group.kindName ?? '-'}</TableCell>
                     <TableCell className="text-muted-foreground">
                       {group.parentGroupId ? (groupsById.get(group.parentGroupId)?.name ?? 'Missing parent') : 'Root'}
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {group.active ? 'Active' : 'Inactive'}
-                      {group.isContainer ? ' / Container' : ''}
-                    </TableCell>
+                    <TableCell className="text-muted-foreground">{group.isContainer ? ' / Container' : ''}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

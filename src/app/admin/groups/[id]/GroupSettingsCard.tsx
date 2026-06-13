@@ -7,7 +7,7 @@ import { useState } from 'react'
 
 import { deleteGroupMutation, updateGroupMutation } from '@/lib/api-client/@tanstack/react-query.gen'
 
-import { updateGroupFormSchema } from '@/api/models/group'
+import { updateGroupRequestSchema } from '@/api/models/group'
 import { getErrorMessage } from '@/common/errors/utils'
 import type { Group, GroupKind } from '@/common/groups/types'
 import { FormError } from '@/common/ui/form'
@@ -72,26 +72,22 @@ function GroupSettingsForm({
     defaultValues: {
       kindId: group.kindId,
       name: group.name,
-      description: group.description ?? '',
-      active: group.active,
+      description: group.description,
       isContainer: group.isContainer,
       parentGroupId: group.parentGroupId,
     },
     validators: {
-      onSubmit: updateGroupFormSchema,
+      onSubmit: updateGroupRequestSchema.required(),
     },
     onSubmit: async ({ value }) => {
       setError(null)
 
       try {
         await updateMutation.mutateAsync({
-          path: { id: group.id },
+          path: { groupId: group.id },
           body: {
-            kindId: value.kindId,
-            name: value.name?.trim(),
-            description: value.description?.trim() || null,
-            active: value.active,
-            isContainer: value.isContainer,
+            ...value,
+            description: value.description || null,
             parentGroupId: value.parentGroupId || null,
           },
         })
@@ -179,18 +175,6 @@ function GroupSettingsForm({
             )}
           </form.Field>
           <div className="flex items-center gap-6">
-            <form.Field name="active">
-              {(field) => (
-                <label className="flex items-center gap-2 text-sm">
-                  <Checkbox
-                    checked={field.state.value}
-                    disabled={isSaving}
-                    onCheckedChange={(checked) => field.handleChange(checked === true)}
-                  />
-                  Active
-                </label>
-              )}
-            </form.Field>
             <form.Field name="isContainer">
               {(field) => (
                 <label className="flex items-center gap-2 text-sm">
@@ -220,7 +204,7 @@ function GroupSettingsForm({
               onClick={async () => {
                 try {
                   setError(null)
-                  await deleteMutation.mutateAsync({ path: { id: group.id } })
+                  await deleteMutation.mutateAsync({ path: { groupId: group.id } })
                   router.push('/admin/groups')
                 } catch (submitError) {
                   setError(getErrorMessage(submitError))

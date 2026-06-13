@@ -10,8 +10,8 @@ import { createPositionFormSchema } from '@/api/models/group'
 import { createGroupPositionMutation } from '@/lib/api-client/@tanstack/react-query.gen'
 
 import { getErrorMessage } from '@/common/errors/utils'
-import type { Group, Person } from '@/common/groups/types'
-import { personLabel } from '@/common/groups/utils'
+import type { Group, User } from '@/common/groups/types'
+import { userLabel } from '@/common/groups/utils'
 import { FormError } from '@/common/ui/form'
 
 import { ControlledFieldSelect } from '@/components/forms/controlled-field-select'
@@ -25,18 +25,18 @@ const defaultPositionFormValues: z.input<typeof createPositionFormSchema> = {
   name: '',
   description: '',
   groupIds: [],
-  currentHolderPersonId: null,
+  currentHolderUserId: undefined,
 }
 
 export function CreatePositionCard({
   group,
   groups,
-  people,
+  users,
   onChanged,
 }: {
   group: Group | null
   groups: Group[]
-  people: Person[]
+  users: User[]
   onChanged: () => Promise<unknown>
 }) {
   const mutation = useMutation(createGroupPositionMutation())
@@ -53,12 +53,12 @@ export function CreatePositionCard({
 
       try {
         await mutation.mutateAsync({
-          path: { id: group.id },
+          path: { groupId: group.id },
           body: {
             name: value.name.trim(),
             description: value.description?.trim() || undefined,
             groupIds: value.groupIds?.filter((groupId) => groupId !== group.id),
-            currentHolderPersonId: value.currentHolderPersonId || null,
+            currentHolderUserId: value.currentHolderUserId,
           },
         })
         form.reset()
@@ -145,20 +145,20 @@ export function CreatePositionCard({
                 </Field>
               )}
             </form.Field>
-            <form.Field name="currentHolderPersonId">
+            <form.Field name="currentHolderUserId">
               {(field) => (
                 <ControlledFieldSelect
                   id={field.name}
                   label="Holder optional"
-                  items={people}
-                  getValue={(person) => person.id}
-                  getLabel={personLabel}
+                  items={users}
+                  getValue={(user) => user.id}
+                  getLabel={userLabel}
                   placeholder="Vacant"
                   emptyItem={{ value: '', label: 'Vacant' }}
                   value={field.state.value ?? ''}
                   disabled={!group || isSaving}
                   onBlur={field.handleBlur}
-                  onValueChange={(value) => field.handleChange(value || null)}
+                  onValueChange={(value) => field.handleChange(value || undefined)}
                   errors={field.state.meta.isTouched ? field.state.meta.errors : []}
                 />
               )}

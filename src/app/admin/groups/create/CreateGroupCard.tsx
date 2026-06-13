@@ -23,7 +23,6 @@ const defaultGroupFormValues: z.input<typeof createGroupFormSchema> = {
   kindId: '',
   name: '',
   description: '',
-  active: true,
   isContainer: false,
   parentGroupId: null,
 }
@@ -51,7 +50,6 @@ export function CreateGroupCard({
             kindId: value.kindId,
             name: value.name.trim(),
             description: value.description?.trim() || undefined,
-            active: value.active,
             isContainer: value.isContainer,
             parentGroupId: value.parentGroupId || null,
           },
@@ -147,18 +145,6 @@ export function CreateGroupCard({
               )}
             </form.Field>
             <div className="flex items-center gap-6">
-              <form.Field name="active">
-                {(field) => (
-                  <label className="flex items-center gap-2 text-sm">
-                    <Checkbox
-                      checked={field.state.value}
-                      disabled={isSaving}
-                      onCheckedChange={(checked) => field.handleChange(checked === true)}
-                    />
-                    Active
-                  </label>
-                )}
-              </form.Field>
               <form.Field name="isContainer">
                 {(field) => (
                   <label className="flex items-center gap-2 text-sm">

@@ -1,19 +1,20 @@
 import { returnsErrors } from '@/api/docs/errors'
-import { assignPositionHolderRequestSchema, positionSchema } from '@/api/models/group'
-import { idParamsSchema } from '@/api/models/utils'
+import { assignPositionHolderRequestSchema } from '@/api/models/group'
+import { positionSchema } from '@/api/models/position'
 import { handleGroupServiceError } from '@/api/services/groups'
 import { assignPositionHolder, vacatePosition } from '@/api/services/positions'
 import { Hono } from 'hono'
 import { describeRoute, resolver, validator } from 'hono-openapi'
+import z from 'zod'
 
 const router = new Hono()
 
 router.post(
-  '/:id/holder',
+  '/:positionId/holder',
 
   describeRoute({
     operationId: 'assignPositionHolder',
-    description: 'Assign a current holder person to a position',
+    description: 'Assign a current holder user to a position',
     tags: ['Positions'],
     responses: {
       200: {
@@ -24,17 +25,17 @@ router.post(
           },
         },
       },
-      ...returnsErrors([[404, 'Position or holder person not found']]),
+      ...returnsErrors([[404, 'Position or holder user not found']]),
     },
   }),
 
-  validator('param', idParamsSchema),
+  validator('param', z.object({ positionId: z.string() })),
 
   validator('json', assignPositionHolderRequestSchema),
 
   async (c) => {
     try {
-      const position = await assignPositionHolder(c.req.param('id'), c.req.valid('json'))
+      const position = await assignPositionHolder(c.req.param('positionId'), c.req.valid('json'))
 
       return c.json(position, 200)
     } catch (error) {
@@ -44,7 +45,7 @@ router.post(
 )
 
 router.delete(
-  '/:id/holder',
+  '/:positionId/holder',
 
   describeRoute({
     operationId: 'vacatePosition',
@@ -63,11 +64,11 @@ router.delete(
     },
   }),
 
-  validator('param', idParamsSchema),
+  validator('param', z.object({ positionId: z.string() })),
 
   async (c) => {
     try {
-      const position = await vacatePosition(c.req.param('id'))
+      const position = await vacatePosition(c.req.param('positionId'))
 
       return c.json(position, 200)
     } catch (error) {

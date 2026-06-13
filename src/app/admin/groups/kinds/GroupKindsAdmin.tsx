@@ -192,7 +192,7 @@ function GroupKindsTable({
                           aria-label="Delete kind"
                           disabled={deleteMutation.isPending || usedByCount > 0}
                           onClick={async () => {
-                            await deleteMutation.mutateAsync({ path: { id: kind.id } })
+                            await deleteMutation.mutateAsync({ path: { kindId: kind.id } })
                             await onChanged()
                           }}
                         >

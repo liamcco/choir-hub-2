@@ -5,9 +5,9 @@ import { useMutation } from '@tanstack/react-query'
 import { UserPlus } from 'lucide-react'
 import z from 'zod'
 
-import { provisionPersonFormSchema } from '@/api/models/people'
+import { createUserFormSchema } from '@/api/models/user'
 
-import { provisionPeopleMutation } from '@/lib/api-client/@tanstack/react-query.gen'
+import { createUsersMutation } from '@/lib/api-client/@tanstack/react-query.gen'
 
 import { getErrorMessage } from '@/common/errors/utils'
 import { Button } from '@/components/ui/button'
@@ -16,32 +16,32 @@ import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
-import { ProvisionResult } from './ProvisionResult'
+import { CreateResult } from './CreateUsersResult'
 
-const defaultProvisionFormValues: z.input<typeof provisionPersonFormSchema> = {
+const defaultCreateFormValues: z.input<typeof createUserFormSchema> = {
   name: '',
   email: '',
   password: '',
   role: 'user',
 }
 
-type AdminPersonCreateFormProps = {
-  onPeopleChanged: () => Promise<unknown>
+type CreateUserFormProps = {
+  onUsersChanged: () => Promise<unknown>
 }
 
-export function AdminPersonCreateForm({ onPeopleChanged }: AdminPersonCreateFormProps) {
-  const provisionMutation = useMutation(provisionPeopleMutation())
+export function CreateUserForm({ onUsersChanged }: CreateUserFormProps) {
+  const createMutation = useMutation(createUsersMutation())
 
   const form = useForm({
-    defaultValues: defaultProvisionFormValues,
+    defaultValues: defaultCreateFormValues,
     validators: {
-      onSubmit: provisionPersonFormSchema,
+      onSubmit: createUserFormSchema,
     },
     onSubmit: async ({ value }) => {
       try {
-        await provisionMutation.mutateAsync({
+        await createMutation.mutateAsync({
           body: {
-            people: [
+            users: [
               {
                 name: value.name.trim(),
                 email: value.email.trim(),
@@ -53,21 +53,21 @@ export function AdminPersonCreateForm({ onPeopleChanged }: AdminPersonCreateForm
         })
 
         form.reset()
-        await onPeopleChanged()
+        await onUsersChanged()
       } catch {
         // The mutation stores the error for rendering below.
       }
     },
   })
 
-  const isSaving = provisionMutation.isPending || form.state.isSubmitting
-  const provisionError = getErrorMessage(provisionMutation.error)
+  const isSaving = createMutation.isPending || form.state.isSubmitting
+  const createError = getErrorMessage(createMutation.error)
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Create Person</CardTitle>
-        <CardDescription>Provision a Better Auth user and matching application person.</CardDescription>
+        <CardTitle>Create User</CardTitle>
+        <CardDescription>Create a Better Auth user and matching application user.</CardDescription>
       </CardHeader>
       <CardContent>
         <form
@@ -167,8 +167,8 @@ export function AdminPersonCreateForm({ onPeopleChanged }: AdminPersonCreateForm
           </FieldGroup>
         </form>
 
-        {provisionError ? <p className="mt-4 text-sm text-destructive">{provisionError}</p> : null}
-        <ProvisionResult result={provisionMutation.data} />
+        {createError ? <p className="mt-4 text-sm text-destructive">{createError}</p> : null}
+        <CreateResult result={createMutation.data} />
       </CardContent>
     </Card>
   )

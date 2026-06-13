@@ -2,7 +2,7 @@
 
 import { RefreshCw } from 'lucide-react'
 
-import type { GetPeopleResponse } from '@/lib/api-client/types.gen'
+import type { GetUsersResponse } from '@/lib/api-client/types.gen'
 
 import { getErrorMessage } from '@/common/errors/utils'
 import { Button } from '@/components/ui/button'
@@ -10,21 +10,21 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
-type AdminPeopleTableProps = {
-  people: GetPeopleResponse['people']
+type AdminUsersTableProps = {
+  users: GetUsersResponse
   isPending: boolean
   isFetching: boolean
   error: unknown
   onRefresh: () => void
 }
 
-export function AdminPeopleTable({ people, isPending, isFetching, error, onRefresh }: AdminPeopleTableProps) {
+export function AdminUsersTable({ users, isPending, isFetching, error, onRefresh }: AdminUsersTableProps) {
   return (
     <Card className="lg:col-start-2 lg:row-span-2 lg:row-start-1">
       <CardHeader className="grid-cols-[1fr_auto]">
         <div>
-          <CardTitle>Persons</CardTitle>
-          <CardDescription>{people.length} provisioned</CardDescription>
+          <CardTitle>Users</CardTitle>
+          <CardDescription>{users.length} created</CardDescription>
         </div>
         <Button
           variant="outline"
@@ -39,21 +39,13 @@ export function AdminPeopleTable({ people, isPending, isFetching, error, onRefre
         </Button>
       </CardHeader>
       <CardContent>
-        <PeopleList people={people} isPending={isPending} error={error} />
+        <UsersList users={users} isPending={isPending} error={error} />
       </CardContent>
     </Card>
   )
 }
 
-function PeopleList({
-  people,
-  isPending,
-  error,
-}: {
-  people: GetPeopleResponse['people']
-  isPending: boolean
-  error: unknown
-}) {
+function UsersList({ users, isPending, error }: { users: GetUsersResponse; isPending: boolean; error: unknown }) {
   if (isPending) {
     return (
       <div className="space-y-3">
@@ -69,8 +61,8 @@ function PeopleList({
     return <p className="text-sm text-destructive">{errorMessage}</p>
   }
 
-  if (!people.length) {
-    return <p className="text-sm text-muted-foreground">No persons provisioned.</p>
+  if (!users.length) {
+    return <p className="text-sm text-muted-foreground">No users created.</p>
   }
 
   return (
@@ -80,16 +72,16 @@ function PeopleList({
           <TableHead>Name</TableHead>
           <TableHead>Email</TableHead>
           <TableHead>Role</TableHead>
-          <TableHead>Person ID</TableHead>
+          <TableHead>User ID</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
-        {people.map((person) => (
-          <TableRow key={person.id}>
-            <TableCell className="font-medium">{person.user?.name ?? 'Missing user'}</TableCell>
-            <TableCell className="text-muted-foreground">{person.user?.email ?? '-'}</TableCell>
-            <TableCell className="text-muted-foreground">{person.user?.role ?? '-'}</TableCell>
-            <TableCell className="font-mono text-xs text-muted-foreground">{person.id}</TableCell>
+        {users.map((user) => (
+          <TableRow key={user.id}>
+            <TableCell className="font-medium">{user.name ?? 'Missing user'}</TableCell>
+            <TableCell className="text-muted-foreground">{user.email ?? '-'}</TableCell>
+            <TableCell className="text-muted-foreground">{user.role ?? '-'}</TableCell>
+            <TableCell className="font-mono text-xs text-muted-foreground">{user.id}</TableCell>
           </TableRow>
         ))}
       </TableBody>

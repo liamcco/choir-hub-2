@@ -31,7 +31,7 @@ const components: { title: string; href: string; description: string }[] = [
   {
     title: 'Admin',
     href: '/admin',
-    description: 'Provision users and manage application persons.',
+    description: 'Create users and manage application users.',
   },
 ]
 

@@ -2,7 +2,8 @@ import { Context, Hono } from 'hono'
 import { describeResponse, describeRoute, resolver, validator } from 'hono-openapi'
 
 import { returnsErrors, returnsResponseErrors } from '@/api/docs/errors'
-import { positionSchema, updatePositionRequestSchema } from '@/api/models/group'
+import { updatePositionRequestSchema } from '@/api/models/group'
+import { positionSchema } from '@/api/models/position'
 import { GroupServiceError } from '@/api/services/groups/errors'
 import { deletePosition, getPositionById, updatePosition } from '@/api/services/positions/positionService'
 import z from 'zod'
@@ -50,7 +51,7 @@ router.patch(
 
   describeRoute({
     operationId: 'updatePosition',
-    description: 'Update global position details, associated groups, or current holder person',
+    description: 'Update global position details, associated groups, or current holder user',
     tags: ['Positions'],
     responses: {
       200: {
@@ -62,7 +63,7 @@ router.patch(
         },
       },
       ...returnsErrors([
-        [404, 'Position, group, or holder person not found'],
+        [404, 'Position, group, or holder user not found'],
         [409, 'Position update conflict'],
       ]),
     },
