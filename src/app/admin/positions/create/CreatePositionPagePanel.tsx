@@ -19,7 +19,7 @@ export function CreatePositionPagePanel() {
   const [selectedGroupId, setSelectedGroupId] = useState<string>('')
   const groupsQuery = useQuery(getGroupsOptions())
   const peopleQuery = useQuery(getPeopleOptions())
-  const groups = groupsQuery.data?.groups ?? []
+  const groups = groupsQuery.data ?? []
   const groupSections = groupSectionsByKind(groups)
   const effectiveGroupId = groups.some((group) => group.id === selectedGroupId)
     ? selectedGroupId

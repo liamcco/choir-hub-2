@@ -9,7 +9,7 @@ import {
   deleteGroupMembershipMutation,
 } from '@/lib/api-client/@tanstack/react-query.gen'
 
-import { createMembershipSchema } from '@/api/models/group'
+import { createMembershipFormSchema } from '@/api/models/group'
 import { getErrorMessage } from '@/common/errors/utils'
 import type { Group, Membership, Person } from '@/common/groups/types'
 import { formatDate, personLabel } from '@/common/groups/utils'
@@ -22,35 +22,32 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import z from 'zod'
 
-const defaultMembershipFormValues: z.input<typeof createMembershipSchema> = {
+const defaultMembershipFormValues: z.input<typeof createMembershipFormSchema> = {
   personId: '',
 }
 
 export function MembershipsAdmin({
   group,
   people,
-  memberships,
-  effectiveCount,
+  members,
   isPending,
   error,
   onMembershipsChanged,
 }: {
   group: Group | null
   people: Person[]
-  memberships: Membership[]
-  effectiveCount: number
+  members: Membership[]
   isPending: boolean
   error: unknown
   onMembershipsChanged: () => Promise<unknown>
 }) {
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(320px,420px)_1fr]">
-      <AddMembershipCard group={group} people={people} memberships={memberships} onChanged={onMembershipsChanged} />
+      <AddMembershipCard group={group} people={people} memberships={members} onChanged={onMembershipsChanged} />
       <MembershipsTable
         group={group}
-        memberships={memberships}
+        members={members}
         people={people}
-        effectiveCount={effectiveCount}
         isPending={isPending}
         error={error}
         onChanged={onMembershipsChanged}
@@ -71,12 +68,12 @@ function AddMembershipCard({
   onChanged: () => Promise<unknown>
 }) {
   const mutation = useMutation(createGroupMembershipMutation())
-  const memberPersonIds = new Set(memberships.map((membership) => membership.personId))
+  const memberPersonIds = new Set(memberships.map((membership) => membership.userId))
   const availablePeople = people.filter((person) => !memberPersonIds.has(person.id))
   const form = useForm({
     defaultValues: defaultMembershipFormValues,
     validators: {
-      onSubmit: createMembershipSchema,
+      onSubmit: createMembershipFormSchema,
     },
     onSubmit: async ({ value }) => {
       if (!group) {
@@ -156,17 +153,15 @@ function AddMembershipCard({
 
 function MembershipsTable({
   group,
-  memberships,
+  members,
   people,
-  effectiveCount,
   isPending,
   error,
   onChanged,
 }: {
   group: Group | null
-  memberships: Membership[]
+  members: Membership[]
   people: Person[]
-  effectiveCount: number
   isPending: boolean
   error: unknown
   onChanged: () => Promise<unknown>
@@ -179,7 +174,7 @@ function MembershipsTable({
       <CardHeader>
         <CardTitle>Memberships</CardTitle>
         <CardDescription>
-          {memberships.length} direct / {effectiveCount} effective
+          {members.filter((x) => x.isDirect).length} direct / {members.filter((x) => !x.isDirect).length} effective
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -202,10 +197,10 @@ function MembershipsTable({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {memberships.map((membership) => (
-                  <TableRow key={membership.id}>
-                    <TableCell className="font-medium">{personLabel(peopleById.get(membership.personId))}</TableCell>
-                    <TableCell className="text-muted-foreground">{formatDate(membership.addedAt)}</TableCell>
+                {members.map((member) => (
+                  <TableRow key={member.userId}>
+                    <TableCell className="font-medium">{personLabel(peopleById.get(member.userId))}</TableCell>
+                    <TableCell className="text-muted-foreground">{formatDate(member.addedAt)}</TableCell>
                     <TableCell className="text-right">
                       <Button
                         type="button"
@@ -219,7 +214,7 @@ function MembershipsTable({
                             return
                           }
 
-                          await deleteMutation.mutateAsync({ path: { id: group.id, membershipId: membership.id } })
+                          await deleteMutation.mutateAsync({ path: { id: group.id, userId: member.userId } })
                           await onChanged()
                         }}
                       >
@@ -230,7 +225,7 @@ function MembershipsTable({
                 ))}
               </TableBody>
             </Table>
-            {!memberships.length ? <p className="text-sm text-muted-foreground">No direct memberships.</p> : null}
+            {!members.length ? <p className="text-sm text-muted-foreground">No direct memberships.</p> : null}
             <FormError error={getErrorMessage(deleteMutation.error)} />
           </>
         )}

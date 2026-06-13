@@ -22,7 +22,7 @@ export function PositionsPagePanel() {
   const peopleQuery = useQuery(getPeopleOptions())
 
   // All groups
-  const groups = groupsQuery.data?.groups ?? []
+  const groups = groupsQuery.data ?? []
   const groupSections = groupSectionsByKind(groups)
 
   // Keep track of the selected group
@@ -62,7 +62,7 @@ export function PositionsPagePanel() {
       <div className="grid gap-6">
         <PositionsTable
           group={selectedGroup}
-          positions={positionsQuery.data?.positions ?? []}
+          positions={positionsQuery.data ?? []}
           people={peopleQuery.data?.people ?? []}
           isPending={positionsQuery.isPending && Boolean(effectiveGroupId)}
           error={positionsQuery.error}

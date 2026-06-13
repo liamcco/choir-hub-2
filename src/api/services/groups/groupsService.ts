@@ -2,7 +2,7 @@ import { z } from 'zod'
 
 import { prisma } from '@/db'
 
-import { createGroupSchema, updateGroupSchema } from '@/api/models/groups.mutate'
+import { createGroupRequestSchema, updateGroupRequestSchema } from '@/api/models/group'
 import {
   assertGroupKindExists,
   assertGroupParentDoesNotCreateCycle,
@@ -11,8 +11,8 @@ import {
 } from './assertions'
 import { GroupServiceError } from './errors'
 
-type CreateGroupInput = z.infer<typeof createGroupSchema>
-type UpdateGroupInput = z.infer<typeof updateGroupSchema>
+type CreateGroupInput = z.infer<typeof createGroupRequestSchema>
+type UpdateGroupInput = z.infer<typeof updateGroupRequestSchema>
 
 export async function getGroups() {
   return await prisma.group.findMany({

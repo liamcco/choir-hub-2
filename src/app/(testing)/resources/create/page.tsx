@@ -13,9 +13,9 @@ import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import z from 'zod'
 
-import { createResourceInputSchema } from '@/api/models/resources'
+import { createResourceFormSchema } from '@/api/models/resource'
 
-const defaultCreateFormValues: z.input<typeof createResourceInputSchema> = {
+const defaultCreateFormValues: z.input<typeof createResourceFormSchema> = {
   name: '',
   description: '',
 }
@@ -26,13 +26,13 @@ export default function CreatePage() {
   const form = useForm({
     defaultValues: defaultCreateFormValues,
     validators: {
-      onSubmit: createResourceInputSchema,
+      onSubmit: createResourceFormSchema,
     },
     onSubmit: async ({ value }) => {
       await mutation.mutateAsync({
         body: {
           name: value.name.trim(),
-          description: value.description.trim() || undefined,
+          description: value.description.trim(),
         },
       })
 

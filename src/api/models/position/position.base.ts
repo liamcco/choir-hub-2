@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { groupSchema } from './groups'
+import { groupSchema } from '../group/group.base'
 
 export const positionSchema = z.object({
   id: z.string(),

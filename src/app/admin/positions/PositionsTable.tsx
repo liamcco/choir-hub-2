@@ -3,7 +3,7 @@
 import { useMutation } from '@tanstack/react-query'
 import { Trash2, X } from 'lucide-react'
 
-import { updatePositionSchema } from '@/api/models/group'
+import { updatePositionFormSchema } from '@/api/models/group'
 
 import {
   deletePositionMutation,
@@ -44,7 +44,7 @@ export function PositionsTable({
   const peopleById = new Map(people.map((person) => [person.id, person]))
 
   async function assignHolder(position: Position, currentHolderPersonId: string) {
-    const parsed = updatePositionSchema.safeParse({
+    const parsed = updatePositionFormSchema.safeParse({
       currentHolderPersonId: currentHolderPersonId || null,
     })
 

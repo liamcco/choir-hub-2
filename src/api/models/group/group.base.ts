@@ -21,16 +21,10 @@ export const groupSchema = z.object({
   kind: groupKindSchema.optional(),
 })
 
-export const personGroupMembershipSchema = z.object({
-  id: z.string(),
-  personId: z.string(),
-  groupId: z.string(),
+export const groupMemberSchema = z.object({
+  userId: z.string(),
   addedAt: z.date(),
-})
-
-export const effectivePersonMembershipSchema = z.object({
-  personId: z.string(),
-  directGroupIds: z.array(z.string()),
+  isDirect: z.boolean(),
 })
 
 export const positionSchema = z.object({
@@ -48,24 +42,4 @@ export const positionSchema = z.object({
   ),
   createdAt: z.date(),
   updatedAt: z.date(),
-})
-
-export const groupKindsResponseSchema = z.object({
-  groupKinds: z.array(groupKindSchema),
-})
-
-export const groupsResponseSchema = z.object({
-  groups: z.array(groupSchema),
-})
-
-export const groupMembershipsResponseSchema = z.object({
-  memberships: z.array(personGroupMembershipSchema),
-})
-
-export const effectiveMembershipsResponseSchema = z.object({
-  members: z.array(effectivePersonMembershipSchema),
-})
-
-export const positionsResponseSchema = z.object({
-  positions: z.array(positionSchema),
 })

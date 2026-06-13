@@ -14,8 +14,8 @@ export function CreateGroupPagePanel() {
 
   return (
     <CreateGroupCard
-      groupKinds={groupKindsQuery.data?.groupKinds ?? []}
-      groups={groupsQuery.data?.groups ?? []}
+      groupKinds={groupKindsQuery.data ?? []}
+      groups={groupsQuery.data ?? []}
       onChanged={async () => {
         await invalidateGroups()
       }}

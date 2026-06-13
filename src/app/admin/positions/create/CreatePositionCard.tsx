@@ -5,7 +5,7 @@ import { useMutation } from '@tanstack/react-query'
 import { Plus } from 'lucide-react'
 import z from 'zod'
 
-import { createPositionSchema } from '@/api/models/group'
+import { createPositionFormSchema } from '@/api/models/group'
 
 import { createGroupPositionMutation } from '@/lib/api-client/@tanstack/react-query.gen'
 
@@ -21,7 +21,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 
-const defaultPositionFormValues: z.input<typeof createPositionSchema> = {
+const defaultPositionFormValues: z.input<typeof createPositionFormSchema> = {
   name: '',
   description: '',
   groupIds: [],
@@ -44,7 +44,7 @@ export function CreatePositionCard({
   const form = useForm({
     defaultValues: defaultPositionFormValues,
     validators: {
-      onSubmit: createPositionSchema,
+      onSubmit: createPositionFormSchema,
     },
     onSubmit: async ({ value }) => {
       if (!group) {

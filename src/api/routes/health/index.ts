@@ -13,6 +13,7 @@ router.get(
   describeRoute({
     operationId: 'checkHealth',
     description: 'Get system health status',
+    tags: ['Status'],
   }),
   describeResponse(
     async (c) => {

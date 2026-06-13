@@ -8,12 +8,7 @@ import { GroupsAdmin } from './GroupsAdmin'
 
 export function AdminGroupsPanel() {
   const groupsQuery = useQuery(getGroupsOptions())
-  const groups = groupsQuery.data?.groups ?? []
+  const groups = groupsQuery.data ?? []
 
-  return (
-    <GroupsAdmin
-      groups={groups}
-      groupsQuery={groupsQuery}
-    />
-  )
+  return <GroupsAdmin groups={groups} groupsQuery={groupsQuery} />
 }

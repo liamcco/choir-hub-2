@@ -1,13 +1,13 @@
 import { z } from 'zod'
 
-import { createGroupKindSchema, updateGroupKindSchema } from '@/api/models/groups.mutate'
+import { createGroupKindRequestSchema, updateGroupKindRequestSchema } from '@/api/models/group'
 import { prisma } from '@/db'
 
 import { assertUniqueGroupKindName } from './assertions'
 import { GroupServiceError } from './errors'
 
-type CreateGroupKindInput = z.infer<typeof createGroupKindSchema>
-type UpdateGroupKindInput = z.infer<typeof updateGroupKindSchema>
+type CreateGroupKindInput = z.infer<typeof createGroupKindRequestSchema>
+type UpdateGroupKindInput = z.infer<typeof updateGroupKindRequestSchema>
 
 export async function getGroupKinds() {
   return await prisma.groupKind.findMany({

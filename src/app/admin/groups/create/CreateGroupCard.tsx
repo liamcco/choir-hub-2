@@ -3,10 +3,11 @@
 import { useForm } from '@tanstack/react-form'
 import { useMutation } from '@tanstack/react-query'
 import { Plus } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 import { createGroupMutation } from '@/lib/api-client/@tanstack/react-query.gen'
 
-import { createGroupSchema } from '@/api/models/group'
+import { createGroupFormSchema } from '@/api/models/group'
 import { getErrorMessage } from '@/common/errors/utils'
 import type { Group, GroupKind } from '@/common/groups/types'
 import { FormError } from '@/common/ui/form'
@@ -18,7 +19,7 @@ import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field
 import { Input } from '@/components/ui/input'
 import z from 'zod'
 
-const defaultGroupFormValues: z.input<typeof createGroupSchema> = {
+const defaultGroupFormValues: z.input<typeof createGroupFormSchema> = {
   kindId: '',
   name: '',
   description: '',
@@ -36,11 +37,12 @@ export function CreateGroupCard({
   groups: Group[]
   onChanged: (createdGroupId: string) => Promise<unknown>
 }) {
+  const router = useRouter()
   const mutation = useMutation(createGroupMutation())
   const form = useForm({
     defaultValues: defaultGroupFormValues,
     validators: {
-      onSubmit: createGroupSchema,
+      onSubmit: createGroupFormSchema,
     },
     onSubmit: async ({ value }) => {
       try {
@@ -54,6 +56,7 @@ export function CreateGroupCard({
             parentGroupId: value.parentGroupId || null,
           },
         })
+        router.push(`/admin/groups/${createdGroup.id}`)
         form.reset()
         await onChanged(createdGroup.id)
       } catch {

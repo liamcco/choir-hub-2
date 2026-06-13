@@ -2,13 +2,17 @@ import { z } from 'zod'
 
 import { prisma } from '@/db'
 
+import {
+  assignPositionHolderRequestSchema,
+  createPositionRequestSchema,
+  updatePositionRequestSchema,
+} from '@/api/models/group'
 import { assertGroupExists, assertGroupsExist, assertPersonExists, uniqueIds } from '@/api/services/groups/assertions'
 import { GroupServiceError } from '@/api/services/groups/errors'
-import { createPositionSchema, updatePositionSchema, assignPositionHolderSchema } from '@/api/models/groups.mutate'
 
-type CreatePositionInput = z.infer<typeof createPositionSchema>
-type UpdatePositionInput = z.infer<typeof updatePositionSchema>
-type AssignPositionHolderInput = z.infer<typeof assignPositionHolderSchema>
+type CreatePositionInput = z.infer<typeof createPositionRequestSchema>
+type UpdatePositionInput = z.infer<typeof updatePositionRequestSchema>
+type AssignPositionHolderInput = z.infer<typeof assignPositionHolderRequestSchema>
 
 const positionInclude = {
   groups: {
@@ -26,6 +30,12 @@ const positionInclude = {
     },
   },
 } as const
+
+export async function getPositions() {
+  return await prisma.position.findMany({
+    include: positionInclude,
+  })
+}
 
 export async function getGroupPositions(groupId: string) {
   await assertGroupExists(groupId)

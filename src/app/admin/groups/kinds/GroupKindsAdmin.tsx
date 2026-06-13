@@ -6,7 +6,7 @@ import { Plus, Trash2 } from 'lucide-react'
 
 import { createGroupKindMutation, deleteGroupKindMutation } from '@/lib/api-client/@tanstack/react-query.gen'
 
-import { createGroupKindSchema } from '@/api/models/group'
+import { createGroupKindFormSchema } from '@/api/models/group'
 import { getErrorMessage } from '@/common/errors/utils'
 import type { Group, GroupKind } from '@/common/groups/types'
 import { FormError } from '@/common/ui/form'
@@ -18,7 +18,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import z from 'zod'
 
-const defaultGroupKindFormValues: z.input<typeof createGroupKindSchema> = {
+const defaultGroupKindFormValues: z.input<typeof createGroupKindFormSchema> = {
   name: '',
   description: '',
 }
@@ -55,7 +55,7 @@ function CreateGroupKindCard({ onChanged }: { onChanged: () => Promise<unknown> 
   const form = useForm({
     defaultValues: defaultGroupKindFormValues,
     validators: {
-      onSubmit: createGroupKindSchema,
+      onSubmit: createGroupKindFormSchema,
     },
     onSubmit: async ({ value }) => {
       try {

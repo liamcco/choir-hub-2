@@ -2,21 +2,79 @@ import { z } from 'zod'
 
 import { prisma } from '@/db'
 
-import { createMembershipSchema } from '@/api/models/groups.mutate'
-import { assertGroupExists, getDescendantGroupIds } from './assertions'
+import { createMembershipRequestSchema, groupMemberSchema } from '@/api/models/group'
+import { assertGroupExists } from './assertions'
 import { GroupServiceError } from './errors'
 
-type CreateMembershipInput = z.infer<typeof createMembershipSchema>
+type CreateMembershipInput = z.infer<typeof createMembershipRequestSchema>
+type GroupMember = z.infer<typeof groupMemberSchema>
 
-export async function getDirectGroupMemberships(groupId: string) {
+export async function getGroupMembers(groupId: string, onlyDirectMembers = false): Promise<GroupMember[]> {
   await assertGroupExists(groupId)
 
-  return await prisma.personGroupMembership.findMany({
+  const directMemberships = await prisma.personGroupMembership.findMany({
     where: { groupId },
     orderBy: {
       addedAt: 'asc',
     },
   })
+
+  const directMembers = directMemberships.map((membership) =>
+    groupMemberSchema.parse({ userId: membership.personId, isDirect: true, addedAt: membership.addedAt }),
+  )
+
+  // Simple case: the caller only wants people directly assigned to this group.
+  if (onlyDirectMembers) {
+    return directMembers
+  }
+
+  const descendantGroupIds: string[] = []
+  let currentParentGroupIds = [groupId]
+
+  while (currentParentGroupIds.length > 0) {
+    const childGroups = await prisma.group.findMany({
+      where: {
+        parentGroupId: {
+          in: currentParentGroupIds,
+        },
+      },
+      select: {
+        id: true,
+      },
+    })
+
+    currentParentGroupIds = childGroups.map((group) => group.id)
+    descendantGroupIds.push(...currentParentGroupIds)
+  }
+
+  if (descendantGroupIds.length === 0) {
+    return directMembers
+  }
+
+  const descendantMemberships = await prisma.personGroupMembership.findMany({
+    where: {
+      groupId: { in: descendantGroupIds },
+    },
+    orderBy: {
+      addedAt: 'asc',
+    },
+  })
+
+  const directMemberIds = new Set(directMembers.map((member) => member.userId))
+
+  const descendantMemberIds = [
+    ...new Set(
+      descendantMemberships
+        .map((membership) => membership.personId)
+        .filter((personId) => !directMemberIds.has(personId)),
+    ),
+  ]
+
+  const descendantMembers = descendantMemberIds.map((personId) =>
+    groupMemberSchema.parse({ userId: personId, isDirect: false, addedAt: null }),
+  )
+
+  return [...directMembers, ...descendantMembers]
 }
 
 export async function createGroupMembership(groupId: string, input: CreateMembershipInput) {
@@ -67,9 +125,9 @@ export async function createGroupMembership(groupId: string, input: CreateMember
   })
 }
 
-export async function deleteGroupMembership(groupId: string, membershipId: string) {
+export async function deleteGroupMembership(groupId: string, userId: string) {
   const membership = await prisma.personGroupMembership.findUnique({
-    where: { id: membershipId },
+    where: { personId_groupId: { personId: userId, groupId } },
   })
 
   if (!membership || membership.groupId !== groupId) {
@@ -77,39 +135,6 @@ export async function deleteGroupMembership(groupId: string, membershipId: strin
   }
 
   await prisma.personGroupMembership.delete({
-    where: { id: membershipId },
+    where: { id: membership.id },
   })
-}
-
-export async function getEffectiveGroupMembers(groupId: string) {
-  await assertGroupExists(groupId)
-
-  const descendantGroupIds = await getDescendantGroupIds(groupId)
-  const effectiveGroupIds = [groupId, ...descendantGroupIds]
-  const memberships = await prisma.personGroupMembership.findMany({
-    where: {
-      groupId: {
-        in: effectiveGroupIds,
-      },
-    },
-    orderBy: [{ personId: 'asc' }, { groupId: 'asc' }],
-  })
-
-  const membersByPersonId = new Map<string, { personId: string; directGroupIds: string[] }>()
-
-  for (const membership of memberships) {
-    const existing = membersByPersonId.get(membership.personId)
-
-    if (existing) {
-      existing.directGroupIds.push(membership.groupId)
-      continue
-    }
-
-    membersByPersonId.set(membership.personId, {
-      personId: membership.personId,
-      directGroupIds: [membership.groupId],
-    })
-  }
-
-  return [...membersByPersonId.values()]
 }

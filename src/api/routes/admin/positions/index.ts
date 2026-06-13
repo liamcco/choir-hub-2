@@ -1,191 +1,67 @@
-import { Context, Hono } from 'hono'
-import { describeResponse, describeRoute, resolver, validator } from 'hono-openapi'
+import { Hono } from 'hono'
+import { describeResponse, describeRoute, resolver } from 'hono-openapi'
 
-import { returnsErrors, returnsResponseErrors } from '@/api/docs/errors'
-import { positionSchema } from '@/api/models/groups'
-import { idParamsSchema } from '@/api/models/utils'
-import { GroupServiceError } from '@/api/services/groups/errors'
-import {
-  assignPositionHolder,
-  deletePosition,
-  getPositionById,
-  updatePosition,
-  vacatePosition,
-} from '@/api/services/positions/positionService'
-import { updatePositionSchema, assignPositionHolderSchema } from '@/api/models/groups.mutate'
+import { returnsErrors } from '@/api/docs/errors'
+import { positionSchema } from '@/api/models/group'
+import { getPositions } from '@/api/services/positions/positionService'
+import z from 'zod'
+import positionByIdRouter from './:id'
 
 const router = new Hono()
 
 router.get(
-  '/:id',
+  '/',
 
   describeRoute({
-    operationId: 'getPositionById',
-    description: 'Get a position by ID',
+    operationId: 'getPositions',
+    description: 'List all global positions, optionally filtered by associated group ID',
+    tags: ['Positions'],
   }),
-
-  validator('param', idParamsSchema),
 
   describeResponse(
     async (c) => {
-      const position = await getPositionById(c.req.param('id'))
+      const positions = await getPositions()
 
-      if (!position) {
-        return c.json({ message: 'Position not found' }, 404)
-      }
-
-      return c.json(position, 200)
+      return c.json(positions, 200)
     },
     {
       200: {
-        description: 'Position',
+        description: 'Global positions',
         content: {
           'application/json': {
-            vSchema: positionSchema,
+            vSchema: z.array(positionSchema),
           },
         },
       },
-      ...returnsResponseErrors([[404, 'Position not found']]),
     },
   ),
 )
 
-router.patch(
-  '/:id',
-
-  describeRoute({
-    operationId: 'updatePosition',
-    description: 'Update global position details, associated groups, or current holder person',
-    responses: {
-      200: {
-        description: 'Updated position',
-        content: {
-          'application/json': {
-            schema: resolver(positionSchema),
-          },
-        },
-      },
-      ...returnsErrors([
-        [404, 'Position, group, or holder person not found'],
-        [409, 'Position update conflict'],
-      ]),
-    },
-  }),
-
-  validator('param', idParamsSchema),
-
-  validator('json', updatePositionSchema),
-
-  async (c) => {
-    try {
-      const position = await updatePosition(c.req.param('id'), c.req.valid('json'))
-
-      return c.json(position, 200)
-    } catch (error) {
-      return handleGroupServiceError(c, error)
-    }
-  },
-)
-
-router.delete(
-  '/:id',
-
-  describeRoute({
-    operationId: 'deletePosition',
-    description: 'Delete a global position definition',
-    responses: {
-      204: {
-        description: 'Position deleted',
-      },
-      ...returnsErrors([[404, 'Position not found']]),
-    },
-  }),
-
-  validator('param', idParamsSchema),
-
-  async (c) => {
-    try {
-      await deletePosition(c.req.param('id'))
-
-      return c.body(null, 204)
-    } catch (error) {
-      return handleGroupServiceError(c, error)
-    }
-  },
-)
-
 router.post(
-  '/:id/holder',
+  '/',
 
   describeRoute({
-    operationId: 'assignPositionHolder',
-    description: 'Assign a current holder person to a position',
+    operationId: 'createPosition',
+    description: 'Create a new global position',
+    tags: ['Positions'],
     responses: {
-      200: {
-        description: 'Position with assigned holder',
+      201: {
+        description: 'Created position',
         content: {
           'application/json': {
             schema: resolver(positionSchema),
           },
         },
       },
-      ...returnsErrors([[404, 'Position or holder person not found']]),
+      ...returnsErrors([[409, 'Position naming conflict']]),
     },
   }),
 
-  validator('param', idParamsSchema),
-
-  validator('json', assignPositionHolderSchema),
-
   async (c) => {
-    try {
-      const position = await assignPositionHolder(c.req.param('id'), c.req.valid('json'))
-
-      return c.json(position, 200)
-    } catch (error) {
-      return handleGroupServiceError(c, error)
-    }
+    // Implementation for creating a new position would go here
+    return c.json({ message: 'Not implemented' }, 501)
   },
 )
 
-router.delete(
-  '/:id/holder',
-
-  describeRoute({
-    operationId: 'vacatePosition',
-    description: 'Vacate a position by clearing its current holder and heldSince timestamp',
-    responses: {
-      200: {
-        description: 'Vacated position',
-        content: {
-          'application/json': {
-            schema: resolver(positionSchema),
-          },
-        },
-      },
-      ...returnsErrors([[404, 'Position not found']]),
-    },
-  }),
-
-  validator('param', idParamsSchema),
-
-  async (c) => {
-    try {
-      const position = await vacatePosition(c.req.param('id'))
-
-      return c.json(position, 200)
-    } catch (error) {
-      return handleGroupServiceError(c, error)
-    }
-  },
-)
-
-function handleGroupServiceError(c: Context, error: unknown) {
-  if (error instanceof GroupServiceError) {
-    return c.json({ message: error.message }, error.status)
-  }
-
-  throw error
-}
-
+router.route('/', positionByIdRouter)
 export default router

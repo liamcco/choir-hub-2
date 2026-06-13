@@ -18,8 +18,8 @@ export function GroupKindsPagePanel() {
 
   return (
     <GroupKindsAdmin
-      groupKinds={groupKindsQuery.data?.groupKinds ?? []}
-      groups={groupsQuery.data?.groups ?? []}
+      groupKinds={groupKindsQuery.data ?? []}
+      groups={groupsQuery.data ?? []}
       isPending={groupKindsQuery.isPending}
       error={groupKindsQuery.error}
       onKindsChanged={invalidateKinds}

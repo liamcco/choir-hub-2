@@ -5,7 +5,7 @@ import { useMutation } from '@tanstack/react-query'
 import { UserPlus } from 'lucide-react'
 import z from 'zod'
 
-import { provisionPersonInputSchema } from '@/api/models/people'
+import { provisionPersonFormSchema } from '@/api/models/people'
 
 import { provisionPeopleMutation } from '@/lib/api-client/@tanstack/react-query.gen'
 
@@ -18,7 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 import { ProvisionResult } from './ProvisionResult'
 
-const defaultProvisionFormValues: z.input<typeof provisionPersonInputSchema> = {
+const defaultProvisionFormValues: z.input<typeof provisionPersonFormSchema> = {
   name: '',
   email: '',
   password: '',
@@ -35,7 +35,7 @@ export function AdminPersonCreateForm({ onPeopleChanged }: AdminPersonCreateForm
   const form = useForm({
     defaultValues: defaultProvisionFormValues,
     validators: {
-      onSubmit: provisionPersonInputSchema,
+      onSubmit: provisionPersonFormSchema,
     },
     onSubmit: async ({ value }) => {
       try {
@@ -45,7 +45,7 @@ export function AdminPersonCreateForm({ onPeopleChanged }: AdminPersonCreateForm
               {
                 name: value.name.trim(),
                 email: value.email.trim(),
-                password: value.password.trim() || undefined,
+                password: value.password?.trim(),
                 role: value.role,
               },
             ],

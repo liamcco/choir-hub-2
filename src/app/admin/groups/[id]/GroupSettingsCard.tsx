@@ -7,7 +7,7 @@ import { useState } from 'react'
 
 import { deleteGroupMutation, updateGroupMutation } from '@/lib/api-client/@tanstack/react-query.gen'
 
-import { updateGroupSchema } from '@/api/models/group'
+import { updateGroupFormSchema } from '@/api/models/group'
 import { getErrorMessage } from '@/common/errors/utils'
 import type { Group, GroupKind } from '@/common/groups/types'
 import { FormError } from '@/common/ui/form'
@@ -17,16 +17,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Checkbox } from '@/components/ui/checkbox'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import z from 'zod'
-
-const groupSettingsFormSchema = z.object({
-  kindId: z.string().min(1, 'Group kind is required'),
-  name: z.string().trim().min(1, 'Name is required'),
-  description: z.string(),
-  active: z.boolean(),
-  isContainer: z.boolean(),
-  parentGroupId: z.string().min(1).nullable(),
-})
+import { useRouter } from 'next/navigation'
 
 export function GroupSettingsCard({
   group,
@@ -73,6 +64,7 @@ function GroupSettingsForm({
   groups: Group[]
   onChanged: () => Promise<unknown>
 }) {
+  const router = useRouter()
   const updateMutation = useMutation(updateGroupMutation())
   const deleteMutation = useMutation(deleteGroupMutation())
   const [error, setError] = useState<string | null>(null)
@@ -84,9 +76,9 @@ function GroupSettingsForm({
       active: group.active,
       isContainer: group.isContainer,
       parentGroupId: group.parentGroupId,
-    } satisfies z.input<typeof updateGroupSchema>,
+    },
     validators: {
-      onSubmit: groupSettingsFormSchema,
+      onSubmit: updateGroupFormSchema,
     },
     onSubmit: async ({ value }) => {
       setError(null)
@@ -229,7 +221,7 @@ function GroupSettingsForm({
                 try {
                   setError(null)
                   await deleteMutation.mutateAsync({ path: { id: group.id } })
-                  await onChanged()
+                  router.push('/admin/groups')
                 } catch (submitError) {
                   setError(getErrorMessage(submitError))
                 }
