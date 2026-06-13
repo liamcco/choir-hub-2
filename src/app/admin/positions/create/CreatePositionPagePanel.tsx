@@ -4,7 +4,6 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 
 import {
-  getDirectGroupMembershipsOptions,
   getGroupPositionsQueryKey,
   getGroupsOptions,
   getPeopleOptions,
@@ -25,10 +24,6 @@ export function CreatePositionPagePanel() {
   const effectiveGroupId = groups.some((group) => group.id === selectedGroupId)
     ? selectedGroupId
     : (groups[0]?.id ?? '')
-  const membershipsQuery = useQuery({
-    ...getDirectGroupMembershipsOptions({ path: { id: effectiveGroupId } }),
-    enabled: Boolean(effectiveGroupId),
-  })
   const selectedGroup = groups.find((group) => group.id === effectiveGroupId) ?? null
   const invalidatePositions = () =>
     effectiveGroupId
@@ -49,7 +44,7 @@ export function CreatePositionPagePanel() {
       />
       <CreatePositionCard
         group={selectedGroup}
-        memberships={membershipsQuery.data?.memberships ?? []}
+        groups={groups}
         people={peopleQuery.data?.people ?? []}
         onChanged={invalidatePositions}
       />

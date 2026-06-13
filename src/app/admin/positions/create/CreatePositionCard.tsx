@@ -10,35 +10,36 @@ import { createPositionSchema } from '@/api/models/groups'
 import { createGroupPositionMutation } from '@/lib/api-client/@tanstack/react-query.gen'
 
 import { getErrorMessage } from '@/common/errors/utils'
-import type { Group, Membership, Person } from '@/common/groups/types'
+import type { Group, Person } from '@/common/groups/types'
 import { personLabel } from '@/common/groups/utils'
 import { FormError } from '@/common/ui/form'
 
+import { ControlledFieldSelect } from '@/components/forms/controlled-field-select'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 const defaultPositionFormValues: z.input<typeof createPositionSchema> = {
   name: '',
   description: '',
-  personGroupMembershipId: null,
+  groupIds: [],
+  currentHolderPersonId: null,
 }
 
 export function CreatePositionCard({
   group,
-  memberships,
+  groups,
   people,
   onChanged,
 }: {
   group: Group | null
-  memberships: Membership[]
+  groups: Group[]
   people: Person[]
   onChanged: () => Promise<unknown>
 }) {
   const mutation = useMutation(createGroupPositionMutation())
-  const peopleById = new Map(people.map((person) => [person.id, person]))
 
   const form = useForm({
     defaultValues: defaultPositionFormValues,
@@ -56,7 +57,8 @@ export function CreatePositionCard({
           body: {
             name: value.name.trim(),
             description: value.description?.trim() || undefined,
-            personGroupMembershipId: value.personGroupMembershipId || null,
+            groupIds: value.groupIds?.filter((groupId) => groupId !== group.id),
+            currentHolderPersonId: value.currentHolderPersonId || null,
           },
         })
         form.reset()
@@ -113,35 +115,52 @@ export function CreatePositionCard({
                 </Field>
               )}
             </form.Field>
-            <form.Field name="personGroupMembershipId">
+            <form.Field name="groupIds">
               {(field) => (
                 <Field>
-                  <FieldLabel htmlFor={field.name}>Holder optional</FieldLabel>
-                  <Select
-                    value={field.state.value ?? ''}
-                    disabled={!group || isSaving}
-                    onValueChange={(value) => field.handleChange(value || null)}
-                  >
-                    <SelectTrigger id={field.name} onBlur={field.handleBlur} className="w-full">
-                      <SelectValue placeholder="Vacant">
-                        {(value) =>
-                          value
-                            ? personLabel(peopleById.get(memberships.find((membership) => membership.id === value)?.personId ?? ''))
-                            : 'Vacant'
-                        }
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">Vacant</SelectItem>
-                      {memberships.map((membership) => (
-                        <SelectItem key={membership.id} value={membership.id}>
-                          {personLabel(peopleById.get(membership.personId))}
-                        </SelectItem>
+                  <FieldLabel>Additional groups optional</FieldLabel>
+                  <div className="grid gap-2">
+                    {groups
+                      .filter((candidate) => candidate.id !== group?.id)
+                      .map((candidate) => (
+                        <label key={candidate.id} className="flex items-center gap-2 text-sm">
+                          <Checkbox
+                            checked={field.state.value?.includes(candidate.id) ?? false}
+                            disabled={!group || isSaving}
+                            onCheckedChange={(checked) => {
+                              const selectedGroupIds = field.state.value ?? []
+
+                              field.handleChange(
+                                checked === true
+                                  ? [...selectedGroupIds, candidate.id]
+                                  : selectedGroupIds.filter((groupId) => groupId !== candidate.id),
+                              )
+                            }}
+                          />
+                          {candidate.name}
+                        </label>
                       ))}
-                    </SelectContent>
-                  </Select>
+                  </div>
                   <FieldError errors={field.state.meta.isTouched ? field.state.meta.errors : []} />
                 </Field>
+              )}
+            </form.Field>
+            <form.Field name="currentHolderPersonId">
+              {(field) => (
+                <ControlledFieldSelect
+                  id={field.name}
+                  label="Holder optional"
+                  items={people}
+                  getValue={(person) => person.id}
+                  getLabel={personLabel}
+                  placeholder="Vacant"
+                  emptyItem={{ value: '', label: 'Vacant' }}
+                  value={field.state.value ?? ''}
+                  disabled={!group || isSaving}
+                  onBlur={field.handleBlur}
+                  onValueChange={(value) => field.handleChange(value || null)}
+                  errors={field.state.meta.isTouched ? field.state.meta.errors : []}
+                />
               )}
             </form.Field>
             <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>

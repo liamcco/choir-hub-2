@@ -271,7 +271,7 @@ router.delete(
 
   describeRoute({
     operationId: 'deleteGroupMembership',
-    description: 'Remove a direct membership and vacate any positions currently held through that membership',
+    description: 'Remove a direct membership; position assignments are managed independently',
     responses: {
       204: {
         description: 'Membership deleted',
@@ -367,8 +367,7 @@ router.post(
 
   describeRoute({
     operationId: 'createGroupPosition',
-    description:
-      'Create a position for a group, optionally assigning one current holder through an existing direct membership',
+    description: 'Create a global position and associate it with this group plus any extra groups in the request body',
     responses: {
       201: {
         description: 'Created position',
@@ -379,7 +378,7 @@ router.post(
         },
       },
       ...returnsErrors([
-        [404, 'Group or membership not found'],
+        [404, 'Group or holder person not found'],
         [409, 'Position name or holder conflict'],
       ]),
     },

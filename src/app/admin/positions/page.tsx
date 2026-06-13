@@ -9,7 +9,7 @@ import { PositionsPagePanel } from './PositionsPagePanel'
 export default function AdminPositionsPage() {
   return (
     <PageShell size="wide">
-      <PageHeader title="Positions" description="Create positions and assign holders through direct group memberships." />
+      <PageHeader title="Positions" description="Create global positions, associate them with groups, and assign holders." />
       <div className="mb-6 flex items-center gap-2">
         <Button nativeButton={false} render={<Link href="/admin/positions/create" />}>
           <Plus />

@@ -30,6 +30,23 @@ type CreatePositionInput = z.infer<typeof createPositionSchema>
 type UpdatePositionInput = z.infer<typeof updatePositionSchema>
 type AssignPositionHolderInput = z.infer<typeof assignPositionHolderSchema>
 
+const positionInclude = {
+  groups: {
+    include: {
+      group: {
+        include: {
+          kind: true,
+        },
+      },
+    },
+    orderBy: {
+      group: {
+        name: 'asc',
+      },
+    },
+  },
+} as const
+
 export async function getGroupKinds() {
   return await prisma.groupKind.findMany({
     orderBy: {
@@ -274,15 +291,6 @@ export async function deleteGroupMembership(groupId: string, membershipId: strin
   }
 
   await prisma.$transaction([
-    prisma.position.updateMany({
-      where: {
-        personGroupMembershipId: membershipId,
-      },
-      data: {
-        personGroupMembershipId: null,
-        heldSince: null,
-      },
-    }),
     prisma.personGroupMembership.delete({
       where: { id: membershipId },
     }),
@@ -326,7 +334,14 @@ export async function getGroupPositions(groupId: string) {
   await assertGroupExists(groupId)
 
   return await prisma.position.findMany({
-    where: { groupId },
+    where: {
+      groups: {
+        some: {
+          groupId,
+        },
+      },
+    },
+    include: positionInclude,
     orderBy: {
       name: 'asc',
     },
@@ -336,29 +351,37 @@ export async function getGroupPositions(groupId: string) {
 export async function getPositionById(id: string) {
   return await prisma.position.findUnique({
     where: { id },
+    include: positionInclude,
   })
 }
 
 export async function createGroupPosition(groupId: string, input: CreatePositionInput) {
-  await assertGroupExists(groupId)
-  await assertUniquePositionName(groupId, input.name)
+  const groupIds = uniqueIds([groupId, ...(input.groupIds ?? [])])
 
-  if (input.personGroupMembershipId) {
-    await assertMembershipBelongsToGroup(input.personGroupMembershipId, groupId)
+  await assertGroupsExist(groupIds)
+  await assertUniquePositionName(input.name)
+
+  if (input.currentHolderPersonId) {
+    await assertPersonExists(input.currentHolderPersonId)
   }
 
-  if (!input.personGroupMembershipId && input.heldSince) {
+  if (!input.currentHolderPersonId && input.heldSince) {
     throw new GroupServiceError('A vacant position cannot have heldSince set')
   }
 
   return await prisma.position.create({
     data: {
-      groupId,
       name: input.name,
       description: input.description,
-      personGroupMembershipId: input.personGroupMembershipId,
-      heldSince: input.personGroupMembershipId ? (input.heldSince ?? new Date()) : null,
+      currentHolderPersonId: input.currentHolderPersonId,
+      heldSince: input.currentHolderPersonId ? (input.heldSince ?? new Date()) : null,
+      groups: {
+        create: groupIds.map((associatedGroupId) => ({
+          groupId: associatedGroupId,
+        })),
+      },
     },
+    include: positionInclude,
   })
 }
 
@@ -367,29 +390,48 @@ export async function updatePosition(id: string, input: UpdatePositionInput) {
   const nextName = input.name ?? position.name
 
   if (nextName !== position.name) {
-    await assertUniquePositionName(position.groupId, nextName, id)
+    await assertUniquePositionName(nextName, id)
   }
 
-  const isHolderUpdate = Object.hasOwn(input, 'personGroupMembershipId')
-  const personGroupMembershipId = isHolderUpdate ? (input.personGroupMembershipId ?? null) : position.personGroupMembershipId
+  const groupIds = input.groupIds ? uniqueIds(input.groupIds) : undefined
 
-  if (personGroupMembershipId) {
-    await assertMembershipBelongsToGroup(personGroupMembershipId, position.groupId)
+  if (groupIds) {
+    if (!groupIds.length) {
+      throw new GroupServiceError('At least one group is required')
+    }
+
+    await assertGroupsExist(groupIds)
   }
 
-  if (!personGroupMembershipId && input.heldSince) {
+  const isHolderUpdate = Object.hasOwn(input, 'currentHolderPersonId')
+  const currentHolderPersonId = isHolderUpdate
+    ? (input.currentHolderPersonId ?? null)
+    : position.currentHolderPersonId
+
+  if (currentHolderPersonId) {
+    await assertPersonExists(currentHolderPersonId)
+  }
+
+  if (!currentHolderPersonId && input.heldSince) {
     throw new GroupServiceError('A vacant position cannot have heldSince set')
   }
 
-  if (!personGroupMembershipId && Object.hasOwn(input, 'heldSince') && input.heldSince === null) {
+  if (!currentHolderPersonId && Object.hasOwn(input, 'heldSince') && input.heldSince === null) {
     return await prisma.position.update({
       where: { id },
       data: {
         name: input.name,
         description: input.description,
-        personGroupMembershipId: null,
+        currentHolderPersonId: null,
         heldSince: null,
+        groups: groupIds
+          ? {
+              deleteMany: {},
+              create: groupIds.map((associatedGroupId) => ({ groupId: associatedGroupId })),
+            }
+          : undefined,
       },
+      include: positionInclude,
     })
   }
 
@@ -398,31 +440,38 @@ export async function updatePosition(id: string, input: UpdatePositionInput) {
     data: {
       name: input.name,
       description: input.description,
-      personGroupMembershipId: isHolderUpdate ? personGroupMembershipId : undefined,
-      heldSince: personGroupMembershipId
+      currentHolderPersonId: isHolderUpdate ? currentHolderPersonId : undefined,
+      heldSince: currentHolderPersonId
         ? Object.hasOwn(input, 'heldSince')
-          ? input.heldSince
+          ? (input.heldSince ?? new Date())
           : isHolderUpdate
             ? new Date()
             : undefined
         : isHolderUpdate
           ? null
           : undefined,
+      groups: groupIds
+        ? {
+            deleteMany: {},
+            create: groupIds.map((associatedGroupId) => ({ groupId: associatedGroupId })),
+          }
+        : undefined,
     },
+    include: positionInclude,
   })
 }
 
 export async function assignPositionHolder(id: string, input: AssignPositionHolderInput) {
-  const position = await getExistingPosition(id)
-
-  await assertMembershipBelongsToGroup(input.personGroupMembershipId, position.groupId)
+  await getExistingPosition(id)
+  await assertPersonExists(input.currentHolderPersonId)
 
   return await prisma.position.update({
     where: { id },
     data: {
-      personGroupMembershipId: input.personGroupMembershipId,
+      currentHolderPersonId: input.currentHolderPersonId,
       heldSince: input.heldSince ?? new Date(),
     },
+    include: positionInclude,
   })
 }
 
@@ -432,9 +481,10 @@ export async function vacatePosition(id: string) {
   return await prisma.position.update({
     where: { id },
     data: {
-      personGroupMembershipId: null,
+      currentHolderPersonId: null,
       heldSince: null,
     },
+    include: positionInclude,
   })
 }
 
@@ -502,10 +552,9 @@ async function assertUniqueGroupName(name: string, parentGroupId: string | null,
   }
 }
 
-async function assertUniquePositionName(groupId: string, name: string, ignorePositionId?: string) {
+async function assertUniquePositionName(name: string, ignorePositionId?: string) {
   const existingPosition = await prisma.position.findFirst({
     where: {
-      groupId,
       name,
       id: ignorePositionId ? { not: ignorePositionId } : undefined,
     },
@@ -513,7 +562,26 @@ async function assertUniquePositionName(groupId: string, name: string, ignorePos
   })
 
   if (existingPosition) {
-    throw new GroupServiceError('Position name already exists in this group', 409)
+    throw new GroupServiceError('Position name already exists', 409)
+  }
+}
+
+async function assertGroupsExist(groupIds: string[]) {
+  if (!groupIds.length) {
+    throw new GroupServiceError('At least one group is required')
+  }
+
+  const groups = await prisma.group.findMany({
+    where: {
+      id: {
+        in: groupIds,
+      },
+    },
+    select: { id: true },
+  })
+
+  if (groups.length !== groupIds.length) {
+    throw new GroupServiceError('One or more groups were not found', 404)
   }
 }
 
@@ -542,24 +610,21 @@ async function assertGroupParentDoesNotCreateCycle(groupId: string, parentGroupI
   }
 }
 
-async function assertMembershipBelongsToGroup(membershipId: string, groupId: string) {
-  const membership = await prisma.personGroupMembership.findUnique({
-    where: { id: membershipId },
-    select: { groupId: true },
+async function assertPersonExists(personId: string) {
+  const person = await prisma.person.findUnique({
+    where: { id: personId },
+    select: { id: true },
   })
 
-  if (!membership) {
-    throw new GroupServiceError('Membership not found', 404)
-  }
-
-  if (membership.groupId !== groupId) {
-    throw new GroupServiceError('Position holder must be a direct member of the position group', 409)
+  if (!person) {
+    throw new GroupServiceError('Person not found', 404)
   }
 }
 
 async function getExistingPosition(id: string) {
   const position = await prisma.position.findUnique({
     where: { id },
+    include: positionInclude,
   })
 
   if (!position) {
@@ -567,6 +632,10 @@ async function getExistingPosition(id: string) {
   }
 
   return position
+}
+
+function uniqueIds(ids: string[]) {
+  return [...new Set(ids.filter(Boolean))]
 }
 
 async function getDescendantGroupIds(groupId: string) {

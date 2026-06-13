@@ -4,7 +4,6 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 
 import {
-  getDirectGroupMembershipsOptions,
   getGroupPositionsOptions,
   getGroupPositionsQueryKey,
   getGroupsOptions,
@@ -36,11 +35,6 @@ export function PositionsPagePanel() {
     : (groups[0]?.id ?? '')
   const selectedGroup = groups.find((group) => group.id === effectiveGroupId) ?? null
 
-  const membershipsQuery = useQuery({
-    ...getDirectGroupMembershipsOptions({ path: { id: effectiveGroupId } }),
-    // Only refetch memberships if a group is selected
-    enabled: Boolean(effectiveGroupId),
-  })
   const positionsQuery = useQuery({
     ...getGroupPositionsOptions({ path: { id: effectiveGroupId } }),
     // Only refetch positions if a group is selected
@@ -69,7 +63,6 @@ export function PositionsPagePanel() {
         <PositionsTable
           group={selectedGroup}
           positions={positionsQuery.data?.positions ?? []}
-          memberships={membershipsQuery.data?.memberships ?? []}
           people={peopleQuery.data?.people ?? []}
           isPending={positionsQuery.isPending && Boolean(effectiveGroupId)}
           error={positionsQuery.error}

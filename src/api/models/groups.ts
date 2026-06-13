@@ -35,11 +35,18 @@ export const effectivePersonMembershipSchema = z.object({
 
 export const positionSchema = z.object({
   id: z.string(),
-  groupId: z.string(),
   name: z.string(),
   description: z.string().nullable(),
-  personGroupMembershipId: z.string().nullable(),
+  currentHolderPersonId: z.string().nullable(),
   heldSince: z.date().nullable(),
+  groups: z.array(
+    z.object({
+      groupId: z.string(),
+      createdAt: z.date(),
+      group: groupSchema.optional(),
+    }),
+  ),
+  createdAt: z.date(),
   updatedAt: z.date(),
 })
 
@@ -120,7 +127,8 @@ export const createPositionSchema = z.object({
     .trim()
     .transform((description) => description || undefined)
     .optional(),
-  personGroupMembershipId: z.string().min(1).nullable().optional(),
+  groupIds: z.array(z.string().min(1)).optional(),
+  currentHolderPersonId: z.string().min(1).nullable().optional(),
   heldSince: z.coerce.date().nullable().optional(),
 })
 
@@ -132,11 +140,12 @@ export const updatePositionSchema = z.object({
     .transform((description) => description || null)
     .nullable()
     .optional(),
-  personGroupMembershipId: z.string().min(1).nullable().optional(),
+  groupIds: z.array(z.string().min(1)).min(1, 'At least one group is required').optional(),
+  currentHolderPersonId: z.string().min(1).nullable().optional(),
   heldSince: z.coerce.date().nullable().optional(),
 })
 
 export const assignPositionHolderSchema = z.object({
-  personGroupMembershipId: z.string().min(1, 'Membership is required'),
+  currentHolderPersonId: z.string().min(1, 'Person is required'),
   heldSince: z.coerce.date().optional(),
 })

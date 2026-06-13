@@ -54,8 +54,7 @@ router.patch(
 
   describeRoute({
     operationId: 'updatePosition',
-    description:
-      'Update position details or current holder; holder membership must be a direct membership in the position group',
+    description: 'Update global position details, associated groups, or current holder person',
     responses: {
       200: {
         description: 'Updated position',
@@ -66,7 +65,7 @@ router.patch(
         },
       },
       ...returnsErrors([
-        [404, 'Position or membership not found'],
+        [404, 'Position, group, or holder person not found'],
         [409, 'Position update conflict'],
       ]),
     },
@@ -92,7 +91,7 @@ router.delete(
 
   describeRoute({
     operationId: 'deletePosition',
-    description: 'Delete a position definition from its group',
+    description: 'Delete a global position definition',
     responses: {
       204: {
         description: 'Position deleted',
@@ -119,7 +118,7 @@ router.post(
 
   describeRoute({
     operationId: 'assignPositionHolder',
-    description: 'Assign a current holder to a position through an existing direct membership in the position group',
+    description: 'Assign a current holder person to a position',
     responses: {
       200: {
         description: 'Position with assigned holder',
@@ -130,8 +129,7 @@ router.post(
         },
       },
       ...returnsErrors([
-        [404, 'Position or membership not found'],
-        [409, 'Membership belongs to a different group'],
+        [404, 'Position or holder person not found'],
       ]),
     },
   }),
