@@ -1,14 +1,25 @@
 import { randomBytes } from 'node:crypto'
 
 import { createUserSchema, createUsersRequestSchema, createUsersResponseSchema, userSchema } from '@/api/models/user'
+import { groupSchema } from '@/api/models/group'
+import { positionSchema } from '@/api/models/position'
 import { prisma } from '@/db'
 import { auth } from '@/lib/auth'
 import z from 'zod'
+import { getEffectiveMemberCounts } from '@/api/services/groups/hierarchy'
 
 type User = z.infer<typeof userSchema>
 type CreateUserInput = z.infer<typeof createUserSchema>
 type CreateUsersInput = z.infer<typeof createUsersRequestSchema>
 type CreateUsersResponse = z.infer<typeof createUsersResponseSchema>
+type UserOrgGroup = z.infer<typeof groupSchema>
+type UserOrgPosition = z.infer<typeof positionSchema>
+
+export type UserOrgPlacement = {
+  directGroupIds: string[]
+  groups: UserOrgGroup[]
+  positions: UserOrgPosition[]
+}
 
 export async function getUserById(id: string): Promise<User | null> {
   const user = await prisma.user.findUnique({
@@ -56,6 +67,60 @@ export async function createUsers(input: CreateUsersInput): Promise<CreateUsersR
   }
 
   return result
+}
+
+export async function getUserOrgPlacement(userId: string): Promise<UserOrgPlacement> {
+  const [groups, memberships, positions, allMemberships] = await Promise.all([
+    prisma.group.findMany({
+      orderBy: [{ parentGroupId: 'asc' }, { name: 'asc' }],
+      include: {
+        kind: true,
+      },
+    }),
+    prisma.userGroupMembership.findMany({
+      where: { userId },
+      select: { groupId: true },
+    }),
+    prisma.position.findMany({
+      where: { currentHolderUserId: userId },
+      orderBy: { name: 'asc' },
+      include: {
+        currentHolder: {
+          select: { id: true, name: true },
+        },
+        groups: {
+          select: { groupId: true },
+        },
+      },
+    }),
+    prisma.userGroupMembership.findMany({
+      select: {
+        groupId: true,
+        userId: true,
+      },
+    }),
+  ])
+
+  const groupsById = new Map(groups.map((group) => [group.id, group]))
+  const directGroupIds = memberships.map((membership) => membership.groupId)
+  const positionGroupIds = positions.flatMap((position) => position.groups.map((group) => group.groupId))
+  const visibleGroupIds = getGroupIdsWithAncestors([...directGroupIds, ...positionGroupIds], groupsById)
+  const effectiveMemberCounts = getEffectiveMemberCounts(groups, allMemberships)
+  const visibleGroups = groups
+    .filter((group) => visibleGroupIds.has(group.id))
+    .map((group) =>
+      groupSchema.parse({
+        ...group,
+        kindName: group.kind.name,
+        effectiveMemberCount: effectiveMemberCounts.get(group.id) ?? 0,
+      }),
+    )
+
+  return {
+    directGroupIds,
+    groups: visibleGroups,
+    positions: positions.map(toPosition),
+  }
 }
 
 async function createUser(
@@ -149,6 +214,42 @@ function toUser(user: {
     ...user,
     role: user.role ?? 'user',
   })
+}
+
+function toPosition(position: {
+  id: string
+  name: string
+  description: string | null
+  currentHolder: { id: string; name: string } | null
+  heldSince: Date | null
+  groups: Array<{ groupId: string }>
+  createdAt: Date
+  updatedAt: Date
+}): UserOrgPosition {
+  return positionSchema.parse({
+    ...position,
+    groupIds: position.groups.map((group) => group.groupId),
+  })
+}
+
+function getGroupIdsWithAncestors<TGroup extends { id: string; parentGroupId: string | null }>(
+  groupIds: string[],
+  groupsById: Map<string, TGroup>,
+) {
+  const result = new Set<string>()
+
+  for (const groupId of groupIds) {
+    let currentGroupId: string | null = groupId
+    const visitedGroupIds = new Set<string>()
+
+    while (currentGroupId && !visitedGroupIds.has(currentGroupId)) {
+      visitedGroupIds.add(currentGroupId)
+      result.add(currentGroupId)
+      currentGroupId = groupsById.get(currentGroupId)?.parentGroupId ?? null
+    }
+  }
+
+  return result
 }
 
 /**

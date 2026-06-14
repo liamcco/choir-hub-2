@@ -1,9 +1,8 @@
 'use client'
 
-import type { Group, Position } from '@/common/groups/types'
+import type { Group } from '@/common/groups/types'
 
 import { GroupsTable } from './GroupsTable'
-import { OrgStructure } from './OrgStructure'
 
 type GroupsQueryState = {
   isPending: boolean
@@ -15,11 +14,9 @@ type GroupsQueryState = {
 export function GroupsAdmin({
   groups,
   groupsQuery,
-  positions,
 }: {
   groups: Group[]
   groupsQuery: GroupsQueryState
-  positions: Position[]
 }) {
   return (
     <div className="grid gap-6">
@@ -32,7 +29,6 @@ export function GroupsAdmin({
           void groupsQuery.refetch()
         }}
       />
-      <OrgStructure groups={groups} positions={positions} />
     </div>
   )
 }

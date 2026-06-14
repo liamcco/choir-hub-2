@@ -13,13 +13,13 @@ import {
 
 import { DataState, EmptyText } from '@/app/admin/_components/data-state'
 import type { Group, Position, User } from '@/common/groups/types'
-import { formatDate, userLabel } from '@/common/groups/utils'
+import { formatDate } from '@/common/groups/utils'
 import { FormError } from '@/common/ui/form'
 
 import { getErrorMessage } from '@/common/errors/utils'
+import { MemberCombobox } from '@/components/forms/member-combobox'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
 export function PositionsTable({
@@ -41,7 +41,6 @@ export function PositionsTable({
   const vacateMutation = useMutation(vacatePositionMutation())
   const deleteMutation = useMutation(deletePositionMutation())
 
-  const usersById = new Map(users.map((user) => [user.id, user]))
   const positionSections = groupPositionsByGroup(groups, positions)
   const groupCount = positionSections.filter((section) => section.key !== unassignedGroupKey).length
 
@@ -85,7 +84,6 @@ export function PositionsTable({
                     <PositionsSectionTable
                       positions={section.positions}
                       users={users}
-                      usersById={usersById}
                       isUpdating={updateMutation.isPending}
                       isVacating={vacateMutation.isPending}
                       isDeleting={deleteMutation.isPending}
@@ -122,7 +120,6 @@ export function PositionsTable({
 function PositionsSectionTable({
   positions,
   users,
-  usersById,
   isUpdating,
   isVacating,
   isDeleting,
@@ -132,7 +129,6 @@ function PositionsSectionTable({
 }: {
   positions: Position[]
   users: User[]
-  usersById: Map<string, User>
   isUpdating: boolean
   isVacating: boolean
   isDeleting: boolean
@@ -155,27 +151,13 @@ function PositionsSectionTable({
           <TableRow key={position.id}>
             <TableCell className="font-medium">{position.name}</TableCell>
             <TableCell>
-              <Select
+              <MemberCombobox
                 value={position.currentHolder?.id ?? ''}
                 disabled={isUpdating}
-                onValueChange={(value) => {
-                  void onAssignHolder(position, value ?? '')
-                }}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Vacant">
-                    {(value) => (value ? userLabel(usersById.get(String(value))) : 'Vacant')}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">Vacant</SelectItem>
-                  {users.map((user) => (
-                    <SelectItem key={user.id} value={user.id}>
-                      {userLabel(user)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                users={users}
+                placeholder="Search members"
+                onValueChange={(value) => void onAssignHolder(position, value)}
+              />
             </TableCell>
             <TableCell className="text-muted-foreground">
               {position.currentHolder?.id ? formatDate(position.heldSince) : '-'}

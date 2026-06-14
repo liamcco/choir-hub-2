@@ -10,8 +10,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { auth } from '@/lib/auth'
 
 import { EmailVerificationForm } from './email-verification-form'
+import { OrgPlacementCard } from './org-placement-card'
 import { PasskeyManager } from './passkey-manager'
 import { UsernameForm } from './username-form'
+import { getUserOrgPlacement } from '@/api/services/users/userService'
 
 export default function ProfilePage() {
   return (
@@ -21,12 +23,19 @@ export default function ProfilePage() {
       <Tabs defaultValue="profile" className="w-full">
         <TabsList className="w-full sm:w-fit">
           <TabsTrigger value="profile">Profile</TabsTrigger>
+          <TabsTrigger value="org">Org</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile">
           <Suspense fallback={<ProfileCardSkeleton />}>
             <ProfileCard />
+          </Suspense>
+        </TabsContent>
+
+        <TabsContent value="org">
+          <Suspense fallback={<OrgPlacementCardSkeleton />}>
+            <OrgPlacement />
           </Suspense>
         </TabsContent>
 
@@ -67,6 +76,13 @@ async function ProfileCard() {
       </CardContent>
     </Card>
   )
+}
+
+async function OrgPlacement() {
+  const { session } = await getSessionOrRedirect()
+  const placement = await getUserOrgPlacement(session.user.id)
+
+  return <OrgPlacementCard placement={placement} />
 }
 
 async function SecurityCard() {
@@ -115,6 +131,22 @@ function ProfileCardSkeleton() {
         </div>
         <Skeleton className="h-28" />
         <Skeleton className="h-32" />
+      </CardContent>
+    </Card>
+  )
+}
+
+function OrgPlacementCardSkeleton() {
+  return (
+    <Card>
+      <CardHeader>
+        <Skeleton className="h-5 w-36" />
+        <Skeleton className="h-4 w-64 max-w-full" />
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <Skeleton className="h-9 w-full" />
+        <Skeleton className="h-9 w-11/12" />
+        <Skeleton className="h-9 w-4/5" />
       </CardContent>
     </Card>
   )

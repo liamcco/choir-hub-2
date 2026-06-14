@@ -62,7 +62,7 @@ function GroupBranch({
         style={{ marginLeft: depth * 16 }}
       >
         <span className="font-medium">{group.name}</span>
-        <span className="text-muted-foreground">{formatMemberCount(group.effectiveMemberCount)}</span>
+        <span className="text-muted-foreground">{group.effectiveMemberCount}</span>
         {group.isContainer ? <span className="text-muted-foreground">Container</span> : null}
       </Link>
       {positions.length ? (
@@ -83,10 +83,6 @@ function GroupBranch({
       ))}
     </div>
   )
-}
-
-function formatMemberCount(count: number) {
-  return `${count} effective ${count === 1 ? 'member' : 'members'}`
 }
 
 function PositionLine({ position }: { position: Position }) {

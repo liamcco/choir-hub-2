@@ -9,7 +9,7 @@ import { AdminGroupsPanel } from './AdminGroupsPanel'
 export default function AdminGroupsPage() {
   return (
     <PageShell size="wide">
-      <PageHeader title="Groups" description="Create groups, inspect the hierarchy, and open group detail pages." />
+      <PageHeader title="Groups" description="Create groups and open group detail pages." />
       <div className="mb-6 flex items-center gap-2">
         <Button nativeButton={false} render={<Link href="/admin/groups/create" />}>
           <Plus />

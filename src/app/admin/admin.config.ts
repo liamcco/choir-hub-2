@@ -1,4 +1,4 @@
-import { BriefcaseBusiness, FolderTree, Users } from 'lucide-react'
+import { BriefcaseBusiness, FolderTree, GitFork, Users } from 'lucide-react'
 
 export const adminSections = [
   {
@@ -9,9 +9,15 @@ export const adminSections = [
   },
   {
     title: 'Groups',
-    description: 'Create groups and inspect the organization structure.',
+    description: 'Create groups and manage memberships.',
     href: '/admin/groups',
     icon: FolderTree,
+  },
+  {
+    title: 'Org Structure',
+    description: 'Inspect the full group hierarchy with positions and effective member counts.',
+    href: '/admin/org-structure',
+    icon: GitFork,
   },
   {
     title: 'Positions',

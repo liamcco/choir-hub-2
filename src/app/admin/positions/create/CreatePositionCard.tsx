@@ -12,10 +12,11 @@ import { createPositionMutation } from '@/lib/api-client/@tanstack/react-query.g
 
 import { getErrorMessage } from '@/common/errors/utils'
 import type { Group, User } from '@/common/groups/types'
-import { groupSectionsByKind, userLabel } from '@/common/groups/utils'
+import { groupSectionsByKind } from '@/common/groups/utils'
 import { FormError } from '@/common/ui/form'
 
 import { ControlledFieldSelect } from '@/components/forms/controlled-field-select'
+import { ControlledMemberCombobox } from '@/components/forms/member-combobox'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
@@ -130,14 +131,11 @@ export function CreatePositionCard({
             </form.Field>
             <form.Field name="currentHolderUserId">
               {(field) => (
-                <ControlledFieldSelect
+                <ControlledMemberCombobox
                   id={field.name}
                   label="Holder optional"
-                  items={users}
-                  getValue={(user) => user.id}
-                  getLabel={userLabel}
-                  placeholder="Vacant"
-                  emptyItem={{ value: '', label: 'Vacant' }}
+                  users={users}
+                  placeholder="Search members"
                   value={field.state.value ?? ''}
                   disabled={isSaving}
                   onBlur={field.handleBlur}
