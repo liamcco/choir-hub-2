@@ -44,7 +44,7 @@ bun run openapi-ts
 next build
 ```
 
-Set the variables from `.env.example` in Vercel Project Settings. At minimum, production needs `DATABASE_URL`, `BETTER_AUTH_SECRET`, and either `APP_URL`/`BETTER_AUTH_URL` or Vercel system environment variables exposed.
+Set the variables from `.env.example` in Vercel Project Settings. At minimum, production needs `POSTGRES_PRISMA_URL`, `BETTER_AUTH_SECRET`, and either `APP_URL`/`BETTER_AUTH_URL` or Vercel system environment variables exposed.
 
 `OPENAPI_SERVER_URL` is optional. Leave it unset to generate a same-origin API client.
 

@@ -8,6 +8,6 @@ export default defineConfig({
     seed: 'tsx src/prisma/seed.ts',
   },
   datasource: {
-    url: env('DATABASE_URL'),
+    url: env('POSTGRES_PRISMA_URL'),
   },
 })
