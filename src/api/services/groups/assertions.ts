@@ -128,24 +128,44 @@ export async function assertGroupParentDoesNotCreateCycle(groupId: string, paren
     throw new ApiError('A group cannot be its own parent', 409)
   }
 
+  const groups = await prisma.group.findMany({
+    select: {
+      id: true,
+      parentGroupId: true,
+    },
+  })
+  const parentByGroupId = new Map(groups.map((group) => [group.id, group.parentGroupId]))
+  const visitedGroupIds = new Set<string>()
   let currentParentId: string | null = parentGroupId
 
-  while (currentParentId) {
+  while (currentParentId && !visitedGroupIds.has(currentParentId)) {
     if (currentParentId === groupId) {
       throw new ApiError('Group hierarchy cannot contain cycles', 409)
     }
 
-    const parent: { parentGroupId: string | null } | null = await prisma.group.findUnique({
-      where: { id: currentParentId },
-      select: { parentGroupId: true },
-    })
-
-    currentParentId = parent?.parentGroupId ?? null
+    visitedGroupIds.add(currentParentId)
+    currentParentId = parentByGroupId.get(currentParentId) ?? null
   }
 }
 
 export async function getDescendantGroupIds(groupId: string) {
   const descendants: string[] = []
+  const groups = await prisma.group.findMany({
+    select: {
+      id: true,
+      parentGroupId: true,
+    },
+  })
+  const childIdsByGroupId = new Map<string, string[]>()
+
+  for (const group of groups) {
+    if (!group.parentGroupId) {
+      continue
+    }
+
+    childIdsByGroupId.set(group.parentGroupId, [...(childIdsByGroupId.get(group.parentGroupId) ?? []), group.id])
+  }
+
   const queue = [groupId]
 
   while (queue.length > 0) {
@@ -155,18 +175,9 @@ export async function getDescendantGroupIds(groupId: string) {
       continue
     }
 
-    const children = await prisma.group.findMany({
-      where: {
-        parentGroupId: currentGroupId,
-      },
-      select: {
-        id: true,
-      },
-    })
-
-    for (const child of children) {
-      descendants.push(child.id)
-      queue.push(child.id)
+    for (const childId of childIdsByGroupId.get(currentGroupId) ?? []) {
+      descendants.push(childId)
+      queue.push(childId)
     }
   }
 

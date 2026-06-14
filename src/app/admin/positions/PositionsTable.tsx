@@ -23,14 +23,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
 export function PositionsTable({
-  group,
+  groups,
   positions,
   users,
   isPending,
   error,
   onChanged,
 }: {
-  group: Group | null
+  groups: Group[]
   positions: Position[]
   users: User[]
   isPending: boolean
@@ -42,6 +42,8 @@ export function PositionsTable({
   const deleteMutation = useMutation(deletePositionMutation())
 
   const usersById = new Map(users.map((user) => [user.id, user]))
+  const positionSections = groupPositionsByGroup(groups, positions)
+  const groupCount = positionSections.filter((section) => section.key !== unassignedGroupKey).length
 
   async function assignHolder(position: Position, currentHolderUserId: string) {
     const parsed = updatePositionFormSchema.safeParse({
@@ -65,87 +67,44 @@ export function PositionsTable({
     <Card>
       <CardHeader>
         <CardTitle>Positions</CardTitle>
-        <CardDescription>{positions.length} defined</CardDescription>
+        <CardDescription>
+          {formatCount(positions.length, 'position')} defined across {formatCount(groupCount, 'group')}
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <DataState isPending={isPending} error={error}>
           <>
-            <Table className="min-w-170">
-              <TableHeader className="text-xs text-muted-foreground uppercase">
-                <TableRow>
-                  <TableHead>Position</TableHead>
-                  <TableHead>Holder</TableHead>
-                  <TableHead>Held Since</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {positions.map((position) => (
-                  <TableRow key={position.id}>
-                    <TableCell className="font-medium">{position.name}</TableCell>
-                    <TableCell>
-                      <Select
-                        value={position.currentHolder?.id ?? ''}
-                        disabled={!group || updateMutation.isPending}
-                        onValueChange={(value) => {
-                          void assignHolder(position, value ?? '')
-                        }}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Vacant">
-                            {(value) => (value ? userLabel(usersById.get(String(value))) : 'Vacant')}
-                          </SelectValue>
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="">Vacant</SelectItem>
-                          {users.map((user) => (
-                            <SelectItem key={user.id} value={user.id}>
-                              {userLabel(user)}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {position.currentHolder?.id ? formatDate(position.heldSince) : '-'}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          type="button"
-                          size="icon-sm"
-                          variant="outline"
-                          title="Vacate position"
-                          aria-label="Vacate position"
-                          disabled={!position.currentHolder?.id || vacateMutation.isPending}
-                          onClick={async () => {
-                            await vacateMutation.mutateAsync({ path: { positionId: position.id } })
-                            await onChanged()
-                          }}
-                        >
-                          <X />
-                        </Button>
-                        <Button
-                          type="button"
-                          size="icon-sm"
-                          variant="destructive"
-                          title="Delete position"
-                          aria-label="Delete position"
-                          disabled={deleteMutation.isPending}
-                          onClick={async () => {
-                            await deleteMutation.mutateAsync({ path: { positionId: position.id } })
-                            await onChanged()
-                          }}
-                        >
-                          <Trash2 />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
+            {positionSections.length ? (
+              <div className="space-y-6">
+                {positionSections.map((section) => (
+                  <section key={section.key} className="space-y-2">
+                    <div className="flex flex-wrap items-baseline justify-between gap-2">
+                      <h2 className="text-sm font-medium">{section.name}</h2>
+                      <span className="text-xs text-muted-foreground">{formatCount(section.positions.length, 'position')}</span>
+                    </div>
+                    <PositionsSectionTable
+                      positions={section.positions}
+                      users={users}
+                      usersById={usersById}
+                      isUpdating={updateMutation.isPending}
+                      isVacating={vacateMutation.isPending}
+                      isDeleting={deleteMutation.isPending}
+                      onAssignHolder={assignHolder}
+                      onVacate={async (position) => {
+                        await vacateMutation.mutateAsync({ path: { positionId: position.id } })
+                        await onChanged()
+                      }}
+                      onDelete={async (position) => {
+                        await deleteMutation.mutateAsync({ path: { positionId: position.id } })
+                        await onChanged()
+                      }}
+                    />
+                  </section>
                 ))}
-              </TableBody>
-            </Table>
-            {!positions.length ? <EmptyText>No positions defined.</EmptyText> : null}
+              </div>
+            ) : (
+              <EmptyText>No positions defined.</EmptyText>
+            )}
             <FormError
               error={
                 getErrorMessage(updateMutation.error) ??
@@ -158,4 +117,159 @@ export function PositionsTable({
       </CardContent>
     </Card>
   )
+}
+
+function PositionsSectionTable({
+  positions,
+  users,
+  usersById,
+  isUpdating,
+  isVacating,
+  isDeleting,
+  onAssignHolder,
+  onVacate,
+  onDelete,
+}: {
+  positions: Position[]
+  users: User[]
+  usersById: Map<string, User>
+  isUpdating: boolean
+  isVacating: boolean
+  isDeleting: boolean
+  onAssignHolder: (position: Position, currentHolderUserId: string) => Promise<void>
+  onVacate: (position: Position) => Promise<void>
+  onDelete: (position: Position) => Promise<void>
+}) {
+  return (
+    <Table className="min-w-170">
+      <TableHeader className="text-xs text-muted-foreground uppercase">
+        <TableRow>
+          <TableHead>Position</TableHead>
+          <TableHead>Holder</TableHead>
+          <TableHead>Held Since</TableHead>
+          <TableHead className="text-right">Actions</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {positions.map((position) => (
+          <TableRow key={position.id}>
+            <TableCell className="font-medium">{position.name}</TableCell>
+            <TableCell>
+              <Select
+                value={position.currentHolder?.id ?? ''}
+                disabled={isUpdating}
+                onValueChange={(value) => {
+                  void onAssignHolder(position, value ?? '')
+                }}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Vacant">
+                    {(value) => (value ? userLabel(usersById.get(String(value))) : 'Vacant')}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Vacant</SelectItem>
+                  {users.map((user) => (
+                    <SelectItem key={user.id} value={user.id}>
+                      {userLabel(user)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </TableCell>
+            <TableCell className="text-muted-foreground">
+              {position.currentHolder?.id ? formatDate(position.heldSince) : '-'}
+            </TableCell>
+            <TableCell>
+              <div className="flex justify-end gap-2">
+                <Button
+                  type="button"
+                  size="icon-sm"
+                  variant="outline"
+                  title="Vacate position"
+                  aria-label="Vacate position"
+                  disabled={!position.currentHolder?.id || isVacating}
+                  onClick={() => {
+                    void onVacate(position)
+                  }}
+                >
+                  <X />
+                </Button>
+                <Button
+                  type="button"
+                  size="icon-sm"
+                  variant="destructive"
+                  title="Delete position"
+                  aria-label="Delete position"
+                  disabled={isDeleting}
+                  onClick={() => {
+                    void onDelete(position)
+                  }}
+                >
+                  <Trash2 />
+                </Button>
+              </div>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  )
+}
+
+function formatCount(count: number, label: string) {
+  return `${count} ${count === 1 ? label : `${label}s`}`
+}
+
+type PositionSection = {
+  key: string
+  name: string
+  positions: Position[]
+}
+
+const unassignedGroupKey = '__unassigned__'
+
+function groupPositionsByGroup(groups: Group[], positions: Position[]): PositionSection[] {
+  const groupsById = new Map(groups.map((group) => [group.id, group]))
+  const positionsByGroupId = new Map<string, Position[]>()
+
+  for (const position of positions) {
+    const groupIds = position.groupIds.length ? position.groupIds : [unassignedGroupKey]
+
+    for (const groupId of groupIds) {
+      const groupPositions = positionsByGroupId.get(groupId) ?? []
+      groupPositions.push(position)
+      positionsByGroupId.set(groupId, groupPositions)
+    }
+  }
+
+  const sections: PositionSection[] = groups.flatMap((group) => {
+    const groupPositions = positionsByGroupId.get(group.id) ?? []
+
+    return groupPositions.length ? [{ key: group.id, name: group.name, positions: groupPositions }] : []
+  })
+
+  for (const [groupId, groupPositions] of positionsByGroupId) {
+    if (groupId === unassignedGroupKey || groupsById.has(groupId)) {
+      continue
+    }
+
+    sections.push({
+      key: groupId,
+      name: 'Unknown group',
+      positions: groupPositions,
+    })
+  }
+
+  const unassignedPositions = positionsByGroupId.get(unassignedGroupKey)
+
+  if (unassignedPositions?.length) {
+    sections.push({
+      key: unassignedGroupKey,
+      name: 'No group',
+      positions: unassignedPositions,
+    })
+  }
+
+  return sections
 }

@@ -3,55 +3,31 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 
 import {
-  getGroupPositionsOptions,
-  getGroupPositionsQueryKey,
   getGroupsOptions,
+  getPositionsOptions,
+  getPositionsQueryKey,
   getUsersOptions,
 } from '@/lib/api-client/@tanstack/react-query.gen'
-
-import { useGroupSelection } from '@/app/admin/_hooks/use-group-selection'
-import { ControlledFieldSelect } from '@/components/forms/controlled-field-select'
 
 import { PositionsTable } from './PositionsTable'
 
 export function PositionsPagePanel() {
   const queryClient = useQueryClient()
   const groupsQuery = useQuery(getGroupsOptions())
+  const positionsQuery = useQuery(getPositionsOptions())
   const usersQuery = useQuery(getUsersOptions())
 
-  const groups = groupsQuery.data ?? []
-  const { effectiveGroupId, groupSections, selectedGroup, setSelectedGroupId } = useGroupSelection(groups)
-
-  const positionsQuery = useQuery({
-    ...getGroupPositionsOptions({ path: { groupId: effectiveGroupId } }),
-    enabled: Boolean(effectiveGroupId),
-  })
-
-  const invalidatePositions = () =>
-    effectiveGroupId
-      ? queryClient.invalidateQueries({ queryKey: getGroupPositionsQueryKey({ path: { groupId: effectiveGroupId } }) })
-      : Promise.resolve()
+  const invalidatePositions = () => queryClient.invalidateQueries({ queryKey: getPositionsQueryKey() })
 
   return (
     <div className="space-y-6">
-      <ControlledFieldSelect
-        id="positions-group"
-        className="max-w-sm"
-        label="Group"
-        sections={groupSections}
-        getValue={(group) => group.id}
-        getLabel={(group) => group.name}
-        placeholder="Select group"
-        value={effectiveGroupId}
-        onValueChange={setSelectedGroupId}
-      />
       <div className="grid gap-6">
         <PositionsTable
-          group={selectedGroup}
+          groups={groupsQuery.data ?? []}
           positions={positionsQuery.data ?? []}
           users={usersQuery.data ?? []}
-          isPending={positionsQuery.isPending && Boolean(effectiveGroupId)}
-          error={positionsQuery.error}
+          isPending={groupsQuery.isPending || positionsQuery.isPending || usersQuery.isPending}
+          error={groupsQuery.error ?? positionsQuery.error ?? usersQuery.error}
           onChanged={invalidatePositions}
         />
       </div>

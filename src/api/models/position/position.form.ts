@@ -1,11 +1,9 @@
 import { createPositionRequestSchema, updatePositionRequestSchema } from './position.mutate'
 import { z } from 'zod'
 
-const additionalGroupIdsFormSchema = z.array(z.string().min(1)).default([])
-
 export const createPositionFormSchema = createPositionRequestSchema.omit({ groupIds: true }).extend({
   description: createPositionRequestSchema.shape.description.transform((description) => description || undefined),
-  groupIds: additionalGroupIdsFormSchema,
+  groupId: z.string().min(1, 'Group is required'),
 })
 
 export const updatePositionFormSchema = updatePositionRequestSchema.extend({

@@ -12,38 +12,73 @@ import {
 } from './assertions'
 
 type Group = z.infer<typeof groupSchema>
+type GroupHierarchyNode = {
+  id: string
+  parentGroupId: string | null
+}
+type GroupMembershipNode = {
+  groupId: string
+  userId: string
+}
 
 export async function getGroups(): Promise<Array<Group>> {
-  const groups = await prisma.group.findMany({
-    orderBy: [{ parentGroupId: 'asc' }, { name: 'asc' }],
-    include: {
-      kind: true,
-    },
-  })
+  const [groups, memberships] = await Promise.all([
+    prisma.group.findMany({
+      orderBy: [{ parentGroupId: 'asc' }, { name: 'asc' }],
+      include: {
+        kind: true,
+      },
+    }),
+    prisma.userGroupMembership.findMany({
+      select: {
+        groupId: true,
+        userId: true,
+      },
+    }),
+  ])
+  const effectiveMemberCounts = getEffectiveMemberCounts(groups, memberships)
 
   return groups.map((group) =>
     groupSchema.parse({
       ...group,
       kindName: group.kind.name,
+      effectiveMemberCount: effectiveMemberCounts.get(group.id) ?? 0,
     }),
   )
 }
 
 export async function getGroupById(id: string): Promise<Group> {
-  const groupsWithKinds = await prisma.group.findUnique({
-    where: { id },
-    include: {
-      kind: true,
-    },
-  })
+  const [groupsWithKinds, groups, memberships] = await Promise.all([
+    prisma.group.findUnique({
+      where: { id },
+      include: {
+        kind: true,
+      },
+    }),
+    prisma.group.findMany({
+      select: {
+        id: true,
+        parentGroupId: true,
+      },
+    }),
+    prisma.userGroupMembership.findMany({
+      select: {
+        groupId: true,
+        userId: true,
+      },
+    }),
+  ])
 
   if (!groupsWithKinds) {
     throw new ApiError('Group not found', 404)
   }
 
+  const effectiveMemberCounts = getEffectiveMemberCounts(groups, memberships)
+
   return groupSchema.parse({
     ...groupsWithKinds,
     kindName: groupsWithKinds.kind.name,
+    effectiveMemberCount: effectiveMemberCounts.get(groupsWithKinds.id) ?? 0,
   })
 }
 
@@ -73,6 +108,7 @@ export async function createGroup(input: CreateGroupInput): Promise<Group> {
   return {
     ...createdGroup,
     kindName: kind.name,
+    effectiveMemberCount: 0,
   }
 }
 
@@ -110,23 +146,27 @@ export async function updateGroup(groupId: string, input: UpdateGroupInput): Pro
     throw new ApiError('A group with direct memberships cannot be converted to a container group', 409)
   }
 
-  const { kind, ...updatedGroup } = await prisma.group.update({
-    where: { id: groupId },
-    data: {
-      kindId: input.kindId,
-      name: input.name,
-      description: input.description,
-      isContainer: input.isContainer,
-      parentGroupId,
-    },
-    include: {
-      kind: true,
-    },
-  })
+  const [{ kind, ...updatedGroup }, effectiveMemberCount] = await Promise.all([
+    prisma.group.update({
+      where: { id: groupId },
+      data: {
+        kindId: input.kindId,
+        name: input.name,
+        description: input.description,
+        isContainer: input.isContainer,
+        parentGroupId,
+      },
+      include: {
+        kind: true,
+      },
+    }),
+    getEffectiveMemberCount(groupId),
+  ])
 
   return {
     ...updatedGroup,
     kindName: kind.name,
+    effectiveMemberCount,
   }
 }
 
@@ -152,4 +192,45 @@ export async function deleteGroup(groupId: string): Promise<void> {
   await prisma.group.delete({
     where: { id: groupId },
   })
+}
+
+async function getEffectiveMemberCount(groupId: string) {
+  const [groups, memberships] = await Promise.all([
+    prisma.group.findMany({
+      select: {
+        id: true,
+        parentGroupId: true,
+      },
+    }),
+    prisma.userGroupMembership.findMany({
+      select: {
+        groupId: true,
+        userId: true,
+      },
+    }),
+  ])
+
+  return getEffectiveMemberCounts(groups, memberships).get(groupId) ?? 0
+}
+
+function getEffectiveMemberCounts(groups: GroupHierarchyNode[], memberships: GroupMembershipNode[]) {
+  const parentByGroupId = new Map(groups.map((group) => [group.id, group.parentGroupId]))
+  const memberIdsByGroupId = new Map<string, Set<string>>()
+
+  for (const membership of memberships) {
+    let currentGroupId: string | null = membership.groupId
+    const visitedGroupIds = new Set<string>()
+
+    while (currentGroupId && !visitedGroupIds.has(currentGroupId)) {
+      visitedGroupIds.add(currentGroupId)
+
+      const memberIds = memberIdsByGroupId.get(currentGroupId) ?? new Set<string>()
+      memberIds.add(membership.userId)
+      memberIdsByGroupId.set(currentGroupId, memberIds)
+
+      currentGroupId = parentByGroupId.get(currentGroupId) ?? null
+    }
+  }
+
+  return new Map([...memberIdsByGroupId.entries()].map(([groupId, memberIds]) => [groupId, memberIds.size]))
 }

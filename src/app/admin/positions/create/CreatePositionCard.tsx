@@ -3,6 +3,7 @@
 import { useForm } from '@tanstack/react-form'
 import { useMutation } from '@tanstack/react-query'
 import { Plus } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import z from 'zod'
 
 import { createPositionFormSchema } from '@/api/models/position'
@@ -11,35 +12,34 @@ import { createPositionMutation } from '@/lib/api-client/@tanstack/react-query.g
 
 import { getErrorMessage } from '@/common/errors/utils'
 import type { Group, User } from '@/common/groups/types'
-import { userLabel } from '@/common/groups/utils'
+import { groupSectionsByKind, userLabel } from '@/common/groups/utils'
 import { FormError } from '@/common/ui/form'
 
 import { ControlledFieldSelect } from '@/components/forms/controlled-field-select'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Checkbox } from '@/components/ui/checkbox'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 
 const defaultPositionFormValues: z.input<typeof createPositionFormSchema> = {
   name: '',
   description: '',
-  groupIds: [],
+  groupId: '',
   currentHolderUserId: null,
 }
 
 export function CreatePositionCard({
-  group,
   groups,
   users,
-  onChanged,
+  onCreated,
 }: {
-  group: Group | null
   groups: Group[]
   users: User[]
-  onChanged: () => Promise<unknown>
+  onCreated: () => Promise<unknown>
 }) {
+  const router = useRouter()
   const mutation = useMutation(createPositionMutation())
+  const groupSections = groupSectionsByKind(groups)
 
   const form = useForm({
     defaultValues: defaultPositionFormValues,
@@ -47,21 +47,18 @@ export function CreatePositionCard({
       onSubmit: createPositionFormSchema,
     },
     onSubmit: async ({ value }) => {
-      if (!group) {
-        return
-      }
-
       try {
         await mutation.mutateAsync({
           body: {
             name: value.name.trim(),
             description: value.description?.trim(),
-            groupIds: [...new Set([group.id, ...(value.groupIds ?? [])])],
+            groupIds: [value.groupId],
             currentHolderUserId: value.currentHolderUserId ?? undefined,
           },
         })
         form.reset()
-        await onChanged()
+        await onCreated()
+        router.push('/admin/positions')
       } catch {
         // The mutation stores the error for rendering below.
       }
@@ -74,7 +71,7 @@ export function CreatePositionCard({
     <Card>
       <CardHeader>
         <CardTitle>Create Position</CardTitle>
-        <CardDescription>{group ? group.name : 'Select a group first'}</CardDescription>
+        <CardDescription>Add the position to a group and optionally assign an initial holder.</CardDescription>
       </CardHeader>
       <CardContent>
         <form
@@ -91,7 +88,7 @@ export function CreatePositionCard({
                   <Input
                     id={field.name}
                     value={field.state.value}
-                    disabled={!group || isSaving}
+                    disabled={isSaving}
                     onBlur={field.handleBlur}
                     onChange={(event) => field.handleChange(event.target.value)}
                   />
@@ -106,7 +103,7 @@ export function CreatePositionCard({
                   <Input
                     id={field.name}
                     value={field.state.value ?? ''}
-                    disabled={!group || isSaving}
+                    disabled={isSaving}
                     onBlur={field.handleBlur}
                     onChange={(event) => field.handleChange(event.target.value)}
                   />
@@ -114,34 +111,21 @@ export function CreatePositionCard({
                 </Field>
               )}
             </form.Field>
-            <form.Field name="groupIds">
+            <form.Field name="groupId">
               {(field) => (
-                <Field>
-                  <FieldLabel>Additional groups optional</FieldLabel>
-                  <div className="grid gap-2">
-                    {groups
-                      .filter((candidate) => candidate.id !== group?.id)
-                      .map((candidate) => (
-                        <label key={candidate.id} className="flex items-center gap-2 text-sm">
-                          <Checkbox
-                            checked={field.state.value?.includes(candidate.id) ?? false}
-                            disabled={!group || isSaving}
-                            onCheckedChange={(checked) => {
-                              const selectedGroupIds = field.state.value ?? []
-
-                              field.handleChange(
-                                checked === true
-                                  ? [...selectedGroupIds, candidate.id]
-                                  : selectedGroupIds.filter((groupId) => groupId !== candidate.id),
-                              )
-                            }}
-                          />
-                          {candidate.name}
-                        </label>
-                      ))}
-                  </div>
-                  <FieldError errors={field.state.meta.isTouched ? field.state.meta.errors : []} />
-                </Field>
+                <ControlledFieldSelect
+                  id={field.name}
+                  label="Group"
+                  sections={groupSections}
+                  getValue={(group) => group.id}
+                  getLabel={(group) => group.name}
+                  placeholder="Select group"
+                  value={field.state.value}
+                  disabled={isSaving}
+                  onBlur={field.handleBlur}
+                  onValueChange={field.handleChange}
+                  errors={field.state.meta.isTouched ? field.state.meta.errors : []}
+                />
               )}
             </form.Field>
             <form.Field name="currentHolderUserId">
@@ -155,7 +139,7 @@ export function CreatePositionCard({
                   placeholder="Vacant"
                   emptyItem={{ value: '', label: 'Vacant' }}
                   value={field.state.value ?? ''}
-                  disabled={!group || isSaving}
+                  disabled={isSaving}
                   onBlur={field.handleBlur}
                   onValueChange={(value) => field.handleChange(value || undefined)}
                   errors={field.state.meta.isTouched ? field.state.meta.errors : []}
@@ -164,7 +148,7 @@ export function CreatePositionCard({
             </form.Field>
             <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
               {([canSubmit, isSubmitting]) => (
-                <Button type="submit" disabled={!group || !canSubmit || isSubmitting || isSaving}>
+                <Button type="submit" disabled={!canSubmit || isSubmitting || isSaving}>
                   <Plus />
                   Create
                 </Button>

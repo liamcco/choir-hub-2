@@ -16,6 +16,7 @@ export const groupSchema = z.object({
   description: z.string().nullable(),
   isContainer: z.boolean(),
   parentGroupId: z.string().nullable(),
+  effectiveMemberCount: z.number().int().nonnegative(),
   createdAt: z.date(),
   updatedAt: z.date(),
 })
