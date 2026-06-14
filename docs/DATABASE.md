@@ -16,6 +16,7 @@
 
 ```bash
 bun run prisma:generate
+bun prisma db push
 ```
 
 Use Prisma Studio to inspect data locally if needed.
