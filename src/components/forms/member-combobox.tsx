@@ -25,8 +25,9 @@ type MemberComboboxProps = {
   value: string
 }
 
-const memberComboboxValueChangeReasons = ['itemPress', 'clearPress', 'inputClear'] as const
-const allowedValueChangeReasons = new Set<string>(memberComboboxValueChangeReasons)
+const memberComboboxValueChangeReasons = ['itemPress', 'clearPress', 'inputClear'] as const satisfies readonly string[]
+type MemberComboboxValueChangeReason = (typeof memberComboboxValueChangeReasons)[number]
+const allowedValueChangeReasons = new Set<MemberComboboxValueChangeReason>(memberComboboxValueChangeReasons)
 
 export function MemberCombobox({
   disabled,
@@ -49,7 +50,8 @@ export function MemberCombobox({
       isItemEqualToValue={(item, selected) => item.id === selected.id}
       filter={(user, query) => userLabel(user).toLowerCase().includes(query.toLowerCase())}
       onValueChange={(user, eventDetails) => {
-        if (!allowedValueChangeReasons.has(eventDetails.reason)) {
+        const reason = eventDetails.reason as MemberComboboxValueChangeReason
+        if (!allowedValueChangeReasons.has(reason)) {
           return
         }
 
