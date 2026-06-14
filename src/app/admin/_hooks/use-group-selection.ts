@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 
 import type { Group } from '@/common/groups/types'
 import { groupSectionsByKind } from '@/common/groups/utils'
@@ -13,7 +13,7 @@ export function useGroupSelection(groups: Group[]) {
 
   return {
     effectiveGroupId,
-    groupSections: useMemo(() => groupSectionsByKind(groups), [groups]),
+    groupSections: groupSectionsByKind(groups),
     selectedGroup: groups.find((group) => group.id === effectiveGroupId) ?? null,
     selectedGroupId,
     setSelectedGroupId,
