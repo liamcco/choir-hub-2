@@ -22,11 +22,7 @@ export const prisma =
   new PrismaClient({
     log: logPrismaQueries ? ['query', 'error', 'warn'] : ['error', 'warn'],
     adapter: new PrismaPg({
-      connectionString: process.env.POSTGRES_PRISMA_URL,
-      ssl: {
-        rejectUnauthorized: true,
-        ca,
-      },
+      connectionString: process.env.DATABASE_URL,
     }),
   })
 
