@@ -45,7 +45,13 @@ export function MemberCombobox({
       itemToStringValue={(user) => user.id}
       isItemEqualToValue={(item, selected) => item.id === selected.id}
       filter={(user, query) => userLabel(user).toLowerCase().includes(query.toLowerCase())}
-      onValueChange={(user) => onValueChange(user?.id ?? '')}
+      onValueChange={(user, eventDetails) => {
+        if (eventDetails.reason !== 'itemPress' && eventDetails.reason !== 'clearPress' && eventDetails.reason !== 'inputClear') {
+          return
+        }
+
+        onValueChange(user?.id ?? '')
+      }}
     >
       <ComboboxInput
         id={id}

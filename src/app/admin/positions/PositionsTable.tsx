@@ -152,7 +152,7 @@ function PositionsSectionTable({
             <TableCell className="font-medium">{position.name}</TableCell>
             <TableCell>
               <MemberCombobox
-                value={position.currentHolder?.id ?? ''}
+                value=""
                 disabled={isUpdating}
                 users={users}
                 placeholder="Search members"
