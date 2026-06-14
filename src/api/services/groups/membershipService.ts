@@ -4,41 +4,50 @@ import { prisma } from '@/db'
 
 import { groupMemberSchema } from '@/api/models/group'
 import { ApiError } from '@/api/errors'
-import { assertGroupExists, getDescendantGroupIds } from './assertions'
+import { getDescendantGroupIdsFromHierarchy } from './hierarchy'
 
 type GroupMember = z.infer<typeof groupMemberSchema>
 
 export async function getGroupMembers(groupId: string, onlyDirectMembers = false): Promise<GroupMember[]> {
-  await assertGroupExists(groupId)
-
-  const directMemberships = await prisma.userGroupMembership.findMany({
-    where: { groupId },
-    orderBy: {
-      addedAt: 'asc',
-    },
-    include: {
-      user: {
-        select: {
-          name: true,
+  const [group, directMemberships] = await Promise.all([
+    prisma.group.findUnique({
+      where: { id: groupId },
+      select: { id: true },
+    }),
+    prisma.userGroupMembership.findMany({
+      where: { groupId },
+      orderBy: {
+        addedAt: 'asc',
+      },
+      select: {
+        userId: true,
+        addedAt: true,
+        user: {
+          select: {
+            name: true,
+          },
         },
       },
-    },
-  })
-
-  const directMembers = directMemberships.map((membership) =>
-    groupMemberSchema.parse({
-      userId: membership.userId,
-      name: membership.user.name,
-      isDirect: true,
-      addedAt: membership.addedAt,
     }),
-  )
+  ])
+
+  if (!group) {
+    throw new ApiError('Group not found', 404)
+  }
+
+  const directMembers = directMemberships.map(toDirectGroupMember)
 
   if (onlyDirectMembers) {
     return directMembers
   }
 
-  const descendantGroupIds = await getDescendantGroupIds(groupId)
+  const groups = await prisma.group.findMany({
+    select: {
+      id: true,
+      parentGroupId: true,
+    },
+  })
+  const descendantGroupIds = getDescendantGroupIdsFromHierarchy(groupId, groups)
 
   if (descendantGroupIds.length === 0) {
     return directMembers
@@ -48,7 +57,9 @@ export async function getGroupMembers(groupId: string, onlyDirectMembers = false
     where: {
       groupId: { in: descendantGroupIds },
     },
-    include: {
+    select: {
+      userId: true,
+      addedAt: true,
       user: {
         select: {
           name: true,
@@ -66,11 +77,10 @@ export async function getGroupMembers(groupId: string, onlyDirectMembers = false
 
     membersByUserId.set(
       membership.userId,
-      groupMemberSchema.parse({
+      toEffectiveGroupMember({
         userId: membership.userId,
-        name: membership.user.name,
-        isDirect: false,
         addedAt: null,
+        user: membership.user,
       }),
     )
   }
@@ -78,7 +88,7 @@ export async function getGroupMembers(groupId: string, onlyDirectMembers = false
   return [...membersByUserId.values()]
 }
 
-export async function createGroupMembership(groupId: string, userId: string) {
+export async function createGroupMembership(groupId: string, userId: string): Promise<GroupMember> {
   const [group, user] = await Promise.all([
     prisma.group.findUnique({
       where: { id: groupId },
@@ -89,7 +99,7 @@ export async function createGroupMembership(groupId: string, userId: string) {
     }),
     prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true },
+      select: { id: true, name: true },
     }),
   ])
 
@@ -105,37 +115,75 @@ export async function createGroupMembership(groupId: string, userId: string) {
     throw new ApiError('User not found', 404)
   }
 
-  const existingMembership = await prisma.userGroupMembership.findUnique({
-    where: {
-      userId_groupId: {
+  try {
+    const membership = await prisma.userGroupMembership.create({
+      data: {
         userId: userId,
         groupId,
       },
-    },
-  })
+      select: {
+        userId: true,
+        addedAt: true,
+        user: {
+          select: {
+            name: true,
+          },
+        },
+      },
+    })
 
-  if (existingMembership) {
-    throw new ApiError('User is already a direct member of this group', 409)
+    return toDirectGroupMember(membership)
+  } catch (error) {
+    if (isPrismaRequestError(error, 'P2002')) {
+      throw new ApiError('User is already a direct member of this group', 409)
+    }
+
+    throw error
   }
-
-  return prisma.userGroupMembership.create({
-    data: {
-      userId: userId,
-      groupId,
-    },
-  })
 }
 
 export async function deleteGroupMembership(groupId: string, userId: string) {
-  const membership = await prisma.userGroupMembership.findUnique({
-    where: { userId_groupId: { userId: userId, groupId } },
+  const result = await prisma.userGroupMembership.deleteMany({
+    where: { userId: userId, groupId },
   })
 
-  if (!membership || membership.groupId !== groupId) {
+  if (result.count === 0) {
     throw new ApiError('Membership not found', 404)
   }
+}
 
-  await prisma.userGroupMembership.delete({
-    where: { id: membership.id },
+function toDirectGroupMember(membership: {
+  userId: string
+  addedAt: Date | null
+  user: { name: string }
+}) {
+  return groupMemberSchema.parse({
+    userId: membership.userId,
+    name: membership.user.name,
+    isDirect: true,
+    addedAt: membership.addedAt,
   })
+}
+
+function toEffectiveGroupMember(membership: {
+  userId: string
+  addedAt: Date | null
+  user: { name: string }
+}) {
+  return groupMemberSchema.parse({
+    userId: membership.userId,
+    name: membership.user.name,
+    isDirect: false,
+    addedAt: membership.addedAt,
+  })
+}
+
+function isPrismaRequestError(error: unknown, code: string): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    typeof error.code === 'string' &&
+    error.code === code
+  )
 }

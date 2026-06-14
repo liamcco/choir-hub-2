@@ -43,6 +43,8 @@ export function GroupDetailPanel({ groupId }: { groupId: string }) {
       }),
       queryClient.invalidateQueries({ queryKey: getGroupMembersQueryKey({ path: { groupId } }) }),
       queryClient.invalidateQueries({ queryKey: getGroupPositionsQueryKey({ path: { groupId } }) }),
+      queryClient.invalidateQueries({ queryKey: getGroupByIdQueryKey({ path: { groupId } }) }),
+      queryClient.invalidateQueries({ queryKey: getGroupsQueryKey() }),
     ])
 
   if (groupQuery.isPending) {

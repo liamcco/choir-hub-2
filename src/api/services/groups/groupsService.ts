@@ -10,16 +10,9 @@ import {
   assertParentGroupExists,
   assertUniqueGroupName,
 } from './assertions'
+import { getEffectiveMemberCounts } from './hierarchy'
 
 type Group = z.infer<typeof groupSchema>
-type GroupHierarchyNode = {
-  id: string
-  parentGroupId: string | null
-}
-type GroupMembershipNode = {
-  groupId: string
-  userId: string
-}
 
 export async function getGroups(): Promise<Array<Group>> {
   const [groups, memberships] = await Promise.all([
@@ -211,26 +204,4 @@ async function getEffectiveMemberCount(groupId: string) {
   ])
 
   return getEffectiveMemberCounts(groups, memberships).get(groupId) ?? 0
-}
-
-function getEffectiveMemberCounts(groups: GroupHierarchyNode[], memberships: GroupMembershipNode[]) {
-  const parentByGroupId = new Map(groups.map((group) => [group.id, group.parentGroupId]))
-  const memberIdsByGroupId = new Map<string, Set<string>>()
-
-  for (const membership of memberships) {
-    let currentGroupId: string | null = membership.groupId
-    const visitedGroupIds = new Set<string>()
-
-    while (currentGroupId && !visitedGroupIds.has(currentGroupId)) {
-      visitedGroupIds.add(currentGroupId)
-
-      const memberIds = memberIdsByGroupId.get(currentGroupId) ?? new Set<string>()
-      memberIds.add(membership.userId)
-      memberIdsByGroupId.set(currentGroupId, memberIds)
-
-      currentGroupId = parentByGroupId.get(currentGroupId) ?? null
-    }
-  }
-
-  return new Map([...memberIdsByGroupId.entries()].map(([groupId, memberIds]) => [groupId, memberIds.size]))
 }

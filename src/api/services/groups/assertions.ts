@@ -1,6 +1,7 @@
 import { prisma } from '@/db'
 
 import { ApiError } from '@/api/errors'
+import { getDescendantGroupIdsFromHierarchy } from './hierarchy'
 
 /**
  * Asserts that a group kind exists
@@ -149,39 +150,14 @@ export async function assertGroupParentDoesNotCreateCycle(groupId: string, paren
 }
 
 export async function getDescendantGroupIds(groupId: string) {
-  const descendants: string[] = []
   const groups = await prisma.group.findMany({
     select: {
       id: true,
       parentGroupId: true,
     },
   })
-  const childIdsByGroupId = new Map<string, string[]>()
 
-  for (const group of groups) {
-    if (!group.parentGroupId) {
-      continue
-    }
-
-    childIdsByGroupId.set(group.parentGroupId, [...(childIdsByGroupId.get(group.parentGroupId) ?? []), group.id])
-  }
-
-  const queue = [groupId]
-
-  while (queue.length > 0) {
-    const currentGroupId = queue.shift()
-
-    if (!currentGroupId) {
-      continue
-    }
-
-    for (const childId of childIdsByGroupId.get(currentGroupId) ?? []) {
-      descendants.push(childId)
-      queue.push(childId)
-    }
-  }
-
-  return descendants
+  return getDescendantGroupIdsFromHierarchy(groupId, groups)
 }
 
 export function uniqueIds(ids: readonly string[] = []) {

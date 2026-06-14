@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "test": "bun test",
     "lint": "eslint",
     "openapi:spec": "bun scripts/generate-openapi.ts",
     "openapi-ts": "bunx --bun openapi-ts",

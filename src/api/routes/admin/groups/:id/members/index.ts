@@ -1,10 +1,8 @@
 import { returnsErrors, returnsResponseErrors } from '@/api/docs/errors'
-import { addUserToGroupRequestSchema, groupMemberSchema } from '@/api/models/group'
+import { addUserToGroupRequestSchema, groupMemberSchema, membersQuerySchema } from '@/api/models/group'
 import { createGroupMembership, deleteGroupMembership, getGroupMembers } from '@/api/services/groups'
-import { describeResponse, describeRoute, validator } from 'hono-openapi'
-
-import { membersQuerySchema } from '@/api/models/group'
 import { Hono } from 'hono'
+import { describeResponse, describeRoute, resolver, validator } from 'hono-openapi'
 import z from 'zod'
 
 const router = new Hono()
@@ -55,6 +53,11 @@ router.post(
     responses: {
       201: {
         description: 'Created direct membership',
+        content: {
+          'application/json': {
+            schema: resolver(groupMemberSchema),
+          },
+        },
       },
       ...returnsErrors([
         [404, 'Group or user not found'],
