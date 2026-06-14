@@ -25,6 +25,9 @@ type MemberComboboxProps = {
   value: string
 }
 
+const memberComboboxValueChangeReasons = ['itemPress', 'clearPress', 'inputClear'] as const
+const allowedValueChangeReasons = new Set<string>(memberComboboxValueChangeReasons)
+
 export function MemberCombobox({
   disabled,
   emptyLabel = 'No members found.',
@@ -36,7 +39,6 @@ export function MemberCombobox({
   value,
 }: MemberComboboxProps) {
   const selectedUser = users.find((user) => user.id === value) ?? null
-  const allowedValueChangeReasons = new Set(['itemPress', 'clearPress', 'inputClear'])
 
   return (
     <Combobox<User>
