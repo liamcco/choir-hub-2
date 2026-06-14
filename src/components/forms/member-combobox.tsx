@@ -36,6 +36,7 @@ export function MemberCombobox({
   value,
 }: MemberComboboxProps) {
   const selectedUser = users.find((user) => user.id === value) ?? null
+  const allowedValueChangeReasons = new Set(['itemPress', 'clearPress', 'inputClear'])
 
   return (
     <Combobox<User>
@@ -46,7 +47,7 @@ export function MemberCombobox({
       isItemEqualToValue={(item, selected) => item.id === selected.id}
       filter={(user, query) => userLabel(user).toLowerCase().includes(query.toLowerCase())}
       onValueChange={(user, eventDetails) => {
-        if (eventDetails.reason !== 'itemPress' && eventDetails.reason !== 'clearPress' && eventDetails.reason !== 'inputClear') {
+        if (!allowedValueChangeReasons.has(eventDetails.reason)) {
           return
         }
 
