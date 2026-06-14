@@ -1,7 +1,6 @@
 'use client'
 
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
 
 import {
   getGroupPositionsOptions,
@@ -10,34 +9,21 @@ import {
   getUsersOptions,
 } from '@/lib/api-client/@tanstack/react-query.gen'
 
-import { groupSectionsByKind } from '@/common/groups/utils'
+import { useGroupSelection } from '@/app/admin/_hooks/use-group-selection'
 import { ControlledFieldSelect } from '@/components/forms/controlled-field-select'
 
 import { PositionsTable } from './PositionsTable'
 
 export function PositionsPagePanel() {
-  // Featch groups and users
   const queryClient = useQueryClient()
   const groupsQuery = useQuery(getGroupsOptions())
   const usersQuery = useQuery(getUsersOptions())
 
-  // All groups
   const groups = groupsQuery.data ?? []
-  const groupSections = groupSectionsByKind(groups)
-
-  // Keep track of the selected group
-  const [selectedGroupId, setSelectedGroupId] = useState<string>('')
-
-  // If the selected group is not in the list of groups, default to the first group (if available)
-  // TODO: Really? Wierd? No?
-  const effectiveGroupId = groups.some((group) => group.id === selectedGroupId)
-    ? selectedGroupId
-    : (groups[0]?.id ?? '')
-  const selectedGroup = groups.find((group) => group.id === effectiveGroupId) ?? null
+  const { effectiveGroupId, groupSections, selectedGroup, setSelectedGroupId } = useGroupSelection(groups)
 
   const positionsQuery = useQuery({
     ...getGroupPositionsOptions({ path: { groupId: effectiveGroupId } }),
-    // Only refetch positions if a group is selected
     enabled: Boolean(effectiveGroupId),
   })
 

@@ -1,6 +1,5 @@
 import { returnsErrors } from '@/api/docs/errors'
 import { assignPositionHolderRequestSchema, positionSchema } from '@/api/models/position'
-import { handleServiceError } from '@/api/services/errors'
 import { assignPositionHolder, vacatePosition } from '@/api/services/positions'
 import { Hono } from 'hono'
 import { describeRoute, resolver, validator } from 'hono-openapi'
@@ -33,13 +32,9 @@ router.post(
   validator('json', assignPositionHolderRequestSchema),
 
   async (c) => {
-    try {
-      const position = await assignPositionHolder(c.req.param('positionId'), c.req.valid('json'))
+    const position = await assignPositionHolder(c.req.param('positionId'), c.req.valid('json'))
 
-      return c.json(position, 200)
-    } catch (error) {
-      return handleServiceError(c, error)
-    }
+    return c.json(position, 200)
   },
 )
 
@@ -66,13 +61,9 @@ router.delete(
   validator('param', z.object({ positionId: z.string() })),
 
   async (c) => {
-    try {
-      const position = await vacatePosition(c.req.param('positionId'))
+    const position = await vacatePosition(c.req.param('positionId'))
 
-      return c.json(position, 200)
-    } catch (error) {
-      return handleServiceError(c, error)
-    }
+    return c.json(position, 200)
   },
 )
 

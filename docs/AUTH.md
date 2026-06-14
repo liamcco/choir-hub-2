@@ -7,6 +7,7 @@ This project uses **Better Auth** with the Prisma adapter.
 - Session is read from request headers/cookies.
 - API middleware sets `user`/`session` context.
 - Protected API routes return `401` when unauthenticated.
+- Admin API routes under `/api/admin/*` require `user.role === "admin"` and return `403` for authenticated non-admin users.
 
 ## Important notes
 

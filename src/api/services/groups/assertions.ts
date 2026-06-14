@@ -1,6 +1,6 @@
 import { prisma } from '@/db'
 
-import { ApiError } from '../errors'
+import { ApiError } from '@/api/errors'
 
 /**
  * Asserts that a group kind exists
@@ -41,16 +41,17 @@ export async function assertGroupsExist(groupIds: string[]): Promise<void> {
     return
   }
 
+  const uniqueGroupIds = uniqueIds(groupIds)
   const groups = await prisma.group.findMany({
     where: {
       id: {
-        in: groupIds,
+        in: uniqueGroupIds,
       },
     },
     select: { id: true },
   })
 
-  if (groups.length !== groupIds.length) {
+  if (groups.length !== uniqueGroupIds.length) {
     throw new ApiError('One or more groups were not found', 404)
   }
 }
@@ -172,6 +173,6 @@ export async function getDescendantGroupIds(groupId: string) {
   return descendants
 }
 
-export function uniqueIds(ids: string[]) {
-  return [...new Set(ids?.filter(Boolean))]
+export function uniqueIds(ids: readonly string[] = []) {
+  return [...new Set(ids.filter(Boolean))]
 }

@@ -1,6 +1,5 @@
 import { returnsErrors, returnsResponseErrors } from '@/api/docs/errors'
 import { addUserToGroupRequestSchema, groupMemberSchema } from '@/api/models/group'
-import { handleServiceError, handleServiceQueryError } from '@/api/services/errors'
 import { createGroupMembership, deleteGroupMembership, getGroupMembers } from '@/api/services/groups'
 import { describeResponse, describeRoute, validator } from 'hono-openapi'
 
@@ -25,16 +24,12 @@ router.get(
 
   describeResponse(
     async (c) => {
-      try {
-        const { onlyDirectMembers = false }: { onlyDirectMembers?: boolean } = c.req.query()
-        const groupId = c.req.param('groupId')
+      const { onlyDirectMembers = false } = membersQuerySchema.parse(c.req.query())
+      const groupId = c.req.param('groupId')
 
-        const members = await getGroupMembers(groupId, onlyDirectMembers)
+      const members = await getGroupMembers(groupId, onlyDirectMembers)
 
-        return c.json(members, 200)
-      } catch (error) {
-        return handleServiceQueryError(c, error)
-      }
+      return c.json(members, 200)
     },
     {
       200: {
@@ -73,13 +68,9 @@ router.post(
   validator('json', addUserToGroupRequestSchema),
 
   async (c) => {
-    try {
-      const membership = await createGroupMembership(c.req.param('groupId'), c.req.valid('json').userId)
+    const membership = await createGroupMembership(c.req.param('groupId'), c.req.valid('json').userId)
 
-      return c.json(membership, 201)
-    } catch (error) {
-      return handleServiceError(c, error)
-    }
+    return c.json(membership, 201)
   },
 )
 
@@ -101,13 +92,9 @@ router.delete(
   validator('param', z.object({ groupId: z.string(), userId: z.string() })),
 
   async (c) => {
-    try {
-      await deleteGroupMembership(c.req.param('groupId'), c.req.param('userId'))
+    await deleteGroupMembership(c.req.param('groupId'), c.req.param('userId'))
 
-      return c.body(null, 204)
-    } catch (error) {
-      return handleServiceError(c, error)
-    }
+    return c.body(null, 204)
   },
 )
 

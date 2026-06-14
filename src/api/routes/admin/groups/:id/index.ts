@@ -1,6 +1,5 @@
 import { returnsErrors, returnsResponseErrors } from '@/api/docs/errors'
 import { groupSchema, updateGroupRequestSchema } from '@/api/models/group'
-import { handleServiceError } from '@/api/services/errors'
 import { deleteGroup, getGroupById, updateGroup } from '@/api/services/groups'
 import { Hono } from 'hono'
 import { describeResponse, describeRoute, resolver, validator } from 'hono-openapi'
@@ -24,12 +23,6 @@ router.get(
   describeResponse(
     async (c) => {
       const group = await getGroupById(c.req.param('groupId'))
-
-      console.log('Fetched group:', group)
-
-      if (!group) {
-        return c.json({ message: 'Group not found' }, 404)
-      }
 
       return c.json(group, 200)
     },
@@ -75,13 +68,9 @@ router.patch(
   validator('json', updateGroupRequestSchema),
 
   async (c) => {
-    try {
-      const group = await updateGroup(c.req.param('groupId'), c.req.valid('json'))
+    const group = await updateGroup(c.req.param('groupId'), c.req.valid('json'))
 
-      return c.json(group, 200)
-    } catch (error) {
-      return handleServiceError(c, error)
-    }
+    return c.json(group, 200)
   },
 )
 
@@ -106,13 +95,9 @@ router.delete(
   validator('param', z.object({ groupId: z.string() })),
 
   async (c) => {
-    try {
-      await deleteGroup(c.req.param('groupId'))
+    await deleteGroup(c.req.param('groupId'))
 
-      return c.body(null, 204)
-    } catch (error) {
-      return handleServiceError(c, error)
-    }
+    return c.body(null, 204)
   },
 )
 

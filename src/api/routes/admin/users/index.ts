@@ -25,7 +25,7 @@ router.get(
     },
     {
       200: {
-        description: 'Createed users with Better Auth user details',
+        description: 'Created users with Better Auth user details',
         content: {
           'application/json': {
             vSchema: z.array(userSchema),
@@ -45,7 +45,7 @@ router.post(
     tags: ['Users'],
     responses: {
       200: {
-        description: 'Createing results',
+        description: 'Creation results',
         content: {
           'application/json': {
             schema: resolver(createUsersResponseSchema),

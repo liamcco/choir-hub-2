@@ -1,9 +1,8 @@
-import { Context, Hono } from 'hono'
+import { Hono } from 'hono'
 import { describeResponse, describeRoute, resolver, validator } from 'hono-openapi'
 
 import { returnsErrors, returnsResponseErrors } from '@/api/docs/errors'
 import { positionSchema, updatePositionRequestSchema } from '@/api/models/position'
-import { ApiError } from '@/api/services/errors'
 import { deletePosition, getPositionById, updatePosition } from '@/api/services/positions/positionService'
 import z from 'zod'
 import positionHolderRouter from './holder'
@@ -24,10 +23,6 @@ router.get(
   describeResponse(
     async (c) => {
       const position = await getPositionById(c.req.param('positionId'))
-
-      if (!position) {
-        return c.json({ message: 'Position not found' }, 404)
-      }
 
       return c.json(position, 200)
     },
@@ -73,13 +68,9 @@ router.patch(
   validator('json', updatePositionRequestSchema),
 
   async (c) => {
-    try {
-      const position = await updatePosition(c.req.param('positionId'), c.req.valid('json'))
+    const position = await updatePosition(c.req.param('positionId'), c.req.valid('json'))
 
-      return c.json(position, 200)
-    } catch (error) {
-      return handleServiceError(c, error)
-    }
+    return c.json(position, 200)
   },
 )
 
@@ -101,23 +92,11 @@ router.delete(
   validator('param', z.object({ positionId: z.string() })),
 
   async (c) => {
-    try {
-      await deletePosition(c.req.param('positionId'))
+    await deletePosition(c.req.param('positionId'))
 
-      return c.body(null, 204)
-    } catch (error) {
-      return handleServiceError(c, error)
-    }
+    return c.body(null, 204)
   },
 )
-
-function handleServiceError(c: Context, error: unknown) {
-  if (error instanceof ApiError) {
-    return c.json({ message: error.message }, error.status)
-  }
-
-  throw error
-}
 
 router.route('/', positionHolderRouter)
 export default router

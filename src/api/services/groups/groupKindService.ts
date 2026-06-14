@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { createGroupKindRequestSchema, groupKindSchema, updateGroupKindRequestSchema } from '@/api/models/group'
 import { prisma } from '@/db'
 
-import { ApiError } from '../errors'
+import { ApiError } from '@/api/errors'
 import { assertUniqueGroupKindName } from './assertions'
 
 type CreateGroupKindInput = z.infer<typeof createGroupKindRequestSchema>
@@ -11,7 +11,9 @@ type UpdateGroupKindInput = z.infer<typeof updateGroupKindRequestSchema>
 type GroupKind = z.infer<typeof groupKindSchema>
 
 export async function getGroupKinds(): Promise<GroupKind[]> {
-  return prisma.groupKind.findMany({})
+  return prisma.groupKind.findMany({
+    orderBy: { name: 'asc' },
+  })
 }
 
 export async function getGroupKindById(id: string): Promise<GroupKind> {
@@ -29,7 +31,7 @@ export async function getGroupKindById(id: string): Promise<GroupKind> {
 export async function createGroupKind(input: CreateGroupKindInput): Promise<GroupKind> {
   await assertUniqueGroupKindName(input.name)
 
-  return await prisma.groupKind.create({
+  return prisma.groupKind.create({
     data: input,
   })
 }
@@ -37,15 +39,11 @@ export async function createGroupKind(input: CreateGroupKindInput): Promise<Grou
 export async function updateGroupKind(id: string, input: UpdateGroupKindInput): Promise<GroupKind> {
   const groupKind = await getGroupKindById(id)
 
-  if (!groupKind) {
-    throw new ApiError('Group kind not found', 404)
-  }
-
   if (input.name && input.name !== groupKind.name) {
     await assertUniqueGroupKindName(input.name)
   }
 
-  return await prisma.groupKind.update({
+  return prisma.groupKind.update({
     where: { id },
     data: input,
   })

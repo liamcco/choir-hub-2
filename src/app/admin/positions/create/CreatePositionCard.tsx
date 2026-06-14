@@ -56,7 +56,7 @@ export function CreatePositionCard({
           body: {
             name: value.name.trim(),
             description: value.description?.trim(),
-            groupIds: value.groupIds?.filter((groupId) => groupId !== group.id),
+            groupIds: [...new Set([group.id, ...(value.groupIds ?? [])])],
             currentHolderUserId: value.currentHolderUserId ?? undefined,
           },
         })

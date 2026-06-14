@@ -3,7 +3,6 @@ import { describeResponse, describeRoute, resolver, validator } from 'hono-opena
 
 import { returnsErrors } from '@/api/docs/errors'
 import { createGroupKindRequestSchema, groupKindSchema } from '@/api/models/group'
-import { handleServiceError } from '@/api/services/errors'
 import { createGroupKind, getGroupKinds } from '@/api/services/groups'
 
 import z from 'zod'
@@ -66,13 +65,9 @@ router.post(
   validator('json', createGroupKindRequestSchema),
 
   async (c) => {
-    try {
-      const groupKind = await createGroupKind(c.req.valid('json'))
+    const groupKind = await createGroupKind(c.req.valid('json'))
 
-      return c.json(groupKind, 201)
-    } catch (error) {
-      return handleServiceError(c, error)
-    }
+    return c.json(groupKind, 201)
   },
 )
 

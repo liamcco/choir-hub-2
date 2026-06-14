@@ -7,6 +7,7 @@ import { Trash2, UserPlus } from 'lucide-react'
 import { addUserToGroupMutation, deleteGroupMembershipMutation } from '@/lib/api-client/@tanstack/react-query.gen'
 
 import { addUserToGroupRequestSchema } from '@/api/models/group'
+import { DataState, EmptyText } from '@/app/admin/_components/data-state'
 import { getErrorMessage } from '@/common/errors/utils'
 import type { Group, Membership, User } from '@/common/groups/types'
 import { formatDate, userLabel } from '@/common/groups/utils'
@@ -15,7 +16,6 @@ import { ControlledFieldSelect } from '@/components/forms/controlled-field-selec
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { FieldGroup } from '@/components/ui/field'
-import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
 export function MembershipsAdmin({
@@ -167,15 +167,7 @@ function MembershipsTable({
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {isPending ? (
-          <div className="space-y-3">
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
-          </div>
-        ) : getErrorMessage(error) ? (
-          <p className="text-sm text-destructive">{getErrorMessage(error)}</p>
-        ) : (
+        <DataState isPending={isPending} error={error}>
           <>
             <Table className="min-w-130">
               <TableHeader className="text-xs text-muted-foreground uppercase">
@@ -214,10 +206,10 @@ function MembershipsTable({
                 ))}
               </TableBody>
             </Table>
-            {!members.length ? <p className="text-sm text-muted-foreground">No direct memberships.</p> : null}
+            {!members.length ? <EmptyText>No direct memberships.</EmptyText> : null}
             <FormError error={getErrorMessage(deleteMutation.error)} />
           </>
-        )}
+        </DataState>
       </CardContent>
     </Card>
   )

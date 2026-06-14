@@ -1,6 +1,5 @@
 import { returnsErrors, returnsResponseErrors } from '@/api/docs/errors'
 import { groupKindSchema, updateGroupKindRequestSchema } from '@/api/models/group'
-import { handleServiceError } from '@/api/services/errors'
 import { deleteGroupKind, getGroupKindById, updateGroupKind } from '@/api/services/groups'
 import { Hono } from 'hono'
 import { describeResponse, describeRoute, resolver, validator } from 'hono-openapi'
@@ -22,10 +21,6 @@ router.get(
   describeResponse(
     async (c) => {
       const groupKind = await getGroupKindById(c.req.param('kindId'))
-
-      if (!groupKind) {
-        return c.json({ message: 'Group kind not found' }, 404)
-      }
 
       return c.json(groupKind, 200)
     },
@@ -71,13 +66,9 @@ router.patch(
   validator('json', updateGroupKindRequestSchema),
 
   async (c) => {
-    try {
-      const groupKind = await updateGroupKind(c.req.param('kindId'), c.req.valid('json'))
+    const groupKind = await updateGroupKind(c.req.param('kindId'), c.req.valid('json'))
 
-      return c.json(groupKind, 200)
-    } catch (error) {
-      return handleServiceError(c, error)
-    }
+    return c.json(groupKind, 200)
   },
 )
 
@@ -102,13 +93,9 @@ router.delete(
   validator('param', z.object({ kindId: z.string() })),
 
   async (c) => {
-    try {
-      await deleteGroupKind(c.req.param('kindId'))
+    await deleteGroupKind(c.req.param('kindId'))
 
-      return c.body(null, 204)
-    } catch (error) {
-      return handleServiceError(c, error)
-    }
+    return c.body(null, 204)
   },
 )
 

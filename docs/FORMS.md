@@ -12,7 +12,7 @@ Example: `src/app/(auth)/login/login-form.tsx` + `src/app/(auth)/login/actions.t
 
 Use TanStack Form for field-level state/validation and TanStack Query for mutation handling.
 
-Example: `src/app/resources/create/page.tsx`
+Example: `src/app/admin/groups/create/CreateGroupCard.tsx`
 
 ## Validation
 

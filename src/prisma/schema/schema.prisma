@@ -7,14 +7,6 @@ datasource db {
   provider = "postgresql"
 }
 
-model Resource {
-  id          String   @id @default(uuid())
-  name        String
-  description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-
 model GroupKind {
   id          String   @id @default(uuid())
   name        String   @unique

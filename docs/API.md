@@ -16,6 +16,8 @@ Protected docs endpoints:
 - `GET /api/scalar`
 - `GET /api/swagger`
 
+Admin endpoints under `/api/admin/*` require an authenticated Better Auth user with the `admin` role.
+
 ## Route conventions in this repo
 
 - Use Zod schemas from `src/api/models/*`.

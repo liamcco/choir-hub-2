@@ -11,8 +11,8 @@ Default to **Server Components**. Move to Client Components only when you need b
 Examples in this repo:
 
 - Server page: `src/app/page.tsx`
-- Client page with React Query: `src/app/resources/page.tsx`
-- Client page with TanStack Form: `src/app/resources/create/page.tsx`
+- Client panel with React Query: `src/app/admin/groups/AdminGroupsPanel.tsx`
+- Client form with TanStack Form: `src/app/admin/groups/create/CreateGroupCard.tsx`
 
 ## Keep `"use client"` low in the tree
 

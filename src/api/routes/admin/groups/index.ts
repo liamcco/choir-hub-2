@@ -3,11 +3,9 @@ import { describeResponse, describeRoute, resolver, validator } from 'hono-opena
 
 import { returnsErrors } from '@/api/docs/errors'
 import { createGroupRequestSchema, groupSchema } from '@/api/models/group'
-import { handleServiceError } from '@/api/services/errors'
 import { createGroup, getGroups } from '@/api/services/groups'
 import z from 'zod'
 import groupsByIdRouter from './:id'
-import groupKindsRoute from './kinds'
 
 const router = new Hono()
 
@@ -66,16 +64,11 @@ router.post(
   validator('json', createGroupRequestSchema),
 
   async (c) => {
-    try {
-      const group = await createGroup(c.req.valid('json'))
+    const group = await createGroup(c.req.valid('json'))
 
-      return c.json(group, 201)
-    } catch (error) {
-      return handleServiceError(c, error)
-    }
+    return c.json(group, 201)
   },
 )
 
-router.route('/kinds', groupKindsRoute)
 router.route('/', groupsByIdRouter)
 export default router

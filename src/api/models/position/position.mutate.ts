@@ -3,7 +3,7 @@ import { z } from 'zod'
 export const createPositionRequestSchema = z.object({
   name: z.string().trim().min(1, 'Name is required'),
   description: z.string().trim().optional(),
-  groupIds: z.array(z.string().min(1)).optional(),
+  groupIds: z.array(z.string().min(1)).min(1, 'At least one group is required'),
   currentHolderUserId: z.string().min(1).nullable().optional(),
   heldSince: z.coerce.date().nullable().optional(),
 })

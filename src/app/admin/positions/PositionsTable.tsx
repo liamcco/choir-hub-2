@@ -11,6 +11,7 @@ import {
   vacatePositionMutation,
 } from '@/lib/api-client/@tanstack/react-query.gen'
 
+import { DataState, EmptyText } from '@/app/admin/_components/data-state'
 import type { Group, Position, User } from '@/common/groups/types'
 import { formatDate, userLabel } from '@/common/groups/utils'
 import { FormError } from '@/common/ui/form'
@@ -19,7 +20,6 @@ import { getErrorMessage } from '@/common/errors/utils'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
 export function PositionsTable({
@@ -68,15 +68,7 @@ export function PositionsTable({
         <CardDescription>{positions.length} defined</CardDescription>
       </CardHeader>
       <CardContent>
-        {isPending ? (
-          <div className="space-y-3">
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
-          </div>
-        ) : getErrorMessage(error) ? (
-          <p className="text-sm text-destructive">{getErrorMessage(error)}</p>
-        ) : (
+        <DataState isPending={isPending} error={error}>
           <>
             <Table className="min-w-170">
               <TableHeader className="text-xs text-muted-foreground uppercase">
@@ -153,7 +145,7 @@ export function PositionsTable({
                 ))}
               </TableBody>
             </Table>
-            {!positions.length ? <p className="text-sm text-muted-foreground">No positions defined.</p> : null}
+            {!positions.length ? <EmptyText>No positions defined.</EmptyText> : null}
             <FormError
               error={
                 getErrorMessage(updateMutation.error) ??
@@ -162,7 +154,7 @@ export function PositionsTable({
               }
             />
           </>
-        )}
+        </DataState>
       </CardContent>
     </Card>
   )

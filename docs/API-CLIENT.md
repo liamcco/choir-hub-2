@@ -22,5 +22,5 @@ bun run openapi-ts
 
 ## Usage patterns
 
-- TanStack Query options from generated files (example: `getApiResourcesOptions` in `src/app/resources/page.tsx`).
-- Generated mutations for write operations (example: `postApiResourcesMutation` in `src/app/resources/create/page.tsx`).
+- TanStack Query options from generated files (example: `getGroupsOptions` in `src/app/admin/groups/AdminGroupsPanel.tsx`).
+- Generated mutations for write operations (example: `createGroupMutation` in `src/app/admin/groups/create/CreateGroupCard.tsx`).

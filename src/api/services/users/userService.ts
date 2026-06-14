@@ -3,7 +3,6 @@ import { randomBytes } from 'node:crypto'
 import { createUserSchema, createUsersRequestSchema, createUsersResponseSchema, userSchema } from '@/api/models/user'
 import { prisma } from '@/db'
 import { auth } from '@/lib/auth'
-import { headers } from 'next/headers'
 import z from 'zod'
 
 type User = z.infer<typeof userSchema>
@@ -11,31 +10,26 @@ type CreateUserInput = z.infer<typeof createUserSchema>
 type CreateUsersInput = z.infer<typeof createUsersRequestSchema>
 type CreateUsersResponse = z.infer<typeof createUsersResponseSchema>
 
-export type CreateUserResult =
-  | { status: 'created'; user: User }
-  | { status: 'already-exists'; user: User }
-  | { status: 'user-not-found' }
-
 export async function getUserById(id: string): Promise<User | null> {
-  const user = await auth.api.getUser({
-    query: { id },
-    headers: await headers(),
+  const user = await prisma.user.findUnique({
+    where: { id },
+    select: userSelect,
   })
 
   if (!user) {
     return null
   }
 
-  return userSchema.parse(user)
+  return toUser(user)
 }
 
 export async function getUsers(): Promise<User[]> {
-  const queryResult = await auth.api.listUsers({
-    query: {},
-    headers: await headers(),
+  const users = await prisma.user.findMany({
+    orderBy: [{ name: 'asc' }, { email: 'asc' }],
+    select: userSelect,
   })
 
-  return queryResult.users.map((user) => userSchema.parse(user))
+  return users.map(toUser)
 }
 
 export async function createUsers(input: CreateUsersInput): Promise<CreateUsersResponse> {
@@ -117,8 +111,6 @@ async function createUser(
       },
     }
   } catch (error) {
-    // TODO: consider rolling back the created user if user creation fails, depending on how likely that is to happen and whether it would cause issues
-
     return {
       status: 'failed',
       data: {
@@ -132,6 +124,31 @@ async function createUser(
 
 function generateTemporaryPassword(): string {
   return `${randomBytes(18).toString('base64url')}aA1!`
+}
+
+const userSelect = {
+  id: true,
+  name: true,
+  email: true,
+  emailVerified: true,
+  role: true,
+  createdAt: true,
+  updatedAt: true,
+} as const
+
+function toUser(user: {
+  id: string
+  name: string
+  email: string
+  emailVerified: boolean
+  role: string | null
+  createdAt: Date
+  updatedAt: Date
+}): User {
+  return userSchema.parse({
+    ...user,
+    role: user.role ?? 'user',
+  })
 }
 
 /**

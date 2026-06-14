@@ -4,6 +4,7 @@ export const positionSchema = z.object({
   id: z.string(),
   name: z.string(),
   description: z.string().nullable(),
+  groupIds: z.array(z.string()),
   currentHolder: z
     .object({
       id: z.string(),

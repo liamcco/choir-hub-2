@@ -1,7 +1,6 @@
 'use client'
 
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
 
 import {
   getGroupPositionsQueryKey,
@@ -9,22 +8,17 @@ import {
   getUsersOptions,
 } from '@/lib/api-client/@tanstack/react-query.gen'
 
-import { groupSectionsByKind } from '@/common/groups/utils'
+import { useGroupSelection } from '@/app/admin/_hooks/use-group-selection'
 import { ControlledFieldSelect } from '@/components/forms/controlled-field-select'
 
 import { CreatePositionCard } from './CreatePositionCard'
 
 export function CreatePositionPagePanel() {
   const queryClient = useQueryClient()
-  const [selectedGroupId, setSelectedGroupId] = useState<string>('')
   const groupsQuery = useQuery(getGroupsOptions())
   const usersQuery = useQuery(getUsersOptions())
   const groups = groupsQuery.data ?? []
-  const groupSections = groupSectionsByKind(groups)
-  const effectiveGroupId = groups.some((group) => group.id === selectedGroupId)
-    ? selectedGroupId
-    : (groups[0]?.id ?? '')
-  const selectedGroup = groups.find((group) => group.id === effectiveGroupId) ?? null
+  const { effectiveGroupId, groupSections, selectedGroup, setSelectedGroupId } = useGroupSelection(groups)
   const invalidatePositions = () =>
     effectiveGroupId
       ? queryClient.invalidateQueries({ queryKey: getGroupPositionsQueryKey({ path: { groupId: effectiveGroupId } }) })

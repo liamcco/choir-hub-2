@@ -3,8 +3,8 @@ import { z } from 'zod'
 import { prisma } from '@/db'
 
 import { groupMemberSchema } from '@/api/models/group'
-import { ApiError } from '../errors'
-import { assertGroupExists } from './assertions'
+import { ApiError } from '@/api/errors'
+import { assertGroupExists, getDescendantGroupIds } from './assertions'
 
 type GroupMember = z.infer<typeof groupMemberSchema>
 
@@ -38,24 +38,7 @@ export async function getGroupMembers(groupId: string, onlyDirectMembers = false
     return directMembers
   }
 
-  const descendantGroupIds: string[] = []
-  let currentParentGroupIds = [groupId]
-
-  while (currentParentGroupIds.length > 0) {
-    const childGroups = await prisma.group.findMany({
-      where: {
-        parentGroupId: {
-          in: currentParentGroupIds,
-        },
-      },
-      select: {
-        id: true,
-      },
-    })
-
-    currentParentGroupIds = childGroups.map((group) => group.id)
-    descendantGroupIds.push(...currentParentGroupIds)
-  }
+  const descendantGroupIds = await getDescendantGroupIds(groupId)
 
   if (descendantGroupIds.length === 0) {
     return directMembers
@@ -74,10 +57,15 @@ export async function getGroupMembers(groupId: string, onlyDirectMembers = false
     },
   })
 
-  const directMemberUserIds = new Set(directMembers.map((member) => member.userId))
-  const descendantMembers = descendantMemberships
-    .filter((membership) => !directMemberUserIds.has(membership.userId))
-    .map((membership) =>
+  const membersByUserId = new Map(directMembers.map((member) => [member.userId, member]))
+
+  for (const membership of descendantMemberships) {
+    if (membersByUserId.has(membership.userId)) {
+      continue
+    }
+
+    membersByUserId.set(
+      membership.userId,
       groupMemberSchema.parse({
         userId: membership.userId,
         name: membership.user.name,
@@ -85,8 +73,9 @@ export async function getGroupMembers(groupId: string, onlyDirectMembers = false
         addedAt: null,
       }),
     )
+  }
 
-  return [...directMembers, ...descendantMembers]
+  return [...membersByUserId.values()]
 }
 
 export async function createGroupMembership(groupId: string, userId: string) {
@@ -129,7 +118,7 @@ export async function createGroupMembership(groupId: string, userId: string) {
     throw new ApiError('User is already a direct member of this group', 409)
   }
 
-  return await prisma.userGroupMembership.create({
+  return prisma.userGroupMembership.create({
     data: {
       userId: userId,
       groupId,

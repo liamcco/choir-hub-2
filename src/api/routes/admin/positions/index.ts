@@ -3,7 +3,6 @@ import { describeResponse, describeRoute, resolver, validator } from 'hono-opena
 
 import { returnsErrors } from '@/api/docs/errors'
 import { createPositionRequestSchema, positionSchema } from '@/api/models/position'
-import { handleServiceError } from '@/api/services/errors'
 import { createPosition, getPositions } from '@/api/services/positions/positionService'
 import z from 'zod'
 import positionByIdRouter from './:id'
@@ -15,7 +14,7 @@ router.get(
 
   describeRoute({
     operationId: 'getPositions',
-    description: 'List all global positions, optionally filtered by associated group ID',
+    description: 'List all global positions',
     tags: ['Positions'],
   }),
 
@@ -54,21 +53,21 @@ router.post(
           },
         },
       },
-      ...returnsErrors([[409, 'Position naming conflict']]),
+      ...returnsErrors([
+        [400, 'Invalid request body'],
+        [404, 'Associated group or holder user not found'],
+        [409, 'Position naming conflict'],
+      ]),
     },
   }),
 
   validator('json', createPositionRequestSchema),
 
   async (c) => {
-    try {
-      const input = await c.req.valid('json')
-      const position = await createPosition(input)
+    const input = c.req.valid('json')
+    const position = await createPosition(input)
 
-      return c.json(position, 201)
-    } catch (error) {
-      return handleServiceError(c, error)
-    }
+    return c.json(position, 201)
   },
 )
 

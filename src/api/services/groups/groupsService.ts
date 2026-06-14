@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { prisma } from '@/db'
 
 import { createGroupRequestSchema, groupSchema, updateGroupRequestSchema } from '@/api/models/group'
-import { ApiError } from '../errors'
+import { ApiError } from '@/api/errors'
 import {
   assertGroupKindExists,
   assertGroupParentDoesNotCreateCycle,
@@ -15,6 +15,7 @@ type Group = z.infer<typeof groupSchema>
 
 export async function getGroups(): Promise<Array<Group>> {
   const groups = await prisma.group.findMany({
+    orderBy: [{ parentGroupId: 'asc' }, { name: 'asc' }],
     include: {
       kind: true,
     },

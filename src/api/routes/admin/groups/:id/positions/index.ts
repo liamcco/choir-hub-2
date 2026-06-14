@@ -1,6 +1,5 @@
 import { returnsErrors, returnsResponseErrors } from '@/api/docs/errors'
 import { positionSchema } from '@/api/models/position'
-import { handleServiceError, handleServiceQueryError } from '@/api/services/errors'
 import { addPositionToGroup, deletePositionFromGroup, getPositionsInGroup } from '@/api/services/positions'
 import { Hono } from 'hono'
 import { describeResponse, describeRoute, resolver, validator } from 'hono-openapi'
@@ -21,14 +20,10 @@ router.get(
 
   describeResponse(
     async (c) => {
-      try {
-        const groupId = c.req.param('groupId')
-        const positions = await getPositionsInGroup(groupId)
+      const groupId = c.req.param('groupId')
+      const positions = await getPositionsInGroup(groupId)
 
-        return c.json(positions, 200)
-      } catch (error) {
-        return handleServiceQueryError(c, error)
-      }
+      return c.json(positions, 200)
     },
     {
       200: {
@@ -52,8 +47,8 @@ router.post(
     description: 'Associate a position with this group',
     tags: ['Groups', 'Positions'],
     responses: {
-      201: {
-        description: 'Created position',
+      200: {
+        description: 'Position associated with this group',
         content: {
           'application/json': {
             schema: resolver(positionSchema),
@@ -61,8 +56,8 @@ router.post(
         },
       },
       ...returnsErrors([
-        [404, 'Group or holder user not found'],
-        [409, 'Position name or holder conflict'],
+        [404, 'Group or position not found'],
+        [409, 'Position association conflict'],
       ]),
     },
   }),
@@ -72,13 +67,9 @@ router.post(
   validator('query', z.object({ positionId: z.string() })),
 
   async (c) => {
-    try {
-      const position = await addPositionToGroup(c.req.valid('param').groupId, c.req.valid('query').positionId)
+    const position = await addPositionToGroup(c.req.valid('param').groupId, c.req.valid('query').positionId)
 
-      return c.json(position, 201)
-    } catch (error) {
-      return handleServiceError(c, error)
-    }
+    return c.json(position, 200)
   },
 )
 
@@ -86,17 +77,16 @@ router.delete(
   '/:groupId/positions/:positionId',
 
   describeRoute({
-    operationId: 'deleteGroupPosition',
-    description:
-      'Delete a position defined for this group; the position must not be currently held by anyone, but any group associations will be removed regardless of holder status',
+    operationId: 'removePositionFromGroup',
+    description: 'Remove a group association from a position while preserving the global position definition',
     tags: ['Groups', 'Positions'],
     responses: {
       204: {
-        description: 'Deleted position',
+        description: 'Position removed from this group',
       },
       ...returnsErrors([
-        [404, 'Group or position not found'],
-        [409, 'Position currently held and cannot be deleted'],
+        [404, 'Group, position, or association not found'],
+        [409, 'Position must keep at least one group association'],
       ]),
     },
   }),
@@ -104,13 +94,9 @@ router.delete(
   validator('param', z.object({ groupId: z.string(), positionId: z.string() })),
 
   async (c) => {
-    try {
-      await deletePositionFromGroup(c.req.valid('param').groupId, c.req.valid('param').positionId)
+    await deletePositionFromGroup(c.req.valid('param').groupId, c.req.valid('param').positionId)
 
-      return c.status(204)
-    } catch (error) {
-      return handleServiceError(c, error)
-    }
+    return c.body(null, 204)
   },
 )
 

@@ -14,8 +14,8 @@ import {
   getUsersOptions,
 } from '@/lib/api-client/@tanstack/react-query.gen'
 
+import { LoadingRows } from '@/app/admin/_components/data-state'
 import { getErrorMessage } from '@/common/errors/utils'
-import { Skeleton } from '@/components/ui/skeleton'
 import { GroupSettingsCard } from './GroupSettingsCard'
 import { MembershipsAdmin } from './MembershipsAdmin'
 
@@ -46,13 +46,7 @@ export function GroupDetailPanel({ groupId }: { groupId: string }) {
     ])
 
   if (groupQuery.isPending) {
-    return (
-      <div className="space-y-3">
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-10 w-full" />
-      </div>
-    )
+    return <LoadingRows />
   }
 
   const groupError = getErrorMessage(groupQuery.error)

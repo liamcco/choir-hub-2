@@ -1,24 +1,35 @@
-'use client'
-
 import Link from 'next/link'
 
-import type { Group } from '@/common/groups/types'
+import type { Group, Position } from '@/common/groups/types'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
-export function OrgStructure({ groups }: { groups: Group[] }) {
-  const rootGroups = groups.filter((group) => !group.parentGroupId)
+const rootParentKey = '__root__'
+
+export function OrgStructure({ groups, positions }: { groups: Group[]; positions: Position[] }) {
+  const groupsByParentId = groupByParentId(groups)
+  const positionsByGroupId = groupPositionsByGroupId(positions)
+  const rootGroups = groupsByParentId.get(rootParentKey) ?? []
+  const positionCount = positions.length
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Org Structure</CardTitle>
-        <CardDescription>{groups.length} groups in the hierarchy</CardDescription>
+        <CardDescription>
+          {groups.length} groups / {positionCount} positions
+        </CardDescription>
       </CardHeader>
       <CardContent>
         {rootGroups.length ? (
           <div className="space-y-2">
             {rootGroups.map((group) => (
-              <GroupBranch key={group.id} group={group} groups={groups} depth={0} />
+              <GroupBranch
+                key={group.id}
+                group={group}
+                groupsByParentId={groupsByParentId}
+                positionsByGroupId={positionsByGroupId}
+                depth={0}
+              />
             ))}
           </div>
         ) : (
@@ -29,8 +40,19 @@ export function OrgStructure({ groups }: { groups: Group[] }) {
   )
 }
 
-function GroupBranch({ group, groups, depth }: { group: Group; groups: Group[]; depth: number }) {
-  const children = groups.filter((candidate) => candidate.parentGroupId === group.id)
+function GroupBranch({
+  group,
+  groupsByParentId,
+  positionsByGroupId,
+  depth,
+}: {
+  group: Group
+  groupsByParentId: Map<string, Group[]>
+  positionsByGroupId: Map<string, Position[]>
+  depth: number
+}) {
+  const children = groupsByParentId.get(group.id) ?? []
+  const positions = positionsByGroupId.get(group.id) ?? []
 
   return (
     <div>
@@ -43,9 +65,58 @@ function GroupBranch({ group, groups, depth }: { group: Group; groups: Group[]; 
         <span className="text-muted-foreground">{group.kindName}</span>
         {group.isContainer ? <span className="text-muted-foreground">Container</span> : null}
       </Link>
+      {positions.length ? (
+        <div className="space-y-1 py-1" style={{ marginLeft: depth * 16 + 20 }}>
+          {positions.map((position) => (
+            <PositionLine key={position.id} position={position} />
+          ))}
+        </div>
+      ) : null}
       {children.map((child) => (
-        <GroupBranch key={child.id} group={child} groups={groups} depth={depth + 1} />
+        <GroupBranch
+          key={child.id}
+          group={child}
+          groupsByParentId={groupsByParentId}
+          positionsByGroupId={positionsByGroupId}
+          depth={depth + 1}
+        />
       ))}
     </div>
   )
+}
+
+function PositionLine({ position }: { position: Position }) {
+  return (
+    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md px-2 py-1 text-sm text-muted-foreground">
+      <span className="font-medium text-foreground">{position.name}</span>
+      <span>{position.currentHolder ? position.currentHolder.name : 'Vacant'}</span>
+    </div>
+  )
+}
+
+function groupByParentId(groups: Group[]) {
+  const groupsByParentId = new Map<string, Group[]>()
+
+  for (const group of groups) {
+    const parentKey = group.parentGroupId ?? rootParentKey
+    const siblings = groupsByParentId.get(parentKey) ?? []
+    siblings.push(group)
+    groupsByParentId.set(parentKey, siblings)
+  }
+
+  return groupsByParentId
+}
+
+function groupPositionsByGroupId(positions: Position[]) {
+  const positionsByGroupId = new Map<string, Position[]>()
+
+  for (const position of positions) {
+    for (const groupId of position.groupIds) {
+      const groupPositions = positionsByGroupId.get(groupId) ?? []
+      groupPositions.push(position)
+      positionsByGroupId.set(groupId, groupPositions)
+    }
+  }
+
+  return positionsByGroupId
 }
