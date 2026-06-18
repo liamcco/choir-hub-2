@@ -21,11 +21,6 @@ const authenticatedNavigationItems: { title: string; href: string; description: 
     href: '/profile',
     description: 'Manage your account details, username, email verification, and passkeys.',
   },
-  {
-    title: 'Admin',
-    href: '/admin',
-    description: 'Manage members, group hierarchy, memberships, and positions.',
-  },
 ]
 
 export function Navigation() {
@@ -41,7 +36,7 @@ export function Navigation() {
           <NavigationMenuItem>
             <NavigationMenuTrigger>Links</NavigationMenuTrigger>
             <NavigationMenuContent>
-              <ul className="grid w-80 gap-2 md:w-110 md:grid-cols-2">
+              <ul className="grid w-80 gap-2">
                 {navigationItems.map((item) => (
                   <ListItem key={item.title} title={item.title} href={item.href}>
                     {item.description}

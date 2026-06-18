@@ -14,6 +14,7 @@ export type EmailVerificationState = {
 
 export type UsernameState = {
   status: 'idle' | 'saved'
+  username?: string
   message?: string
   error?: string
 }
@@ -55,6 +56,16 @@ export async function requestEmailVerificationAction(): Promise<EmailVerificatio
   }
 }
 
+export async function requestEmailVerificationFormAction(
+  state: EmailVerificationState,
+  formData: FormData,
+): Promise<EmailVerificationState> {
+  void state
+  void formData
+
+  return requestEmailVerificationAction()
+}
+
 export async function verifyEmailOtpAction(otpInput: string): Promise<EmailVerificationState> {
   const parsed = otpSchema.safeParse(otpInput)
 
@@ -85,6 +96,13 @@ export async function verifyEmailOtpAction(otpInput: string): Promise<EmailVerif
   } catch {
     return { status: 'otp-sent', error: 'Invalid or expired verification code.' }
   }
+}
+
+export async function verifyEmailOtpFormAction(
+  _state: EmailVerificationState,
+  formData: FormData,
+): Promise<EmailVerificationState> {
+  return verifyEmailOtpAction(String(formData.get('otp') ?? ''))
 }
 
 export async function claimUsernameAction(usernameInput: string): Promise<UsernameState> {
@@ -124,10 +142,14 @@ export async function claimUsernameAction(usernameInput: string): Promise<Userna
     })
 
     revalidatePath('/profile')
-    return { status: 'saved', message: 'Username saved.' }
+    return { status: 'saved', username: parsed.data, message: 'Username saved.' }
   } catch {
     return { status: 'idle', error: 'Could not save that username. Try another one.' }
   }
+}
+
+export async function claimUsernameFormAction(_state: UsernameState, formData: FormData): Promise<UsernameState> {
+  return claimUsernameAction(String(formData.get('username') ?? ''))
 }
 
 async function getRequiredSession() {

@@ -1,10 +1,3 @@
-import { handle } from 'hono/vercel'
-import app from '@/api'
-
-export const GET = handle(app)
-export const POST = handle(app)
-export const PUT = handle(app)
-export const DELETE = handle(app)
-export const OPTIONS = handle(app)
-export const PATCH = handle(app)
-export const HEAD = handle(app)
+import { auth } from '@/lib/auth'
+import { toNextJsHandler } from 'better-auth/next-js'
+export const { GET, POST } = toNextJsHandler(auth)
