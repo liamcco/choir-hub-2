@@ -1,3 +1,4 @@
+// fallow-ignore-file security-client-server-leak -- Next.js Server Actions are intentionally imported into client forms.
 'use client'
 
 import Link from 'next/link'

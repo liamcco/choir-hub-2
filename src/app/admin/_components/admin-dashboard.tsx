@@ -1,7 +1,9 @@
+// fallow-ignore-file security-client-server-leak -- Next.js Server Actions are intentionally imported into client forms.
 'use client'
 
 import { useRouter } from 'next/navigation'
 import { useActionState, useMemo, useState } from 'react'
+import type { ComponentProps } from 'react'
 import { useFormStatus } from 'react-dom'
 import {
   BanIcon,
@@ -347,6 +349,141 @@ function UserBadges({ banned, role }: { banned: boolean; role: string }) {
       {banned ? <Badge variant="destructive">Banned</Badge> : null}
     </div>
   )
+}
+
+type GroupKindForm = {
+  description: string
+  descriptionInputId: string
+  id: string
+  name: string
+  nameInputId: string
+  submitLabel: string
+  title: string
+  triggerLabel: string
+  triggerVariant: ComponentProps<typeof Button>['variant']
+}
+
+type GroupForm = {
+  containerInputId: string
+  description: string
+  descriptionInputId: string
+  id: string
+  isContainer: boolean
+  kindId: string
+  kindInputId: string
+  name: string
+  nameInputId: string
+  parentGroupId: string
+  parentInputId: string
+  submitLabel: string
+}
+
+type PositionForm = {
+  currentHolderUserId: string
+  description: string
+  descriptionInputId: string
+  groupIds: Set<string>
+  holderInputId: string
+  id: string
+  name: string
+  nameInputId: string
+  submitLabel: string
+}
+
+function emptyString(value: string | null) {
+  return value || ''
+}
+
+function getGroupKindForm(kind: AdminDashboardData['groupKinds'][number] | undefined): GroupKindForm {
+  if (!kind) {
+    return {
+      description: '',
+      descriptionInputId: 'kind-description-new',
+      id: '',
+      name: '',
+      nameInputId: 'kind-name-new',
+      submitLabel: 'Create kind',
+      title: 'New group kind',
+      triggerLabel: 'New kind',
+      triggerVariant: 'default',
+    }
+  }
+
+  return {
+    description: emptyString(kind.description),
+    descriptionInputId: `kind-description-${kind.id}`,
+    id: kind.id,
+    name: kind.name,
+    nameInputId: `kind-name-${kind.id}`,
+    submitLabel: 'Save kind',
+    title: 'Edit group kind',
+    triggerLabel: 'Edit',
+    triggerVariant: 'outline',
+  }
+}
+
+function getGroupForm(group: AdminGroup | undefined, kinds: AdminDashboardData['groupKinds']): GroupForm {
+  if (!group) {
+    return {
+      containerInputId: 'group-container-new',
+      description: '',
+      descriptionInputId: 'group-description-new',
+      id: '',
+      isContainer: false,
+      kindId: kinds[0]?.id || '',
+      kindInputId: 'group-kind-new',
+      name: '',
+      nameInputId: 'group-name-new',
+      parentGroupId: '',
+      parentInputId: 'group-parent-new',
+      submitLabel: 'Create group',
+    }
+  }
+
+  return {
+    containerInputId: `group-container-${group.id}`,
+    description: emptyString(group.description),
+    descriptionInputId: `group-description-${group.id}`,
+    id: group.id,
+    isContainer: group.isContainer,
+    kindId: group.kindId,
+    kindInputId: `group-kind-${group.id}`,
+    name: group.name,
+    nameInputId: `group-name-${group.id}`,
+    parentGroupId: emptyString(group.parentGroupId),
+    parentInputId: `group-parent-${group.id}`,
+    submitLabel: 'Save group',
+  }
+}
+
+function getPositionForm(position: AdminPosition | undefined, users: AdminDashboardData['users']): PositionForm {
+  const firstUserId = users[0]?.id || ''
+
+  if (!position) {
+    return {
+      currentHolderUserId: firstUserId,
+      description: '',
+      descriptionInputId: 'position-description-new',
+      groupIds: new Set(),
+      holderInputId: 'position-holder-new',
+      id: '',
+      name: '',
+      nameInputId: 'position-name-new',
+      submitLabel: 'Create position',
+    }
+  }
+
+  return {
+    currentHolderUserId: position.currentHolderUserId || firstUserId,
+    description: emptyString(position.description),
+    descriptionInputId: `position-description-${position.id}`,
+    groupIds: new Set(position.groupIds),
+    holderInputId: `position-holder-${position.id}`,
+    id: position.id,
+    name: position.name,
+    nameInputId: `position-name-${position.id}`,
+    submitLabel: 'Save position',
+  }
 }
 
 function CreateUserDialog() {
@@ -857,35 +994,41 @@ function GroupsTab({ data }: { data: AdminDashboardData }) {
 }
 
 function GroupKindSheet({ kind }: { kind?: AdminDashboardData['groupKinds'][number] }) {
+  const form = getGroupKindForm(kind)
+
   return (
     <Sheet>
-      <SheetTrigger render={<Button type="button" variant={kind ? 'outline' : 'default'} size="sm" />}>
-        {kind ? 'Edit' : 'New kind'}
+      <SheetTrigger render={<Button type="button" variant={form.triggerVariant} size="sm" />}>
+        {form.triggerLabel}
       </SheetTrigger>
       <SheetContent>
         <SheetHeader>
-          <SheetTitle>{kind ? 'Edit group kind' : 'New group kind'}</SheetTitle>
+          <SheetTitle>{form.title}</SheetTitle>
           <SheetDescription>Group kinds are unique by name.</SheetDescription>
         </SheetHeader>
         <ActionForm action={saveGroupKindAction} className="space-y-4 px-4">
-          {(state) => (
-            <>
-              <input type="hidden" name="id" value={kind?.id ?? ''} />
-              <Field>
-                <FieldLabel htmlFor={`kind-name-${kind?.id ?? 'new'}`}>Name</FieldLabel>
-                <Input id={`kind-name-${kind?.id ?? 'new'}`} name="name" defaultValue={kind?.name ?? ''} required />
-              </Field>
-              <Field>
-                <FieldLabel htmlFor={`kind-description-${kind?.id ?? 'new'}`}>Description</FieldLabel>
-                <Textarea id={`kind-description-${kind?.id ?? 'new'}`} name="description" defaultValue={kind?.description ?? ''} />
-              </Field>
-              <ActionMessage state={state} />
-              <SubmitButton>{kind ? 'Save kind' : 'Create kind'}</SubmitButton>
-            </>
-          )}
+          {(state) => <GroupKindFields form={form} state={state} />}
         </ActionForm>
       </SheetContent>
     </Sheet>
+  )
+}
+
+function GroupKindFields({ form, state }: { form: GroupKindForm; state: AdminActionState }) {
+  return (
+    <>
+      <input type="hidden" name="id" value={form.id} />
+      <Field>
+        <FieldLabel htmlFor={form.nameInputId}>Name</FieldLabel>
+        <Input id={form.nameInputId} name="name" defaultValue={form.name} required />
+      </Field>
+      <Field>
+        <FieldLabel htmlFor={form.descriptionInputId}>Description</FieldLabel>
+        <Textarea id={form.descriptionInputId} name="description" defaultValue={form.description} />
+      </Field>
+      <ActionMessage state={state} />
+      <SubmitButton>{form.submitLabel}</SubmitButton>
+    </>
   )
 }
 
@@ -898,6 +1041,9 @@ function GroupSheet({
   groups: AdminGroup[]
   kinds: AdminDashboardData['groupKinds']
 }) {
+  const form = getGroupForm(group, kinds)
+  const parentGroups = groups.filter((candidate) => candidate.id !== form.id)
+
   return (
     <Sheet>
       <SheetTrigger render={<Button type="button" variant={group ? 'outline' : 'default'} size="sm" />}>
@@ -909,61 +1055,63 @@ function GroupSheet({
           <SheetDescription>Set the group kind, parent, and container behavior.</SheetDescription>
         </SheetHeader>
         <ActionForm action={saveGroupAction} className="space-y-4 px-4">
-          {(state) => (
-            <>
-              <input type="hidden" name="id" value={group?.id ?? ''} />
-              <Field>
-                <FieldLabel htmlFor={`group-name-${group?.id ?? 'new'}`}>Name</FieldLabel>
-                <Input id={`group-name-${group?.id ?? 'new'}`} name="name" defaultValue={group?.name ?? ''} required />
-              </Field>
-              <Field>
-                <FieldLabel htmlFor={`group-kind-${group?.id ?? 'new'}`}>Kind</FieldLabel>
-                <NativeSelect
-                  id={`group-kind-${group?.id ?? 'new'}`}
-                  name="kindId"
-                  className="w-full"
-                  defaultValue={group?.kindId ?? kinds[0]?.id}
-                >
-                  {kinds.map((kind) => (
-                    <NativeSelectOption key={kind.id} value={kind.id}>
-                      {kind.name}
-                    </NativeSelectOption>
-                  ))}
-                </NativeSelect>
-              </Field>
-              <Field>
-                <FieldLabel htmlFor={`group-parent-${group?.id ?? 'new'}`}>Parent</FieldLabel>
-                <NativeSelect
-                  id={`group-parent-${group?.id ?? 'new'}`}
-                  name="parentGroupId"
-                  className="w-full"
-                  defaultValue={group?.parentGroupId ?? ''}
-                >
-                  <NativeSelectOption value="">None</NativeSelectOption>
-                  {groups
-                    .filter((candidate) => candidate.id !== group?.id)
-                    .map((candidate) => (
-                      <NativeSelectOption key={candidate.id} value={candidate.id}>
-                        {candidate.kindName}: {candidate.name}
-                      </NativeSelectOption>
-                    ))}
-                </NativeSelect>
-              </Field>
-              <Field>
-                <FieldLabel htmlFor={`group-description-${group?.id ?? 'new'}`}>Description</FieldLabel>
-                <Textarea id={`group-description-${group?.id ?? 'new'}`} name="description" defaultValue={group?.description ?? ''} />
-              </Field>
-              <Field orientation="horizontal">
-                <Switch id={`group-container-${group?.id ?? 'new'}`} name="isContainer" defaultChecked={group?.isContainer ?? false} />
-                <FieldLabel htmlFor={`group-container-${group?.id ?? 'new'}`}>Container group</FieldLabel>
-              </Field>
-              <ActionMessage state={state} />
-              <SubmitButton>{group ? 'Save group' : 'Create group'}</SubmitButton>
-            </>
-          )}
+          {(state) => <GroupFields form={form} kinds={kinds} parentGroups={parentGroups} state={state} />}
         </ActionForm>
       </SheetContent>
     </Sheet>
+  )
+}
+
+function GroupFields({
+  form,
+  kinds,
+  parentGroups,
+  state,
+}: {
+  form: GroupForm
+  kinds: AdminDashboardData['groupKinds']
+  parentGroups: AdminGroup[]
+  state: AdminActionState
+}) {
+  return (
+    <>
+      <input type="hidden" name="id" value={form.id} />
+      <Field>
+        <FieldLabel htmlFor={form.nameInputId}>Name</FieldLabel>
+        <Input id={form.nameInputId} name="name" defaultValue={form.name} required />
+      </Field>
+      <Field>
+        <FieldLabel htmlFor={form.kindInputId}>Kind</FieldLabel>
+        <NativeSelect id={form.kindInputId} name="kindId" className="w-full" defaultValue={form.kindId}>
+          {kinds.map((kind) => (
+            <NativeSelectOption key={kind.id} value={kind.id}>
+              {kind.name}
+            </NativeSelectOption>
+          ))}
+        </NativeSelect>
+      </Field>
+      <Field>
+        <FieldLabel htmlFor={form.parentInputId}>Parent</FieldLabel>
+        <NativeSelect id={form.parentInputId} name="parentGroupId" className="w-full" defaultValue={form.parentGroupId}>
+          <NativeSelectOption value="">None</NativeSelectOption>
+          {parentGroups.map((candidate) => (
+            <NativeSelectOption key={candidate.id} value={candidate.id}>
+              {candidate.kindName}: {candidate.name}
+            </NativeSelectOption>
+          ))}
+        </NativeSelect>
+      </Field>
+      <Field>
+        <FieldLabel htmlFor={form.descriptionInputId}>Description</FieldLabel>
+        <Textarea id={form.descriptionInputId} name="description" defaultValue={form.description} />
+      </Field>
+      <Field orientation="horizontal">
+        <Switch id={form.containerInputId} name="isContainer" defaultChecked={form.isContainer} />
+        <FieldLabel htmlFor={form.containerInputId}>Container group</FieldLabel>
+      </Field>
+      <ActionMessage state={state} />
+      <SubmitButton>{form.submitLabel}</SubmitButton>
+    </>
   )
 }
 
@@ -1042,6 +1190,8 @@ function PositionSheet({
   position?: AdminPosition
   users: AdminDashboardData['users']
 }) {
+  const form = getPositionForm(position, users)
+
   return (
     <Sheet>
       <SheetTrigger render={<Button type="button" variant={position ? 'outline' : 'default'} size="sm" />}>
@@ -1053,72 +1203,87 @@ function PositionSheet({
           <SheetDescription>Assign linked groups here; set current holders from the user workflow.</SheetDescription>
         </SheetHeader>
         <ActionForm action={savePositionAction} className="space-y-4 px-4">
-          {(state) => (
-            <>
-              <input type="hidden" name="id" value={position?.id ?? ''} />
-              <Field>
-                <FieldLabel htmlFor={`position-name-${position?.id ?? 'new'}`}>Name</FieldLabel>
-                <Input id={`position-name-${position?.id ?? 'new'}`} name="name" defaultValue={position?.name ?? ''} required />
-              </Field>
-              <Field>
-                <FieldLabel htmlFor={`position-description-${position?.id ?? 'new'}`}>Description</FieldLabel>
-                <Textarea
-                  id={`position-description-${position?.id ?? 'new'}`}
-                  name="description"
-                  defaultValue={position?.description ?? ''}
-                />
-              </Field>
-              <Field>
-                <FieldLabel>Linked groups</FieldLabel>
-                <div className="max-h-48 space-y-2 overflow-auto rounded-lg border p-3">
-                  {groups.map((group) => (
-                    <label key={group.id} className="flex items-center gap-2 text-sm">
-                      <input
-                        type="checkbox"
-                        name="groupIds"
-                        value={group.id}
-                        defaultChecked={position?.groupIds.includes(group.id)}
-                        className="size-4"
-                      />
-                      <span className="truncate">
-                        {group.kindName}: {group.name}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              </Field>
-              <ActionMessage state={state} />
-              <SubmitButton>{position ? 'Save position' : 'Create position'}</SubmitButton>
-            </>
-          )}
+          {(state) => <PositionFields form={form} groups={groups} state={state} />}
         </ActionForm>
         {position ? (
           <ActionForm action={assignPositionToUserAction} className="space-y-3 px-4">
-            {(assignState) => (
-              <div className="space-y-3 rounded-lg border p-3">
-                <input type="hidden" name="positionId" value={position.id} />
-                <Field>
-                  <FieldLabel htmlFor={`position-holder-${position.id}`}>Current holder</FieldLabel>
-                  <NativeSelect
-                    id={`position-holder-${position.id}`}
-                    name="userId"
-                    className="w-full"
-                    defaultValue={position.currentHolderUserId ?? users[0]?.id}
-                  >
-                    {users.map((user) => (
-                      <NativeSelectOption key={user.id} value={user.id}>
-                        {user.name} ({user.email})
-                      </NativeSelectOption>
-                    ))}
-                  </NativeSelect>
-                </Field>
-                <ActionMessage state={assignState} />
-                <SubmitButton variant="outline">Set holder</SubmitButton>
-              </div>
-            )}
+            {(assignState) => <PositionHolderFields form={form} state={assignState} users={users} />}
           </ActionForm>
         ) : null}
       </SheetContent>
     </Sheet>
+  )
+}
+
+function PositionFields({
+  form,
+  groups,
+  state,
+}: {
+  form: PositionForm
+  groups: AdminGroup[]
+  state: AdminActionState
+}) {
+  return (
+    <>
+      <input type="hidden" name="id" value={form.id} />
+      <Field>
+        <FieldLabel htmlFor={form.nameInputId}>Name</FieldLabel>
+        <Input id={form.nameInputId} name="name" defaultValue={form.name} required />
+      </Field>
+      <Field>
+        <FieldLabel htmlFor={form.descriptionInputId}>Description</FieldLabel>
+        <Textarea id={form.descriptionInputId} name="description" defaultValue={form.description} />
+      </Field>
+      <Field>
+        <FieldLabel>Linked groups</FieldLabel>
+        <div className="max-h-48 space-y-2 overflow-auto rounded-lg border p-3">
+          {groups.map((group) => (
+            <label key={group.id} className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                name="groupIds"
+                value={group.id}
+                defaultChecked={form.groupIds.has(group.id)}
+                className="size-4"
+              />
+              <span className="truncate">
+                {group.kindName}: {group.name}
+              </span>
+            </label>
+          ))}
+        </div>
+      </Field>
+      <ActionMessage state={state} />
+      <SubmitButton>{form.submitLabel}</SubmitButton>
+    </>
+  )
+}
+
+function PositionHolderFields({
+  form,
+  state,
+  users,
+}: {
+  form: PositionForm
+  state: AdminActionState
+  users: AdminDashboardData['users']
+}) {
+  return (
+    <div className="space-y-3 rounded-lg border p-3">
+      <input type="hidden" name="positionId" value={form.id} />
+      <Field>
+        <FieldLabel htmlFor={form.holderInputId}>Current holder</FieldLabel>
+        <NativeSelect id={form.holderInputId} name="userId" className="w-full" defaultValue={form.currentHolderUserId}>
+          {users.map((user) => (
+            <NativeSelectOption key={user.id} value={user.id}>
+              {user.name} ({user.email})
+            </NativeSelectOption>
+          ))}
+        </NativeSelect>
+      </Field>
+      <ActionMessage state={state} />
+      <SubmitButton variant="outline">Set holder</SubmitButton>
+    </div>
   )
 }

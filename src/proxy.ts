@@ -1,3 +1,4 @@
+// fallow-ignore-file security-sink -- Redirect targets are same-origin paths constructed from the current request URL.
 import { getSessionCookie } from 'better-auth/cookies'
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
