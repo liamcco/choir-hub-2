@@ -1,4 +1,5 @@
 import { Navigation } from '@/components/nav/menu-bar'
+import { Toaster } from '@/components/ui/sonner'
 import { cn } from '@/lib/utils'
 import { ThemeProvider } from '@wrksz/themes/next'
 import type { Metadata } from 'next'
@@ -32,6 +33,7 @@ export default function RootLayout({
           <main id="main-content" className="flex-1">
             {children}
           </main>
+          <Toaster />
         </ThemeProvider>
       </body>
     </html>

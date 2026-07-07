@@ -1,4 +1,3 @@
-import { auth } from '@/lib/auth'
 import { getSessionCookie } from 'better-auth/cookies'
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
@@ -23,16 +22,8 @@ export default async function proxy(req: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  const session = await auth.api.getSession({
-    headers: req.headers,
-  })
-
   if (isAdminRoute) {
-    if (!session || session.user.role !== 'admin') {
-      const url = req.nextUrl.clone()
-      url.pathname = session ? '/' : '/login'
-      return NextResponse.redirect(url)
-    }
+    return NextResponse.next()
   }
 
   return NextResponse.next()
