@@ -6,7 +6,10 @@ import { useActionState } from 'react'
 import { requestPasswordResetAction, resetPasswordAction } from './actions'
 
 import { Button } from '@/components/ui/button'
+import { Field, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp'
+import { Spinner } from '@/components/ui/spinner'
 
 const initialState = {
   step: 'email' as const,
@@ -36,11 +39,31 @@ export function ForgotPasswordForm() {
       <form action={resetAction} className="space-y-4">
         <input type="hidden" name="email" value={state.email} />
 
-        <Input name="otp" placeholder="Reset code" required />
-        <Input name="password" type="password" placeholder="New password" required />
-        <Input name="confirmPassword" type="password" placeholder="Confirm new password" required />
+        <InputOTP name="otp" maxLength={6} required>
+          <InputOTPGroup>
+            <InputOTPSlot index={0} />
+            <InputOTPSlot index={1} />
+            <InputOTPSlot index={2} />
+            <InputOTPSlot index={3} />
+            <InputOTPSlot index={4} />
+            <InputOTPSlot index={5} />
+          </InputOTPGroup>
+        </InputOTP>
 
-        {state.error ? <p className="text-sm text-red-700">{state.error}</p> : null}
+        <FieldSet>
+          <FieldLegend>Password</FieldLegend>
+          <FieldGroup>
+            <Field>
+              <FieldLabel>New password</FieldLabel>
+              <Input name="password" type="password" placeholder="New password" required />
+            </Field>
+            <Field>
+              <FieldLabel>Confirm new password</FieldLabel>
+              <Input name="confirmPassword" type="password" placeholder="Confirm new password" required />
+            </Field>
+          </FieldGroup>
+        </FieldSet>
+        {state.error && <FieldError>{state.error}</FieldError>}
 
         <Button disabled={resetPending} className="w-full" type="submit">
           {resetPending ? 'Resetting...' : 'Reset password'}
@@ -53,10 +76,16 @@ export function ForgotPasswordForm() {
     <form action={requestAction} className="space-y-4">
       <Input name="email" type="email" placeholder="Email" required />
 
-      {state.error ? <p className="text-sm text-red-700">{state.error}</p> : null}
+      {state.error && <FieldError>{state.error}</FieldError>}
 
       <Button disabled={requestPending} className="w-full" type="submit">
-        {requestPending ? 'Sending...' : 'Send reset code'}
+        {requestPending ? (
+          <>
+            <Spinner /> Sending...
+          </>
+        ) : (
+          <>Send reset code</>
+        )}
       </Button>
     </form>
   )
