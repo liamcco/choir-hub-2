@@ -4,10 +4,10 @@
 
 **Blocked by:** 01 — Introduce a narrow Member registry module; 04 — Deepen dated history handling.
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] Group structure behavior is reachable through a workflow-shaped module that preserves flexible hierarchy and sibling-only Group name uniqueness.
-- [ ] Group Membership history behavior is reachable through a workflow-shaped module that preserves dated membership history.
-- [ ] Position Scope and Position Assignment history behavior are reachable through workflow-shaped modules that preserve scoped Positions and one-holder-at-a-time semantics.
-- [ ] The broad persistence adapter may remain broad, but caller-facing organization interfaces are smaller and workflow-oriented.
-- [ ] Tests verify the workflow modules through their interfaces without requiring unrelated organizational setup.
+- [x] Group structure behavior is reachable through a workflow-shaped module that preserves flexible hierarchy and sibling-only Group name uniqueness.
+- [x] Group Membership history behavior is reachable through a workflow-shaped module that preserves dated membership history.
+- [x] Position Scope and Position Assignment history behavior are reachable through workflow-shaped modules that preserve scoped Positions and one-holder-at-a-time semantics.
+- [x] The broad persistence adapter may remain broad, but caller-facing organization interfaces are smaller and workflow-oriented.
+- [x] Tests verify the workflow modules through their interfaces without requiring unrelated organizational setup.

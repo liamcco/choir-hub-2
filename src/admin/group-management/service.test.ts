@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test } from 'bun:test'
 import { createGroupManagementService, GroupManagementAuthorizationError } from '@/admin/group-management/service'
-import { createOrganizationDomain } from '@/organization'
+import { createGroupStructure } from '@/organization'
 import { InMemoryOrganizationPersistence } from '@/organization/test-support'
 import { GroupKind } from '@/prisma/generated/client'
 
@@ -121,6 +121,6 @@ describe('admin Group management service', () => {
 
 function createService() {
   return createGroupManagementService({
-    organization: createOrganizationDomain(persistence),
+    groupStructure: createGroupStructure(persistence),
   })
 }

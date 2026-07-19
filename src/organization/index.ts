@@ -1,7 +1,16 @@
 export { createOrganizationDomain } from '@/organization/domain'
 export type { OrganizationDomainErrorCode } from '@/organization/errors'
 export { OrganizationDomainError } from '@/organization/errors'
+export type { GroupMembershipHistory } from '@/organization/group-membership-history'
+export { createGroupMembershipHistory } from '@/organization/group-membership-history'
+export type { GroupStructure } from '@/organization/group-structure'
+export { createGroupStructure } from '@/organization/group-structure'
 export type { MemberRegistry } from '@/organization/member-registry'
+export { createMemberRegistry } from '@/organization/member-registry'
+export type { PositionAssignmentHistory } from '@/organization/position-assignment-history'
+export { createPositionAssignmentHistory } from '@/organization/position-assignment-history'
+export type { PositionScopeRegistry } from '@/organization/position-scope-registry'
+export { createPositionScopeRegistry } from '@/organization/position-scope-registry'
 export { createPrismaOrganizationPersistence } from '@/organization/prisma'
 export type {
   CreateGroupInput,

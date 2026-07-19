@@ -3,7 +3,7 @@ import {
   createGroupMembershipManagementService,
   GroupMembershipManagementAuthorizationError,
 } from '@/admin/group-membership-management/service'
-import { createOrganizationDomain } from '@/organization'
+import { createGroupMembershipHistory, createGroupStructure, createMemberRegistry } from '@/organization'
 import { InMemoryOrganizationPersistence } from '@/organization/test-support'
 import { GroupKind, MemberStatus } from '@/prisma/generated/client'
 
@@ -139,12 +139,17 @@ function createService(input: { users?: { id: string; name: string; email: strin
           createdAt: date('2026-01-01'),
         })),
     },
-    organization: organization(),
+    groupMembershipHistory: createGroupMembershipHistory(persistence),
+    groupStructure: createGroupStructure(persistence),
+    memberRegistry: createMemberRegistry(persistence),
   })
 }
 
 function organization() {
-  return createOrganizationDomain(persistence)
+  return {
+    ...createGroupStructure(persistence),
+    ...createMemberRegistry(persistence),
+  }
 }
 
 function date(value: string) {

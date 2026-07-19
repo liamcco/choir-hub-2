@@ -1,7 +1,13 @@
 import { type AccessActor, canAccessAdminSurface } from '@/admin/access-policy'
 import { formatGroupPath } from '@/admin/group-management/group-labels'
 import type { AuthAdminGateway, AuthUserAccount } from '@/admin/member-management/account-lifecycle'
-import { type OrganizationDomain, OrganizationDomainError, type OrganizationRecord } from '@/organization'
+import {
+  type GroupMembershipHistory,
+  type GroupStructure,
+  type MemberRegistry,
+  OrganizationDomainError,
+  type OrganizationRecord,
+} from '@/organization'
 import { isCurrentDatedPeriod, isHistoricalDatedPeriod, isScheduledDatedPeriod } from '@/organization/dated-history'
 import type { CreateGroupMembershipInput } from '@/organization/types'
 
@@ -85,18 +91,22 @@ export class GroupMembershipManagementValidationError extends Error {
 
 export function createGroupMembershipManagementService({
   authGateway,
-  organization,
+  groupMembershipHistory,
+  groupStructure,
+  memberRegistry,
 }: {
   authGateway?: Pick<AuthAdminGateway, 'listUsers'>
-  organization: OrganizationDomain
+  groupMembershipHistory: GroupMembershipHistory
+  groupStructure: GroupStructure
+  memberRegistry: MemberRegistry
 }): GroupMembershipManagementService {
   return {
     async listGroupMembershipManagement(actor, input) {
       assertAdmin(actor)
       const [groups, members, memberships, users] = await Promise.all([
-        organization.listGroups(),
-        organization.listMembers(),
-        organization.listGroupMemberships(),
+        groupStructure.listGroups(),
+        memberRegistry.listMembers(),
+        groupMembershipHistory.listGroupMemberships(),
         authGateway?.listUsers() ?? Promise.resolve([]),
       ])
       return buildGroupMembershipManagementState({
@@ -109,11 +119,13 @@ export function createGroupMembershipManagementService({
     },
     async createGroupMembership(actor, input) {
       assertAdmin(actor)
-      return mapValidationErrors(() => organization.createGroupMembership(input))
+      return mapValidationErrors(() => groupMembershipHistory.createGroupMembership(input))
     },
     async endGroupMembership(actor, membershipId, input) {
       assertAdmin(actor)
-      return mapValidationErrors(() => organization.updateGroupMembership(membershipId, { endsAt: input.endsAt }))
+      return mapValidationErrors(() =>
+        groupMembershipHistory.updateGroupMembership(membershipId, { endsAt: input.endsAt }),
+      )
     },
   }
 }

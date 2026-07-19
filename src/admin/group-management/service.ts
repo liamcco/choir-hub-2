@@ -1,5 +1,5 @@
 import { type AccessActor, canAccessAdminSurface } from '@/admin/access-policy'
-import { type OrganizationDomain, OrganizationDomainError, type OrganizationRecord } from '@/organization'
+import { type GroupStructure, OrganizationDomainError, type OrganizationRecord } from '@/organization'
 import type { CreateGroupInput, UpdateGroupInput } from '@/organization/types'
 
 export type GroupManagementActor = AccessActor
@@ -43,14 +43,14 @@ export class GroupManagementValidationError extends Error {
 }
 
 export function createGroupManagementService({
-  organization,
+  groupStructure,
 }: {
-  organization: OrganizationDomain
+  groupStructure: GroupStructure
 }): GroupManagementService {
   return {
     async listGroupManagement(actor) {
       assertAdmin(actor)
-      const groups = await organization.listGroups()
+      const groups = await groupStructure.listGroups()
       return {
         groups,
         hierarchy: buildGroupHierarchy(groups),
@@ -58,7 +58,7 @@ export function createGroupManagementService({
     },
     async createGroup(actor, input) {
       assertAdmin(actor)
-      return mapValidationErrors(() => organization.createGroup(input))
+      return mapValidationErrors(() => groupStructure.createGroup(input))
     },
     async updateGroup(actor, groupId, input) {
       assertAdmin(actor)
@@ -68,9 +68,9 @@ export function createGroupManagementService({
         })
       }
       if (input.parentGroupId) {
-        await assertParentIsNotDescendant(organization, groupId, input.parentGroupId)
+        await assertParentIsNotDescendant(groupStructure, groupId, input.parentGroupId)
       }
-      return mapValidationErrors(() => organization.updateGroup(groupId, input))
+      return mapValidationErrors(() => groupStructure.updateGroup(groupId, input))
     },
   }
 }
@@ -134,11 +134,11 @@ async function mapValidationErrors<T>(operation: () => Promise<T>) {
 }
 
 async function assertParentIsNotDescendant(
-  organization: OrganizationDomain,
+  groupStructure: GroupStructure,
   groupId: string,
   candidateParentGroupId: string,
 ) {
-  const groups = await organization.listGroups()
+  const groups = await groupStructure.listGroups()
   const childIdsByParentId = new Map<string, string[]>()
 
   for (const group of groups) {
