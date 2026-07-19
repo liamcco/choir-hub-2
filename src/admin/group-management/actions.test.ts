@@ -7,6 +7,7 @@ const revalidatePath = mock(() => {})
 const listGroupManagement = mock(async () => ({ groups: [], hierarchy: [] }))
 const createGroup = mock(async () => ({ id: 'group-1' }))
 const updateGroup = mock(async () => ({ id: 'group-1' }))
+const requireAdminSurfaceActor = mock(async () => actor)
 const actor: AccessActor = { id: 'admin-user', role: 'admin' }
 
 mock.module('next/cache', () => ({
@@ -15,7 +16,7 @@ mock.module('next/cache', () => ({
 
 mock.module('@/admin/actor', () => ({
   getCurrentAccessActor: async () => actor,
-  requireAdminSurfaceActor: async () => actor,
+  requireAdminSurfaceActor,
 }))
 
 mock.module('@/admin/group-management/runtime', () => ({
@@ -33,6 +34,7 @@ beforeEach(() => {
   listGroupManagement.mockClear()
   createGroup.mockClear()
   updateGroup.mockClear()
+  requireAdminSurfaceActor.mockClear()
 })
 
 describe('admin Group management actions', () => {
@@ -117,6 +119,25 @@ describe('admin Group management actions', () => {
         name: 'A sibling Group named "Altos" already exists.',
       },
     })
+  })
+
+  test('rejects direct non-admin create and update action requests before service writes', async () => {
+    requireAdminSurfaceActor.mockImplementation(async () => {
+      throw new Error('Forbidden')
+    })
+
+    const formData = groupFormData({
+      name: 'Altos',
+      description: '',
+      kind: GroupKind.SECTION,
+      parentGroupId: 'choir-1',
+    })
+
+    await expect(createGroupAction({}, formData)).rejects.toThrow('Forbidden')
+    await expect(updateGroupAction('group-1', {}, formData)).rejects.toThrow('Forbidden')
+    expect(createGroup).not.toHaveBeenCalled()
+    expect(updateGroup).not.toHaveBeenCalled()
+    expect(revalidatePath).not.toHaveBeenCalled()
   })
 })
 

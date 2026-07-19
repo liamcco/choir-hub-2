@@ -6,6 +6,7 @@ const revalidatePath = mock(() => {})
 const listGroupMembershipManagement = mock(async () => ({ groups: [], members: [], groupViews: [], memberViews: [] }))
 const createGroupMembership = mock(async () => ({ id: 'membership-1' }))
 const endGroupMembership = mock(async () => ({ id: 'membership-1' }))
+const requireAdminSurfaceActor = mock(async () => actor)
 const actor: AccessActor = { id: 'admin-user', role: 'admin' }
 
 mock.module('next/cache', () => ({
@@ -14,7 +15,7 @@ mock.module('next/cache', () => ({
 
 mock.module('@/admin/actor', () => ({
   getCurrentAccessActor: async () => actor,
-  requireAdminSurfaceActor: async () => actor,
+  requireAdminSurfaceActor,
 }))
 
 mock.module('@/admin/group-membership-management/runtime', () => ({
@@ -34,6 +35,7 @@ beforeEach(() => {
   listGroupMembershipManagement.mockClear()
   createGroupMembership.mockClear()
   endGroupMembership.mockClear()
+  requireAdminSurfaceActor.mockClear()
 })
 
 describe('admin Group Membership management actions', () => {
@@ -104,6 +106,29 @@ describe('admin Group Membership management actions', () => {
         endsAt: 'The end date must be after the start date.',
       },
     })
+  })
+
+  test('rejects direct non-admin create and end action requests before service writes', async () => {
+    requireAdminSurfaceActor.mockImplementation(async () => {
+      throw new Error('Forbidden')
+    })
+
+    await expect(
+      createGroupMembershipAction(
+        {},
+        createMembershipFormData({
+          memberId: 'member-1',
+          groupId: 'group-1',
+          startsAt: '2026-01-01',
+        }),
+      ),
+    ).rejects.toThrow('Forbidden')
+    const endFormData = new FormData()
+    endFormData.set('endsAt', '2026-06-01')
+    await expect(endGroupMembershipAction('membership-1', {}, endFormData)).rejects.toThrow('Forbidden')
+    expect(createGroupMembership).not.toHaveBeenCalled()
+    expect(endGroupMembership).not.toHaveBeenCalled()
+    expect(revalidatePath).not.toHaveBeenCalled()
   })
 })
 

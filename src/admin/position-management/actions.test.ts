@@ -6,6 +6,7 @@ const revalidatePath = mock(() => {})
 const listPositionManagement = mock(async () => ({ groups: [], positions: [] }))
 const createPosition = mock(async () => ({ id: 'position-1' }))
 const updatePosition = mock(async () => ({ id: 'position-1' }))
+const requireAdminSurfaceActor = mock(async () => actor)
 const actor: AccessActor = { id: 'admin-user', role: 'admin' }
 
 mock.module('next/cache', () => ({
@@ -14,7 +15,7 @@ mock.module('next/cache', () => ({
 
 mock.module('@/admin/actor', () => ({
   getCurrentAccessActor: async () => actor,
-  requireAdminSurfaceActor: async () => actor,
+  requireAdminSurfaceActor,
 }))
 
 mock.module('@/admin/position-management/runtime', () => ({
@@ -32,6 +33,7 @@ beforeEach(() => {
   listPositionManagement.mockClear()
   createPosition.mockClear()
   updatePosition.mockClear()
+  requireAdminSurfaceActor.mockClear()
 })
 
 describe('admin Position management actions', () => {
@@ -89,6 +91,24 @@ describe('admin Position management actions', () => {
         groupIds: 'Choose at least one Group.',
       },
     })
+  })
+
+  test('rejects direct non-admin create and update action requests before service writes', async () => {
+    requireAdminSurfaceActor.mockImplementation(async () => {
+      throw new Error('Forbidden')
+    })
+
+    const formData = positionFormData({
+      name: 'Chair',
+      description: '',
+      groupIds: ['group-1'],
+    })
+
+    await expect(createPositionAction({}, formData)).rejects.toThrow('Forbidden')
+    await expect(updatePositionAction('position-1', {}, formData)).rejects.toThrow('Forbidden')
+    expect(createPosition).not.toHaveBeenCalled()
+    expect(updatePosition).not.toHaveBeenCalled()
+    expect(revalidatePath).not.toHaveBeenCalled()
   })
 })
 

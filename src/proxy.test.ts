@@ -23,4 +23,24 @@ describe('proxy route protection', () => {
   test('allows cached admin actors on admin routes', () => {
     expect(evaluateProxyRouteAccess('/admin/members', { id: 'user-admin', role: 'admin' })).toEqual({ kind: 'allow' })
   })
+
+  test('protects every v1 admin organizational management route for non-admins', () => {
+    for (const path of [
+      '/admin/members',
+      '/admin/groups',
+      '/admin/group-memberships',
+      '/admin/positions',
+      '/admin/position-assignments',
+    ]) {
+      expect(evaluateProxyRouteAccess(path, { id: 'user-member', role: 'user' })).toEqual({
+        kind: 'redirect',
+        location: '/organization',
+      })
+    }
+  })
+
+  test('allows non-admin Users on authenticated non-admin routes', () => {
+    expect(evaluateProxyRouteAccess('/organization', { id: 'user-member', role: 'user' })).toEqual({ kind: 'allow' })
+    expect(evaluateProxyRouteAccess('/account', { id: 'user-member', role: 'user' })).toEqual({ kind: 'allow' })
+  })
 })

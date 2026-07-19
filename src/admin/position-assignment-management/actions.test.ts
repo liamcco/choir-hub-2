@@ -11,6 +11,7 @@ const listPositionAssignmentManagement = mock(async () => ({
 }))
 const createPositionAssignment = mock(async () => ({ id: 'assignment-1' }))
 const endPositionAssignment = mock(async () => ({ id: 'assignment-1' }))
+const requireAdminSurfaceActor = mock(async () => actor)
 const actor: AccessActor = { id: 'admin-user', role: 'admin' }
 
 mock.module('next/cache', () => ({
@@ -19,7 +20,7 @@ mock.module('next/cache', () => ({
 
 mock.module('@/admin/actor', () => ({
   getCurrentAccessActor: async () => actor,
-  requireAdminSurfaceActor: async () => actor,
+  requireAdminSurfaceActor,
 }))
 
 mock.module('@/admin/position-assignment-management/runtime', () => ({
@@ -39,6 +40,7 @@ beforeEach(() => {
   listPositionAssignmentManagement.mockClear()
   createPositionAssignment.mockClear()
   endPositionAssignment.mockClear()
+  requireAdminSurfaceActor.mockClear()
 })
 
 describe('admin Position Assignment management actions', () => {
@@ -111,6 +113,29 @@ describe('admin Position Assignment management actions', () => {
         endsAt: 'The end date must be after the start date.',
       },
     })
+  })
+
+  test('rejects direct non-admin create and end action requests before service writes', async () => {
+    requireAdminSurfaceActor.mockImplementation(async () => {
+      throw new Error('Forbidden')
+    })
+
+    await expect(
+      createPositionAssignmentAction(
+        {},
+        createAssignmentFormData({
+          memberId: 'member-1',
+          positionId: 'position-1',
+          startsAt: '2026-01-01',
+        }),
+      ),
+    ).rejects.toThrow('Forbidden')
+    const endFormData = new FormData()
+    endFormData.set('endsAt', '2026-06-01')
+    await expect(endPositionAssignmentAction('assignment-1', {}, endFormData)).rejects.toThrow('Forbidden')
+    expect(createPositionAssignment).not.toHaveBeenCalled()
+    expect(endPositionAssignment).not.toHaveBeenCalled()
+    expect(revalidatePath).not.toHaveBeenCalled()
   })
 })
 
