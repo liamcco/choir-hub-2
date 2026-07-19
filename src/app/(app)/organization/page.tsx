@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { getCurrentAccessActor } from '@/admin/actor'
+import { ROUTES } from '@/lib/route-access'
 import { getOrganizationalReadOnlyService } from '@/organization-read/runtime'
 import { OrganizationalReadOnlyScreen } from '@/organization-read/screen'
 import { OrganizationalReadOnlyAuthorizationError } from '@/organization-read/service'
@@ -9,7 +10,7 @@ export const instant = false
 export default async function OrganizationPage() {
   const actor = await getCurrentAccessActor()
   if (!actor) {
-    redirect('/login')
+    redirect(ROUTES.login)
   }
 
   try {
@@ -18,7 +19,7 @@ export default async function OrganizationPage() {
     return <OrganizationalReadOnlyScreen state={state} />
   } catch (error) {
     if (error instanceof OrganizationalReadOnlyAuthorizationError) {
-      redirect('/login')
+      redirect(ROUTES.login)
     }
     throw error
   }

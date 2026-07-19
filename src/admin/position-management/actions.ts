@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { getCurrentAccessActor, requireAdminSurfaceActor } from '@/admin/actor'
 import { getPositionManagementService } from '@/admin/position-management/runtime'
 import { PositionManagementValidationError } from '@/admin/position-management/service'
+import { ROUTES } from '@/lib/route-access'
 
 export type PositionFormState = {
   message?: string
@@ -33,7 +34,7 @@ export async function createPositionAction(
     return handleFormError(error)
   }
 
-  revalidatePath('/admin/positions')
+  revalidatePath(ROUTES.adminPositions)
   return { message: 'Position created.' }
 }
 
@@ -54,7 +55,7 @@ export async function updatePositionAction(
     return handleFormError(error)
   }
 
-  revalidatePath('/admin/positions')
+  revalidatePath(ROUTES.adminPositions)
   return { message: 'Position updated.' }
 }
 

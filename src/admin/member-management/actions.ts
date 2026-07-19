@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { getCurrentAccessActor, requireAdminSurfaceActor } from '@/admin/actor'
 import { getMemberManagementService } from '@/admin/member-management/runtime'
+import { ROUTES } from '@/lib/route-access'
 import { MemberStatus } from '@/prisma/generated/client'
 
 const createMemberAccountSchema = z.object({
@@ -27,7 +28,7 @@ export async function createMemberAccountAction(formData: FormData) {
   await getMemberManagementService().then(async (service) => {
     await service.createMemberAccount(await requireActor(), input)
   })
-  revalidatePath('/admin/members')
+  revalidatePath(ROUTES.adminMembers)
 }
 
 export async function createLinkedMemberAction(userId: string, formData: FormData) {
@@ -39,7 +40,7 @@ export async function createLinkedMemberAction(userId: string, formData: FormDat
       status,
     })
   })
-  revalidatePath('/admin/members')
+  revalidatePath(ROUTES.adminMembers)
 }
 
 export async function updateMemberStatusAction(memberId: string, formData: FormData) {
@@ -51,7 +52,7 @@ export async function updateMemberStatusAction(memberId: string, formData: FormD
       status,
     })
   })
-  revalidatePath('/admin/members')
+  revalidatePath(ROUTES.adminMembers)
 }
 
 export async function updateAccountAccessAction(userId: string, formData: FormData) {
@@ -63,7 +64,7 @@ export async function updateAccountAccessAction(userId: string, formData: FormDa
       accessState,
     })
   })
-  revalidatePath('/admin/members')
+  revalidatePath(ROUTES.adminMembers)
 }
 
 async function requireActor() {

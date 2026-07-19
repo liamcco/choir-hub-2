@@ -2,14 +2,16 @@ import { describe, expect, test } from 'bun:test'
 import {
   canAccessAdminSurface,
   canManageMembers,
+  getAccessibleNavigationRoutes,
   getAdminSurfaceAccessDecision,
   getPostLoginPath,
   getRouteAccessDecision,
   getRouteAccessPolicy,
   parseActorRoles,
-} from '@/admin/access-policy'
+  ROUTES,
+} from '@/lib/route-access'
 
-describe('admin access policy', () => {
+describe('route access policy', () => {
   test('parses Better Auth role values in one place', () => {
     expect(parseActorRoles('admin,user')).toEqual(['admin', 'user'])
     expect(parseActorRoles([' admin ', 'user,committee'])).toEqual(['admin', 'user', 'committee'])
@@ -25,10 +27,10 @@ describe('admin access policy', () => {
   })
 
   test('classifies public, authenticated, and admin routes with policy vocabulary', () => {
-    expect(getRouteAccessPolicy('/login')).toEqual({ kind: 'public' })
-    expect(getRouteAccessPolicy('/account')).toEqual({ kind: 'authenticated' })
+    expect(getRouteAccessPolicy(ROUTES.login)).toEqual({ kind: 'public' })
+    expect(getRouteAccessPolicy(ROUTES.account)).toEqual({ kind: 'authenticated' })
     expect(getRouteAccessPolicy('/')).toEqual({ kind: 'authenticated' })
-    expect(getRouteAccessPolicy('/admin/members')).toEqual({ kind: 'admin', surface: 'members' })
+    expect(getRouteAccessPolicy(ROUTES.adminMembers)).toEqual({ kind: 'admin', surface: 'members' })
     expect(getRouteAccessPolicy('/admin/future')).toEqual({ kind: 'admin', surface: 'organization-admin' })
   })
 
@@ -58,8 +60,35 @@ describe('admin access policy', () => {
   })
 
   test('uses the policy destination after sign-in', () => {
-    expect(getPostLoginPath()).toBe('/organization')
-    expect(getPostLoginPath({ id: 'user-member', role: 'user' })).toBe('/organization')
-    expect(getPostLoginPath({ id: 'user-admin', role: 'admin' })).toBe('/admin/members')
+    expect(getPostLoginPath()).toBe(ROUTES.organization)
+    expect(getPostLoginPath({ id: 'user-member', role: 'user' })).toBe(ROUTES.organization)
+    expect(getPostLoginPath({ id: 'user-admin', role: 'admin' })).toBe(ROUTES.adminMembers)
+  })
+
+  test('selects visible navigation routes from the same policy vocabulary', () => {
+    expect(getAccessibleNavigationRoutes(null).map((route) => route.id)).toEqual(['login'])
+    expect(getAccessibleNavigationRoutes({ id: 'user-member', role: 'user' }).map((route) => route.id)).toEqual([
+      'organization',
+      'account',
+    ])
+    expect(getAccessibleNavigationRoutes({ id: 'user-admin', role: 'admin' }).map((route) => route.id)).toEqual([
+      'organization',
+      'account',
+      'adminMembers',
+      'adminGroups',
+      'adminGroupMemberships',
+      'adminPositions',
+      'adminPositionAssignments',
+    ])
+
+    expect(getAccessibleNavigationRoutes({ id: 'user-admin', role: 'admin' }).map((route) => route.href)).toEqual([
+      ROUTES.organization,
+      ROUTES.account,
+      ROUTES.adminMembers,
+      ROUTES.adminGroups,
+      ROUTES.adminGroupMemberships,
+      ROUTES.adminPositions,
+      ROUTES.adminPositionAssignments,
+    ])
   })
 })

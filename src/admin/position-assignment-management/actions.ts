@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { getCurrentAccessActor, requireAdminSurfaceActor } from '@/admin/actor'
 import { getPositionAssignmentManagementService } from '@/admin/position-assignment-management/runtime'
 import { PositionAssignmentManagementValidationError } from '@/admin/position-assignment-management/service'
+import { ROUTES } from '@/lib/route-access'
 
 export type PositionAssignmentFormState = {
   message?: string
@@ -37,7 +38,7 @@ export async function createPositionAssignmentAction(
     return handleFormError(error)
   }
 
-  revalidatePath('/admin/position-assignments')
+  revalidatePath(ROUTES.adminPositionAssignments)
   return { message: 'Position Assignment added.' }
 }
 
@@ -58,7 +59,7 @@ export async function endPositionAssignmentAction(
     return handleFormError(error)
   }
 
-  revalidatePath('/admin/position-assignments')
+  revalidatePath(ROUTES.adminPositionAssignments)
   return { message: 'Position Assignment ended.' }
 }
 

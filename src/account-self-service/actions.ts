@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { getAccountSelfService } from '@/account-self-service/runtime'
 import { AccountSelfServiceAuthorizationError, AccountSelfServiceValidationError } from '@/account-self-service/service'
 import { getCurrentAccessActor } from '@/lib/access-actor'
+import { ROUTES } from '@/lib/route-access'
 
 export type PasswordChangeFormState = {
   message?: string
@@ -29,7 +30,7 @@ export async function changePasswordAction(
     return { success: true, message: result.message }
   } catch (error) {
     if (error instanceof AccountSelfServiceAuthorizationError) {
-      redirect('/login')
+      redirect(ROUTES.login)
     }
     if (error instanceof AccountSelfServiceValidationError) {
       return {

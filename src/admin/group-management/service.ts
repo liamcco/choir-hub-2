@@ -1,4 +1,5 @@
-import { type AccessActor, canAccessAdminSurface } from '@/admin/access-policy'
+import type { AccessActor } from '@/lib/access-actor'
+import { canAccessAdminSurface } from '@/lib/route-access'
 import { type GroupStructure, OrganizationDomainError, type OrganizationRecord } from '@/organization'
 import type { CreateGroupInput, UpdateGroupInput } from '@/organization/types'
 

@@ -1,4 +1,5 @@
-import { getPostLoginPath } from '@/admin/access-policy'
+import type { AccessActor } from '@/lib/access-actor'
+import { getPostLoginPath } from '@/lib/route-access'
 
 export type EmailPasswordSignInInput = {
   email: string
@@ -7,12 +8,10 @@ export type EmailPasswordSignInInput = {
 
 export type LoginAuthClient = {
   signIn: {
-    email(input: {
-      email: string
-      password: string
-      callbackURL: string
-      rememberMe: boolean
-    }): Promise<{ error?: { message?: string | null } | null }>
+    email(input: { email: string; password: string; callbackURL: string; rememberMe: boolean }): Promise<{
+      data?: { user?: { id?: unknown; role?: AccessActor['role'] } | null } | null
+      error?: { message?: string | null } | null
+    }>
   }
 }
 
@@ -22,11 +21,11 @@ export async function signInWithEmailPassword(
   authClient: LoginAuthClient,
   input: EmailPasswordSignInInput,
 ): Promise<LoginResult> {
-  const redirectTo = getPostLoginPath()
+  const defaultRedirectTo = getPostLoginPath()
   const result = await authClient.signIn.email({
     email: input.email,
     password: input.password,
-    callbackURL: redirectTo,
+    callbackURL: defaultRedirectTo,
     rememberMe: true,
   })
 
@@ -34,5 +33,9 @@ export async function signInWithEmailPassword(
     return { success: false, error: result.error.message || 'Sign-in failed.' }
   }
 
-  return { success: true, redirectTo }
+  return { success: true, redirectTo: getPostLoginPath(toSignedInActor(result.data?.user)) }
+}
+
+function toSignedInActor(user: { id?: unknown; role?: AccessActor['role'] } | null | undefined): AccessActor | null {
+  return typeof user?.id === 'string' ? { id: user.id, role: user.role } : null
 }

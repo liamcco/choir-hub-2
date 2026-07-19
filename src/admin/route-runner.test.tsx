@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test'
 import { renderToStaticMarkup } from 'react-dom/server'
-import type { AccessActor } from '@/admin/access-policy'
+import type { AccessActor } from '@/lib/access-actor'
 
 const redirect = mock((location: string): never => {
   throw new TestRedirect(location)

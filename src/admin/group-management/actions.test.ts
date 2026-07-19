@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test'
-import type { AccessActor } from '@/admin/access-policy'
 import { GroupManagementValidationError } from '@/admin/group-management/service'
+import type { AccessActor } from '@/lib/access-actor'
 import { GroupKind } from '@/prisma/generated/client'
 
 const revalidatePath = mock(() => {})

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test'
-import type { AccessActor } from '@/admin/access-policy'
 import { GroupMembershipManagementValidationError } from '@/admin/group-membership-management/service'
+import type { AccessActor } from '@/lib/access-actor'
 
 const revalidatePath = mock(() => {})
 const listGroupMembershipManagement = mock(async () => ({ groups: [], members: [], groupViews: [], memberViews: [] }))

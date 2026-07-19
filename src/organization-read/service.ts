@@ -1,4 +1,4 @@
-import type { AccessActor } from '@/admin/access-policy'
+import type { AccessActor } from '@/lib/access-actor'
 import type {
   AuthUserIdentity,
   GroupMembershipHistory,

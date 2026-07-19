@@ -2,7 +2,8 @@ import { getSessionCookie } from 'better-auth/cookies'
 import { headers } from 'next/headers'
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
-import { type AccessActor, type AccessDecision, getRouteAccessDecision } from '@/admin/access-policy'
+import type { AccessActor } from '@/lib/access-actor'
+import { type AccessDecision, getRouteAccessDecision } from '@/lib/route-access'
 import { auth } from './lib/auth'
 
 type ProxyRouteDecision = AccessDecision

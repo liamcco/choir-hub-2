@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { getCurrentAccessActor, requireAdminSurfaceActor } from '@/admin/actor'
 import { getGroupManagementService } from '@/admin/group-management/runtime'
 import { GroupManagementValidationError } from '@/admin/group-management/service'
+import { ROUTES } from '@/lib/route-access'
 import { GroupKind } from '@/prisma/generated/client'
 
 export type GroupFormState = {
@@ -32,7 +33,7 @@ export async function createGroupAction(_previousState: GroupFormState, formData
     return handleFormError(error)
   }
 
-  revalidatePath('/admin/groups')
+  revalidatePath(ROUTES.adminGroups)
   return { message: 'Group created.' }
 }
 
@@ -53,7 +54,7 @@ export async function updateGroupAction(
     return handleFormError(error)
   }
 
-  revalidatePath('/admin/groups')
+  revalidatePath(ROUTES.adminGroups)
   return { message: 'Group updated.' }
 }
 

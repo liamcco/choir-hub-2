@@ -1,5 +1,6 @@
-import { type AccessActor, canAccessAdminSurface } from '@/admin/access-policy'
 import { formatGroupPath } from '@/admin/group-management/group-labels'
+import type { AccessActor } from '@/lib/access-actor'
+import { canAccessAdminSurface } from '@/lib/route-access'
 import {
   formatPositionScopeLabel,
   type GroupStructure,

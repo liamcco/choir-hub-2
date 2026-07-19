@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test'
-import type { AccessActor } from '@/admin/access-policy'
 import { PositionAssignmentManagementValidationError } from '@/admin/position-assignment-management/service'
+import type { AccessActor } from '@/lib/access-actor'
 
 const revalidatePath = mock(() => {})
 const listPositionAssignmentManagement = mock(async () => ({

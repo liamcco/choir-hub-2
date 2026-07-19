@@ -9,37 +9,34 @@ import {
   UsersIcon,
 } from 'lucide-react'
 import Link from 'next/link'
-import { type AccessActor, canAccessAdminSurface, getPostLoginPath } from '@/admin/access-policy'
 import { buttonVariants } from '@/components/ui/button'
-import { getCurrentAccessActor } from '@/lib/access-actor'
+import { type AccessActor, getCurrentAccessActor } from '@/lib/access-actor'
+import {
+  type AccessibleNavigationRoute,
+  getAccessibleNavigationRoutes,
+  getPostLoginPath,
+  type NavigationRouteId,
+} from '@/lib/route-access'
 import { cn } from '@/lib/utils'
 
-export type NavigationItem = {
-  href: string
+export type NavigationItem = AccessibleNavigationRoute & {
   label: string
   Icon: LucideIcon
-  section: 'member' | 'admin'
 }
 
-const MEMBER_NAVIGATION: NavigationItem[] = [
-  { href: '/organization', label: 'Organization', Icon: GitForkIcon, section: 'member' },
-  { href: '/account', label: 'Account', Icon: KeyRoundIcon, section: 'member' },
-]
-
-const ADMIN_NAVIGATION: NavigationItem[] = [
-  { href: '/admin/members', label: 'Members', Icon: UserRoundCogIcon, section: 'admin' },
-  { href: '/admin/groups', label: 'Groups', Icon: Building2Icon, section: 'admin' },
-  { href: '/admin/group-memberships', label: 'Group Memberships', Icon: UsersIcon, section: 'admin' },
-  { href: '/admin/positions', label: 'Positions', Icon: BriefcaseBusinessIcon, section: 'admin' },
-  { href: '/admin/position-assignments', label: 'Position Assignments', Icon: GitForkIcon, section: 'admin' },
-]
+const NAVIGATION_PRESENTATION = {
+  login: { label: 'Login', Icon: LogInIcon },
+  organization: { label: 'Organization', Icon: GitForkIcon },
+  account: { label: 'Account', Icon: KeyRoundIcon },
+  adminMembers: { label: 'Members', Icon: UserRoundCogIcon },
+  adminGroups: { label: 'Groups', Icon: Building2Icon },
+  adminGroupMemberships: { label: 'Group Memberships', Icon: UsersIcon },
+  adminPositions: { label: 'Positions', Icon: BriefcaseBusinessIcon },
+  adminPositionAssignments: { label: 'Position Assignments', Icon: GitForkIcon },
+} satisfies Record<NavigationRouteId, { label: string; Icon: LucideIcon }>
 
 export function getNavigationItems(actor: AccessActor | null | undefined): NavigationItem[] {
-  if (!actor) {
-    return [{ href: '/login', label: 'Login', Icon: LogInIcon, section: 'member' }]
-  }
-
-  return canAccessAdminSurface(actor) ? [...MEMBER_NAVIGATION, ...ADMIN_NAVIGATION] : MEMBER_NAVIGATION
+  return getAccessibleNavigationRoutes(actor).map((item) => ({ ...item, ...NAVIGATION_PRESENTATION[item.id] }))
 }
 
 export function AppNavigation({ actor }: { actor: AccessActor | null }) {

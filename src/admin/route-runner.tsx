@@ -1,7 +1,8 @@
 import { redirect } from 'next/navigation'
 import type { ReactNode } from 'react'
-import { type AccessActor, type AdminSurface, getAdminSurfaceAccessDecision } from '@/admin/access-policy'
 import { getCurrentAccessActor } from '@/admin/actor'
+import type { AccessActor } from '@/lib/access-actor'
+import { type AdminSurface, getAdminSurfaceAccessDecision, ROUTES } from '@/lib/route-access'
 
 export type AdminRouteOptions<State> = {
   surface: AdminSurface
@@ -30,7 +31,7 @@ export async function renderAdminRoute<State>({
     state = await load(actor)
   } catch (error) {
     if (isAuthorizationError(error)) {
-      redirect('/organization')
+      redirect(ROUTES.organization)
     }
     throw error
   }

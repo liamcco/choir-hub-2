@@ -1,4 +1,3 @@
-import { type AccessActor, canManageMembers } from '@/admin/access-policy'
 import {
   type AccountAccessState,
   type AuthAdminGateway,
@@ -11,6 +10,8 @@ import {
   type UpdateAccountAccessInput,
   type UpdateMemberStatusInput,
 } from '@/admin/member-management/account-lifecycle'
+import type { AccessActor } from '@/lib/access-actor'
+import { canManageMembers } from '@/lib/route-access'
 import type { MemberRegistry, OrganizationRecord } from '@/organization'
 
 export type MemberManagementActor = AccessActor

@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { getCurrentAccessActor, requireAdminSurfaceActor } from '@/admin/actor'
 import { getGroupMembershipManagementService } from '@/admin/group-membership-management/runtime'
 import { GroupMembershipManagementValidationError } from '@/admin/group-membership-management/service'
+import { ROUTES } from '@/lib/route-access'
 
 export type GroupMembershipFormState = {
   message?: string
@@ -37,7 +38,7 @@ export async function createGroupMembershipAction(
     return handleFormError(error)
   }
 
-  revalidatePath('/admin/group-memberships')
+  revalidatePath(ROUTES.adminGroupMemberships)
   return { message: 'Group Membership added.' }
 }
 
@@ -58,7 +59,7 @@ export async function endGroupMembershipAction(
     return handleFormError(error)
   }
 
-  revalidatePath('/admin/group-memberships')
+  revalidatePath(ROUTES.adminGroupMemberships)
   return { message: 'Group Membership ended.' }
 }
 

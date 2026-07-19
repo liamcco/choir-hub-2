@@ -1,6 +1,7 @@
-import { type AccessActor, canAccessAdminSurface } from '@/admin/access-policy'
 import { formatGroupPath } from '@/admin/group-management/group-labels'
 import type { AuthAdminGateway, AuthUserAccount } from '@/admin/member-management/account-lifecycle'
+import type { AccessActor } from '@/lib/access-actor'
+import { canAccessAdminSurface } from '@/lib/route-access'
 import {
   buildMemberLabels,
   type GroupMembershipHistory,
