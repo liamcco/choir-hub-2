@@ -1,6 +1,6 @@
 # Glancable Screen Modules
 
-Status: ready-for-agent
+Status: resolved
 
 ## Problem Statement
 
