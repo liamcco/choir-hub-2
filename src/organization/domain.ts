@@ -1,3 +1,8 @@
+import {
+  findOverlappingDatedPeriod,
+  normalizeDatedPeriodInput,
+  normalizeDatedPeriodUpdate,
+} from '@/organization/dated-history'
 import { OrganizationDomainError } from '@/organization/errors'
 import type {
   CreateGroupInput,
@@ -6,7 +11,6 @@ import type {
   CreatePositionInput,
   OrganizationDomain,
   OrganizationPersistence,
-  OrganizationRecord,
   UpdateGroupInput,
   UpdateGroupMembershipInput,
   UpdatePositionAssignmentInput,
@@ -118,15 +122,12 @@ async function assertGroupMembershipDoesNotOverlap(
   input: Required<CreateGroupMembershipInput>,
   excludingMembershipId?: string,
 ) {
-  const overlappingMembership = (await persistence.listGroupMemberships()).find(
-    (membership) =>
-      membership.id !== excludingMembershipId &&
-      membership.memberId === input.memberId &&
-      membership.groupId === input.groupId &&
-      periodsOverlap(membership, input),
+  const candidateMemberships = (await persistence.listGroupMemberships()).filter(
+    (membership) => membership.memberId === input.memberId && membership.groupId === input.groupId,
   )
+  const overlappingPeriod = findOverlappingDatedPeriod(candidateMemberships, input, excludingMembershipId)
 
-  if (overlappingMembership) {
+  if (overlappingPeriod) {
     throw new OrganizationDomainError(
       'GROUP_MEMBERSHIP_PERIOD_OVERLAP',
       'This Member already has a Group Membership in this Group during that period.',
@@ -140,14 +141,12 @@ async function assertPositionAssignmentDoesNotOverlap(
   input: Required<CreatePositionAssignmentInput>,
   excludingAssignmentId?: string,
 ) {
-  const overlappingAssignment = (await persistence.listPositionAssignments()).find(
-    (assignment) =>
-      assignment.id !== excludingAssignmentId &&
-      assignment.positionId === input.positionId &&
-      periodsOverlap(assignment, input),
+  const candidateAssignments = (await persistence.listPositionAssignments()).filter(
+    (assignment) => assignment.positionId === input.positionId,
   )
+  const overlappingPeriod = findOverlappingDatedPeriod(candidateAssignments, input, excludingAssignmentId)
 
-  if (overlappingAssignment) {
+  if (overlappingPeriod) {
     throw new OrganizationDomainError(
       'POSITION_ASSIGNMENT_PERIOD_OVERLAP',
       'This Position already has an assignment during that period.',
@@ -200,38 +199,11 @@ function preparePositionAssignmentInput(input: CreatePositionAssignmentInput): R
 function prepareDatedInput<T extends CreateGroupMembershipInput | CreatePositionAssignmentInput>(
   input: T,
 ): T & { endsAt: Date | null } {
-  const prepared = {
-    ...input,
-    endsAt: input.endsAt ?? null,
-  }
-
-  assertValidPeriod(prepared)
-  return prepared
+  return normalizeDatedPeriodInput(input)
 }
 
 function toUpdateDatedInput<T extends UpdateGroupMembershipInput | UpdatePositionAssignmentInput>(input: T): T {
-  return withoutUndefinedValues({
-    ...input,
-    endsAt: 'endsAt' in input ? (input.endsAt ?? null) : undefined,
-  })
-}
-
-function assertValidPeriod(period: Pick<OrganizationRecord<'groupMembership'>, 'startsAt' | 'endsAt'>) {
-  if (period.endsAt && period.endsAt <= period.startsAt) {
-    throw new OrganizationDomainError('INVALID_PERIOD', 'The end date must be after the start date.', {
-      field: 'endsAt',
-    })
-  }
-}
-
-function periodsOverlap(
-  first: Pick<OrganizationRecord<'groupMembership'>, 'startsAt' | 'endsAt'>,
-  second: Pick<OrganizationRecord<'groupMembership'>, 'startsAt' | 'endsAt'>,
-) {
-  const firstEnd = first.endsAt?.getTime() ?? Number.POSITIVE_INFINITY
-  const secondEnd = second.endsAt?.getTime() ?? Number.POSITIVE_INFINITY
-
-  return first.startsAt.getTime() < secondEnd && second.startsAt.getTime() < firstEnd
+  return withoutUndefinedValues(normalizeDatedPeriodUpdate(input))
 }
 
 function normalizeGroupName(name: string) {

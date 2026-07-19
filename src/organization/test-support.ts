@@ -1,4 +1,5 @@
 import type { OrganizationPersistence, OrganizationRecord } from '@/organization'
+import { isCurrentDatedPeriod } from '@/organization/dated-history'
 import type { GroupKind, MemberStatus } from '@/prisma/generated/client'
 
 export class InMemoryOrganizationPersistence implements OrganizationPersistence {
@@ -63,7 +64,7 @@ export class InMemoryOrganizationPersistence implements OrganizationPersistence 
       (membership) =>
         (!input?.memberId || membership.memberId === input.memberId) &&
         (!input?.groupId || membership.groupId === input.groupId) &&
-        (!input?.at || includesDate(membership, input.at)),
+        (!input?.at || isCurrentDatedPeriod(membership, input.at)),
     )
   }
 
@@ -126,7 +127,7 @@ export class InMemoryOrganizationPersistence implements OrganizationPersistence 
       (assignment) =>
         (!input?.positionId || assignment.positionId === input.positionId) &&
         (!input?.memberId || assignment.memberId === input.memberId) &&
-        (!input?.at || includesDate(assignment, input.at)),
+        (!input?.at || isCurrentDatedPeriod(assignment, input.at)),
     )
   }
 
@@ -151,8 +152,4 @@ export class InMemoryOrganizationPersistence implements OrganizationPersistence 
   private id() {
     return `record-${this.nextId++}`
   }
-}
-
-function includesDate(period: { startsAt: Date; endsAt: Date | null }, at: Date) {
-  return period.startsAt <= at && (!period.endsAt || period.endsAt > at)
 }

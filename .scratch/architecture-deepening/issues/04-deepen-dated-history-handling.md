@@ -6,8 +6,8 @@
 
 **Status:** ready-for-agent
 
-- [ ] Group Membership writes still reject overlapping periods for the same Member and Group.
-- [ ] Position Assignment writes still reject overlapping periods for the same Position.
-- [ ] Current and historical reads keep the same half-open period semantics.
-- [ ] Shared dated-period behavior is tested once through a focused module interface and remains exercised through the organization workflows.
-- [ ] No new public adapter seam is introduced unless a second real adapter or caller need exists.
+- [x] Group Membership writes still reject overlapping periods for the same Member and Group.
+- [x] Position Assignment writes still reject overlapping periods for the same Position.
+- [x] Current and historical reads keep the same half-open period semantics.
+- [x] Shared dated-period behavior is tested once through a focused module interface and remains exercised through the organization workflows.
+- [x] No new public adapter seam is introduced unless a second real adapter or caller need exists.

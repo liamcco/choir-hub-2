@@ -42,12 +42,7 @@ export function createPrismaOrganizationPersistence(
         where: {
           memberId: input?.memberId,
           groupId: input?.groupId,
-          ...(input?.at
-            ? {
-                startsAt: { lte: input.at },
-                OR: [{ endsAt: null }, { endsAt: { gt: input.at } }],
-              }
-            : {}),
+          ...(input?.at ? currentDatedPeriodWhere(input.at) : {}),
         },
         orderBy: [{ groupId: 'asc' }, { memberId: 'asc' }, { startsAt: 'asc' }],
       }),
@@ -93,12 +88,7 @@ export function createPrismaOrganizationPersistence(
         where: {
           positionId: input?.positionId,
           memberId: input?.memberId,
-          ...(input?.at
-            ? {
-                startsAt: { lte: input.at },
-                OR: [{ endsAt: null }, { endsAt: { gt: input.at } }],
-              }
-            : {}),
+          ...(input?.at ? currentDatedPeriodWhere(input.at) : {}),
         },
         orderBy: [{ positionId: 'asc' }, { startsAt: 'asc' }],
       }),
@@ -111,5 +101,12 @@ export function createPrismaOrganizationPersistence(
         where: { id },
         data: input,
       }),
+  }
+}
+
+function currentDatedPeriodWhere(at: Date) {
+  return {
+    startsAt: { lte: at },
+    OR: [{ endsAt: null }, { endsAt: { gt: at } }],
   }
 }

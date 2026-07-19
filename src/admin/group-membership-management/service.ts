@@ -2,6 +2,7 @@ import { type AccessActor, canAccessAdminSurface } from '@/admin/access-policy'
 import { formatGroupPath } from '@/admin/group-management/group-labels'
 import type { AuthAdminGateway, AuthUserAccount } from '@/admin/member-management/account-lifecycle'
 import { type OrganizationDomain, OrganizationDomainError, type OrganizationRecord } from '@/organization'
+import { isCurrentDatedPeriod, isHistoricalDatedPeriod, isScheduledDatedPeriod } from '@/organization/dated-history'
 import type { CreateGroupMembershipInput } from '@/organization/types'
 
 export type GroupMembershipManagementActor = AccessActor
@@ -176,26 +177,11 @@ function compareMembershipPeriods(groups: OrganizationRecord<'group'>[]) {
     first.id.localeCompare(second.id)
 }
 
-export function isCurrentPeriod(period: Pick<OrganizationRecord<'groupMembership'>, 'startsAt' | 'endsAt'>, at: Date) {
-  return period.startsAt <= at && (!period.endsAt || period.endsAt > at)
-}
-
-export function isHistoricalPeriod(
-  period: Pick<OrganizationRecord<'groupMembership'>, 'startsAt' | 'endsAt'>,
-  at: Date,
-) {
-  return !!period.endsAt && period.endsAt <= at
-}
-
-export function isScheduledPeriod(period: Pick<OrganizationRecord<'groupMembership'>, 'startsAt'>, at: Date) {
-  return period.startsAt > at
-}
-
 function partitionMembershipPeriods(periods: GroupMembershipPeriod[], at: Date) {
   return {
-    currentMemberships: periods.filter((membership) => isCurrentPeriod(membership, at)),
-    scheduledMemberships: periods.filter((membership) => isScheduledPeriod(membership, at)),
-    historicalMemberships: periods.filter((membership) => isHistoricalPeriod(membership, at)),
+    currentMemberships: periods.filter((membership) => isCurrentDatedPeriod(membership, at)),
+    scheduledMemberships: periods.filter((membership) => isScheduledDatedPeriod(membership, at)),
+    historicalMemberships: periods.filter((membership) => isHistoricalDatedPeriod(membership, at)),
   }
 }
 
