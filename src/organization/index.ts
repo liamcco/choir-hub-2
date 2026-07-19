@@ -1,5 +1,7 @@
 export type { OrganizationDomainErrorCode } from '@/organization/errors'
 export { OrganizationDomainError } from '@/organization/errors'
+export { defaultGroupKind, formatGroupKind, groupKindOptions } from '@/organization/group-kind'
+export { formatGroupPath } from '@/organization/group-labels'
 export type { GroupMembershipHistory } from '@/organization/group-membership-history'
 export { createGroupMembershipHistory } from '@/organization/group-membership-history'
 export type { GroupStructure } from '@/organization/group-structure'

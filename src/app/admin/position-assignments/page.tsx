@@ -5,6 +5,8 @@ import { getPositionAssignmentManagementService } from '@/admin/position-assignm
 import { PositionAssignmentManagementScreen } from '@/admin/position-assignment-management/screen'
 import { PositionAssignmentManagementAuthorizationError } from '@/admin/position-assignment-management/service'
 
+export const instant = false
+
 export default async function AdminPositionAssignmentsPage() {
   const actor = await getCurrentAccessActor()
   const accessDecision = getAdminSurfaceAccessDecision(actor, 'organization-admin')
@@ -21,7 +23,7 @@ export default async function AdminPositionAssignmentsPage() {
     return <PositionAssignmentManagementScreen state={state} />
   } catch (error) {
     if (error instanceof PositionAssignmentManagementAuthorizationError) {
-      redirect('/')
+      redirect('/organization')
     }
     throw error
   }

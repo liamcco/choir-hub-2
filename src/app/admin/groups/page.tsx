@@ -5,6 +5,8 @@ import { getGroupManagementService } from '@/admin/group-management/runtime'
 import { GroupManagementScreen } from '@/admin/group-management/screen'
 import { GroupManagementAuthorizationError } from '@/admin/group-management/service'
 
+export const instant = false
+
 export default async function AdminGroupsPage() {
   const actor = await getCurrentAccessActor()
   const accessDecision = getAdminSurfaceAccessDecision(actor, 'organization-admin')
@@ -21,7 +23,7 @@ export default async function AdminGroupsPage() {
     return <GroupManagementScreen state={state} />
   } catch (error) {
     if (error instanceof GroupManagementAuthorizationError) {
-      redirect('/')
+      redirect('/organization')
     }
     throw error
   }

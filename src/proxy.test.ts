@@ -9,14 +9,14 @@ describe('proxy route protection', () => {
   test('denies cached non-admin actors on admin routes', () => {
     expect(evaluateProxyRouteAccess('/admin/members', { id: 'user-member', role: 'user' })).toEqual({
       kind: 'redirect',
-      location: '/',
+      location: '/organization',
     })
   })
 
   test('denies authenticated actors whose cached role cannot prove admin access', () => {
     expect(evaluateProxyRouteAccess('/admin/members', { id: 'unknown-role' })).toEqual({
       kind: 'redirect',
-      location: '/',
+      location: '/organization',
     })
   })
 

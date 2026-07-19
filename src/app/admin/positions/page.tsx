@@ -5,6 +5,8 @@ import { getPositionManagementService } from '@/admin/position-management/runtim
 import { PositionManagementScreen } from '@/admin/position-management/screen'
 import { PositionManagementAuthorizationError } from '@/admin/position-management/service'
 
+export const instant = false
+
 export default async function AdminPositionsPage() {
   const actor = await getCurrentAccessActor()
   const accessDecision = getAdminSurfaceAccessDecision(actor, 'organization-admin')
@@ -21,7 +23,7 @@ export default async function AdminPositionsPage() {
     return <PositionManagementScreen state={state} />
   } catch (error) {
     if (error instanceof PositionManagementAuthorizationError) {
-      redirect('/')
+      redirect('/organization')
     }
     throw error
   }

@@ -15,6 +15,7 @@ export type AccessDecision = { kind: 'allow' } | { kind: 'redirect'; location: s
 const ADMIN_ROLE = 'admin'
 const ADMIN_MEMBER_PATH = '/admin/members'
 const ADMIN_ROUTE_PREFIX = '/admin'
+const ORGANIZATION_PATH = '/organization'
 const PUBLIC_PATHS = new Set(['/login'])
 
 export function parseActorRoles(role: AccessActor['role']): string[] {
@@ -76,11 +77,11 @@ export function getAdminSurfaceAccessDecision(
     return { kind: 'redirect', location: '/login' }
   }
 
-  return canAccessAdminSurface(actor) ? { kind: 'allow' } : { kind: 'redirect', location: '/' }
+  return canAccessAdminSurface(actor) ? { kind: 'allow' } : { kind: 'redirect', location: ORGANIZATION_PATH }
 }
 
 export function getPostLoginPath(actor?: AccessActor | null) {
-  return actor && canManageMembers(actor) ? ADMIN_MEMBER_PATH : '/'
+  return actor && canManageMembers(actor) ? ADMIN_MEMBER_PATH : ORGANIZATION_PATH
 }
 
 function actorHasRole(actor: AccessActor | null | undefined, role: string) {

@@ -35,12 +35,13 @@ describe('admin access policy', () => {
     expect(getRouteAccessDecision('/admin/members', null)).toEqual({ kind: 'redirect', location: '/login' })
     expect(getRouteAccessDecision('/admin/members', { id: 'user-member', role: 'user' })).toEqual({
       kind: 'redirect',
-      location: '/',
+      location: '/organization',
     })
     expect(getRouteAccessDecision('/admin/members', { id: 'unknown-role' })).toEqual({
       kind: 'redirect',
-      location: '/',
+      location: '/organization',
     })
+    expect(getRouteAccessDecision('/organization', { id: 'user-member', role: 'user' })).toEqual({ kind: 'allow' })
     expect(getRouteAccessDecision('/admin/members', { id: 'user-admin', role: 'admin' })).toEqual({ kind: 'allow' })
   })
 
@@ -48,13 +49,14 @@ describe('admin access policy', () => {
     expect(getAdminSurfaceAccessDecision(null, 'members')).toEqual({ kind: 'redirect', location: '/login' })
     expect(getAdminSurfaceAccessDecision({ id: 'user-member', role: 'user' }, 'members')).toEqual({
       kind: 'redirect',
-      location: '/',
+      location: '/organization',
     })
     expect(getAdminSurfaceAccessDecision({ id: 'user-admin', role: 'admin' }, 'members')).toEqual({ kind: 'allow' })
   })
 
   test('uses the policy destination after sign-in', () => {
-    expect(getPostLoginPath()).toBe('/')
+    expect(getPostLoginPath()).toBe('/organization')
+    expect(getPostLoginPath({ id: 'user-member', role: 'user' })).toBe('/organization')
     expect(getPostLoginPath({ id: 'user-admin', role: 'admin' })).toBe('/admin/members')
   })
 })

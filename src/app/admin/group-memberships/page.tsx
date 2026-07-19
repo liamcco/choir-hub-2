@@ -5,6 +5,8 @@ import { getGroupMembershipManagementService } from '@/admin/group-membership-ma
 import { GroupMembershipManagementScreen } from '@/admin/group-membership-management/screen'
 import { GroupMembershipManagementAuthorizationError } from '@/admin/group-membership-management/service'
 
+export const instant = false
+
 export default async function AdminGroupMembershipsPage() {
   const actor = await getCurrentAccessActor()
   const accessDecision = getAdminSurfaceAccessDecision(actor, 'organization-admin')
@@ -21,7 +23,7 @@ export default async function AdminGroupMembershipsPage() {
     return <GroupMembershipManagementScreen state={state} />
   } catch (error) {
     if (error instanceof GroupMembershipManagementAuthorizationError) {
-      redirect('/')
+      redirect('/organization')
     }
     throw error
   }

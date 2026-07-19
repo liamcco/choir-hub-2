@@ -5,6 +5,8 @@ import { getMemberManagementService } from '@/admin/member-management/runtime'
 import { MemberManagementScreen } from '@/admin/member-management/screen'
 import { MemberManagementAuthorizationError } from '@/admin/member-management/service'
 
+export const instant = false
+
 export default async function AdminMembersPage() {
   const actor = await getCurrentAccessActor()
   const accessDecision = getAdminSurfaceAccessDecision(actor, 'members')
@@ -21,7 +23,7 @@ export default async function AdminMembersPage() {
     return <MemberManagementScreen accounts={accounts} />
   } catch (error) {
     if (error instanceof MemberManagementAuthorizationError) {
-      redirect('/')
+      redirect('/organization')
     }
     throw error
   }
