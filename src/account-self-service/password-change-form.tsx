@@ -1,13 +1,12 @@
 'use client'
 
 import { useActionState } from 'react'
-import type { PasswordChangeFormState } from '@/account-self-service/actions'
-import { changePasswordAction } from '@/account-self-service/actions'
-import { passwordChangePolicy } from '@/account-self-service/service'
+import { changePasswordAction, type PasswordChangeFormState } from '@/account-self-service/actions'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import { passwordChangePolicy } from './schemas'
 
 const initialState: PasswordChangeFormState = {}
 

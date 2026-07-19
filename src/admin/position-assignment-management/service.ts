@@ -1,37 +1,11 @@
-import { formatGroupPath } from '@/admin/group-management/group-labels'
-import type { AuthAdminGateway, AuthUserAccount } from '@/admin/member-management/account-lifecycle'
-import type { AccessActor } from '@/lib/access-actor'
-import { canAccessAdminSurface } from '@/lib/route-access'
-import {
-  buildMemberLabels,
-  formatPositionScopeLabel,
-  type GroupStructure,
-  type MemberRegistry,
-  OrganizationDomainError,
-  type OrganizationRecord,
-  type PositionAssignmentHistory,
-  type PositionScopeRegistry,
-} from '@/organization'
+import { organizationService } from '@/organization'
 import { isCurrentDatedPeriod, isHistoricalDatedPeriod } from '@/organization/dated-history'
-import type { CreatePositionAssignmentInput } from '@/organization/types'
+import { buildMemberLabels, formatGroupPath, formatPositionScopeLabel } from '@/organization/labels'
+import type { Group, Member, Position, PositionAssignment, PositionScope } from '@/prisma/generated/client'
 
-export type PositionAssignmentManagementActor = AccessActor
-
-export type PositionAssignmentPositionOption = {
-  position: OrganizationRecord<'position'>
-  label: string
-  scopeLabel: string
-}
-
-export type PositionAssignmentMemberOption = {
-  member: OrganizationRecord<'member'>
-  label: string
-  detail: string
-}
-
-export type PositionAssignmentPeriod = OrganizationRecord<'positionAssignment'> & {
-  position: OrganizationRecord<'position'>
-  member: OrganizationRecord<'member'>
+export type PositionAssignmentPeriod = PositionAssignment & {
+  position: Position
+  member: Member
   positionLabel: string
   positionScopeLabel: string
   memberLabel: string
@@ -39,7 +13,7 @@ export type PositionAssignmentPeriod = OrganizationRecord<'positionAssignment'> 
 }
 
 export type PositionAssignmentPositionView = {
-  position: OrganizationRecord<'position'>
+  position: Position
   positionLabel: string
   positionScopeLabel: string
   currentAssignments: PositionAssignmentPeriod[]
@@ -47,106 +21,34 @@ export type PositionAssignmentPositionView = {
 }
 
 export type PositionAssignmentMemberView = {
-  member: OrganizationRecord<'member'>
+  member: Member
   memberLabel: string
   memberDetail: string
   currentAssignments: PositionAssignmentPeriod[]
   historicalAssignments: PositionAssignmentPeriod[]
 }
 
-export type PositionAssignmentManagementState = {
-  positions: PositionAssignmentPositionOption[]
-  members: PositionAssignmentMemberOption[]
-  positionViews: PositionAssignmentPositionView[]
-  memberViews: PositionAssignmentMemberView[]
+export async function listPositionAssignmentManagement(input?: { at?: Date }) {
+  const [groups, members, positions, scopes, assignments, users] = await Promise.all([
+    organizationService.groups.list(),
+    organizationService.members.list(),
+    organizationService.positions.list(),
+    organizationService.positions.listScopes(),
+    organizationService.positionAssignments.list(),
+    organizationService.members.listIdentities(),
+  ])
+  return buildPositionAssignmentManagementState({
+    groups,
+    members,
+    positions,
+    scopes,
+    assignments,
+    users,
+    at: input?.at ?? new Date(),
+  })
 }
 
-export type EndPositionAssignmentInput = {
-  endsAt: Date
-}
-
-export type PositionAssignmentManagementService = {
-  listPositionAssignmentManagement(
-    actor: PositionAssignmentManagementActor,
-    input?: { at?: Date },
-  ): Promise<PositionAssignmentManagementState>
-  createPositionAssignment(
-    actor: PositionAssignmentManagementActor,
-    input: CreatePositionAssignmentInput,
-  ): Promise<OrganizationRecord<'positionAssignment'>>
-  endPositionAssignment(
-    actor: PositionAssignmentManagementActor,
-    assignmentId: string,
-    input: EndPositionAssignmentInput,
-  ): Promise<OrganizationRecord<'positionAssignment'>>
-}
-
-export class PositionAssignmentManagementAuthorizationError extends Error {
-  constructor() {
-    super('Only admins can manage Position Assignments.')
-    this.name = 'PositionAssignmentManagementAuthorizationError'
-  }
-}
-
-export class PositionAssignmentManagementValidationError extends Error {
-  readonly fieldErrors: Partial<Record<keyof CreatePositionAssignmentInput | keyof EndPositionAssignmentInput, string>>
-
-  constructor(
-    message: string,
-    fieldErrors: Partial<Record<keyof CreatePositionAssignmentInput | keyof EndPositionAssignmentInput, string>>,
-  ) {
-    super(message)
-    this.name = 'PositionAssignmentManagementValidationError'
-    this.fieldErrors = fieldErrors
-  }
-}
-
-export function createPositionAssignmentManagementService({
-  authGateway,
-  groupStructure,
-  memberRegistry,
-  positionAssignmentHistory,
-  positionScopeRegistry,
-}: {
-  authGateway?: Pick<AuthAdminGateway, 'listUsers'>
-  groupStructure: GroupStructure
-  memberRegistry: MemberRegistry
-  positionAssignmentHistory: PositionAssignmentHistory
-  positionScopeRegistry: PositionScopeRegistry
-}): PositionAssignmentManagementService {
-  return {
-    async listPositionAssignmentManagement(actor, input) {
-      assertAdmin(actor)
-      const [groups, members, positions, scopes, assignments, users] = await Promise.all([
-        groupStructure.listGroups(),
-        memberRegistry.listMembers(),
-        positionScopeRegistry.listPositions(),
-        positionScopeRegistry.listPositionScopes(),
-        positionAssignmentHistory.listPositionAssignments(),
-        authGateway?.listUsers() ?? Promise.resolve([]),
-      ])
-      return buildPositionAssignmentManagementState({
-        groups,
-        members,
-        positions,
-        scopes,
-        assignments,
-        users,
-        at: input?.at ?? new Date(),
-      })
-    },
-    async createPositionAssignment(actor, input) {
-      assertAdmin(actor)
-      return mapValidationErrors(() => positionAssignmentHistory.createPositionAssignment(input))
-    },
-    async endPositionAssignment(actor, assignmentId, input) {
-      assertAdmin(actor)
-      return mapValidationErrors(() =>
-        positionAssignmentHistory.updatePositionAssignment(assignmentId, { endsAt: input.endsAt }),
-      )
-    },
-  }
-}
+export type PositionAssignmentManagementState = Awaited<ReturnType<typeof listPositionAssignmentManagement>>
 
 export function buildPositionAssignmentManagementState({
   groups,
@@ -157,26 +59,26 @@ export function buildPositionAssignmentManagementState({
   users = [],
   at,
 }: {
-  groups: OrganizationRecord<'group'>[]
-  members: OrganizationRecord<'member'>[]
-  positions: OrganizationRecord<'position'>[]
-  scopes: OrganizationRecord<'positionScope'>[]
-  assignments: OrganizationRecord<'positionAssignment'>[]
-  users?: Pick<AuthUserAccount, 'id' | 'name' | 'email'>[]
+  groups: Group[]
+  members: Member[]
+  positions: Position[]
+  scopes: PositionScope[]
+  assignments: PositionAssignment[]
+  users?: { id: string; name: string; email: string }[]
   at: Date
-}): PositionAssignmentManagementState {
+}) {
   const positionsById = new Map(positions.map((position) => [position.id, position]))
   const membersById = new Map(members.map((member) => [member.id, member]))
-  const positionOptions = buildPositionOptions({ groups, positions, scopes })
+  const positionOptions = buildPositionOptions(groups, positions, scopes)
   const positionOptionsById = new Map(positionOptions.map((option) => [option.position.id, option]))
   const memberOptions = buildMemberLabels(members, users)
-  const memberOptionsByMemberId = new Map(memberOptions.map((option) => [option.member.id, option]))
+  const memberOptionsById = new Map(memberOptions.map((option) => [option.member.id, option]))
   const periods = assignments
     .flatMap((assignment): PositionAssignmentPeriod[] => {
       const position = positionsById.get(assignment.positionId)
       const positionOption = position ? positionOptionsById.get(position.id) : undefined
       const member = membersById.get(assignment.memberId)
-      const memberOption = member ? memberOptionsByMemberId.get(member.id) : undefined
+      const memberOption = member ? memberOptionsById.get(member.id) : undefined
       return position && positionOption && member && memberOption
         ? [
             {
@@ -191,43 +93,44 @@ export function buildPositionAssignmentManagementState({
           ]
         : []
     })
-    .sort(compareAssignmentPeriods)
+    .sort(
+      (first, second) =>
+        first.positionLabel.localeCompare(second.positionLabel) ||
+        first.memberLabel.localeCompare(second.memberLabel) ||
+        first.startsAt.getTime() - second.startsAt.getTime() ||
+        first.id.localeCompare(second.id),
+    )
 
   return {
     positions: positionOptions,
     members: memberOptions,
-    positionViews: positionOptions.map((option) => {
-      const positionPeriods = periods.filter((assignment) => assignment.positionId === option.position.id)
-      return {
+    positionViews: positionOptions.map(
+      (option): PositionAssignmentPositionView => ({
         position: option.position,
         positionLabel: option.label,
         positionScopeLabel: option.scopeLabel,
-        ...partitionAssignmentPeriods(positionPeriods, at),
-      }
-    }),
-    memberViews: memberOptions.map((option) => {
-      const memberPeriods = periods.filter((assignment) => assignment.memberId === option.member.id)
-      return {
+        ...partitionAssignments(
+          periods.filter((assignment) => assignment.positionId === option.position.id),
+          at,
+        ),
+      }),
+    ),
+    memberViews: memberOptions.map(
+      (option): PositionAssignmentMemberView => ({
         member: option.member,
         memberLabel: option.label,
         memberDetail: option.detail,
-        ...partitionAssignmentPeriods(memberPeriods, at),
-      }
-    }),
+        ...partitionAssignments(
+          periods.filter((assignment) => assignment.memberId === option.member.id),
+          at,
+        ),
+      }),
+    ),
   }
 }
 
-function buildPositionOptions({
-  groups,
-  positions,
-  scopes,
-}: {
-  groups: OrganizationRecord<'group'>[]
-  positions: OrganizationRecord<'position'>[]
-  scopes: OrganizationRecord<'positionScope'>[]
-}): PositionAssignmentPositionOption[] {
+function buildPositionOptions(groups: Group[], positions: Position[], scopes: PositionScope[]) {
   const groupsById = new Map(groups.map((group) => [group.id, group]))
-
   return positions.map((position) => {
     const scopeGroups = scopes
       .filter((scope) => scope.positionId === position.id)
@@ -237,46 +140,13 @@ function buildPositionOptions({
       })
       .sort((first, second) => formatGroupPath(groups, first).localeCompare(formatGroupPath(groups, second)))
     const scopeLabel = formatPositionScopeLabel(groups, scopeGroups)
-
-    return {
-      position,
-      label: `${position.name} (${scopeLabel})`,
-      scopeLabel,
-    }
+    return { position, label: `${position.name} (${scopeLabel})`, scopeLabel }
   })
 }
 
-function compareAssignmentPeriods(first: PositionAssignmentPeriod, second: PositionAssignmentPeriod) {
-  return (
-    first.positionLabel.localeCompare(second.positionLabel) ||
-    first.memberLabel.localeCompare(second.memberLabel) ||
-    first.startsAt.getTime() - second.startsAt.getTime() ||
-    first.id.localeCompare(second.id)
-  )
-}
-
-function partitionAssignmentPeriods(periods: PositionAssignmentPeriod[], at: Date) {
+function partitionAssignments(periods: PositionAssignmentPeriod[], at: Date) {
   return {
     currentAssignments: periods.filter((assignment) => isCurrentDatedPeriod(assignment, at)),
     historicalAssignments: periods.filter((assignment) => isHistoricalDatedPeriod(assignment, at)),
-  }
-}
-
-async function mapValidationErrors<T>(operation: () => Promise<T>) {
-  try {
-    return await operation()
-  } catch (error) {
-    if (error instanceof OrganizationDomainError) {
-      throw new PositionAssignmentManagementValidationError(error.message, {
-        [error.field ?? 'startsAt']: error.message,
-      })
-    }
-    throw error
-  }
-}
-
-function assertAdmin(actor: PositionAssignmentManagementActor | null | undefined) {
-  if (!canAccessAdminSurface(actor)) {
-    throw new PositionAssignmentManagementAuthorizationError()
   }
 }

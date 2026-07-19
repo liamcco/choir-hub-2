@@ -2,71 +2,90 @@
 
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
-import { getMemberManagementService } from '@/admin/member-management/runtime'
-import { getCurrentAccessActor, requireAdminSurfaceActor } from '@/admin/shell/actor'
-import { ROUTES } from '@/lib/route-access'
-import { MemberStatus } from '@/prisma/generated/client'
+import {
+  createLinkedMember,
+  createMemberAccount,
+  updateAccountAccess,
+  updateMemberStatus,
+} from '@/admin/member-management/service'
+import type { FormState } from '@/common/types/forms'
+import { ROUTES } from '@/navigation/app-routes'
+import { AccountAccessStateSchema, CreateMemberAccountFormSchema, MemberStatusSchema } from './schemas'
 
-const createMemberAccountSchema = z.object({
-  name: z.string().refine((value) => value.trim().length > 0),
-  email: z.string().refine((value) => z.email().safeParse(value.trim()).success),
-  password: z.string().min(8),
-  status: z.enum(MemberStatus),
-})
+export type MemberAccountFormState = FormState<typeof CreateMemberAccountFormSchema>
 
-const memberStatusSchema = z.enum(MemberStatus)
-const accessStateSchema = z.enum(['enabled', 'disabled'])
+export async function createMemberAccountAction(
+  _previousState: MemberAccountFormState,
+  formData: FormData,
+): Promise<MemberAccountFormState> {
+  // 1. Authenticate
 
-export async function createMemberAccountAction(formData: FormData) {
-  const input = createMemberAccountSchema.parse({
-    name: formData.get('name'),
-    email: formData.get('email'),
-    password: formData.get('password'),
-    status: formData.get('status'),
+  // 2. Validate form data
+  const input = CreateMemberAccountFormSchema.safeParse({
+    name: String(formData.get('name')),
+    email: String(formData.get('email')),
+    password: String(formData.get('password')),
+    status: String(formData.get('status')),
   })
 
-  await getMemberManagementService().then(async (service) => {
-    await service.createMemberAccount(await requireActor(), input)
-  })
+  if (!input.success) {
+    return { success: false, fieldErrors: z.flattenError(input.error).fieldErrors }
+  }
+
+  // 3. Mutate
+  await createMemberAccount(input.data)
+
+  // 4. Invalidate
   revalidatePath(ROUTES.adminMembers)
+  return { success: true, message: 'Member account created.' }
+
+  // 5. Navigate
 }
 
 export async function createLinkedMemberAction(userId: string, formData: FormData) {
-  const status = memberStatusSchema.parse(formData.get('status'))
+  // 1. Authenticate
 
-  await getMemberManagementService().then(async (service) => {
-    await service.createLinkedMember(await requireActor(), {
-      userId,
-      status,
-    })
-  })
+  // 2. Validate form data
+  const formInput = MemberStatusSchema.safeParse(String(formData.get('status')))
+  if (!formInput.success) throw new Error(z.prettifyError(formInput.error))
+
+  // 3. Mutate
+  await createLinkedMember(userId, formInput.data)
+
+  // 4. Invalidate
   revalidatePath(ROUTES.adminMembers)
+
+  // 5. Navigate
 }
 
 export async function updateMemberStatusAction(memberId: string, formData: FormData) {
-  const status = memberStatusSchema.parse(formData.get('status'))
+  // 1. Authenticate
 
-  await getMemberManagementService().then(async (service) => {
-    await service.updateMemberStatus(await requireActor(), {
-      memberId,
-      status,
-    })
-  })
+  // 2. Validate form data
+  const formInput = MemberStatusSchema.safeParse(String(formData.get('status')))
+  if (!formInput.success) throw new Error(z.prettifyError(formInput.error))
+
+  // 3. Mutate
+  await updateMemberStatus(memberId, formInput.data)
+
+  // 4. Invalidate
   revalidatePath(ROUTES.adminMembers)
+
+  // 5. Navigate
 }
 
 export async function updateAccountAccessAction(userId: string, formData: FormData) {
-  const accessState = accessStateSchema.parse(formData.get('accessState'))
+  // 1. Authenticate
 
-  await getMemberManagementService().then(async (service) => {
-    await service.updateAccountAccess(await requireActor(), {
-      userId,
-      accessState,
-    })
-  })
+  // 2. Validate form data
+  const formInput = AccountAccessStateSchema.safeParse(String(formData.get('accessState')))
+  if (!formInput.success) throw new Error(z.prettifyError(formInput.error))
+
+  // 3. Mutate
+  await updateAccountAccess(userId, formInput.data)
+
+  // 4. Invalidate
   revalidatePath(ROUTES.adminMembers)
-}
 
-async function requireActor() {
-  return requireAdminSurfaceActor(getCurrentAccessActor, 'members')
+  // 5. Navigate
 }

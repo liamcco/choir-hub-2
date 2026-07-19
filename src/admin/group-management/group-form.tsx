@@ -3,19 +3,19 @@
 import { useActionState } from 'react'
 import type { GroupFormState } from '@/admin/group-management/actions'
 import { createGroupAction, updateGroupAction } from '@/admin/group-management/actions'
-import { defaultGroupKind, formatGroupKind, groupKindOptions } from '@/admin/group-management/group-kind'
-import { formatGroupPath } from '@/admin/group-management/group-labels'
-import type { GroupManagementState } from '@/admin/group-management/service'
+import { FormMessage } from '@/components/forms/error-handling'
 import { Button } from '@/components/ui/button'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import { Textarea } from '@/components/ui/textarea'
-import type { OrganizationRecord } from '@/organization'
+import { defaultGroupKind, formatGroupKind, groupKindOptions } from '@/organization/group-kind'
+import { formatGroupPath } from '@/organization/labels'
+import type { Group } from '@/prisma/generated/client'
 
 const initialState: GroupFormState = {}
 
-export function CreateGroupForm({ groups }: { groups: GroupManagementState['groups'] }) {
+export function CreateGroupForm({ groups }: { groups: Group[] }) {
   const [state, formAction, isPending] = useActionState(createGroupAction, initialState)
 
   return (
@@ -31,13 +31,7 @@ export function CreateGroupForm({ groups }: { groups: GroupManagementState['grou
   )
 }
 
-export function UpdateGroupForm({
-  group,
-  groups,
-}: {
-  group: OrganizationRecord<'group'>
-  groups: GroupManagementState['groups']
-}) {
+export function UpdateGroupForm({ group, groups }: { group: Group; groups: Group[] }) {
   const [state, formAction, isPending] = useActionState(updateGroupAction.bind(null, group.id), initialState)
 
   return (
@@ -77,7 +71,7 @@ function GroupFields({
   descriptionRows = 3,
 }: {
   idPrefix: string
-  groups: GroupManagementState['groups']
+  groups: Group[]
   state: GroupFormState
   name?: string
   description?: string
@@ -149,7 +143,7 @@ function ParentGroupSelect({
   currentGroupId,
   ...props
 }: Omit<React.ComponentProps<typeof NativeSelect>, 'children'> & {
-  groups: GroupManagementState['groups']
+  groups: Group[]
   currentGroupId?: string
 }) {
   return (
@@ -163,15 +157,5 @@ function ParentGroupSelect({
           </NativeSelectOption>
         ))}
     </NativeSelect>
-  )
-}
-
-function FormMessage({ state }: { state: GroupFormState }) {
-  if (!state.message) {
-    return null
-  }
-
-  return (
-    <p className={state.fieldErrors ? 'text-destructive text-sm' : 'text-muted-foreground text-sm'}>{state.message}</p>
   )
 }

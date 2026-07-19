@@ -2,22 +2,28 @@
 
 import { SaveIcon, UserPlusIcon } from 'lucide-react'
 import { useActionState } from 'react'
-import { formatGroupPath } from '@/admin/group-management/group-labels'
-import type { GroupMembershipFormState } from '@/admin/group-membership-management/actions'
+import type {
+  CreateGroupMembershipFormState,
+  EndGroupMembershipFormState,
+} from '@/admin/group-membership-management/actions'
 import { createGroupMembershipAction, endGroupMembershipAction } from '@/admin/group-membership-management/actions'
 import type { GroupMembershipManagementState, GroupMembershipPeriod } from '@/admin/group-membership-management/service'
+import { formatDateInput } from '@/common/formatting'
+import { FormMessage } from '@/components/forms/error-handling'
 import { Button } from '@/components/ui/button'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
+import { formatGroupPath } from '@/organization/labels'
 
-const initialState: GroupMembershipFormState = {}
+const createInitialState: CreateGroupMembershipFormState = {}
+const endInitialState: EndGroupMembershipFormState = {}
 
 export function CreateGroupMembershipForm({
   groups,
   members,
 }: Pick<GroupMembershipManagementState, 'groups' | 'members'>) {
-  const [state, formAction, isPending] = useActionState(createGroupMembershipAction, initialState)
+  const [state, formAction, isPending] = useActionState(createGroupMembershipAction, createInitialState)
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
@@ -82,7 +88,7 @@ export function CreateGroupMembershipForm({
 export function EndGroupMembershipForm({ membership }: { membership: GroupMembershipPeriod }) {
   const [state, formAction, isPending] = useActionState(
     endGroupMembershipAction.bind(null, membership.id),
-    initialState,
+    endInitialState,
   )
 
   return (
@@ -104,18 +110,4 @@ export function EndGroupMembershipForm({ membership }: { membership: GroupMember
       </Button>
     </form>
   )
-}
-
-function FormMessage({ state }: { state: GroupMembershipFormState }) {
-  if (!state.message) {
-    return null
-  }
-
-  return (
-    <p className={state.fieldErrors ? 'text-destructive text-sm' : 'text-muted-foreground text-sm'}>{state.message}</p>
-  )
-}
-
-function formatDateInput(date: Date) {
-  return date.toISOString().slice(0, 10)
 }

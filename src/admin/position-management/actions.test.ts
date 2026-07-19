@@ -1,39 +1,41 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test'
-import { PositionManagementValidationError } from '@/admin/position-management/service'
-import type { AccessActor } from '@/lib/access-actor'
 
 const revalidatePath = mock(() => {})
-const listPositionManagement = mock(async () => ({ groups: [], positions: [] }))
 const createPosition = mock(async () => ({ id: 'position-1' }))
 const updatePosition = mock(async () => ({ id: 'position-1' }))
-const requireAdminSurfaceActor = mock(async () => actor)
-const actor: AccessActor = { id: 'admin-user', role: 'admin' }
+
+class OrganizationOperationError extends Error {
+  constructor(
+    message: string,
+    readonly options: { field?: string } = {},
+  ) {
+    super(message)
+  }
+  get field() {
+    return this.options.field
+  }
+}
 
 mock.module('next/cache', () => ({
   revalidatePath,
 }))
 
-mock.module('@/admin/shell/actor', () => ({
-  getCurrentAccessActor: async () => actor,
-  requireAdminSurfaceActor,
-}))
-
-mock.module('@/admin/position-management/runtime', () => ({
-  getPositionManagementService: async () => ({
-    listPositionManagement,
-    createPosition,
-    updatePosition,
-  }),
+mock.module('@/organization', () => ({
+  OrganizationOperationError,
+  organizationService: {
+    positions: {
+      create: createPosition,
+      update: updatePosition,
+    },
+  },
 }))
 
 const { createPositionAction, updatePositionAction } = await import('@/admin/position-management/actions')
 
 beforeEach(() => {
   revalidatePath.mockClear()
-  listPositionManagement.mockClear()
   createPosition.mockClear()
   updatePosition.mockClear()
-  requireAdminSurfaceActor.mockClear()
 })
 
 describe('admin Position management actions', () => {
@@ -44,8 +46,8 @@ describe('admin Position management actions', () => {
       groupIds: ['group-1', 'group-2'],
     })
 
-    await expect(createPositionAction({}, formData)).resolves.toEqual({ message: 'Position created.' })
-    expect(createPosition).toHaveBeenCalledWith(actor, {
+    await expect(createPositionAction({}, formData)).resolves.toEqual({ success: true, message: 'Position created.' })
+    expect(createPosition).toHaveBeenCalledWith({
       name: ' Chair ',
       description: 'Shared leadership',
       groupIds: ['group-1', 'group-2'],
@@ -60,8 +62,11 @@ describe('admin Position management actions', () => {
       groupIds: ['group-2'],
     })
 
-    await expect(updatePositionAction('position-1', {}, formData)).resolves.toEqual({ message: 'Position updated.' })
-    expect(updatePosition).toHaveBeenCalledWith(actor, 'position-1', {
+    await expect(updatePositionAction('position-1', {}, formData)).resolves.toEqual({
+      success: true,
+      message: 'Position updated.',
+    })
+    expect(updatePosition).toHaveBeenCalledWith('position-1', {
       name: 'Finance Lead',
       description: null,
       groupIds: ['group-2'],
@@ -71,8 +76,8 @@ describe('admin Position management actions', () => {
 
   test('returns useful scope validation feedback', async () => {
     createPosition.mockImplementationOnce(async () => {
-      throw new PositionManagementValidationError('Choose at least one Group.', {
-        groupIds: 'Choose at least one Group.',
+      throw new OrganizationOperationError('Choose at least one Group.', {
+        field: 'groupIds',
       })
     })
 
@@ -86,29 +91,12 @@ describe('admin Position management actions', () => {
         }),
       ),
     ).resolves.toEqual({
+      success: false,
       message: 'Choose at least one Group.',
       fieldErrors: {
         groupIds: 'Choose at least one Group.',
       },
     })
-  })
-
-  test('rejects direct non-admin create and update action requests before service writes', async () => {
-    requireAdminSurfaceActor.mockImplementation(async () => {
-      throw new Error('Forbidden')
-    })
-
-    const formData = positionFormData({
-      name: 'Chair',
-      description: '',
-      groupIds: ['group-1'],
-    })
-
-    await expect(createPositionAction({}, formData)).rejects.toThrow('Forbidden')
-    await expect(updatePositionAction('position-1', {}, formData)).rejects.toThrow('Forbidden')
-    expect(createPosition).not.toHaveBeenCalled()
-    expect(updatePosition).not.toHaveBeenCalled()
-    expect(revalidatePath).not.toHaveBeenCalled()
   })
 })
 

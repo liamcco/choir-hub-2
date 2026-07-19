@@ -1,92 +1,89 @@
-import {
-  type AccountAccessState,
-  type AuthAdminGateway,
-  type AuthUserAccount,
-  type CreateLinkedMemberInput,
-  type CreateManagedMemberInput,
-  createMemberAccountLifecycle,
-  type LinkedManagedMemberAccount,
-  type ManagedMemberAccount,
-  type UpdateAccountAccessInput,
-  type UpdateMemberStatusInput,
-} from '@/admin/member-management/account-lifecycle'
-import type { AccessActor } from '@/lib/access-actor'
-import { canManageMembers } from '@/lib/route-access'
-import type { MemberRegistry, OrganizationRecord } from '@/organization'
+import 'server-only'
 
-export type MemberManagementActor = AccessActor
+import { headers } from 'next/headers'
+import { auth } from '@/lib/auth'
+import { organizationService } from '@/organization'
+import type { Member, MemberStatus } from '@/prisma/generated/client'
 
-export type MemberManagementService = {
-  listManagedMembers(actor: MemberManagementActor): Promise<ManagedMemberAccount[]>
-  createMemberAccount(
-    actor: MemberManagementActor,
-    input: CreateManagedMemberInput,
-  ): Promise<LinkedManagedMemberAccount>
-  createLinkedMember(
-    actor: MemberManagementActor,
-    input: CreateLinkedMemberInput,
-  ): Promise<OrganizationRecord<'member'>>
-  updateMemberStatus(
-    actor: MemberManagementActor,
-    input: UpdateMemberStatusInput,
-  ): Promise<OrganizationRecord<'member'>>
-  updateAccountAccess(actor: MemberManagementActor, input: UpdateAccountAccessInput): Promise<AuthUserAccount>
+export type AuthUserAccount = {
+  id: string
+  name: string
+  email: string
+  banned?: boolean | null
+  createdAt: Date
 }
 
-export class MemberManagementAuthorizationError extends Error {
-  constructor() {
-    super('Only admins can manage accounts and Members.')
-    this.name = 'MemberManagementAuthorizationError'
+export type ManagedMemberAccount =
+  | { user: AuthUserAccount; member: Member; linkState: 'linked'; accessState: 'enabled' | 'disabled' }
+  | { user: AuthUserAccount; member: null; linkState: 'unlinked'; accessState: 'enabled' | 'disabled' }
+
+export async function listManagedMembers() {
+  const requestHeaders = await headers()
+  const [result, members] = await Promise.all([
+    auth.api.listUsers({
+      headers: requestHeaders,
+      query: { limit: 1000, sortBy: 'name', sortDirection: 'asc' },
+    }),
+    organizationService.members.list(),
+  ])
+  const membersByUserId = new Map(members.map((member) => [member.userId, member]))
+  return result.users.map((user): ManagedMemberAccount => {
+    const member = membersByUserId.get(user.id) ?? null
+    const account = {
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        banned: user.banned,
+        createdAt: new Date(user.createdAt),
+      },
+      accessState: user.banned ? ('disabled' as const) : ('enabled' as const),
+    }
+    return member ? { ...account, member, linkState: 'linked' } : { ...account, member: null, linkState: 'unlinked' }
+  })
+}
+
+export async function createMemberAccount(input: {
+  name: string
+  email: string
+  password: string
+  status: MemberStatus
+}) {
+  const requestHeaders = await headers()
+  const result = await auth.api.createUser({
+    headers: requestHeaders,
+    body: {
+      name: input.name.trim(),
+      email: input.email.trim().toLowerCase(),
+      password: input.password,
+      role: 'user',
+      data: { emailVerified: true },
+    },
+  })
+
+  try {
+    return await organizationService.members.create({ userId: result.user.id, status: input.status })
+  } catch (error) {
+    await auth.api.removeUser({ headers: requestHeaders, body: { userId: result.user.id } })
+    throw error
   }
 }
 
-export function createMemberManagementService({
-  authGateway,
-  memberRegistry,
-}: {
-  authGateway: AuthAdminGateway
-  memberRegistry: MemberRegistry
-}): MemberManagementService {
-  const lifecycle = createMemberAccountLifecycle({ authGateway, memberRegistry })
-
-  return {
-    async listManagedMembers(actor) {
-      assertAdmin(actor)
-      return lifecycle.listManagedAccounts()
-    },
-    async createMemberAccount(actor, input) {
-      assertAdmin(actor)
-      return lifecycle.createManagedAccount(input)
-    },
-    async createLinkedMember(actor, input) {
-      assertAdmin(actor)
-      return lifecycle.createLinkedMember(input)
-    },
-    async updateMemberStatus(actor, input) {
-      assertAdmin(actor)
-      return lifecycle.updateMemberStatus(input)
-    },
-    async updateAccountAccess(actor, input) {
-      assertAdmin(actor)
-      return lifecycle.updateAccountAccess(input)
-    },
-  }
+export function createLinkedMember(userId: string, status: MemberStatus) {
+  return organizationService.members.create({ userId, status })
 }
 
-export type {
-  AccountAccessState,
-  AuthAdminGateway,
-  AuthUserAccount,
-  CreateLinkedMemberInput,
-  CreateManagedMemberInput,
-  LinkedManagedMemberAccount,
-  ManagedMemberAccount,
-  UpdateAccountAccessInput,
-  UpdateMemberStatusInput,
+export function updateMemberStatus(memberId: string, status: MemberStatus) {
+  return organizationService.members.updateStatus(memberId, status)
 }
 
-function assertAdmin(actor: MemberManagementActor | null | undefined) {
-  if (!canManageMembers(actor)) {
-    throw new MemberManagementAuthorizationError()
+export async function updateAccountAccess(userId: string, accessState: 'enabled' | 'disabled') {
+  const requestHeaders = await headers()
+  if (accessState === 'disabled') {
+    return auth.api.banUser({
+      headers: requestHeaders,
+      body: { userId, banReason: 'Access disabled by an admin.' },
+    })
   }
+  return auth.api.unbanUser({ headers: requestHeaders, body: { userId } })
 }

@@ -1,21 +1,20 @@
 import { LockIcon, SaveIcon, UnlockIcon, UserPlusIcon } from 'lucide-react'
 import {
   createLinkedMemberAction,
-  createMemberAccountAction,
   updateAccountAccessAction,
   updateMemberStatusAction,
 } from '@/admin/member-management/actions'
-import type { ManagedMemberAccount } from '@/admin/member-management/service'
+import { MemberAccountForm } from '@/admin/member-management/member-account-form'
+import { listManagedMembers, type ManagedMemberAccount } from '@/admin/member-management/service'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
-import { Input } from '@/components/ui/input'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { MemberStatus } from '@/prisma/generated/client'
 
-export function MemberManagementScreen({ accounts }: { accounts: ManagedMemberAccount[] }) {
+export async function MemberManagementScreen() {
+  const accounts = await listManagedMembers()
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
       <div className="flex flex-col gap-1">
@@ -39,30 +38,7 @@ function CreateMemberAccountCard() {
         <CardDescription>User account with linked skeletal Member</CardDescription>
       </CardHeader>
       <CardContent>
-        <form action={createMemberAccountAction} className="flex flex-col gap-4">
-          <FieldGroup>
-            <Field>
-              <FieldLabel htmlFor="name">Name</FieldLabel>
-              <Input id="name" name="name" autoComplete="name" required />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="email">Email</FieldLabel>
-              <Input id="email" name="email" type="email" autoComplete="email" required />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="password">Temporary password</FieldLabel>
-              <Input id="password" name="password" type="password" minLength={8} required />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="status">Member Status</FieldLabel>
-              <MemberStatusSelect id="status" name="status" className="w-full" defaultValue={MemberStatus.ACTIVE} />
-            </Field>
-          </FieldGroup>
-          <Button type="submit" className="w-fit">
-            <UserPlusIcon data-icon="inline-start" />
-            Create
-          </Button>
-        </form>
+        <MemberAccountForm />
       </CardContent>
     </Card>
   )

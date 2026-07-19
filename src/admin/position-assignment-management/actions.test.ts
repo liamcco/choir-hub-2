@@ -1,34 +1,33 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test'
-import { PositionAssignmentManagementValidationError } from '@/admin/position-assignment-management/service'
-import type { AccessActor } from '@/lib/access-actor'
 
 const revalidatePath = mock(() => {})
-const listPositionAssignmentManagement = mock(async () => ({
-  positions: [],
-  members: [],
-  positionViews: [],
-  memberViews: [],
-}))
 const createPositionAssignment = mock(async () => ({ id: 'assignment-1' }))
-const endPositionAssignment = mock(async () => ({ id: 'assignment-1' }))
-const requireAdminSurfaceActor = mock(async () => actor)
-const actor: AccessActor = { id: 'admin-user', role: 'admin' }
+const endPositionAssignment = mock(async (_id: string, _endsAt: Date) => ({ id: 'assignment-1' }))
+
+class OrganizationOperationError extends Error {
+  constructor(
+    message: string,
+    readonly options: { field?: string } = {},
+  ) {
+    super(message)
+  }
+  get field() {
+    return this.options.field
+  }
+}
 
 mock.module('next/cache', () => ({
   revalidatePath,
 }))
 
-mock.module('@/admin/shell/actor', () => ({
-  getCurrentAccessActor: async () => actor,
-  requireAdminSurfaceActor,
-}))
-
-mock.module('@/admin/position-assignment-management/runtime', () => ({
-  getPositionAssignmentManagementService: async () => ({
-    listPositionAssignmentManagement,
-    createPositionAssignment,
-    endPositionAssignment,
-  }),
+mock.module('@/organization', () => ({
+  OrganizationOperationError,
+  organizationService: {
+    positionAssignments: {
+      create: createPositionAssignment,
+      end: endPositionAssignment,
+    },
+  },
 }))
 
 const { createPositionAssignmentAction, endPositionAssignmentAction } = await import(
@@ -37,10 +36,8 @@ const { createPositionAssignmentAction, endPositionAssignmentAction } = await im
 
 beforeEach(() => {
   revalidatePath.mockClear()
-  listPositionAssignmentManagement.mockClear()
   createPositionAssignment.mockClear()
   endPositionAssignment.mockClear()
-  requireAdminSurfaceActor.mockClear()
 })
 
 describe('admin Position Assignment management actions', () => {
@@ -54,7 +51,7 @@ describe('admin Position Assignment management actions', () => {
     await expect(createPositionAssignmentAction({}, formData)).resolves.toEqual({
       message: 'Position Assignment added.',
     })
-    expect(createPositionAssignment).toHaveBeenCalledWith(actor, {
+    expect(createPositionAssignment).toHaveBeenCalledWith({
       memberId: 'member-1',
       positionId: 'position-1',
       startsAt: new Date('2026-01-01T00:00:00.000Z'),
@@ -69,24 +66,19 @@ describe('admin Position Assignment management actions', () => {
     await expect(endPositionAssignmentAction('assignment-1', {}, formData)).resolves.toEqual({
       message: 'Position Assignment ended.',
     })
-    expect(endPositionAssignment).toHaveBeenCalledWith(actor, 'assignment-1', {
-      endsAt: new Date('2026-06-01T00:00:00.000Z'),
-    })
+    expect(endPositionAssignment).toHaveBeenCalledWith('assignment-1', new Date('2026-06-01T00:00:00.000Z'))
     expect(revalidatePath).toHaveBeenCalledWith('/admin/position-assignments')
   })
 
   test('returns useful overlap and invalid period feedback', async () => {
     createPositionAssignment.mockImplementationOnce(async () => {
-      throw new PositionAssignmentManagementValidationError(
-        'This Position already has an assignment during that period.',
-        {
-          startsAt: 'This Position already has an assignment during that period.',
-        },
-      )
+      throw new OrganizationOperationError('This Position already has an assignment during that period.', {
+        field: 'startsAt',
+      })
     })
     endPositionAssignment.mockImplementationOnce(async () => {
-      throw new PositionAssignmentManagementValidationError('The end date must be after the start date.', {
-        endsAt: 'The end date must be after the start date.',
+      throw new OrganizationOperationError('The end date must be after the start date.', {
+        field: 'endsAt',
       })
     })
 
@@ -113,29 +105,6 @@ describe('admin Position Assignment management actions', () => {
         endsAt: 'The end date must be after the start date.',
       },
     })
-  })
-
-  test('rejects direct non-admin create and end action requests before service writes', async () => {
-    requireAdminSurfaceActor.mockImplementation(async () => {
-      throw new Error('Forbidden')
-    })
-
-    await expect(
-      createPositionAssignmentAction(
-        {},
-        createAssignmentFormData({
-          memberId: 'member-1',
-          positionId: 'position-1',
-          startsAt: '2026-01-01',
-        }),
-      ),
-    ).rejects.toThrow('Forbidden')
-    const endFormData = new FormData()
-    endFormData.set('endsAt', '2026-06-01')
-    await expect(endPositionAssignmentAction('assignment-1', {}, endFormData)).rejects.toThrow('Forbidden')
-    expect(createPositionAssignment).not.toHaveBeenCalled()
-    expect(endPositionAssignment).not.toHaveBeenCalled()
-    expect(revalidatePath).not.toHaveBeenCalled()
   })
 })
 

@@ -2,39 +2,42 @@
 
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
-import { getGroupManagementService } from '@/admin/group-management/runtime'
-import { GroupManagementValidationError } from '@/admin/group-management/service'
-import { getCurrentAccessActor, requireAdminSurfaceActor } from '@/admin/shell/actor'
-import { ROUTES } from '@/lib/route-access'
-import { GroupKind } from '@/prisma/generated/client'
+import { normalizeOptionalString } from '@/common/formatting'
+import type { FormState } from '@/common/types/forms'
+import { ROUTES } from '@/navigation/app-routes'
+import { OrganizationOperationError, organizationService } from '@/organization'
+import type { GroupKind } from '@/prisma/generated/client'
+import { GroupFormSchema } from './schemas'
 
-export type GroupFormState = {
-  message?: string
-  fieldErrors?: Partial<Record<'name' | 'description' | 'kind' | 'parentGroupId', string>>
-}
-
-const groupFormSchema = z.object({
-  name: z.string().refine((value) => value.trim().length > 0, 'Name is required.'),
-  description: z.string().optional(),
-  kind: z.enum(GroupKind),
-  parentGroupId: z.string().optional(),
-})
+export type GroupFormState = FormState<typeof GroupFormSchema>
 
 export async function createGroupAction(_previousState: GroupFormState, formData: FormData): Promise<GroupFormState> {
-  const input = parseGroupForm(formData)
-  if (!input.success) {
-    return input.error
+  // 1. Authenticate
+
+  // 2. Validate form data
+  const formInput = GroupFormSchema.safeParse({
+    name: String(formData.get('name')),
+    description: normalizeOptionalString(String(formData.get('description'))),
+    kind: formData.get('kind') as GroupKind,
+    parentGroupId: normalizeOptionalString(String(formData.get('parentGroupId'))),
+  })
+
+  if (!formInput.success) {
+    return { success: false, fieldErrors: z.flattenError(formInput.error).fieldErrors }
   }
 
+  // 3. Mutate
   try {
-    const service = await getGroupManagementService()
-    await service.createGroup(await requireActor(), input.data)
+    await organizationService.groups.create(formInput.data)
   } catch (error) {
     return handleFormError(error)
   }
 
+  // 4. Invalidate
   revalidatePath(ROUTES.adminGroups)
-  return { message: 'Group created.' }
+  return { success: true, message: 'Group created.' }
+
+  // 5. Navigate
 }
 
 export async function updateGroupAction(
@@ -42,80 +45,41 @@ export async function updateGroupAction(
   _previousState: GroupFormState,
   formData: FormData,
 ): Promise<GroupFormState> {
-  const input = parseGroupForm(formData)
-  if (!input.success) {
-    return input.error
+  // 1. Authenticate
+
+  // 2. Validate form data
+  const formInput = GroupFormSchema.safeParse({
+    name: String(formData.get('name')),
+    description: normalizeOptionalString(String(formData.get('description'))),
+    kind: formData.get('kind') as GroupKind,
+    parentGroupId: normalizeOptionalString(String(formData.get('parentGroupId'))),
+  })
+
+  if (!formInput.success) {
+    return { success: false, fieldErrors: z.flattenError(formInput.error).fieldErrors }
   }
 
+  // 3. Mutate
   try {
-    const service = await getGroupManagementService()
-    await service.updateGroup(await requireActor(), groupId, input.data)
+    await organizationService.groups.update(groupId, formInput.data)
   } catch (error) {
     return handleFormError(error)
   }
 
+  // 4. Invalidate
   revalidatePath(ROUTES.adminGroups)
-  return { message: 'Group updated.' }
-}
+  return { success: true, message: 'Group updated.' }
 
-function parseGroupForm(formData: FormData):
-  | {
-      success: true
-      data: {
-        kind: GroupKind
-        name: string
-        description: string | null
-        parentGroupId: string | null
-      }
-    }
-  | { success: false; error: GroupFormState } {
-  const parsed = groupFormSchema.safeParse({
-    name: formData.get('name'),
-    description: formData.get('description') ?? undefined,
-    kind: formData.get('kind'),
-    parentGroupId: formData.get('parentGroupId') ?? undefined,
-  })
-
-  if (!parsed.success) {
-    return {
-      success: false,
-      error: {
-        fieldErrors: Object.fromEntries(
-          Object.entries(z.flattenError(parsed.error).fieldErrors).map(([field, errors]) => [
-            field,
-            errors?.[0] ?? 'Invalid value.',
-          ]),
-        ),
-      },
-    }
-  }
-
-  return {
-    success: true,
-    data: {
-      kind: parsed.data.kind,
-      name: parsed.data.name,
-      description: normalizeOptionalString(parsed.data.description),
-      parentGroupId: normalizeOptionalString(parsed.data.parentGroupId),
-    },
-  }
+  // 5. Navigate
 }
 
 function handleFormError(error: unknown): GroupFormState {
-  if (error instanceof GroupManagementValidationError) {
+  if (error instanceof OrganizationOperationError) {
     return {
+      success: false,
       message: error.message,
-      fieldErrors: error.fieldErrors,
+      fieldErrors: error.field ? { [error.field]: error.message } : undefined,
     }
   }
   throw error
-}
-
-async function requireActor() {
-  return requireAdminSurfaceActor(getCurrentAccessActor, 'organization-admin')
-}
-
-function normalizeOptionalString(value: string | null | undefined) {
-  const normalized = value?.trim()
-  return normalized ? normalized : null
 }

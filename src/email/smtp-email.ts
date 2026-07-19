@@ -107,10 +107,6 @@ export function EmailClient(options: EmailClientOptions = {}) {
   }
 }
 
-export async function sendEmail(message: EmailMessage) {
-  return EmailClient().send(message)
-}
-
 function getEmailModeFromEnv(): EmailMode {
   const mode = process.env.EMAIL_MODE ?? 'log'
 

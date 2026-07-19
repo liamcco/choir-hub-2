@@ -3,10 +3,11 @@ import {
   GroupMembershipSectionsCard,
   MemberGroupMembershipSectionsCard,
 } from '@/admin/group-membership-management/membership-sections'
-import type { GroupMembershipManagementState } from '@/admin/group-membership-management/service'
+import { listGroupMembershipManagement } from '@/admin/group-membership-management/service'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
-export function GroupMembershipManagementScreen({ state }: { state: GroupMembershipManagementState }) {
+export async function GroupMembershipManagementScreen() {
+  const state = await listGroupMembershipManagement()
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
       <div className="flex flex-col gap-1">

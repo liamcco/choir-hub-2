@@ -1,17 +1,44 @@
-export type OrganizationDomainErrorCode =
-  | 'DUPLICATE_SIBLING_GROUP_NAME'
-  | 'GROUP_MEMBERSHIP_PERIOD_OVERLAP'
-  | 'POSITION_ASSIGNMENT_PERIOD_OVERLAP'
-  | 'INVALID_PERIOD'
-
-export class OrganizationDomainError extends Error {
-  readonly code: OrganizationDomainErrorCode
+export class OrganizationOperationError extends Error {
   readonly field?: string
 
-  constructor(code: OrganizationDomainErrorCode, message: string, options: { field?: string } = {}) {
+  constructor(message: string, options: { field?: string } = {}) {
     super(message)
-    this.name = 'OrganizationDomainError'
-    this.code = code
+    this.name = 'OrganizationOperationError'
     this.field = options.field
+  }
+}
+
+export class EntityDoesNotExistError extends OrganizationOperationError {
+  constructor(message: string, options: { field?: string } = {}) {
+    super(message, options)
+    this.name = 'EntityDoesNotExistError'
+  }
+}
+
+export class DuplicateEntityError extends OrganizationOperationError {
+  constructor(message: string, options: { field?: string } = {}) {
+    super(message, options)
+    this.name = 'DuplicateEntityError'
+  }
+}
+
+export class InvalidRelationshipError extends OrganizationOperationError {
+  constructor(message: string, options: { field?: string } = {}) {
+    super(message, options)
+    this.name = 'InvalidRelationshipError'
+  }
+}
+
+export class DateOverlapError extends OrganizationOperationError {
+  constructor(message: string, options: { field?: string } = {}) {
+    super(message, options)
+    this.name = 'DateOverlapError'
+  }
+}
+
+export class InvalidDatePeriodError extends OrganizationOperationError {
+  constructor(message: string, options: { field?: string } = {}) {
+    super(message, options)
+    this.name = 'InvalidDatePeriodError'
   }
 }

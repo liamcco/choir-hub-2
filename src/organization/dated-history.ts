@@ -1,4 +1,4 @@
-import { OrganizationDomainError } from '@/organization/errors'
+import { InvalidDatePeriodError } from '@/organization/errors'
 
 export type DatedPeriod = {
   startsAt: Date
@@ -34,7 +34,7 @@ export function normalizeDatedPeriodUpdate<T extends DatedPeriodUpdateInput>(inp
 
 export function assertValidDatedPeriod(period: DatedPeriod) {
   if (period.endsAt && period.endsAt <= period.startsAt) {
-    throw new OrganizationDomainError('INVALID_PERIOD', 'The end date must be after the start date.', {
+    throw new InvalidDatePeriodError('The end date must be after the start date.', {
       field: 'endsAt',
     })
   }

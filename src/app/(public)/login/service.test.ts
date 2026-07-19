@@ -24,7 +24,7 @@ describe('login service', () => {
     })
   })
 
-  test('uses the signed-in admin actor for the post-login destination', async () => {
+  test('uses the organizational post-login destination for admin accounts too', async () => {
     const signInEmail = mock(async () => ({ data: { user: { id: 'user-admin', role: 'admin' } }, error: null }))
     const authClient = loginAuthClient(signInEmail)
 
@@ -35,7 +35,7 @@ describe('login service', () => {
       }),
     ).resolves.toEqual({
       success: true,
-      redirectTo: '/admin/members',
+      redirectTo: '/organization',
     })
 
     expect(signInEmail).toHaveBeenCalledWith({

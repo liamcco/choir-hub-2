@@ -2,7 +2,10 @@
 
 import { SaveIcon, UserRoundCheckIcon } from 'lucide-react'
 import { useActionState } from 'react'
-import type { PositionAssignmentFormState } from '@/admin/position-assignment-management/actions'
+import type {
+  CreatePositionAssignmentFormState,
+  EndPositionAssignmentFormState,
+} from '@/admin/position-assignment-management/actions'
 import {
   createPositionAssignmentAction,
   endPositionAssignmentAction,
@@ -11,18 +14,21 @@ import type {
   PositionAssignmentManagementState,
   PositionAssignmentPeriod,
 } from '@/admin/position-assignment-management/service'
+import { formatDateInput } from '@/common/formatting'
+import { FormMessage } from '@/components/forms/error-handling'
 import { Button } from '@/components/ui/button'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 
-const initialState: PositionAssignmentFormState = {}
+const createInitialState: CreatePositionAssignmentFormState = {}
+const endInitialState: EndPositionAssignmentFormState = {}
 
 export function CreatePositionAssignmentForm({
   members,
   positions,
 }: Pick<PositionAssignmentManagementState, 'members' | 'positions'>) {
-  const [state, formAction, isPending] = useActionState(createPositionAssignmentAction, initialState)
+  const [state, formAction, isPending] = useActionState(createPositionAssignmentAction, createInitialState)
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
@@ -87,7 +93,7 @@ export function CreatePositionAssignmentForm({
 export function EndPositionAssignmentForm({ assignment }: { assignment: PositionAssignmentPeriod }) {
   const [state, formAction, isPending] = useActionState(
     endPositionAssignmentAction.bind(null, assignment.id),
-    initialState,
+    endInitialState,
   )
 
   return (
@@ -109,18 +115,4 @@ export function EndPositionAssignmentForm({ assignment }: { assignment: Position
       </Button>
     </form>
   )
-}
-
-function FormMessage({ state }: { state: PositionAssignmentFormState }) {
-  if (!state.message) {
-    return null
-  }
-
-  return (
-    <p className={state.fieldErrors ? 'text-destructive text-sm' : 'text-muted-foreground text-sm'}>{state.message}</p>
-  )
-}
-
-function formatDateInput(date: Date) {
-  return date.toISOString().slice(0, 10)
 }

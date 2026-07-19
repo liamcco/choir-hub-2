@@ -1,40 +1,42 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test'
-import { GroupManagementValidationError } from '@/admin/group-management/service'
-import type { AccessActor } from '@/lib/access-actor'
 import { GroupKind } from '@/prisma/generated/client'
 
 const revalidatePath = mock(() => {})
-const listGroupManagement = mock(async () => ({ groups: [], hierarchy: [] }))
 const createGroup = mock(async () => ({ id: 'group-1' }))
 const updateGroup = mock(async () => ({ id: 'group-1' }))
-const requireAdminSurfaceActor = mock(async () => actor)
-const actor: AccessActor = { id: 'admin-user', role: 'admin' }
+
+class OrganizationOperationError extends Error {
+  constructor(
+    message: string,
+    readonly options: { field?: string } = {},
+  ) {
+    super(message)
+  }
+  get field() {
+    return this.options.field
+  }
+}
 
 mock.module('next/cache', () => ({
   revalidatePath,
 }))
 
-mock.module('@/admin/shell/actor', () => ({
-  getCurrentAccessActor: async () => actor,
-  requireAdminSurfaceActor,
-}))
-
-mock.module('@/admin/group-management/runtime', () => ({
-  getGroupManagementService: async () => ({
-    listGroupManagement,
-    createGroup,
-    updateGroup,
-  }),
+mock.module('@/organization', () => ({
+  OrganizationOperationError,
+  organizationService: {
+    groups: {
+      create: createGroup,
+      update: updateGroup,
+    },
+  },
 }))
 
 const { createGroupAction, updateGroupAction } = await import('@/admin/group-management/actions')
 
 beforeEach(() => {
   revalidatePath.mockClear()
-  listGroupManagement.mockClear()
   createGroup.mockClear()
   updateGroup.mockClear()
-  requireAdminSurfaceActor.mockClear()
 })
 
 describe('admin Group management actions', () => {
@@ -46,8 +48,8 @@ describe('admin Group management actions', () => {
       parentGroupId: '',
     })
 
-    await expect(createGroupAction({}, formData)).resolves.toEqual({ message: 'Group created.' })
-    expect(createGroup).toHaveBeenCalledWith(actor, {
+    await expect(createGroupAction({}, formData)).resolves.toEqual({ success: true, message: 'Group created.' })
+    expect(createGroup).toHaveBeenCalledWith({
       name: ' CSK ',
       description: 'Main choir',
       kind: GroupKind.CHOIR,
@@ -64,8 +66,11 @@ describe('admin Group management actions', () => {
       parentGroupId: 'group-parent',
     })
 
-    await expect(updateGroupAction('group-1', {}, formData)).resolves.toEqual({ message: 'Group updated.' })
-    expect(updateGroup).toHaveBeenCalledWith(actor, 'group-1', {
+    await expect(updateGroupAction('group-1', {}, formData)).resolves.toEqual({
+      success: true,
+      message: 'Group updated.',
+    })
+    expect(updateGroup).toHaveBeenCalledWith('group-1', {
       name: 'Altos',
       description: null,
       kind: GroupKind.SECTION,
@@ -76,13 +81,13 @@ describe('admin Group management actions', () => {
 
   test('returns useful duplicate sibling feedback from create and update validation', async () => {
     createGroup.mockImplementationOnce(async () => {
-      throw new GroupManagementValidationError('A sibling Group named "Altos" already exists.', {
-        name: 'A sibling Group named "Altos" already exists.',
+      throw new OrganizationOperationError('A sibling Group named "Altos" already exists.', {
+        field: 'name',
       })
     })
     updateGroup.mockImplementationOnce(async () => {
-      throw new GroupManagementValidationError('A sibling Group named "Altos" already exists.', {
-        name: 'A sibling Group named "Altos" already exists.',
+      throw new OrganizationOperationError('A sibling Group named "Altos" already exists.', {
+        field: 'name',
       })
     })
 
@@ -97,6 +102,7 @@ describe('admin Group management actions', () => {
         }),
       ),
     ).resolves.toEqual({
+      success: false,
       message: 'A sibling Group named "Altos" already exists.',
       fieldErrors: {
         name: 'A sibling Group named "Altos" already exists.',
@@ -114,30 +120,12 @@ describe('admin Group management actions', () => {
         }),
       ),
     ).resolves.toEqual({
+      success: false,
       message: 'A sibling Group named "Altos" already exists.',
       fieldErrors: {
         name: 'A sibling Group named "Altos" already exists.',
       },
     })
-  })
-
-  test('rejects direct non-admin create and update action requests before service writes', async () => {
-    requireAdminSurfaceActor.mockImplementation(async () => {
-      throw new Error('Forbidden')
-    })
-
-    const formData = groupFormData({
-      name: 'Altos',
-      description: '',
-      kind: GroupKind.SECTION,
-      parentGroupId: 'choir-1',
-    })
-
-    await expect(createGroupAction({}, formData)).rejects.toThrow('Forbidden')
-    await expect(updateGroupAction('group-1', {}, formData)).rejects.toThrow('Forbidden')
-    expect(createGroup).not.toHaveBeenCalled()
-    expect(updateGroup).not.toHaveBeenCalled()
-    expect(revalidatePath).not.toHaveBeenCalled()
   })
 })
 

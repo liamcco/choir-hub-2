@@ -1,11 +1,10 @@
 import { ThemeProvider } from '@wrksz/themes/next'
 
 import type { Metadata } from 'next'
+import './globals.css'
 
 import { Toaster } from '@/components/ui/sonner'
 import { cn } from '@/lib/utils'
-
-import './globals.css'
 
 export const metadata: Metadata = {
   title: 'CSK Choir Hub',

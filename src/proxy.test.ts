@@ -2,45 +2,27 @@ import { describe, expect, test } from 'bun:test'
 import { evaluateProxyRouteAccess } from '@/proxy'
 
 describe('proxy route protection', () => {
-  test('redirects unauthenticated admin requests to login', () => {
-    expect(evaluateProxyRouteAccess('/admin/members', null)).toEqual({ kind: 'redirect', location: '/login' })
+  test('redirects unauthenticated app requests to login', () => {
+    expect(evaluateProxyRouteAccess('/admin/members', false)).toEqual({ kind: 'redirect', location: '/login' })
+    expect(evaluateProxyRouteAccess('/organization', false)).toEqual({ kind: 'redirect', location: '/login' })
+    expect(evaluateProxyRouteAccess('/account', false)).toEqual({ kind: 'redirect', location: '/login' })
   })
 
-  test('denies cached non-admin actors on admin routes', () => {
-    expect(evaluateProxyRouteAccess('/admin/members', { id: 'user-member', role: 'user' })).toEqual({
-      kind: 'redirect',
-      location: '/organization',
-    })
+  test('allows public login requests without authentication', () => {
+    expect(evaluateProxyRouteAccess('/login', false)).toEqual({ kind: 'allow' })
   })
 
-  test('denies authenticated actors whose cached role cannot prove admin access', () => {
-    expect(evaluateProxyRouteAccess('/admin/members', { id: 'unknown-role' })).toEqual({
-      kind: 'redirect',
-      location: '/organization',
-    })
-  })
-
-  test('allows cached admin actors on admin routes', () => {
-    expect(evaluateProxyRouteAccess('/admin/members', { id: 'user-admin', role: 'admin' })).toEqual({ kind: 'allow' })
-  })
-
-  test('protects every v1 admin organizational management route for non-admins', () => {
+  test('allows authenticated users on every v1 app route', () => {
     for (const path of [
+      '/organization',
+      '/account',
       '/admin/members',
       '/admin/groups',
       '/admin/group-memberships',
       '/admin/positions',
       '/admin/position-assignments',
     ]) {
-      expect(evaluateProxyRouteAccess(path, { id: 'user-member', role: 'user' })).toEqual({
-        kind: 'redirect',
-        location: '/organization',
-      })
+      expect(evaluateProxyRouteAccess(path, true)).toEqual({ kind: 'allow' })
     }
-  })
-
-  test('allows non-admin Users on authenticated non-admin routes', () => {
-    expect(evaluateProxyRouteAccess('/organization', { id: 'user-member', role: 'user' })).toEqual({ kind: 'allow' })
-    expect(evaluateProxyRouteAccess('/account', { id: 'user-member', role: 'user' })).toEqual({ kind: 'allow' })
   })
 })

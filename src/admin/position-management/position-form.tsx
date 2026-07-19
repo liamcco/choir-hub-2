@@ -1,15 +1,16 @@
 'use client'
 
 import { useActionState } from 'react'
-import { formatGroupPath } from '@/admin/group-management/group-labels'
 import type { PositionFormState } from '@/admin/position-management/actions'
 import { createPositionAction, updatePositionAction } from '@/admin/position-management/actions'
 import type { PositionManagementPosition, PositionManagementState } from '@/admin/position-management/service'
+import { FormMessage } from '@/components/forms/error-handling'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Field, FieldContent, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import { formatGroupPath } from '@/organization/labels'
 
 const initialState: PositionFormState = {}
 
@@ -130,15 +131,5 @@ function PositionFields({
         <FieldError>{state.fieldErrors?.groupIds}</FieldError>
       </FieldSet>
     </>
-  )
-}
-
-function FormMessage({ state }: { state: PositionFormState }) {
-  if (!state.message) {
-    return null
-  }
-
-  return (
-    <p className={state.fieldErrors ? 'text-destructive text-sm' : 'text-muted-foreground text-sm'}>{state.message}</p>
   )
 }

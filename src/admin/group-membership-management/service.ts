@@ -1,36 +1,24 @@
-import { formatGroupPath } from '@/admin/group-management/group-labels'
-import type { AuthAdminGateway, AuthUserAccount } from '@/admin/member-management/account-lifecycle'
-import type { AccessActor } from '@/lib/access-actor'
-import { canAccessAdminSurface } from '@/lib/route-access'
-import {
-  buildMemberLabels,
-  type GroupMembershipHistory,
-  type GroupStructure,
-  type MemberRegistry,
-  OrganizationDomainError,
-  type OrganizationRecord,
-} from '@/organization'
+import { organizationService } from '@/organization'
 import { isCurrentDatedPeriod, isHistoricalDatedPeriod, isScheduledDatedPeriod } from '@/organization/dated-history'
-import type { CreateGroupMembershipInput } from '@/organization/types'
+import { buildMemberLabels, formatGroupPath } from '@/organization/labels'
+import type { Group, GroupMembership, Member } from '@/prisma/generated/client'
 
-export type GroupMembershipManagementActor = AccessActor
-
-export type GroupMembershipPeriod = OrganizationRecord<'groupMembership'> & {
-  group: OrganizationRecord<'group'>
-  member: OrganizationRecord<'member'>
+export type GroupMembershipPeriod = GroupMembership & {
+  group: Group
+  member: Member
   memberLabel: string
   memberDetail: string
 }
 
 export type GroupMembershipGroupView = {
-  group: OrganizationRecord<'group'>
+  group: Group
   currentMemberships: GroupMembershipPeriod[]
   scheduledMemberships: GroupMembershipPeriod[]
   historicalMemberships: GroupMembershipPeriod[]
 }
 
 export type GroupMembershipMemberView = {
-  member: OrganizationRecord<'member'>
+  member: Member
   memberLabel: string
   memberDetail: string
   currentMemberships: GroupMembershipPeriod[]
@@ -38,99 +26,23 @@ export type GroupMembershipMemberView = {
   historicalMemberships: GroupMembershipPeriod[]
 }
 
-export type GroupMembershipManagementState = {
-  groups: OrganizationRecord<'group'>[]
-  members: GroupMembershipMemberOption[]
-  groupViews: GroupMembershipGroupView[]
-  memberViews: GroupMembershipMemberView[]
+export async function listGroupMembershipManagement(input?: { at?: Date }) {
+  const [groups, members, memberships, users] = await Promise.all([
+    organizationService.groups.list(),
+    organizationService.members.list(),
+    organizationService.groupMemberships.list(),
+    organizationService.members.listIdentities(),
+  ])
+  return buildGroupMembershipManagementState({
+    groups,
+    members,
+    memberships,
+    users,
+    at: input?.at ?? new Date(),
+  })
 }
 
-export type GroupMembershipMemberOption = {
-  member: OrganizationRecord<'member'>
-  label: string
-  detail: string
-}
-
-export type EndGroupMembershipInput = {
-  endsAt: Date
-}
-
-export type GroupMembershipManagementService = {
-  listGroupMembershipManagement(
-    actor: GroupMembershipManagementActor,
-    input?: { at?: Date },
-  ): Promise<GroupMembershipManagementState>
-  createGroupMembership(
-    actor: GroupMembershipManagementActor,
-    input: CreateGroupMembershipInput,
-  ): Promise<OrganizationRecord<'groupMembership'>>
-  endGroupMembership(
-    actor: GroupMembershipManagementActor,
-    membershipId: string,
-    input: EndGroupMembershipInput,
-  ): Promise<OrganizationRecord<'groupMembership'>>
-}
-
-export class GroupMembershipManagementAuthorizationError extends Error {
-  constructor() {
-    super('Only admins can manage Group Memberships.')
-    this.name = 'GroupMembershipManagementAuthorizationError'
-  }
-}
-
-export class GroupMembershipManagementValidationError extends Error {
-  readonly fieldErrors: Partial<Record<keyof CreateGroupMembershipInput | keyof EndGroupMembershipInput, string>>
-
-  constructor(
-    message: string,
-    fieldErrors: Partial<Record<keyof CreateGroupMembershipInput | keyof EndGroupMembershipInput, string>>,
-  ) {
-    super(message)
-    this.name = 'GroupMembershipManagementValidationError'
-    this.fieldErrors = fieldErrors
-  }
-}
-
-export function createGroupMembershipManagementService({
-  authGateway,
-  groupMembershipHistory,
-  groupStructure,
-  memberRegistry,
-}: {
-  authGateway?: Pick<AuthAdminGateway, 'listUsers'>
-  groupMembershipHistory: GroupMembershipHistory
-  groupStructure: GroupStructure
-  memberRegistry: MemberRegistry
-}): GroupMembershipManagementService {
-  return {
-    async listGroupMembershipManagement(actor, input) {
-      assertAdmin(actor)
-      const [groups, members, memberships, users] = await Promise.all([
-        groupStructure.listGroups(),
-        memberRegistry.listMembers(),
-        groupMembershipHistory.listGroupMemberships(),
-        authGateway?.listUsers() ?? Promise.resolve([]),
-      ])
-      return buildGroupMembershipManagementState({
-        groups,
-        members,
-        memberships,
-        users,
-        at: input?.at ?? new Date(),
-      })
-    },
-    async createGroupMembership(actor, input) {
-      assertAdmin(actor)
-      return mapValidationErrors(() => groupMembershipHistory.createGroupMembership(input))
-    },
-    async endGroupMembership(actor, membershipId, input) {
-      assertAdmin(actor)
-      return mapValidationErrors(() =>
-        groupMembershipHistory.updateGroupMembership(membershipId, { endsAt: input.endsAt }),
-      )
-    },
-  }
-}
+export type GroupMembershipManagementState = Awaited<ReturnType<typeof listGroupMembershipManagement>>
 
 export function buildGroupMembershipManagementState({
   groups,
@@ -139,12 +51,12 @@ export function buildGroupMembershipManagementState({
   users = [],
   at,
 }: {
-  groups: OrganizationRecord<'group'>[]
-  members: OrganizationRecord<'member'>[]
-  memberships: OrganizationRecord<'groupMembership'>[]
-  users?: Pick<AuthUserAccount, 'id' | 'name' | 'email'>[]
+  groups: Group[]
+  members: Member[]
+  memberships: GroupMembership[]
+  users?: { id: string; name: string; email: string }[]
   at: Date
-}): GroupMembershipManagementState {
+}) {
   const groupsById = new Map(groups.map((group) => [group.id, group]))
   const membersById = new Map(members.map((member) => [member.id, member]))
   const memberOptions = buildMemberLabels(members, users)
@@ -158,37 +70,38 @@ export function buildGroupMembershipManagementState({
         ? [{ ...membership, group, member, memberLabel: memberOption.label, memberDetail: memberOption.detail }]
         : []
     })
-    .sort(compareMembershipPeriods(groups))
+    .sort(
+      (first, second) =>
+        first.memberLabel.localeCompare(second.memberLabel) ||
+        formatGroupPath(groups, first.group).localeCompare(formatGroupPath(groups, second.group)) ||
+        first.startsAt.getTime() - second.startsAt.getTime() ||
+        first.id.localeCompare(second.id),
+    )
 
   return {
     groups,
     members: memberOptions,
-    groupViews: groups.map((group) => {
-      const groupPeriods = periods.filter((membership) => membership.groupId === group.id)
-      return {
+    groupViews: groups.map(
+      (group): GroupMembershipGroupView => ({
         group,
-        ...partitionMembershipPeriods(groupPeriods, at),
-      }
-    }),
-    memberViews: memberOptions.map((option) => {
-      const member = option.member
-      const memberPeriods = periods.filter((membership) => membership.memberId === member.id)
-      return {
-        member,
+        ...partitionMembershipPeriods(
+          periods.filter((membership) => membership.groupId === group.id),
+          at,
+        ),
+      }),
+    ),
+    memberViews: memberOptions.map(
+      (option): GroupMembershipMemberView => ({
+        member: option.member,
         memberLabel: option.label,
         memberDetail: option.detail,
-        ...partitionMembershipPeriods(memberPeriods, at),
-      }
-    }),
+        ...partitionMembershipPeriods(
+          periods.filter((membership) => membership.memberId === option.member.id),
+          at,
+        ),
+      }),
+    ),
   }
-}
-
-function compareMembershipPeriods(groups: OrganizationRecord<'group'>[]) {
-  return (first: GroupMembershipPeriod, second: GroupMembershipPeriod) =>
-    first.memberLabel.localeCompare(second.memberLabel) ||
-    formatGroupPath(groups, first.group).localeCompare(formatGroupPath(groups, second.group)) ||
-    first.startsAt.getTime() - second.startsAt.getTime() ||
-    first.id.localeCompare(second.id)
 }
 
 function partitionMembershipPeriods(periods: GroupMembershipPeriod[], at: Date) {
@@ -196,24 +109,5 @@ function partitionMembershipPeriods(periods: GroupMembershipPeriod[], at: Date) 
     currentMemberships: periods.filter((membership) => isCurrentDatedPeriod(membership, at)),
     scheduledMemberships: periods.filter((membership) => isScheduledDatedPeriod(membership, at)),
     historicalMemberships: periods.filter((membership) => isHistoricalDatedPeriod(membership, at)),
-  }
-}
-
-async function mapValidationErrors<T>(operation: () => Promise<T>) {
-  try {
-    return await operation()
-  } catch (error) {
-    if (error instanceof OrganizationDomainError) {
-      throw new GroupMembershipManagementValidationError(error.message, {
-        [error.field ?? 'startsAt']: error.message,
-      })
-    }
-    throw error
-  }
-}
-
-function assertAdmin(actor: GroupMembershipManagementActor | null | undefined) {
-  if (!canAccessAdminSurface(actor)) {
-    throw new GroupMembershipManagementAuthorizationError()
   }
 }

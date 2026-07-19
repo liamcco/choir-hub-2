@@ -1,17 +1,13 @@
 import { getSessionCookie } from 'better-auth/cookies'
-import { headers } from 'next/headers'
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
-import type { AccessActor } from '@/lib/access-actor'
-import { type AccessDecision, getRouteAccessDecision } from '@/lib/route-access'
-import { auth } from './lib/auth'
+import { type AccessDecision, getRouteAccessDecision } from '@/navigation/app-routes'
 
 type ProxyRouteDecision = AccessDecision
 
 export default async function proxy(req: NextRequest) {
   const path = req.nextUrl.pathname
-  const actor = await getCachedActor(req)
-  const decision = evaluateProxyRouteAccess(path, actor)
+  const decision = evaluateProxyRouteAccess(path, hasCachedSession(req))
 
   if (decision.kind === 'redirect') {
     const url = req.nextUrl.clone()
@@ -22,26 +18,12 @@ export default async function proxy(req: NextRequest) {
   return NextResponse.next()
 }
 
-export function evaluateProxyRouteAccess(path: string, actor: AccessActor | null): ProxyRouteDecision {
-  return getRouteAccessDecision(path, actor)
+export function evaluateProxyRouteAccess(path: string, isAuthenticated: boolean): ProxyRouteDecision {
+  return getRouteAccessDecision(path, isAuthenticated)
 }
 
-async function getCachedActor(req: NextRequest): Promise<AccessActor | null> {
-  if (!getSessionCookie(req)) {
-    return null
-  }
-
-  const session = await auth.api.getSession({ headers: await headers() })
-  const user = session && typeof session === 'object' && 'user' in session ? session.user : null
-
-  if (!user || typeof user !== 'object' || !('id' in user) || typeof user.id !== 'string') {
-    return { id: 'authenticated-session' }
-  }
-
-  return {
-    id: user.id,
-    role: 'role' in user && (typeof user.role === 'string' || Array.isArray(user.role)) ? user.role : null,
-  }
+function hasCachedSession(req: NextRequest): boolean {
+  return Boolean(getSessionCookie(req))
 }
 
 export const config = {

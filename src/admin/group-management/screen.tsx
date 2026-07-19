@@ -1,12 +1,15 @@
 import { Building2Icon, GitForkIcon } from 'lucide-react'
 import { CreateGroupForm, UpdateGroupForm } from '@/admin/group-management/group-form'
-import { formatGroupKind } from '@/admin/group-management/group-kind'
-import type { GroupHierarchyNode, GroupManagementState } from '@/admin/group-management/service'
+import { buildGroupHierarchy, type GroupHierarchyNode, listGroups } from '@/admin/group-management/service'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
+import { formatGroupKind } from '@/organization'
 
-export function GroupManagementScreen({ state }: { state: GroupManagementState }) {
+export async function GroupManagementScreen() {
+  const groups = await listGroups()
+  const hierarchy = buildGroupHierarchy(groups)
+
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
       <div className="flex flex-col gap-1">
@@ -22,19 +25,19 @@ export function GroupManagementScreen({ state }: { state: GroupManagementState }
               <CardDescription>Name, Group Kind, and optional parent Group</CardDescription>
             </CardHeader>
             <CardContent>
-              <CreateGroupForm groups={state.groups} />
+              <CreateGroupForm groups={groups} />
             </CardContent>
           </Card>
 
           <Card className="rounded-lg">
             <CardHeader>
               <CardTitle>Hierarchy</CardTitle>
-              <CardDescription>{state.groups.length} total</CardDescription>
+              <CardDescription>{groups.length} total</CardDescription>
             </CardHeader>
             <CardContent>
-              {state.hierarchy.length ? (
+              {hierarchy.length ? (
                 <div className="flex flex-col gap-2">
-                  {state.hierarchy.map((node) => (
+                  {hierarchy.map((node) => (
                     <GroupHierarchyBranch key={node.group.id} node={node} />
                   ))}
                 </div>
@@ -53,15 +56,15 @@ export function GroupManagementScreen({ state }: { state: GroupManagementState }
             <CardDescription>Sibling Group names must be unique</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-6">
-            {state.groups.length ? (
-              state.groups.map((group) => (
+            {groups.length ? (
+              groups.map((group) => (
                 <div key={group.id} className="rounded-lg border p-4">
                   <div className="mb-4 flex flex-wrap items-center gap-2">
                     <Building2Icon className="size-4 text-muted-foreground" aria-hidden="true" />
                     <span className="font-medium">{group.name}</span>
                     <Badge variant="outline">{formatGroupKind(group.kind)}</Badge>
                   </div>
-                  <UpdateGroupForm group={group} groups={state.groups} />
+                  <UpdateGroupForm group={group} groups={groups} />
                 </div>
               ))
             ) : (

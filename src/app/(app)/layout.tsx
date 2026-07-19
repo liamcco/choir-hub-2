@@ -1,6 +1,4 @@
-import { Suspense } from 'react'
-
-import { AppNavigation, RuntimeAppNavigation } from '@/app/app-navigation'
+import { AppNavigation } from '@/navigation/app-navigation'
 
 export default function AuthenticatedAppLayout({
   children,
@@ -9,9 +7,7 @@ export default function AuthenticatedAppLayout({
 }>) {
   return (
     <>
-      <Suspense fallback={<AppNavigation actor={null} />}>
-        <RuntimeAppNavigation />
-      </Suspense>
+      <AppNavigation />
       {children}
     </>
   )

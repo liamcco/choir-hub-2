@@ -8,7 +8,7 @@ Baseline assumption: a plain TypeScript App Router project with `src/`, Tailwind
 
 - The app is named `csk-choir-hub` and is intended to become an internal choir portal.
 - The visible App Router surface is still small: `src/app/page.tsx` renders a simple welcome page, and `src/app/api/[[...route]]/route.ts` delegates API handling to Better Auth.
-- Request gating is handled through `src/proxy.ts`, which redirects unauthenticated non-public page requests to `/login`. Public paths are currently `/login`; `/admin` paths are identified separately but currently only require a session.
+- Request gating is handled through `src/proxy.ts`, which redirects unauthenticated non-public page requests to `/login`. Public paths are currently `/login`; all other v1 app paths only require an authenticated session.
 - Runtime environment helpers live in `src/common/environment/environment.ts`.
 
 ## Package Manager and Runtime

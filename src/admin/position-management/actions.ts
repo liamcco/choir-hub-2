@@ -2,40 +2,43 @@
 
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
-import { getPositionManagementService } from '@/admin/position-management/runtime'
-import { PositionManagementValidationError } from '@/admin/position-management/service'
-import { getCurrentAccessActor, requireAdminSurfaceActor } from '@/admin/shell/actor'
-import { ROUTES } from '@/lib/route-access'
+import { normalizeOptionalString } from '@/common/formatting'
+import type { FormState } from '@/common/types/forms'
+import { ROUTES } from '@/navigation/app-routes'
+import { OrganizationOperationError, organizationService } from '@/organization'
+import { PositionFormSchema } from './schemas'
 
-export type PositionFormState = {
-  message?: string
-  fieldErrors?: Partial<Record<'name' | 'description' | 'groupIds', string>>
-}
-
-const positionFormSchema = z.object({
-  name: z.string().refine((value) => value.trim().length > 0, 'Name is required.'),
-  description: z.string().optional(),
-  groupIds: z.array(z.string()),
-})
+export type PositionFormState = FormState<typeof PositionFormSchema>
 
 export async function createPositionAction(
   _previousState: PositionFormState,
   formData: FormData,
 ): Promise<PositionFormState> {
-  const input = parsePositionForm(formData)
-  if (!input.success) {
-    return input.error
+  // 1. Authenticate
+
+  // 2. Validate form data
+  const formInput = PositionFormSchema.safeParse({
+    name: formData.get('name'),
+    description: normalizeOptionalString(String(formData.get('description'))),
+    groupIds: formData.getAll('groupIds'),
+  })
+
+  if (!formInput.success) {
+    return { success: false, fieldErrors: z.flattenError(formInput.error).fieldErrors }
   }
 
+  // 3. Mutate
   try {
-    const service = await getPositionManagementService()
-    await service.createPosition(await requireActor(), input.data)
+    await organizationService.positions.create(formInput.data)
   } catch (error) {
     return handleFormError(error)
   }
 
+  // 4. Invalidate
   revalidatePath(ROUTES.adminPositions)
-  return { message: 'Position created.' }
+  return { success: true, message: 'Position created.' }
+
+  // 5. Navigate
 }
 
 export async function updatePositionAction(
@@ -43,77 +46,40 @@ export async function updatePositionAction(
   _previousState: PositionFormState,
   formData: FormData,
 ): Promise<PositionFormState> {
-  const input = parsePositionForm(formData)
-  if (!input.success) {
-    return input.error
+  // 1. Authenticate
+
+  // 2. Validate form data
+  const formInput = PositionFormSchema.safeParse({
+    name: formData.get('name'),
+    description: normalizeOptionalString(String(formData.get('description'))),
+    groupIds: formData.getAll('groupIds'),
+  })
+
+  if (!formInput.success) {
+    return { success: false, fieldErrors: z.flattenError(formInput.error).fieldErrors }
   }
 
+  // 3. Mutate
   try {
-    const service = await getPositionManagementService()
-    await service.updatePosition(await requireActor(), positionId, input.data)
+    await organizationService.positions.update(positionId, formInput.data)
   } catch (error) {
     return handleFormError(error)
   }
 
+  // 4. Invalidate
   revalidatePath(ROUTES.adminPositions)
-  return { message: 'Position updated.' }
-}
+  return { success: true, message: 'Position updated.' }
 
-function parsePositionForm(formData: FormData):
-  | {
-      success: true
-      data: {
-        name: string
-        description: string | null
-        groupIds: string[]
-      }
-    }
-  | { success: false; error: PositionFormState } {
-  const parsed = positionFormSchema.safeParse({
-    name: formData.get('name'),
-    description: formData.get('description') ?? undefined,
-    groupIds: formData.getAll('groupIds'),
-  })
-
-  if (!parsed.success) {
-    return {
-      success: false,
-      error: {
-        fieldErrors: Object.fromEntries(
-          Object.entries(z.flattenError(parsed.error).fieldErrors).map(([field, errors]) => [
-            field,
-            errors?.[0] ?? 'Invalid value.',
-          ]),
-        ),
-      },
-    }
-  }
-
-  return {
-    success: true,
-    data: {
-      name: parsed.data.name,
-      description: normalizeOptionalString(parsed.data.description),
-      groupIds: parsed.data.groupIds,
-    },
-  }
+  // 5. Navigate
 }
 
 function handleFormError(error: unknown): PositionFormState {
-  if (error instanceof PositionManagementValidationError) {
+  if (error instanceof OrganizationOperationError) {
     return {
+      success: false,
       message: error.message,
-      fieldErrors: error.fieldErrors,
+      fieldErrors: error.field ? { [error.field]: error.message } : undefined,
     }
   }
   throw error
-}
-
-async function requireActor() {
-  return requireAdminSurfaceActor(getCurrentAccessActor, 'organization-admin')
-}
-
-function normalizeOptionalString(value: string | null | undefined) {
-  const normalized = value?.trim()
-  return normalized ? normalized : null
 }

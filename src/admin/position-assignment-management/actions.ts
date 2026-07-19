@@ -2,138 +2,83 @@
 
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
-import { getPositionAssignmentManagementService } from '@/admin/position-assignment-management/runtime'
-import { PositionAssignmentManagementValidationError } from '@/admin/position-assignment-management/service'
-import { getCurrentAccessActor, requireAdminSurfaceActor } from '@/admin/shell/actor'
-import { ROUTES } from '@/lib/route-access'
+import type { FormState } from '@/common/types/forms'
+import { ROUTES } from '@/navigation/app-routes'
+import { OrganizationOperationError, organizationService } from '@/organization'
+import { CreatePositionAssignmentFormSchema, EndPositionAssignmentFormSchema } from './schemas'
 
-export type PositionAssignmentFormState = {
-  message?: string
-  fieldErrors?: Partial<Record<'memberId' | 'positionId' | 'startsAt' | 'endsAt', string>>
-}
+export type CreatePositionAssignmentFormState = FormState<typeof CreatePositionAssignmentFormSchema>
+export type EndPositionAssignmentFormState = FormState<typeof EndPositionAssignmentFormSchema>
 
-const createPositionAssignmentFormSchema = z.object({
-  memberId: z.string().refine((value) => value.trim().length > 0, 'Member is required.'),
-  positionId: z.string().refine((value) => value.trim().length > 0, 'Position is required.'),
-  startsAt: z.string().refine((value) => parseDateInput(value) !== null, 'Start date is required.'),
-})
-
-const endPositionAssignmentFormSchema = z.object({
-  endsAt: z.string().refine((value) => parseDateInput(value) !== null, 'End date is required.'),
-})
+export type PositionAssignmentFormState = CreatePositionAssignmentFormState | EndPositionAssignmentFormState
 
 export async function createPositionAssignmentAction(
   _previousState: PositionAssignmentFormState,
   formData: FormData,
-): Promise<PositionAssignmentFormState> {
-  const input = parseCreatePositionAssignmentForm(formData)
-  if (!input.success) {
-    return input.error
+): Promise<CreatePositionAssignmentFormState> {
+  // 1. Authenticate
+
+  // 2. Validate form data
+  const formInput = CreatePositionAssignmentFormSchema.safeParse({
+    memberId: String(formData.get('memberId')),
+    positionId: String(formData.get('positionId')),
+    startsAt: String(formData.get('startsAt')),
+  })
+
+  if (!formInput.success) {
+    return { success: false, fieldErrors: z.flattenError(formInput.error).fieldErrors }
   }
 
+  // 3. Mutate
   try {
-    const service = await getPositionAssignmentManagementService()
-    await service.createPositionAssignment(await requireActor(), input.data)
+    await organizationService.positionAssignments.create(formInput.data)
   } catch (error) {
     return handleFormError(error)
   }
 
+  // 4. Invalidate
   revalidatePath(ROUTES.adminPositionAssignments)
   return { message: 'Position Assignment added.' }
+
+  // 5. Navigate
 }
 
 export async function endPositionAssignmentAction(
   assignmentId: string,
   _previousState: PositionAssignmentFormState,
   formData: FormData,
-): Promise<PositionAssignmentFormState> {
-  const input = parseEndPositionAssignmentForm(formData)
-  if (!input.success) {
-    return input.error
+): Promise<EndPositionAssignmentFormState> {
+  // 1. Authenticate
+
+  // 2. Validate form data
+  const formInput = EndPositionAssignmentFormSchema.safeParse({
+    endsAt: String(formData.get('endsAt')),
+  })
+
+  if (!formInput.success) {
+    return { success: false, fieldErrors: z.flattenError(formInput.error).fieldErrors }
   }
 
+  // 3. Mutate
   try {
-    const service = await getPositionAssignmentManagementService()
-    await service.endPositionAssignment(await requireActor(), assignmentId, input.data)
+    await organizationService.positionAssignments.end(assignmentId, formInput.data.endsAt)
   } catch (error) {
     return handleFormError(error)
   }
 
+  // 4. Invalidate
   revalidatePath(ROUTES.adminPositionAssignments)
   return { message: 'Position Assignment ended.' }
+
+  // 5. Navigate
 }
 
-function parseCreatePositionAssignmentForm(
-  formData: FormData,
-):
-  | { success: true; data: { memberId: string; positionId: string; startsAt: Date } }
-  | { success: false; error: PositionAssignmentFormState } {
-  const parsed = createPositionAssignmentFormSchema.safeParse({
-    memberId: formData.get('memberId'),
-    positionId: formData.get('positionId'),
-    startsAt: formData.get('startsAt'),
-  })
-
-  if (!parsed.success) {
-    return { success: false, error: { fieldErrors: firstFieldErrors(parsed.error) } }
-  }
-
-  return {
-    success: true,
-    data: {
-      memberId: parsed.data.memberId,
-      positionId: parsed.data.positionId,
-      startsAt: parseDateInput(parsed.data.startsAt) ?? new Date(Number.NaN),
-    },
-  }
-}
-
-function parseEndPositionAssignmentForm(
-  formData: FormData,
-): { success: true; data: { endsAt: Date } } | { success: false; error: PositionAssignmentFormState } {
-  const parsed = endPositionAssignmentFormSchema.safeParse({
-    endsAt: formData.get('endsAt'),
-  })
-
-  if (!parsed.success) {
-    return { success: false, error: { fieldErrors: firstFieldErrors(parsed.error) } }
-  }
-
-  return {
-    success: true,
-    data: {
-      endsAt: parseDateInput(parsed.data.endsAt) ?? new Date(Number.NaN),
-    },
-  }
-}
-
-function firstFieldErrors(error: z.ZodError): PositionAssignmentFormState['fieldErrors'] {
-  return Object.fromEntries(
-    Object.entries(z.flattenError(error).fieldErrors as Record<string, string[]>).map(([field, errors]) => [
-      field,
-      errors?.[0] ?? 'Invalid value.',
-    ]),
-  )
-}
-
-function parseDateInput(value: string | null | undefined) {
-  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    return null
-  }
-  const date = new Date(`${value}T00:00:00.000Z`)
-  return Number.isNaN(date.getTime()) ? null : date
-}
-
-function handleFormError(error: unknown): PositionAssignmentFormState {
-  if (error instanceof PositionAssignmentManagementValidationError) {
+function handleFormError<T extends PositionAssignmentFormState>(error: unknown): T {
+  if (error instanceof OrganizationOperationError) {
     return {
       message: error.message,
-      fieldErrors: error.fieldErrors,
-    }
+      fieldErrors: error.field ? { [error.field]: error.message } : undefined,
+    } as T
   }
   throw error
-}
-
-async function requireActor() {
-  return requireAdminSurfaceActor(getCurrentAccessActor, 'organization-admin')
 }
