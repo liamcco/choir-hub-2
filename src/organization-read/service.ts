@@ -1,5 +1,6 @@
 import type { AccessActor } from '@/admin/access-policy'
 import type {
+  AuthUserIdentity,
   GroupMembershipHistory,
   GroupStructure,
   MemberRegistry,
@@ -9,14 +10,10 @@ import type {
 } from '@/organization'
 import { isCurrentDatedPeriod, isHistoricalDatedPeriod } from '@/organization/dated-history'
 import { formatGroupPath } from '@/organization/group-labels'
+import { buildMemberLabels, formatMemberFallbackLabel } from '@/organization/member-labels'
+import { formatPositionScopeLabel, noGroupScopesLabel } from '@/organization/position-labels'
 
 export type OrganizationalReadOnlyActor = AccessActor
-
-export type AuthUserIdentity = {
-  id: string
-  name: string
-  email: string
-}
 
 export type ReadOnlyGroupHierarchyNode = {
   group: OrganizationRecord<'group'>
@@ -145,9 +142,11 @@ export function buildOrganizationalReadOnlyState({
 }): OrganizationalReadOnlyState {
   const groupsById = new Map(groups.map((group) => [group.id, group]))
   const membersById = new Map(members.map((member) => [member.id, member]))
-  const memberLabels = buildMemberLabels(members, users)
+  const memberLabels = new Map(
+    buildMemberLabels(members, users).map((memberLabel) => [memberLabel.member.id, memberLabel]),
+  )
   const positionScopesByPositionId = groupPositionScopes({ groups, scopes })
-  const positionScopeLabels = buildPositionScopeLabels({ positions, positionScopesByPositionId })
+  const positionScopeLabels = buildPositionScopeLabels({ groups, positions, positionScopesByPositionId })
 
   const membershipPeriods = memberships
     .flatMap((membership): ReadOnlyGroupMembershipPeriod[] => {
@@ -168,7 +167,7 @@ export function buildOrganizationalReadOnlyState({
               position,
               member,
               positionLabel: position.name,
-              positionScopeLabel: positionScopeLabels.get(position.id) ?? 'No Group scopes',
+              positionScopeLabel: positionScopeLabels.get(position.id) ?? noGroupScopesLabel,
               memberLabel: memberLabel.label,
               memberDetail: memberLabel.detail,
             },
@@ -200,7 +199,7 @@ export function buildOrganizationalReadOnlyState({
       return {
         position,
         scopes: positionScopes,
-        scopeLabel: positionScopeLabels.get(position.id) ?? 'No Group scopes',
+        scopeLabel: positionScopeLabels.get(position.id) ?? noGroupScopesLabel,
         currentAssignments: positionAssignments.filter((assignment) => isCurrentDatedPeriod(assignment, at)),
         historicalAssignments: positionAssignments.filter((assignment) => isHistoricalDatedPeriod(assignment, at)),
       }
@@ -253,26 +252,6 @@ function compareGroupHierarchyNodes(first: ReadOnlyGroupHierarchyNode, second: R
   return first.group.name.localeCompare(second.group.name) || first.group.id.localeCompare(second.group.id)
 }
 
-function buildMemberLabels(members: OrganizationRecord<'member'>[], users: AuthUserIdentity[]) {
-  const usersById = new Map(users.map((user) => [user.id, user]))
-  return new Map(
-    members.map((member) => {
-      const user = usersById.get(member.userId)
-      return [
-        member.id,
-        {
-          label: user?.name || formatMemberFallbackLabel(member),
-          detail: user?.email ?? member.id,
-        },
-      ]
-    }),
-  )
-}
-
-function formatMemberFallbackLabel(member: OrganizationRecord<'member'>) {
-  return `Member ${member.id}`
-}
-
 function groupPositionScopes({
   groups,
   scopes,
@@ -303,9 +282,11 @@ function groupPositionScopes({
 }
 
 function buildPositionScopeLabels({
+  groups,
   positions,
   positionScopesByPositionId,
 }: {
+  groups: OrganizationRecord<'group'>[]
   positions: OrganizationRecord<'position'>[]
   positionScopesByPositionId: Map<string, ReadOnlyPositionScope[]>
 }) {
@@ -314,7 +295,10 @@ function buildPositionScopeLabels({
       const positionScopes = positionScopesByPositionId.get(position.id) ?? []
       return [
         position.id,
-        positionScopes.length ? positionScopes.map((scope) => scope.groupPath).join(' + ') : 'No Group scopes',
+        formatPositionScopeLabel(
+          groups,
+          positionScopes.map((scope) => scope.group),
+        ),
       ]
     }),
   )

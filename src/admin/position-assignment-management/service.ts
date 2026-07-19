@@ -2,6 +2,8 @@ import { type AccessActor, canAccessAdminSurface } from '@/admin/access-policy'
 import { formatGroupPath } from '@/admin/group-management/group-labels'
 import type { AuthAdminGateway, AuthUserAccount } from '@/admin/member-management/account-lifecycle'
 import {
+  buildMemberLabels,
+  formatPositionScopeLabel,
   type GroupStructure,
   type MemberRegistry,
   OrganizationDomainError,
@@ -166,7 +168,7 @@ export function buildPositionAssignmentManagementState({
   const membersById = new Map(members.map((member) => [member.id, member]))
   const positionOptions = buildPositionOptions({ groups, positions, scopes })
   const positionOptionsById = new Map(positionOptions.map((option) => [option.position.id, option]))
-  const memberOptions = buildMemberOptions(members, users)
+  const memberOptions = buildMemberLabels(members, users)
   const memberOptionsByMemberId = new Map(memberOptions.map((option) => [option.member.id, option]))
   const periods = assignments
     .flatMap((assignment): PositionAssignmentPeriod[] => {
@@ -233,7 +235,7 @@ function buildPositionOptions({
         return group ? [group] : []
       })
       .sort((first, second) => formatGroupPath(groups, first).localeCompare(formatGroupPath(groups, second)))
-    const scopeLabel = formatScopeLabel(groups, scopeGroups)
+    const scopeLabel = formatPositionScopeLabel(groups, scopeGroups)
 
     return {
       position,
@@ -241,13 +243,6 @@ function buildPositionOptions({
       scopeLabel,
     }
   })
-}
-
-function formatScopeLabel(groups: OrganizationRecord<'group'>[], scopeGroups: OrganizationRecord<'group'>[]) {
-  if (scopeGroups.length === 0) {
-    return 'No Group scopes'
-  }
-  return scopeGroups.map((group) => formatGroupPath(groups, group)).join(' + ')
 }
 
 function compareAssignmentPeriods(first: PositionAssignmentPeriod, second: PositionAssignmentPeriod) {
@@ -264,25 +259,6 @@ function partitionAssignmentPeriods(periods: PositionAssignmentPeriod[], at: Dat
     currentAssignments: periods.filter((assignment) => isCurrentDatedPeriod(assignment, at)),
     historicalAssignments: periods.filter((assignment) => isHistoricalDatedPeriod(assignment, at)),
   }
-}
-
-export function formatMemberFallbackLabel(member: OrganizationRecord<'member'>) {
-  return `Member ${member.id}`
-}
-
-function buildMemberOptions(
-  members: OrganizationRecord<'member'>[],
-  users: Pick<AuthUserAccount, 'id' | 'name' | 'email'>[],
-): PositionAssignmentMemberOption[] {
-  const usersById = new Map(users.map((user) => [user.id, user]))
-  return members.map((member) => {
-    const user = usersById.get(member.userId)
-    return {
-      member,
-      label: user?.name || formatMemberFallbackLabel(member),
-      detail: user?.email ?? member.id,
-    }
-  })
 }
 
 async function mapValidationErrors<T>(operation: () => Promise<T>) {

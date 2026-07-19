@@ -11,6 +11,7 @@ import {
 import Link from 'next/link'
 import { type AccessActor, canAccessAdminSurface, getPostLoginPath } from '@/admin/access-policy'
 import { buttonVariants } from '@/components/ui/button'
+import { getCurrentAccessActor } from '@/lib/access-actor'
 import { cn } from '@/lib/utils'
 
 export type NavigationItem = {
@@ -67,4 +68,9 @@ export function AppNavigation({ actor }: { actor: AccessActor | null }) {
       </div>
     </header>
   )
+}
+
+export async function RuntimeAppNavigation() {
+  const actor = await getCurrentAccessActor()
+  return <AppNavigation actor={actor} />
 }

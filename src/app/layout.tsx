@@ -1,37 +1,31 @@
 import { ThemeProvider } from '@wrksz/themes/next'
 
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Suspense } from 'react'
 
-import { AppNavigation } from '@/app/app-navigation'
+import { AppNavigation, RuntimeAppNavigation } from '@/app/app-navigation'
 import { Toaster } from '@/components/ui/sonner'
-import { getCurrentAccessActor } from '@/lib/access-actor'
 import { cn } from '@/lib/utils'
 
 import './globals.css'
-
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-sans',
-})
 
 export const metadata: Metadata = {
   title: 'CSK Choir Hub',
   description: 'Chalmers Sångkörs digitala nav',
 }
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  const actor = await getCurrentAccessActor()
-
   return (
-    <html lang="en" className={cn('h-full', 'antialiased', inter.variable)} suppressHydrationWarning>
+    <html lang="en" className={cn('h-full', 'antialiased')} suppressHydrationWarning>
       <body className="min-h-full flex flex-col">
         <ThemeProvider>
-          <AppNavigation actor={actor} />
+          <Suspense fallback={<AppNavigation actor={null} />}>
+            <RuntimeAppNavigation />
+          </Suspense>
           {children}
           <Toaster />
         </ThemeProvider>

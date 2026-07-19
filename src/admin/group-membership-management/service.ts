@@ -2,6 +2,7 @@ import { type AccessActor, canAccessAdminSurface } from '@/admin/access-policy'
 import { formatGroupPath } from '@/admin/group-management/group-labels'
 import type { AuthAdminGateway, AuthUserAccount } from '@/admin/member-management/account-lifecycle'
 import {
+  buildMemberLabels,
   type GroupMembershipHistory,
   type GroupStructure,
   type MemberRegistry,
@@ -145,7 +146,7 @@ export function buildGroupMembershipManagementState({
 }): GroupMembershipManagementState {
   const groupsById = new Map(groups.map((group) => [group.id, group]))
   const membersById = new Map(members.map((member) => [member.id, member]))
-  const memberOptions = buildMemberOptions(members, users)
+  const memberOptions = buildMemberLabels(members, users)
   const memberOptionsByMemberId = new Map(memberOptions.map((option) => [option.member.id, option]))
   const periods = memberships
     .flatMap((membership): GroupMembershipPeriod[] => {
@@ -195,25 +196,6 @@ function partitionMembershipPeriods(periods: GroupMembershipPeriod[], at: Date) 
     scheduledMemberships: periods.filter((membership) => isScheduledDatedPeriod(membership, at)),
     historicalMemberships: periods.filter((membership) => isHistoricalDatedPeriod(membership, at)),
   }
-}
-
-export function formatMemberFallbackLabel(member: OrganizationRecord<'member'>) {
-  return `Member ${member.id}`
-}
-
-function buildMemberOptions(
-  members: OrganizationRecord<'member'>[],
-  users: Pick<AuthUserAccount, 'id' | 'name' | 'email'>[],
-): GroupMembershipMemberOption[] {
-  const usersById = new Map(users.map((user) => [user.id, user]))
-  return members.map((member) => {
-    const user = usersById.get(member.userId)
-    return {
-      member,
-      label: user?.name || formatMemberFallbackLabel(member),
-      detail: user?.email ?? member.id,
-    }
-  })
 }
 
 async function mapValidationErrors<T>(operation: () => Promise<T>) {

@@ -1,6 +1,7 @@
 import { type AccessActor, canAccessAdminSurface } from '@/admin/access-policy'
 import { formatGroupPath } from '@/admin/group-management/group-labels'
 import {
+  formatPositionScopeLabel,
   type GroupStructure,
   OrganizationDomainError,
   type OrganizationRecord,
@@ -132,7 +133,7 @@ export function buildPositionManagementState({
       return {
         position,
         scopeGroups,
-        scopeLabel: formatScopeLabel(groups, scopeGroups),
+        scopeLabel: formatPositionScopeLabel(groups, scopeGroups),
         scopeKind: scopeGroups.length > 1 ? 'shared' : scopeGroups.length === 1 ? 'single' : 'unscoped',
         duplicateNameCount: nameCounts.get(normalizeNameKey(position.name)) ?? 1,
       }
@@ -180,13 +181,6 @@ async function reconcilePositionScopes(
       await positionScopeRegistry.deletePositionScope({ positionId, groupId: scope.groupId })
     }
   }
-}
-
-function formatScopeLabel(groups: OrganizationRecord<'group'>[], scopeGroups: OrganizationRecord<'group'>[]) {
-  if (scopeGroups.length === 0) {
-    return 'No Group scopes'
-  }
-  return scopeGroups.map((group) => formatGroupPath(groups, group)).join(' + ')
 }
 
 function countNormalizedNames(positions: OrganizationRecord<'position'>[]) {
