@@ -4,12 +4,12 @@
 
 **Blocked by:** 04 — Enable admin account and Member management.
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] Non-admin Users with accounts can log in.
-- [ ] Non-admin Users can change their password.
-- [ ] Public self-registration remains unavailable.
-- [ ] Password-change errors and success states are clear.
-- [ ] Account self-service does not expose admin-only account management.
-- [ ] The UI prioritizes existing shadcn/ui-style components and is responsive.
-- [ ] Tests cover login, password change, and self-registration being unavailable.
+- [x] Non-admin Users with accounts can log in.
+- [x] Non-admin Users can change their password.
+- [x] Public self-registration remains unavailable.
+- [x] Password-change errors and success states are clear.
+- [x] Account self-service does not expose admin-only account management.
+- [x] The UI prioritizes existing shadcn/ui-style components and is responsive.
+- [x] Tests cover login, password change, and self-registration being unavailable.

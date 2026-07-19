@@ -2,13 +2,13 @@
 
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
-import { getPostLoginPath } from '@/admin/access-policy'
+import { signInWithEmailPassword } from '@/app/login/service'
 import { Button } from '@/components/ui/button'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { authClient } from '@/lib/auth-client'
 
-export function DevLoginForm() {
+export function LoginForm() {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [isPending, setIsPending] = useState(false)
@@ -22,21 +22,16 @@ export function DevLoginForm() {
     const email = String(formData.get('email') ?? '')
     const password = String(formData.get('password') ?? '')
 
-    const result = await authClient.signIn.email({
-      email,
-      password,
-      callbackURL: getPostLoginPath(),
-      rememberMe: true,
-    })
+    const result = await signInWithEmailPassword(authClient, { email, password })
 
     setIsPending(false)
 
-    if (result.error) {
-      setError(result.error.message || 'Sign-in failed.')
+    if (!result.success) {
+      setError(result.error)
       return
     }
 
-    router.push(getPostLoginPath())
+    router.push(result.redirectTo)
     router.refresh()
   }
 

@@ -1,7 +1,6 @@
-export type AccessActor = {
-  id: string
-  role?: string | string[] | null
-}
+import type { AccessActor } from '@/lib/access-actor'
+
+export type { AccessActor } from '@/lib/access-actor'
 
 export type AdminSurface = 'members' | 'organization-admin'
 

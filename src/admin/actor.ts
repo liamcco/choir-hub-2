@@ -1,21 +1,6 @@
-import { headers } from 'next/headers'
 import { type AccessActor, type AdminSurface, getAdminSurfaceAccessDecision } from '@/admin/access-policy'
-import { auth } from '@/lib/auth'
 
-export async function getCurrentAccessActor(): Promise<AccessActor | null> {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  })
-
-  if (!session?.user) {
-    return null
-  }
-
-  return {
-    id: session.user.id,
-    role: session.user.role,
-  }
-}
+export { getCurrentAccessActor } from '@/lib/access-actor'
 
 export async function requireAdminSurfaceActor(getActor: () => Promise<AccessActor | null>, surface: AdminSurface) {
   const actor = await getActor()

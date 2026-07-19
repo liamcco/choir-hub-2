@@ -18,7 +18,7 @@ export function createBetterAuthAdminGateway(requestHeaders: Headers): AuthAdmin
     async createUser(input) {
       const result = await auth.api.createUser({
         headers: requestHeaders,
-        body: input,
+        body: toBetterAuthCreateUserBody(input),
       })
 
       return toAuthUserAccount(result.user)
@@ -45,6 +45,15 @@ export function createBetterAuthAdminGateway(requestHeaders: Headers): AuthAdmin
             })
 
       return toAuthUserAccount(result.user)
+    },
+  }
+}
+
+export function toBetterAuthCreateUserBody(input: Parameters<AuthAdminGateway['createUser']>[0]) {
+  return {
+    ...input,
+    data: {
+      emailVerified: true,
     },
   }
 }

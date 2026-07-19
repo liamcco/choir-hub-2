@@ -26,6 +26,7 @@ describe('admin access policy', () => {
 
   test('classifies public, authenticated, and admin routes with policy vocabulary', () => {
     expect(getRouteAccessPolicy('/login')).toEqual({ kind: 'public' })
+    expect(getRouteAccessPolicy('/account')).toEqual({ kind: 'authenticated' })
     expect(getRouteAccessPolicy('/')).toEqual({ kind: 'authenticated' })
     expect(getRouteAccessPolicy('/admin/members')).toEqual({ kind: 'admin', surface: 'members' })
     expect(getRouteAccessPolicy('/admin/future')).toEqual({ kind: 'admin', surface: 'organization-admin' })
@@ -41,6 +42,8 @@ describe('admin access policy', () => {
       kind: 'redirect',
       location: '/organization',
     })
+    expect(getRouteAccessDecision('/account', null)).toEqual({ kind: 'redirect', location: '/login' })
+    expect(getRouteAccessDecision('/account', { id: 'user-member', role: 'user' })).toEqual({ kind: 'allow' })
     expect(getRouteAccessDecision('/organization', { id: 'user-member', role: 'user' })).toEqual({ kind: 'allow' })
     expect(getRouteAccessDecision('/admin/members', { id: 'user-admin', role: 'admin' })).toEqual({ kind: 'allow' })
   })

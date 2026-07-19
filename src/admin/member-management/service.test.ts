@@ -5,7 +5,7 @@ import {
   type AuthUserAccount,
   createMemberAccountLifecycle,
 } from '@/admin/member-management/account-lifecycle'
-import { toAuthUserAccount } from '@/admin/member-management/better-auth-gateway'
+import { toAuthUserAccount, toBetterAuthCreateUserBody } from '@/admin/member-management/better-auth-gateway'
 import { createMemberManagementService, MemberManagementAuthorizationError } from '@/admin/member-management/service'
 import type { MemberRegistry, OrganizationRecord } from '@/organization'
 import { MemberStatus } from '@/prisma/generated/client'
@@ -267,6 +267,25 @@ describe('Member account lifecycle', () => {
       banReason: null,
       banExpires: new Date('2027-01-02T03:04:05.000Z'),
       createdAt: new Date('2026-07-18T12:34:56.000Z'),
+    })
+  })
+
+  test('marks admin-created auth Users email-verified so production login is available', () => {
+    expect(
+      toBetterAuthCreateUserBody({
+        name: 'Verified User',
+        email: 'verified@example.com',
+        password: 'correct horse battery staple',
+        role: 'user',
+      }),
+    ).toEqual({
+      name: 'Verified User',
+      email: 'verified@example.com',
+      password: 'correct horse battery staple',
+      role: 'user',
+      data: {
+        emailVerified: true,
+      },
     })
   })
 })

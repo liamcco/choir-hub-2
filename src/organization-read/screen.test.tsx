@@ -104,6 +104,7 @@ describe('organizational read-only screen', () => {
     const markup = renderToStaticMarkup(<OrganizationalReadOnlyScreen state={state} />)
 
     expect(markup).toContain('Organization')
+    expect(markup).toContain('Account')
     expect(markup).toContain('CSK / Altos')
     expect(markup).toContain('Ada Lovelace')
     expect(markup).toContain('Historical Group Memberships')

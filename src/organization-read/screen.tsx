@@ -1,5 +1,7 @@
-import { BriefcaseBusinessIcon, CalendarRangeIcon, GitForkIcon, UserRoundIcon } from 'lucide-react'
+import { BriefcaseBusinessIcon, CalendarRangeIcon, GitForkIcon, KeyRoundIcon, UserRoundIcon } from 'lucide-react'
+import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
+import { buttonVariants } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
@@ -18,9 +20,15 @@ import type { MemberStatus } from '@/prisma/generated/client'
 export function OrganizationalReadOnlyScreen({ state }: { state: OrganizationalReadOnlyState }) {
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
-      <div className="flex flex-col gap-1">
-        <h1 className="font-semibold text-2xl tracking-normal">Organization</h1>
-        <p className="text-muted-foreground text-sm">Groups, Members, Positions, and dated history</p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex flex-col gap-1">
+          <h1 className="font-semibold text-2xl tracking-normal">Organization</h1>
+          <p className="text-muted-foreground text-sm">Groups, Members, Positions, and dated history</p>
+        </div>
+        <Link href="/account" className={buttonVariants({ variant: 'outline', size: 'sm', className: 'w-fit' })}>
+          <KeyRoundIcon data-icon="inline-start" />
+          Account
+        </Link>
       </div>
 
       <section className="grid gap-6 xl:grid-cols-[minmax(18rem,24rem)_1fr] xl:items-start">
