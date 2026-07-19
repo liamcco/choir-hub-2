@@ -1,4 +1,3 @@
-export { createOrganizationDomain } from '@/organization/domain'
 export type { OrganizationDomainErrorCode } from '@/organization/errors'
 export { OrganizationDomainError } from '@/organization/errors'
 export type { GroupMembershipHistory } from '@/organization/group-membership-history'
@@ -22,7 +21,6 @@ export type {
   DeletePositionScopeInput,
   ListGroupMembershipsInput,
   ListPositionAssignmentsInput,
-  OrganizationDomain,
   OrganizationPersistence,
   OrganizationRecord,
   OrganizationRecordMap,

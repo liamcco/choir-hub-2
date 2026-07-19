@@ -104,24 +104,3 @@ export type OrganizationPersistence = {
   createPositionAssignment(input: Required<CreatePositionAssignmentInput>): Promise<PositionAssignment>
   updatePositionAssignment(id: string, input: UpdatePositionAssignmentInput): Promise<PositionAssignment>
 }
-
-export type OrganizationDomain = {
-  listGroups(): Promise<Group[]>
-  createGroup(input: CreateGroupInput): Promise<Group>
-  updateGroup(id: string, input: UpdateGroupInput): Promise<Group>
-  listMembers(): Promise<Member[]>
-  createMember(input: CreateMemberInput): Promise<Member>
-  updateMember(id: string, input: UpdateMemberInput): Promise<Member>
-  listGroupMemberships(input?: ListGroupMembershipsInput): Promise<GroupMembership[]>
-  createGroupMembership(input: CreateGroupMembershipInput): Promise<GroupMembership>
-  updateGroupMembership(id: string, input: UpdateGroupMembershipInput): Promise<GroupMembership>
-  listPositions(): Promise<Position[]>
-  createPosition(input: CreatePositionInput): Promise<Position>
-  updatePosition(id: string, input: UpdatePositionInput): Promise<Position>
-  listPositionScopes(): Promise<PositionScope[]>
-  createPositionScope(input: CreatePositionScopeInput): Promise<PositionScope>
-  deletePositionScope(input: DeletePositionScopeInput): Promise<void>
-  listPositionAssignments(input?: ListPositionAssignmentsInput): Promise<PositionAssignment[]>
-  createPositionAssignment(input: CreatePositionAssignmentInput): Promise<PositionAssignment>
-  updatePositionAssignment(id: string, input: UpdatePositionAssignmentInput): Promise<PositionAssignment>
-}

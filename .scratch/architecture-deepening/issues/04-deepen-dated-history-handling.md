@@ -4,10 +4,14 @@
 
 **Blocked by:** None — can start immediately.
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] Group Membership writes still reject overlapping periods for the same Member and Group.
 - [x] Position Assignment writes still reject overlapping periods for the same Position.
 - [x] Current and historical reads keep the same half-open period semantics.
 - [x] Shared dated-period behavior is tested once through a focused module interface and remains exercised through the organization workflows.
 - [x] No new public adapter seam is introduced unless a second real adapter or caller need exists.
+
+## Answer
+
+Shared dated-period behavior lives in `src/organization/dated-history.ts` and is exercised by `src/organization/dated-history.test.ts`. Group Membership and Position Assignment workflow modules both use that module for normalization, half-open current-at-date semantics, and overlap detection. `src/organization/workflow-modules.test.ts` keeps the choir-domain workflows covered through their public module interfaces.

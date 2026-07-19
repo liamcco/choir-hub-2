@@ -2,11 +2,12 @@ import { beforeEach, describe, expect, test } from 'bun:test'
 import {
   createGroupMembershipHistory,
   createGroupStructure,
+  createMemberRegistry,
   createPositionAssignmentHistory,
   createPositionScopeRegistry,
 } from '@/organization'
 import { InMemoryOrganizationPersistence } from '@/organization/test-support'
-import { GroupKind } from '@/prisma/generated/client'
+import { GroupKind, MemberStatus } from '@/prisma/generated/client'
 
 let persistence: InMemoryOrganizationPersistence
 
@@ -15,6 +16,41 @@ beforeEach(() => {
 })
 
 describe('organization workflow modules', () => {
+  test('workflow modules compose into the organizational foundation without a broad facade', async () => {
+    const groups = createGroupStructure(persistence)
+    const members = createMemberRegistry(persistence)
+    const memberships = createGroupMembershipHistory(persistence)
+    const positions = createPositionScopeRegistry(persistence)
+    const assignments = createPositionAssignmentHistory(persistence)
+
+    const choir = await groups.createGroup({ kind: GroupKind.CHOIR, name: 'CSK' })
+    const altos = await groups.createGroup({
+      kind: GroupKind.SECTION,
+      name: 'Altos',
+      parentGroupId: choir.id,
+    })
+    const member = await members.createMember({ userId: 'auth-user-1', status: MemberStatus.ACTIVE })
+    const membership = await memberships.createGroupMembership({
+      memberId: member.id,
+      groupId: altos.id,
+      startsAt: date('2026-01-01'),
+    })
+    const position = await positions.createPosition({ name: 'Concert Master' })
+    const scope = await positions.createPositionScope({ positionId: position.id, groupId: altos.id })
+    const assignment = await assignments.createPositionAssignment({
+      positionId: position.id,
+      memberId: member.id,
+      startsAt: date('2026-02-01'),
+    })
+
+    expect(await groups.listGroups()).toEqual([choir, altos])
+    expect(await members.listMembers()).toEqual([member])
+    expect(await memberships.listGroupMemberships()).toEqual([membership])
+    expect(await positions.listPositions()).toEqual([position])
+    expect(await positions.listPositionScopes()).toEqual([scope])
+    expect(await assignments.listPositionAssignments()).toEqual([assignment])
+  })
+
   test('Group structure preserves flexible hierarchy and sibling-only name uniqueness', async () => {
     const groups = createGroupStructure(persistence)
 
@@ -106,6 +142,69 @@ describe('organization workflow modules', () => {
     await expect(
       assignments.listPositionAssignments({ positionId: 'position-1', at: date('2026-07-01') }),
     ).resolves.toEqual([expect.objectContaining({ memberId: 'member-2', positionId: 'position-1', endsAt: null })])
+  })
+
+  test('workflow modules validate editable records and dated-period invariants when updating', async () => {
+    const groups = createGroupStructure(persistence)
+    const members = createMemberRegistry(persistence)
+    const memberships = createGroupMembershipHistory(persistence)
+    const positions = createPositionScopeRegistry(persistence)
+    const assignments = createPositionAssignmentHistory(persistence)
+
+    const group = await groups.createGroup({ kind: GroupKind.CHOIR, name: 'CSK' })
+    const firstSibling = await groups.createGroup({
+      kind: GroupKind.SECTION,
+      name: 'Altos',
+      parentGroupId: group.id,
+    })
+    await groups.createGroup({ kind: GroupKind.SECTION, name: 'Tenors', parentGroupId: group.id })
+    const member = await members.createMember({ userId: 'auth-user-1' })
+    const secondMember = await members.createMember({ userId: 'auth-user-2' })
+    const firstMembership = await memberships.createGroupMembership({
+      memberId: member.id,
+      groupId: group.id,
+      startsAt: date('2026-01-01'),
+      endsAt: date('2026-02-01'),
+    })
+    await memberships.createGroupMembership({
+      memberId: member.id,
+      groupId: group.id,
+      startsAt: date('2026-03-01'),
+      endsAt: date('2026-04-01'),
+    })
+    const position = await positions.createPosition({ name: 'Chair' })
+    const firstAssignment = await assignments.createPositionAssignment({
+      positionId: position.id,
+      memberId: member.id,
+      startsAt: date('2026-01-01'),
+      endsAt: date('2026-02-01'),
+    })
+    await assignments.createPositionAssignment({
+      positionId: position.id,
+      memberId: secondMember.id,
+      startsAt: date('2026-03-01'),
+      endsAt: date('2026-04-01'),
+    })
+
+    expect(await members.updateMember(member.id, { status: MemberStatus.PASSIVE })).toMatchObject({
+      status: MemberStatus.PASSIVE,
+    })
+    await expect(groups.updateGroup(firstSibling.id, { name: 'tenors' })).rejects.toMatchObject({
+      code: 'DUPLICATE_SIBLING_GROUP_NAME',
+      field: 'name',
+    })
+    await expect(
+      memberships.updateGroupMembership(firstMembership.id, { endsAt: date('2026-03-15') }),
+    ).rejects.toMatchObject({
+      code: 'GROUP_MEMBERSHIP_PERIOD_OVERLAP',
+      field: 'startsAt',
+    })
+    await expect(
+      assignments.updatePositionAssignment(firstAssignment.id, { endsAt: date('2026-03-15') }),
+    ).rejects.toMatchObject({
+      code: 'POSITION_ASSIGNMENT_PERIOD_OVERLAP',
+      field: 'startsAt',
+    })
   })
 })
 
