@@ -18,15 +18,6 @@ model User {
   twofactors       TwoFactor[]
   passkeys         Passkey[]
 
-  /**
-   * Domain-specific relations
-   */
-  userGroupMemberships UserGroupMembership[]
-  positionsHeld        Position[]            @relation("PositionCurrentHolder")
-  /**
-   * Remember to copy these
-   */
-
   @@unique([email])
   @@unique([username])
   @@map("user")

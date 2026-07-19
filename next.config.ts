@@ -10,6 +10,8 @@ const nextConfig: NextConfig = {
       ignore: [/^\/api(?:\/|$)/],
     },
   },
+  cacheComponents: true,
+  partialPrefetching: true,
   experimental: {
     useTypeScriptCli: true,
   },

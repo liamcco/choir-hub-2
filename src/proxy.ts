@@ -1,36 +1,46 @@
-// biome-ignore-all lint: Will come back to this later
 import { getSessionCookie } from 'better-auth/cookies'
+import { headers } from 'next/headers'
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
+import { type AccessActor, type AccessDecision, getRouteAccessDecision } from '@/admin/access-policy'
+import { auth } from './lib/auth'
 
-const publicRoutes = new Set(['/login'])
-const adminRoutePrefixes = ['/admin']
+type ProxyRouteDecision = AccessDecision
 
 export default async function proxy(req: NextRequest) {
-  // TODO: Wait until we have proper auth to fix this
-  return NextResponse.next()
-
   const path = req.nextUrl.pathname
-  const isPublicRoute = publicRoutes.has(path)
-  const isAdminRoute = adminRoutePrefixes.some((prefix) => path === prefix || path.startsWith(`${prefix}/`))
+  const actor = await getCachedActor(req)
+  const decision = evaluateProxyRouteAccess(path, actor)
 
-  if (isPublicRoute) {
-    return NextResponse.next()
-  }
-
-  const sessionCookie = getSessionCookie(req)
-
-  if (!sessionCookie) {
+  if (decision.kind === 'redirect') {
     const url = req.nextUrl.clone()
-    url.pathname = '/login'
+    url.pathname = decision.location
     return NextResponse.redirect(url)
   }
 
-  if (isAdminRoute) {
-    return NextResponse.next()
+  return NextResponse.next()
+}
+
+export function evaluateProxyRouteAccess(path: string, actor: AccessActor | null): ProxyRouteDecision {
+  return getRouteAccessDecision(path, actor)
+}
+
+async function getCachedActor(req: NextRequest): Promise<AccessActor | null> {
+  if (!getSessionCookie(req)) {
+    return null
   }
 
-  return NextResponse.next()
+  const session = await auth.api.getSession({ headers: await headers() })
+  const user = session && typeof session === 'object' && 'user' in session ? session.user : null
+
+  if (!user || typeof user !== 'object' || !('id' in user) || typeof user.id !== 'string') {
+    return { id: 'authenticated-session' }
+  }
+
+  return {
+    id: user.id,
+    role: 'role' in user && (typeof user.role === 'string' || Array.isArray(user.role)) ? user.role : null,
+  }
 }
 
 export const config = {

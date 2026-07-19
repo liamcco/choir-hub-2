@@ -33,15 +33,18 @@ Baseline assumption: a plain TypeScript App Router project with `src/`, Tailwind
 
 ## Data Model
 
-In addition to Better Auth tables, the Prisma schema already contains domain models for choir organization:
+In addition to Better Auth tables, the Prisma schema contains domain models for choir organization in `src/prisma/schema/organization.prisma`:
 
 - `GroupKind`
 - `Group`
-- `UserGroupMembership`
+- `MemberStatus`
+- `Member`
+- `GroupMembership`
 - `Position`
-- `PositionGroup`
+- `PositionScope`
+- `PositionAssignment`
 
-These model group hierarchies, user membership in groups, positions, and the relationship between positions and groups. The `User` model is extended with domain relations for group memberships and currently held positions.
+These model group hierarchies, Members backed by required unique auth user identities, historical group memberships, positions, position scopes, and historical position assignments. Choir-domain relations stay out of the auth-owned `User` model.
 
 ## Authentication
 
