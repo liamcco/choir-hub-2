@@ -2,9 +2,9 @@
 
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
-import { getCurrentAccessActor, requireAdminSurfaceActor } from '@/admin/actor'
 import { getGroupManagementService } from '@/admin/group-management/runtime'
 import { GroupManagementValidationError } from '@/admin/group-management/service'
+import { getCurrentAccessActor, requireAdminSurfaceActor } from '@/admin/shell/actor'
 import { ROUTES } from '@/lib/route-access'
 import { GroupKind } from '@/prisma/generated/client'
 

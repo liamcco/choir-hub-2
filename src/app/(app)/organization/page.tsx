@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { getCurrentAccessActor } from '@/admin/actor'
+import { getCurrentAccessActor } from '@/lib/access-actor'
 import { ROUTES } from '@/lib/route-access'
 import { getOrganizationalReadOnlyService } from '@/organization-read/runtime'
 import { OrganizationalReadOnlyScreen } from '@/organization-read/screen'

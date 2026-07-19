@@ -1,7 +1,7 @@
 import { getMemberManagementService } from '@/admin/member-management/runtime'
 import { MemberManagementScreen } from '@/admin/member-management/screen'
 import { MemberManagementAuthorizationError } from '@/admin/member-management/service'
-import { renderAdminRoute } from '@/admin/route-runner'
+import { renderAdminRoute } from '@/admin/shell/route-runner'
 
 export const instant = false
 

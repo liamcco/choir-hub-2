@@ -23,7 +23,7 @@ mock.module('next/navigation', () => ({
   useRouter,
 }))
 
-mock.module('@/admin/actor', () => ({
+mock.module('@/admin/shell/actor', () => ({
   getCurrentAccessActor,
   requireAdminSurfaceActor,
 }))
@@ -38,7 +38,7 @@ mock.module('@/admin/member-management/screen', () => ({
   MemberManagementScreen: ({ accounts }: { accounts: unknown[] }) => <main>{accounts.length} managed accounts</main>,
 }))
 
-const { renderAdminRoute } = await import('@/admin/route-runner')
+const { renderAdminRoute } = await import('@/admin/shell/route-runner')
 const { default: AdminMembersPage } = await import('@/app/(app)/admin/members/page')
 
 beforeEach(() => {

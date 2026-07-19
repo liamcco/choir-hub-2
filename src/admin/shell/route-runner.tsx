@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import type { ReactNode } from 'react'
-import { getCurrentAccessActor } from '@/admin/actor'
+import { getCurrentAccessActor } from '@/admin/shell/actor'
 import type { AccessActor } from '@/lib/access-actor'
 import { type AdminSurface, getAdminSurfaceAccessDecision, ROUTES } from '@/lib/route-access'
 

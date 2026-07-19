@@ -1,6 +1,6 @@
 # Admin Shell Folder Structure
 
-Status: ready-for-agent
+Status: resolved
 
 ## Problem Statement
 

@@ -14,7 +14,7 @@ mock.module('next/cache', () => ({
   revalidatePath,
 }))
 
-mock.module('@/admin/actor', () => ({
+mock.module('@/admin/shell/actor', () => ({
   getCurrentAccessActor: async () => actor,
   requireAdminSurfaceActor,
 }))

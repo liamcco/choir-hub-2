@@ -2,9 +2,9 @@
 
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
-import { getCurrentAccessActor, requireAdminSurfaceActor } from '@/admin/actor'
 import { getPositionAssignmentManagementService } from '@/admin/position-assignment-management/runtime'
 import { PositionAssignmentManagementValidationError } from '@/admin/position-assignment-management/service'
+import { getCurrentAccessActor, requireAdminSurfaceActor } from '@/admin/shell/actor'
 import { ROUTES } from '@/lib/route-access'
 
 export type PositionAssignmentFormState = {

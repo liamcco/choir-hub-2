@@ -1,7 +1,7 @@
 import { getPositionManagementService } from '@/admin/position-management/runtime'
 import { PositionManagementScreen } from '@/admin/position-management/screen'
 import { PositionManagementAuthorizationError } from '@/admin/position-management/service'
-import { renderAdminRoute } from '@/admin/route-runner'
+import { renderAdminRoute } from '@/admin/shell/route-runner'
 
 export const instant = false
 

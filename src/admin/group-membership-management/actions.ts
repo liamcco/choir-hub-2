@@ -2,9 +2,9 @@
 
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
-import { getCurrentAccessActor, requireAdminSurfaceActor } from '@/admin/actor'
 import { getGroupMembershipManagementService } from '@/admin/group-membership-management/runtime'
 import { GroupMembershipManagementValidationError } from '@/admin/group-membership-management/service'
+import { getCurrentAccessActor, requireAdminSurfaceActor } from '@/admin/shell/actor'
 import { ROUTES } from '@/lib/route-access'
 
 export type GroupMembershipFormState = {

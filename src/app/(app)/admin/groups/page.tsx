@@ -1,7 +1,7 @@
 import { getGroupManagementService } from '@/admin/group-management/runtime'
 import { GroupManagementScreen } from '@/admin/group-management/screen'
 import { GroupManagementAuthorizationError } from '@/admin/group-management/service'
-import { renderAdminRoute } from '@/admin/route-runner'
+import { renderAdminRoute } from '@/admin/shell/route-runner'
 
 export const instant = false
 

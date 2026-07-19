@@ -2,9 +2,9 @@
 
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
-import { getCurrentAccessActor, requireAdminSurfaceActor } from '@/admin/actor'
 import { getPositionManagementService } from '@/admin/position-management/runtime'
 import { PositionManagementValidationError } from '@/admin/position-management/service'
+import { getCurrentAccessActor, requireAdminSurfaceActor } from '@/admin/shell/actor'
 import { ROUTES } from '@/lib/route-access'
 
 export type PositionFormState = {

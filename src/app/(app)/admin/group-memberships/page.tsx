@@ -1,7 +1,7 @@
 import { getGroupMembershipManagementService } from '@/admin/group-membership-management/runtime'
 import { GroupMembershipManagementScreen } from '@/admin/group-membership-management/screen'
 import { GroupMembershipManagementAuthorizationError } from '@/admin/group-membership-management/service'
-import { renderAdminRoute } from '@/admin/route-runner'
+import { renderAdminRoute } from '@/admin/shell/route-runner'
 
 export const instant = false
 

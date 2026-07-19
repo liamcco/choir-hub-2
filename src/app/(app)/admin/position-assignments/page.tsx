@@ -1,7 +1,7 @@
 import { getPositionAssignmentManagementService } from '@/admin/position-assignment-management/runtime'
 import { PositionAssignmentManagementScreen } from '@/admin/position-assignment-management/screen'
 import { PositionAssignmentManagementAuthorizationError } from '@/admin/position-assignment-management/service'
-import { renderAdminRoute } from '@/admin/route-runner'
+import { renderAdminRoute } from '@/admin/shell/route-runner'
 
 export const instant = false
 
