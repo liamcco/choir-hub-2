@@ -2,11 +2,11 @@
 
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
-import { signInWithEmailPassword } from '@/app/login/service'
 import { Button } from '@/components/ui/button'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { authClient } from '@/lib/auth-client'
+import { signInWithEmailPassword } from './service'
 
 export function LoginForm() {
   const router = useRouter()

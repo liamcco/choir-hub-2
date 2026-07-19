@@ -1,4 +1,4 @@
-import { LoginForm } from '@/app/login/login-form'
+import { LoginForm } from './login-form'
 
 export default function LoginPage() {
   return <LoginScreen form={<LoginForm />} />

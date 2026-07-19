@@ -1,6 +1,6 @@
 # App Route Groups And Chrome
 
-Status: ready-for-agent
+Status: resolved
 
 ## Problem Statement
 

@@ -1,5 +1,5 @@
 import { describe, expect, mock, test } from 'bun:test'
-import { type LoginAuthClient, signInWithEmailPassword } from '@/app/login/service'
+import { type LoginAuthClient, signInWithEmailPassword } from './service'
 
 describe('login service', () => {
   test('signs in with email and password and returns the post-login destination', async () => {

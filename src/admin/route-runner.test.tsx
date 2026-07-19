@@ -39,7 +39,7 @@ mock.module('@/admin/member-management/screen', () => ({
 }))
 
 const { renderAdminRoute } = await import('@/admin/route-runner')
-const { default: AdminMembersPage } = await import('@/app/admin/members/page')
+const { default: AdminMembersPage } = await import('@/app/(app)/admin/members/page')
 
 beforeEach(() => {
   actor = { id: 'admin-user', role: 'admin' }

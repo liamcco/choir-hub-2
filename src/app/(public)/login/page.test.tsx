@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { LoginScreen } from '@/app/login/page'
+import { LoginScreen } from './page'
 
 describe('login page', () => {
   test('renders email password login without public self-registration', () => {
