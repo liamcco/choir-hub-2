@@ -56,7 +56,9 @@ async function assertSiblingGroupNameIsUnique(
   excludingGroupId?: string,
 ) {
   const siblings = await prisma.group.findMany({ where: { parentGroupId: input.parentGroupId } })
-  const duplicate = siblings.find((group) => group.id !== excludingGroupId && compareSiblingGroupNames(group.name, input.name) === 0)
+  const duplicate = siblings.find(
+    (group) => group.id !== excludingGroupId && compareSiblingGroupNames(group.name, input.name) === 0,
+  )
   if (duplicate) {
     throw new DuplicateEntityError(`A sibling Group named "${input.name}" already exists.`, { field: 'name' })
   }

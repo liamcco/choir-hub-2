@@ -2,6 +2,7 @@ import 'server-only'
 
 import { prisma } from '@/core/db'
 import { isCurrentDatedPeriod, isHistoricalDatedPeriod } from '@/features/organization/core/dated-history'
+import type { GroupTreeNode } from '@/features/organization/core/group-tree'
 import { buildGroupHierarchy } from '@/features/organization/core/group-tree'
 import {
   type AuthUserIdentity,
@@ -11,7 +12,6 @@ import {
   formatPositionScopeLabel,
   noGroupScopesLabel,
 } from '@/features/organization/core/labels'
-import type { GroupTreeNode } from '@/features/organization/core/group-tree'
 import type {
   Group,
   GroupMembership,

@@ -1,6 +1,6 @@
 import { organizationService } from '@/features/organization'
-import { buildGroupHierarchy as buildOrganizationGroupHierarchy } from '@/features/organization/core/group-tree'
 import type { GroupTreeNode } from '@/features/organization/core/group-tree'
+import { buildGroupHierarchy as buildOrganizationGroupHierarchy } from '@/features/organization/core/group-tree'
 import type { Group } from '@/prisma/generated/client'
 
 export type GroupHierarchyNode = GroupTreeNode

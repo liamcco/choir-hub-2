@@ -41,7 +41,11 @@ export function buildGroupHierarchy(groups: Group[]): GroupTreeNode[] {
 
   return hierarchy
 
-  function buildGroupHierarchyNode(groupId: string, depth: number, lineageGroupIds: Set<string>) {
+  function buildGroupHierarchyNode(
+    groupId: string,
+    depth: number,
+    lineageGroupIds: Set<string>,
+  ): GroupTreeNode | undefined {
     if (visitedGroupIds.has(groupId) || lineageGroupIds.has(groupId)) {
       return undefined
     }
@@ -58,7 +62,7 @@ export function buildGroupHierarchy(groups: Group[]): GroupTreeNode[] {
     return {
       group,
       depth,
-      children: (childGroupsByParentId.get(groupId) ?? []).flatMap((childGroup) => {
+      children: (childGroupsByParentId.get(groupId) ?? []).flatMap((childGroup): GroupTreeNode[] => {
         const child = buildGroupHierarchyNode(childGroup.id, depth + 1, nextLineageGroupIds)
         return child ? [child] : []
       }),
