@@ -3,11 +3,12 @@ import { type BetterAuthOptions, betterAuth } from 'better-auth'
 import { prismaAdapter } from 'better-auth/adapters/prisma'
 import { nextCookies } from 'better-auth/next-js'
 import { admin, emailOTP, openAPI, twoFactor, username } from 'better-auth/plugins'
+import { env } from '@/core/config/env'
 import { prisma } from '@/core/db'
 import { EmailClient } from '@/core/email/smtp-email'
 import { isProduction } from '@/core/environment/environment'
 
-export const BASE_URL = process.env.BETTER_AUTH_URL
+export const BASE_URL = env.BETTER_AUTH_URL
 if (!BASE_URL) {
   throw new Error('BETTER_AUTH_URL is required')
 }
