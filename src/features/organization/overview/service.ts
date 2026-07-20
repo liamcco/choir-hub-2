@@ -2,6 +2,7 @@ import 'server-only'
 
 import { prisma } from '@/core/db'
 import { isCurrentDatedPeriod, isHistoricalDatedPeriod } from '@/features/organization/core/dated-history'
+import { buildGroupHierarchy } from '@/features/organization/core/group-tree'
 import {
   type AuthUserIdentity,
   buildMemberLabels,
@@ -10,6 +11,7 @@ import {
   formatPositionScopeLabel,
   noGroupScopesLabel,
 } from '@/features/organization/core/labels'
+import type { GroupTreeNode } from '@/features/organization/core/group-tree'
 import type {
   Group,
   GroupMembership,
@@ -19,11 +21,7 @@ import type {
   PositionScope,
 } from '@/prisma/generated/client'
 
-export type OverviewGroupHierarchyNode = {
-  group: Group
-  depth: number
-  children: OverviewGroupHierarchyNode[]
-}
+export type OverviewGroupHierarchyNode = GroupTreeNode
 
 export type OverviewGroupMembershipPeriod = GroupMembership & {
   group: Group
@@ -157,7 +155,7 @@ export function buildOrganizationOverviewState({
 
   return {
     groups,
-    groupHierarchy: buildOverviewGroupHierarchy(groups),
+    groupHierarchy: buildGroupHierarchy(groups),
     memberViews: members.map((member) => {
       const memberLabel = memberLabels.get(member.id) ?? { label: formatMemberFallbackLabel(member), detail: member.id }
       const memberMemberships = membershipPeriods.filter((membership) => membership.memberId === member.id)
@@ -184,51 +182,6 @@ export function buildOrganizationOverviewState({
       }
     }),
   }
-}
-
-export function buildOverviewGroupHierarchy(groups: Group[]): OverviewGroupHierarchyNode[] {
-  const nodes = new Map<string, OverviewGroupHierarchyNode>()
-  const roots: OverviewGroupHierarchyNode[] = []
-
-  for (const group of groups) {
-    nodes.set(group.id, { group, depth: 0, children: [] })
-  }
-
-  for (const group of groups) {
-    const node = nodes.get(group.id)
-    if (!node) {
-      continue
-    }
-
-    const parent = group.parentGroupId ? nodes.get(group.parentGroupId) : undefined
-    if (parent) {
-      parent.children.push(node)
-    } else {
-      roots.push(node)
-    }
-  }
-
-  assignGroupHierarchyDepths(roots, 0)
-  sortGroupHierarchy(roots)
-  return roots
-}
-
-function assignGroupHierarchyDepths(nodes: OverviewGroupHierarchyNode[], depth: number) {
-  for (const node of nodes) {
-    node.depth = depth
-    assignGroupHierarchyDepths(node.children, depth + 1)
-  }
-}
-
-function sortGroupHierarchy(nodes: OverviewGroupHierarchyNode[]) {
-  nodes.sort(compareGroupHierarchyNodes)
-  for (const node of nodes) {
-    sortGroupHierarchy(node.children)
-  }
-}
-
-function compareGroupHierarchyNodes(first: OverviewGroupHierarchyNode, second: OverviewGroupHierarchyNode) {
-  return first.group.name.localeCompare(second.group.name) || first.group.id.localeCompare(second.group.id)
 }
 
 function groupPositionScopes({ groups, scopes }: { groups: Group[]; scopes: PositionScope[] }) {
