@@ -32,7 +32,13 @@ type MemberAccountLifecycleDependencies = {
   }>
   createAuthUser(input: {
     headers: Headers
-    body: { name: string; email: string; password: string; role: string; data: { emailVerified: boolean } }
+    body: {
+      name: string
+      email: string
+      password: string
+      role: 'admin' | 'user' | ('admin' | 'user')[]
+      data: { emailVerified: boolean }
+    }
   }): Promise<{ user: { id: string } }>
   removeAuthUser(input: { headers: Headers; body: { userId: string } }): Promise<unknown>
   banAuthUser(input: { headers: Headers; body: { userId: string; banReason: string } }): Promise<unknown>
@@ -53,12 +59,7 @@ export function createMemberAccountLifecycle(dependencies: MemberAccountLifecycl
       return buildManagedMemberAccounts(result.users, members)
     },
 
-    async createMemberAccount(input: {
-      name: string
-      email: string
-      password: string
-      status: MemberStatus
-    }) {
+    async createMemberAccount(input: { name: string; email: string; password: string; status: MemberStatus }) {
       const requestHeaders = await dependencies.getRequestHeaders()
       const result = await dependencies.createAuthUser({
         headers: requestHeaders,
