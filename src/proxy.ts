@@ -1,36 +1,29 @@
-// biome-ignore-all lint: Will come back to this later
 import { getSessionCookie } from 'better-auth/cookies'
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
+import { type AccessDecision, getRouteAccessDecision } from '@/core/navigation/app-routes'
 
-const publicRoutes = new Set(['/login'])
-const adminRoutePrefixes = ['/admin']
+type ProxyRouteDecision = AccessDecision
 
 export default async function proxy(req: NextRequest) {
-  // TODO: Wait until we have proper auth to fix this
-  return NextResponse.next()
-
   const path = req.nextUrl.pathname
-  const isPublicRoute = publicRoutes.has(path)
-  const isAdminRoute = adminRoutePrefixes.some((prefix) => path === prefix || path.startsWith(`${prefix}/`))
+  const decision = evaluateProxyRouteAccess(path, hasCachedSession(req))
 
-  if (isPublicRoute) {
-    return NextResponse.next()
-  }
-
-  const sessionCookie = getSessionCookie(req)
-
-  if (!sessionCookie) {
+  if (decision.kind === 'redirect') {
     const url = req.nextUrl.clone()
-    url.pathname = '/login'
+    url.pathname = decision.location
     return NextResponse.redirect(url)
   }
 
-  if (isAdminRoute) {
-    return NextResponse.next()
-  }
-
   return NextResponse.next()
+}
+
+export function evaluateProxyRouteAccess(path: string, isAuthenticated: boolean): ProxyRouteDecision {
+  return getRouteAccessDecision(path, isAuthenticated)
+}
+
+function hasCachedSession(req: NextRequest): boolean {
+  return Boolean(getSessionCookie(req))
 }
 
 export const config = {

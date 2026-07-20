@@ -1,0 +1,89 @@
+enum GroupKind {
+  CHOIR     @map("choir")
+  SECTION   @map("section")
+  COMMITTEE @map("committee")
+  BOARD     @map("board")
+  PROJECT   @map("project")
+}
+
+enum MemberStatus {
+  ACTIVE  @map("active")
+  PASSIVE @map("passive")
+  FORMER  @map("former")
+}
+
+model Group {
+  id             String            @id @default(uuid())
+  kind           GroupKind
+  name           String
+  description    String?
+  parentGroupId  String?
+  parentGroup    Group?            @relation("GroupHierarchy", fields: [parentGroupId], references: [id], onDelete: SetNull)
+  childGroups    Group[]           @relation("GroupHierarchy")
+  memberships    GroupMembership[]
+  positionScopes PositionScope[]
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  /// Sibling name uniqueness needs PostgreSQL partial unique indexes because root Groups have no parent.
+  @@index([parentGroupId])
+}
+
+model Member {
+  id                  String               @id @default(uuid())
+  userId              String               @unique
+  status              MemberStatus         @default(ACTIVE)
+  memberships         GroupMembership[]
+  positionAssignments PositionAssignment[]
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+}
+
+model GroupMembership {
+  id       String    @id @default(uuid())
+  memberId String
+  member   Member    @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  groupId  String
+  group    Group     @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  startsAt DateTime  @default(now())
+  endsAt   DateTime?
+
+  @@unique([memberId, groupId, startsAt])
+  @@index([memberId, endsAt])
+  @@index([groupId, endsAt])
+}
+
+model Position {
+  id          String               @id @default(uuid())
+  name        String
+  description String?
+  scopes      PositionScope[]
+  assignments PositionAssignment[]
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+}
+
+model PositionScope {
+  positionId String
+  position   Position @relation(fields: [positionId], references: [id], onDelete: Cascade)
+  groupId    String
+  group      Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@id([positionId, groupId])
+}
+
+model PositionAssignment {
+  id         String    @id @default(uuid())
+  positionId String
+  position   Position  @relation(fields: [positionId], references: [id], onDelete: Cascade)
+  memberId   String
+  member     Member    @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  startsAt   DateTime  @default(now())
+  endsAt     DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@unique([positionId, startsAt])
+  @@index([positionId, endsAt])
+  @@index([memberId, endsAt])
+}

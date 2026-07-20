@@ -1,0 +1,15 @@
+import 'server-only'
+
+import { groupMemberships } from '@/features/organization/core/group-memberships'
+import { groups } from '@/features/organization/core/groups'
+import { members } from '@/features/organization/core/members'
+import { positionAssignments } from '@/features/organization/core/position-assignments'
+import { positions } from '@/features/organization/core/positions'
+
+export const organizationService = {
+  groups,
+  members,
+  groupMemberships,
+  positions,
+  positionAssignments,
+}

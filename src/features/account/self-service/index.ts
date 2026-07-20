@@ -1,0 +1,1 @@
+export { AccountSelfServiceScreen } from './screen'

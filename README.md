@@ -19,6 +19,13 @@ The Prisma client is generated into `src/prisma/generated`, which is ignored by 
 bun run prisma:generate
 ```
 
+## Codebase Health
+
+Current baseline gaps:
+
+- The repo has no `*.test.*` or `*.spec.*` files yet, so `bun test` exits with "No tests found!" until the first tests are added.
+- `bun run auth:generate` prompts before overwriting `src/prisma/schema/auth.prisma`; use it only when intentionally regenerating the auth schema.
+
 ## Deployment
 
 Set the variables from `.env.example` in Vercel Project Settings. At minimum, production needs `DATABASE_URL`, `BETTER_AUTH_SECRET`, and either `APP_URL`/`BETTER_AUTH_URL` or Vercel system environment variables exposed.
