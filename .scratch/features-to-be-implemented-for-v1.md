@@ -24,16 +24,15 @@ The goal is production-usable, polished, and ready to grow. Do not expand v1 int
 
 ## Access Control And Security
 
-- [] Finish the access-control permission module from `.scratch/access-control-permissions/spec.md`.
-- [] Implement the remaining access-control tickets:
+- [x] Finish the access-control permission module from `.scratch/access-control-permissions/spec.md`.
+- [x] Implement the remaining access-control tickets:
   - [x] shared Better Auth permission foundation
   - [x] hardened admin bootstrap
   - [x] admin route and navigation enforcement based on resolved session facts, not only cached session-cookie presence
-  - [] service-level authorization for organization-management writes
-  - [] current-actor Group Membership and Position Assignment predicates
-  - [] rollout verification
-- [] Hide admin navigation from authenticated non-admin users and return a forbidden result for authenticated non-admin access to `/admin` routes.
-- [] Keep organization-management mutation protection at the feature write service boundary so server actions and future route handlers cannot bypass authorization.
+  - [x] service-level authorization for organization-management writes
+  - [x] current-actor Group Membership and Position Assignment predicates
+  - [x] rollout verification
+- [x] Hide admin navigation from authenticated non-admin users and return a forbidden result for authenticated non-admin access to `/admin` routes.
 - [] Run a scoped security hardening pass for the current surface:
   - [] auth/session configuration
   - [] public route exposure
