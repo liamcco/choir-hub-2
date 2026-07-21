@@ -1,66 +1,138 @@
 # CSK Choir Hub
 
-Next.js app, Better Auth, Prisma
+CSK Choir Hub is an internal choir administration app built with Next.js 16, React 19, Better Auth, Prisma 7, PostgreSQL, Bun, Tailwind CSS, and shadcn/ui-style components.
 
-## Development
+The current app includes email/password authentication, account password self-service, global admin access control, organization overview screens, and admin workflows for Members, Groups, Group Memberships, Positions, and Position Assignments.
 
-Copy `.example.env` to `.env` and fill in the required values before starting the app:
+## Prerequisites
+
+- [Bun](https://bun.sh/) 1.3.14 (the version pinned in `package.json`)
+- Docker with Docker Compose, or another PostgreSQL instance
+
+## Local setup
+
+1. Install dependencies and create the local environment file:
+
+   ```bash
+   bun install --frozen-lockfile
+   cp .example.env .env
+   ```
+
+2. Review `.env`. The committed template is configured for the Docker database and log-only email delivery.
+
+   > [!IMPORTANT]
+   > Replace `BETTER_AUTH_SECRET` outside disposable local environments.
+
+3. Start PostgreSQL. You can use the bundled Docker container:
+
+   ```bash
+   docker compose up -d db
+   ```
+
+   Alternatively, use any PostgreSQL instance you control and set `DATABASE_URL` in `.env` to its connection string. The `POSTGRES_*` variables in `.env` configure only the bundled Docker container; you can reuse those credentials for your own local database or replace them as needed.
+
+4. Create the database schema and generate the Prisma client:
+
+   ```bash
+   bun x prisma db push
+   bun run prisma:generate
+   ```
+
+   Until the repository does not yet contain a committed `src/prisma/migrations` history, `db push` is the current fresh-database bootstrap. It is for local setup only; contributed schema changes must use migrations as described in [CONTRIBUTING.md](./CONTRIBUTING.md#prisma-schema-and-migrations).
+
+5. Optionally load development data and create an admin account:
+
+   ```bash
+   bun run cli
+   ```
+
+   The interactive CLI can run the foundation seed, demo seed, admin bootstrap, or local database reset. The default bootstrap account is `admin@example.com` / `password` with the name `Local Admin`; use custom values for anything other than a disposable local database. The reset command refuses to run unless `DB_MODE=local` and relies on Prisma migration history.
+
+## Local development
+
+Install dependencies:
 
 ```bash
-cp .example.env .env
+bun i
 ```
 
+Start the app:
+
 ```bash
-bun install
 bun run dev
 ```
 
-The development server prints the local URL it is listening on.
+Next.js prints the local URL, normally `http://localhost:3000`. Email is written to the terminal while `EMAIL_MODE=log`. Set `LOG_PRISMA=true` when query logging is useful during local diagnosis.
 
-To reset the local database and run its seed, select “Reset local database” from the CLI:
-
-```bash
-bun run cli
-```
-
-This command refuses to run unless `DB_MODE=local`.
-
-## Code Generation
-
-The Prisma client is generated into `src/prisma/generated`, which is ignored by git:
+Useful database commands:
 
 ```bash
+bun x prisma studio
+bun x prisma validate
 bun run prisma:generate
 ```
 
-## Script CLI
+Prisma generates the client into the ignored `src/prisma/generated` directory. Generation also runs automatically before `bun run build`.
 
-Run the interactive script menu with:
+## Tests and code quality
+
+The repository has Bun tests for authentication and permissions, navigation, logging, email configuration, account workflows, organization domain behavior, admin actions, and the admin bootstrap script.
 
 ```bash
-bun run cli
+bun test                 # all tests
+bun run lint             # Biome checks
+bun run lint:fix         # apply safe Biome fixes
+bun run format           # format supported files
+bun run build            # production Next.js build
+bun run pr               # run before PR submission
 ```
 
-Use the arrow keys and Enter to choose an admin bootstrap, demo seed, or foundation seed. The admin bootstrap defaults to `admin@example.com`, password `password`, and name `Local Admin`, and can prompt for custom values.
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for project structure, authorization, database, UI, logging, and documentation conventions.
 
-## Codebase Health
+## Environment variables
 
-Current baseline gaps:
+`.example.env` documents the local defaults. Runtime validation is defined in `src/core/config/env.ts`.
 
-- The repo has no `*.test.*` or `*.spec.*` files yet, so `bun test` exits with "No tests found!" until the first tests are added.
-- `bun run auth:generate` prompts before overwriting `src/prisma/schema/auth.prisma`; use it only when intentionally regenerating the auth schema.
+| Variable | Purpose |
+| --- | --- |
+| `DATABASE_URL` | PostgreSQL connection used by the app and Prisma |
+| `DATABASE_URL_PROD` | Connection selected by runtime and CLI code when `DB_MODE=prod` |
+| `DB_MODE` | `local` or `prod`; protects destructive/reset and production CLI workflows |
+| `BETTER_AUTH_URL` | Canonical Better Auth base URL |
+| `BETTER_AUTH_SECRET` | Better Auth signing secret |
+| `SITE_URL` / `API_BASE_URL` | Public site and API base URLs |
+| `ENVIRONMENT` | `development`, `test`, or `production` |
+| `VERCEL_ENV` | Vercel environment; `production` forces production behavior |
+| `EMAIL_MODE` | `log` locally/previews or `smtp` in production |
+| `GMAIL_SMTP_USER` / `GMAIL_SMTP_APP_PASSWORD` | Gmail SMTP credentials used only in production SMTP mode |
+| `LOG_PRISMA` | Set to `true` to include Prisma query logs |
+
+The Docker-only `POSTGRES_*` variables configure the local container. Keep `.env` uncommitted.
 
 ## Deployment
 
-Set the variables from `.env.example` in Vercel Project Settings. At minimum, production needs `DATABASE_URL`, `BETTER_AUTH_SECRET`, and either `APP_URL`/`BETTER_AUTH_URL` or Vercel system environment variables exposed. The CLI's `foundation-seed` route uses `DATABASE_URL_PROD` instead of `DATABASE_URL` when `DB_MODE=prod`, and fails if the production URL is missing.
+The application currently assumes a Vercel-style deployment with a reachable PostgreSQL database, but the repository has no `vercel.json`, CI deployment workflow, Docker production image, or application health endpoint. Configure the platform's install/build/start behavior from the scripts in `package.json`; `bun run build` generates Prisma Client through `prebuild`.
 
-Email delivery is deliberately scoped by environment. Keep `EMAIL_MODE=log` for local development and Vercel previews; the app rejects SMTP mode outside production, so local auth flows cannot accidentally send real mail. In the production Vercel environment, set `EMAIL_MODE=smtp`, `ENVIRONMENT=production`, and `VERCEL_ENV=production`, plus real Gmail SMTP credentials:
+Production requires at least:
 
-```text
-GMAIL_SMTP_USER=your-production-account@example.com
-GMAIL_SMTP_APP_PASSWORD=<16-character Google app password>
+- `DATABASE_URL`
+- `BETTER_AUTH_SECRET`
+- `BETTER_AUTH_URL`, `SITE_URL`, and `API_BASE_URL` set to the deployed HTTPS origin
+- `ENVIRONMENT=production` (Vercel production also supplies `VERCEL_ENV=production`)
+- `EMAIL_MODE=smtp`, `GMAIL_SMTP_USER`, and `GMAIL_SMTP_APP_PASSWORD` for real email delivery
+
+SMTP is rejected outside production. Production SMTP credentials are validated and placeholder values fail fast. Use a Google app password, not the account password. Keep `EMAIL_MODE=log` in local and preview environments.
+
+Database migrations are not applied by `build` or `start`. Once migration files exist, the deployment pipeline must run this separately before serving the new version:
+
+```bash
+bun x prisma migrate deploy
 ```
 
-Production SMTP credentials are validated at startup. Missing values or the placeholder values from `.env` fail with an explicit configuration error. Use a Google app password, not the account password.
+At present there is no committed migration history, so an existing production database must already match the Prisma schema or be provisioned through an explicitly reviewed operational process. Do not run `prisma db push` against production as an implicit deployment step.
 
-`prisma:migrate` uses `npx prisma migrate deploy`, so production schema changes need committed migration files under `src/prisma/migrations`.
+Before deployment, run the repository's full verification command:
+
+```bash
+bun run pr
+```

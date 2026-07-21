@@ -24,6 +24,10 @@ _Avoid_: Group membership status, auth role
 A dated record that a Member belongs to a Group for a period of time. Group Membership has no separate status; whether a Member belongs to a Group is determined by its dates.
 _Avoid_: Current-only group link, group membership status
 
+**Voice**:
+A Member's current Group Membership in a Group of kind Section. Administrators normally keep one current Voice per Member, but the domain does not enforce that limit.
+_Avoid_: Voice Group Kind, enforced voice assignment
+
 **Position**:
 A durable choir office or role that may be relevant to one or more Groups and can be held by only one Member at a time. Position names are display text and are not globally unique; two different scoped Positions may share the same name.
 _Avoid_: Permission, title, per-group role

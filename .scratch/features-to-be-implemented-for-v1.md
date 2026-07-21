@@ -65,20 +65,20 @@ The goal is production-usable, polished, and ready to grow. Do not expand v1 int
 
 ## Documentation
 
-- [] Write `CONTRIBUTING.md` with clear guidelines for:
-  - [] project setup
-  - [] local development
-  - [] testing and linting
-  - [] adding new features
-  - [] route/page structure
-  - [] feature module structure
-  - [] service/action boundaries
-  - [] authorization expectations
-  - [] Prisma schema and migration discipline
-  - [] UI conventions
-  - [] documentation and ADR expectations
-  - [] logging usage
-- [] Update `README.md` so it matches the actual repo state, including existing tests, environment setup, Prisma generation, deployment assumptions, and production verification commands.
+- [x] Write `CONTRIBUTING.md` with clear guidelines for:
+  - [x] project setup
+  - [x] local development
+  - [x] testing and linting
+  - [x] adding new features
+  - [x] route/page structure
+  - [x] feature module structure
+  - [x] service/action boundaries
+  - [x] authorization expectations
+  - [x] Prisma schema and migration discipline
+  - [x] UI conventions
+  - [x] documentation and ADR expectations
+  - [x] logging usage
+- [x] Update `README.md` so it matches the actual repo state, including existing tests, environment setup, Prisma generation, deployment assumptions, and production verification commands.
 - [] Document the launch-time production checklist: env vars, database, first admin bootstrap, email mode, build/test gate, and deployment/migration order.
 
 ## Data, Seeds, And Migrations
@@ -99,9 +99,6 @@ The goal is production-usable, polished, and ready to grow. Do not expand v1 int
   - [] admin access to admin routes
   - [] one representative admin CRUD workflow
 - [] Provide predictable test database setup for the smoke suite using the separated demo/dev/e2e seed path.
-- [] Add or document a release gate that runs the core checks before deploy:
-  - `bun run lint`
-  - `bun run test`
-  - `bun run build`
-  - `bun run test:e2e`
+- [x] Add or document a release gate that runs the core checks before deploy:
+  - `bun run pr`
 - Treat v1 as complete only after the current surface passes automated checks plus the manual product-quality, responsive, accessibility, and security hardening passes above.
