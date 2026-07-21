@@ -4,12 +4,12 @@
 
 **Blocked by:** 12 — Add global permission foundation
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] Current Group Membership helpers derive the current Auth User and linked Member from request/session context.
-- [ ] Current Group Membership helpers answer whether the current Member belongs to the given Group at permission-check time.
-- [ ] Current Group Membership helpers do not accept `memberId`, do not accept an `at` input, do not include an admin override, and do not require Member Status to be active.
-- [ ] Current Position Assignment helpers derive the current Auth User and linked Member from request/session context.
-- [ ] Current Position Assignment helpers answer whether the current Member currently holds the given Position through an active Position Assignment.
-- [ ] Position Scope and Group Membership do not participate inside the current Position Assignment helper.
-- [ ] Tests prove allowed and denied behavior without treating Group Membership or Position Assignment as Better Auth Access Roles, Permission Scopes, or Permission Resource grants.
+- [x] Current Group Membership helpers derive the current Auth User and linked Member from request/session context.
+- [x] Current Group Membership helpers answer whether the current Member belongs to the given Group at permission-check time.
+- [x] Current Group Membership helpers do not accept `memberId`, do not accept an `at` input, do not include an admin override, and do not require Member Status to be active.
+- [x] Current Position Assignment helpers derive the current Auth User and linked Member from request/session context.
+- [x] Current Position Assignment helpers answer whether the current Member currently holds the given Position through an active Position Assignment.
+- [x] Position Scope and Group Membership do not participate inside the current Position Assignment helper.
+- [x] Tests prove allowed and denied behavior without treating Group Membership or Position Assignment as Better Auth Access Roles, Permission Scopes, or Permission Resource grants.
