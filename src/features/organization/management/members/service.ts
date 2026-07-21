@@ -49,9 +49,9 @@ async function list(): Promise<ManagedMemberAccount[]> {
     }),
     organizationService.members.list(),
   ])
-  const membersByUserId = new Map(members.map((member) => [member.userId, member]))
+  const membersById = new Map(members.map((member) => [member.id, member]))
   return result.users.map((user): ManagedMemberAccount => {
-    const member = membersByUserId.get(user.id) ?? null
+    const member = membersById.get(user.id) ?? null
     const account = {
       user: {
         id: user.id,

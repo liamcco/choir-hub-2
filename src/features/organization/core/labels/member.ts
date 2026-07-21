@@ -18,7 +18,7 @@ export function buildMemberLabels(
 ): MemberLabel[] {
   const usersById = new Map(users.map((user) => [user.id, user]))
   return members.map((member) => {
-    const user = usersById.get(member.userId)
+    const user = usersById.get(member.id)
     return {
       member,
       label: user?.name || formatMemberFallbackLabel(member),
