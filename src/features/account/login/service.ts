@@ -1,29 +1,18 @@
-import { getPostLoginPath } from '@/core/navigation/app-routes'
+import { authClient } from '@/core/auth/auth-client'
+import { ROUTES } from '@/core/navigation/site'
 
 export type EmailPasswordSignInInput = {
   email: string
   password: string
 }
 
-export type LoginAuthClient = {
-  signIn: {
-    email(input: { email: string; password: string; callbackURL: string; rememberMe: boolean }): Promise<{
-      error?: { message?: string | null } | null
-    }>
-  }
-}
-
 export type LoginResult = { success: true; redirectTo: string } | { success: false; error: string }
 
-export async function signInWithEmailPassword(
-  authClient: LoginAuthClient,
-  input: EmailPasswordSignInInput,
-): Promise<LoginResult> {
-  const defaultRedirectTo = getPostLoginPath()
+export async function signInWithEmailPassword(input: EmailPasswordSignInInput): Promise<LoginResult> {
   const result = await authClient.signIn.email({
     email: input.email,
     password: input.password,
-    callbackURL: defaultRedirectTo,
+    callbackURL: ROUTES.home,
     rememberMe: true,
   })
 
@@ -31,5 +20,10 @@ export async function signInWithEmailPassword(
     return { success: false, error: result.error.message || 'Sign-in failed.' }
   }
 
-  return { success: true, redirectTo: getPostLoginPath() }
+  return { success: true, redirectTo: getPostLoginPath(result.data.user) }
+}
+
+function getPostLoginPath(user?: { id: string; role?: string | null }): string {
+  if (user?.role === 'admin') return ROUTES.adminRoot
+  return ROUTES.home
 }

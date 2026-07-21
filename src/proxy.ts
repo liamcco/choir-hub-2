@@ -1,13 +1,14 @@
-import { getSessionCookie } from 'better-auth/cookies'
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
-import { type AccessDecision, getRouteAccessDecision } from '@/core/navigation/app-routes'
-
-type ProxyRouteDecision = AccessDecision
+import { auth } from '@/core/auth/auth'
+import { getRouteAccessDecision } from '@/core/auth/route-access'
 
 export default async function proxy(req: NextRequest) {
   const path = req.nextUrl.pathname
-  const decision = evaluateProxyRouteAccess(path, hasCachedSession(req))
+  if ((await getRouteAccessDecision(path, null)).kind === 'allow') return NextResponse.next()
+
+  const session = await auth.api.getSession({ headers: req.headers })
+  const decision = await getRouteAccessDecision(path, session)
 
   if (decision.kind === 'redirect') {
     const url = req.nextUrl.clone()
@@ -15,15 +16,9 @@ export default async function proxy(req: NextRequest) {
     return NextResponse.redirect(url)
   }
 
+  if (decision.kind === 'forbidden') return new NextResponse(null, { status: 403 })
+
   return NextResponse.next()
-}
-
-export function evaluateProxyRouteAccess(path: string, isAuthenticated: boolean): ProxyRouteDecision {
-  return getRouteAccessDecision(path, isAuthenticated)
-}
-
-function hasCachedSession(req: NextRequest): boolean {
-  return Boolean(getSessionCookie(req))
 }
 
 export const config = {

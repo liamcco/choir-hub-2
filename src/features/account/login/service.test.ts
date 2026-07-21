@@ -1,56 +1,61 @@
-import { describe, expect, mock, test } from 'bun:test'
-import { type LoginAuthClient, signInWithEmailPassword } from './service'
+import { beforeEach, describe, expect, mock, test } from 'bun:test'
+const signInEmail = mock(async () => ({
+  data: { user: { id: 'user-member', role: 'user' } },
+  error: null as null | { message: string },
+}))
+mock.module('@/core/auth/auth-client', () => ({ authClient: { signIn: { email: signInEmail } } }))
+import { signInWithEmailPassword } from './service'
+
+beforeEach(() => signInEmail.mockReset())
 
 describe('login service', () => {
   test('signs in member accounts with the organizational post-login destination', async () => {
-    const signInEmail = mock(async () => ({ data: { user: { id: 'user-member', role: 'user' } }, error: null }))
-    const authClient = loginAuthClient(signInEmail)
-
+    signInEmail.mockResolvedValue({ data: { user: { id: 'user-member', role: 'user' } }, error: null })
     await expect(
-      signInWithEmailPassword(authClient, {
+      signInWithEmailPassword({
         email: 'member@example.com',
         password: 'correct horse battery staple',
       }),
     ).resolves.toEqual({
       success: true,
-      redirectTo: '/organization',
+      redirectTo: '/',
     })
 
     expect(signInEmail).toHaveBeenCalledWith({
       email: 'member@example.com',
       password: 'correct horse battery staple',
-      callbackURL: '/organization',
+      callbackURL: '/',
       rememberMe: true,
     })
   })
 
   test('uses the organizational post-login destination for admin accounts too', async () => {
-    const signInEmail = mock(async () => ({ data: { user: { id: 'user-admin', role: 'admin' } }, error: null }))
-    const authClient = loginAuthClient(signInEmail)
-
+    signInEmail.mockResolvedValue({ data: { user: { id: 'user-admin', role: 'admin' } }, error: null })
     await expect(
-      signInWithEmailPassword(authClient, {
+      signInWithEmailPassword({
         email: 'admin@example.com',
         password: 'correct horse battery staple',
       }),
     ).resolves.toEqual({
       success: true,
-      redirectTo: '/organization',
+      redirectTo: '/admin',
     })
 
     expect(signInEmail).toHaveBeenCalledWith({
       email: 'admin@example.com',
       password: 'correct horse battery staple',
-      callbackURL: '/organization',
+      callbackURL: '/',
       rememberMe: true,
     })
   })
 
   test('returns clear sign-in errors from the auth client', async () => {
-    const authClient = loginAuthClient(mock(async () => ({ error: { message: 'Invalid email or password.' } })))
-
+    signInEmail.mockResolvedValue({
+      data: { user: { id: 'user-member', role: 'user' } },
+      error: { message: 'Invalid email or password.' },
+    })
     await expect(
-      signInWithEmailPassword(authClient, {
+      signInWithEmailPassword({
         email: 'member@example.com',
         password: 'wrong password',
       }),
@@ -60,11 +65,3 @@ describe('login service', () => {
     })
   })
 })
-
-function loginAuthClient(signInEmail: LoginAuthClient['signIn']['email']): LoginAuthClient {
-  return {
-    signIn: {
-      email: signInEmail,
-    },
-  }
-}

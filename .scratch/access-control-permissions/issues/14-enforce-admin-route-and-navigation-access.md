@@ -4,12 +4,12 @@
 
 **Blocked by:** 12 — Add global permission foundation; 13 — Harden admin bootstrap
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] Route policy distinguishes public, authenticated, and admin route access using explicit route IDs plus `/admin` prefix classification.
-- [ ] Proxy route enforcement evaluates resolved Better Auth session facts rather than only cached session-cookie presence.
-- [ ] Anonymous users are redirected to login for protected app routes.
-- [ ] Authenticated non-admin users are forbidden from `/admin` routes, including future `/admin` paths not present in navigation.
-- [ ] Authenticated admin users are allowed through `/admin` routes.
-- [ ] Navigation shows admin links to admins and hides them from authenticated non-admin users.
-- [ ] Route/navigation tests cover anonymous, authenticated non-admin, and admin behavior.
+- [x] Route policy distinguishes public, authenticated, and admin route access using explicit route IDs plus `/admin` prefix classification.
+- [x] Proxy route enforcement evaluates resolved Better Auth session facts rather than only cached session-cookie presence.
+- [x] Anonymous users are redirected to login for protected app routes.
+- [x] Authenticated non-admin users are forbidden from `/admin` routes, including future `/admin` paths not present in navigation.
+- [x] Authenticated admin users are allowed through `/admin` routes.
+- [x] Navigation shows admin links to admins and hides them from authenticated non-admin users.
+- [x] Route/navigation tests cover anonymous, authenticated non-admin, and admin behavior.

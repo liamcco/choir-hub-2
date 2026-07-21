@@ -1,7 +1,7 @@
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { auth } from '@/core/auth/auth'
-import { ROUTES } from '@/core/navigation/app-routes'
+import { ROUTES } from '@/core/navigation/site'
 import { AccountSelfServiceScreen } from '@/features/account/self-service'
 
 export const instant = false

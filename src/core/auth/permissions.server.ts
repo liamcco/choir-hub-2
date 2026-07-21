@@ -52,6 +52,17 @@ async function getCurrentActor(): Promise<RequestActor | null> {
   }
 }
 
+function getActorFromSession(session?: { user: { id: string; role?: string | null } } | null): RequestActor | null {
+  if (!session) {
+    return null
+  }
+
+  return {
+    userId: session.user.id,
+    roles: parseAccessRoles(session.user.role),
+  }
+}
+
 function actorContext(actor: RequestActor | null): AuthorizationActorContext {
   return actor ? { state: 'authenticated', userId: actor.userId } : { state: 'unauthenticated' }
 }
@@ -92,7 +103,7 @@ export async function requireCurrentUserPermission<const Request extends GlobalP
 ): Promise<void> {
   const actor = await getCurrentActor()
 
-  if (!actorHasPermission(actor, permission)) {
+  if (!(await actorHasPermission(actor, permission))) {
     throw new AuthorizationDeniedError({
       actor: actorContext(actor),
       requirement: { kind: 'permission', permission },
@@ -100,8 +111,8 @@ export async function requireCurrentUserPermission<const Request extends GlobalP
   }
 }
 
-export async function requireAdmin(): Promise<void> {
-  const actor = await getCurrentActor()
+export async function requireAdmin(session?: { user: { id: string; role?: string | null } } | null): Promise<void> {
+  const actor = getActorFromSession(session) ?? (await getCurrentActor())
 
   if (!actorIsAdmin(actor)) {
     throw new AuthorizationDeniedError({

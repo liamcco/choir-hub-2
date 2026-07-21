@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
-import { ROUTES } from '@/core/navigation/app-routes'
+import { ROUTES } from '@/core/navigation/site'
 import { memberAccountService } from '@/features/organization/management/members/service'
 import { handleFormError } from '@/shared/forms/errors'
 import type { FormState } from '@/shared/forms/types'

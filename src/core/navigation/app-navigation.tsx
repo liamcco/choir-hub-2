@@ -8,13 +8,12 @@ import {
   UserRoundCogIcon,
   UsersIcon,
 } from 'lucide-react'
-import { headers } from 'next/headers'
 import Link from 'next/link'
 import { Suspense } from 'react'
-import { auth } from '@/core/auth/auth'
-import { getPostLoginPath, type NavigationRouteId, ROUTES } from '@/core/navigation/app-routes'
+import { type NavigationRouteId, ROUTES } from '@/core/navigation/site'
 import { buttonVariants } from '@/shared/ui/button'
 import { cn } from '@/shared/utils'
+import { userIsAdmin } from '../auth/permissions.server'
 
 export type NavigationRoute = {
   id: NavigationRouteId
@@ -47,25 +46,35 @@ const AUTHENTICATED_NAVIGATION_ROUTES = [
   { id: 'adminPositions', href: ROUTES.adminPositions, section: 'admin' },
   { id: 'adminPositionAssignments', href: ROUTES.adminPositionAssignments, section: 'admin' },
 ] as const satisfies readonly NavigationRoute[]
+
 const LOGIN_NAVIGATION_ROUTE = {
   id: 'login',
   href: ROUTES.login,
   section: 'member',
 } as const satisfies NavigationRoute
 
-export function getNavigationItems(isAuthenticated: boolean): NavigationItem[] {
-  const routes = isAuthenticated ? AUTHENTICATED_NAVIGATION_ROUTES : [LOGIN_NAVIGATION_ROUTE]
+export function getNavigationItems(config: NavigationConfig | null): NavigationItem[] {
+  const routes = config
+    ? AUTHENTICATED_NAVIGATION_ROUTES.filter((route) => route.section !== 'admin' || config.showAdmin)
+    : [LOGIN_NAVIGATION_ROUTE]
   return routes.map((item) => ({ ...item, ...NAVIGATION_PRESENTATION[item.id] }))
 }
 
-export function AppNavigationTemplate({ isAuthenticated }: { isAuthenticated: boolean }) {
-  const items = getNavigationItems(isAuthenticated)
+type NavigationConfig = {
+  showAdmin: boolean
+}
+
+interface AppNavigationTemplateProps {
+  config: NavigationConfig | null
+}
+export function AppNavigationTemplate({ config }: AppNavigationTemplateProps) {
+  const items = getNavigationItems(config)
 
   return (
     <header className="border-b bg-background">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 px-4 py-3 sm:px-6 lg:px-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <Link href={getPostLoginPath()} className="font-semibold text-base tracking-normal">
+          <Link href={ROUTES.home} className="font-semibold text-base tracking-normal">
             CSK Choir Hub
           </Link>
           <nav aria-label="Primary navigation" className="flex flex-wrap items-center gap-1.5">
@@ -88,13 +97,13 @@ export function AppNavigationTemplate({ isAuthenticated }: { isAuthenticated: bo
 
 export function AppNavigation() {
   return (
-    <Suspense fallback={<AppNavigationTemplate isAuthenticated={true} />}>
+    <Suspense fallback={<AppNavigationTemplate config={null} />}>
       <RuntimeAppNavigation />
     </Suspense>
   )
 }
 
 export async function RuntimeAppNavigation() {
-  const session = await auth.api.getSession({ headers: await headers() })
-  return <AppNavigationTemplate isAuthenticated={Boolean(session?.user)} />
+  const isAdmin = await userIsAdmin()
+  return <AppNavigationTemplate config={{ showAdmin: isAdmin }} />
 }

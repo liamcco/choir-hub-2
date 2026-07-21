@@ -6,9 +6,12 @@ let currentSession: TestSession = null
 const requestHeaders = new Headers({ cookie: 'session=abc' })
 const headers = mock(async () => requestHeaders)
 const getSession = mock(async () => currentSession)
+const userHasPermission = mock(async ({ body }: { body: { userId: string } }) => ({
+  success: currentSession?.user.id === body.userId && currentSession.user.role?.split(',').includes('admin'),
+}))
 
 mock.module('next/headers', () => ({ headers }))
-mock.module('@/core/auth/auth', () => ({ auth: { api: { getSession } } }))
+mock.module('@/core/auth/auth', () => ({ auth: { api: { getSession, userHasPermission } } }))
 
 const { AuthorizationDeniedError, userIsAdmin, canCurrentUser, requireAdmin, requireCurrentUserPermission } =
   await import('@/core/auth/permissions.server')
@@ -19,6 +22,7 @@ beforeEach(() => {
   currentSession = null
   headers.mockClear()
   getSession.mockClear()
+  userHasPermission.mockClear()
 })
 
 describe('current-user global permissions', () => {

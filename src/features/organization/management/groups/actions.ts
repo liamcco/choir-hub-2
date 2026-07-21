@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
-import { ROUTES } from '@/core/navigation/app-routes'
+import { ROUTES } from '@/core/navigation/site'
 import { organizationService } from '@/features/organization'
 import type { GroupKind } from '@/prisma/generated/client'
 import { normalizeOptionalString } from '@/shared/formatting'

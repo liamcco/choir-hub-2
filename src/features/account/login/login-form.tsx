@@ -2,7 +2,6 @@
 
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
-import { authClient } from '@/core/auth/auth-client'
 import { Button } from '@/shared/ui/button'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/shared/ui/field'
 import { Input } from '@/shared/ui/input'
@@ -22,7 +21,7 @@ export function LoginForm() {
     const email = String(formData.get('email') ?? '')
     const password = String(formData.get('password') ?? '')
 
-    const result = await signInWithEmailPassword(authClient, { email, password })
+    const result = await signInWithEmailPassword({ email, password })
 
     setIsPending(false)
 
