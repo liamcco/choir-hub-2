@@ -1,18 +1,16 @@
 import { Building2Icon, GitForkIcon } from 'lucide-react'
 import { formatGroupKind } from '@/features/organization'
+import { buildGroupTree, type GroupTreeNode } from '@/features/organization/core/group-tree'
 import { CreateGroupForm, UpdateGroupForm } from '@/features/organization/management/groups/group-form'
-import {
-  buildGroupHierarchy,
-  type GroupHierarchyNode,
-  listGroups,
-} from '@/features/organization/management/groups/service'
+import { listGroups } from '@/features/organization/management/groups/service'
+import type { Group } from '@/prisma/generated/client'
 import { Badge } from '@/shared/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
 import { cn } from '@/shared/utils'
 
 export async function GroupManagementScreen() {
   const groups = await listGroups()
-  const hierarchy = buildGroupHierarchy(groups)
+  const hierarchy = buildGroupTree(groups)
 
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
@@ -83,7 +81,7 @@ export async function GroupManagementScreen() {
   )
 }
 
-function GroupHierarchyBranch({ node }: { node: GroupHierarchyNode }) {
+function GroupHierarchyBranch({ node }: { node: GroupTreeNode<Group> }) {
   return (
     <div className="flex flex-col gap-2">
       <div

@@ -2,10 +2,10 @@ import 'server-only'
 
 import { prisma } from '@/core/db'
 import { isCurrentDatedPeriod, isHistoricalDatedPeriod } from '@/features/organization/core/dated-history'
+import { buildGroupPathLabels, buildGroupTree, type GroupTreeNode } from '@/features/organization/core/group-tree'
 import {
   type AuthUserIdentity,
   buildMemberLabels,
-  formatGroupPath,
   formatMemberFallbackLabel,
   formatPositionScopeLabel,
   noGroupScopesLabel,
@@ -19,11 +19,7 @@ import type {
   PositionScope,
 } from '@/prisma/generated/client'
 
-export type OverviewGroupHierarchyNode = {
-  group: Group
-  depth: number
-  children: OverviewGroupHierarchyNode[]
-}
+export type OverviewGroupHierarchyNode = GroupTreeNode<Group>
 
 export type OverviewGroupMembershipPeriod = GroupMembership & {
   group: Group
@@ -120,6 +116,7 @@ export function buildOrganizationOverviewState({
   at: Date
 }): OrganizationOverviewState {
   const groupsById = new Map(groups.map((group) => [group.id, group]))
+  const groupPathLabels = buildGroupPathLabels(groups)
   const membersById = new Map(members.map((member) => [member.id, member]))
   const memberLabels = new Map(
     buildMemberLabels(members, users).map((memberLabel) => [memberLabel.member.id, memberLabel]),
@@ -130,7 +127,8 @@ export function buildOrganizationOverviewState({
   const membershipPeriods = memberships
     .flatMap((membership): OverviewGroupMembershipPeriod[] => {
       const group = groupsById.get(membership.groupId)
-      return group ? [{ ...membership, group, groupPath: formatGroupPath(groups, group) }] : []
+      const groupPath = group ? groupPathLabels.get(group.id) : undefined
+      return group && groupPath ? [{ ...membership, group, groupPath }] : []
     })
     .sort(compareGroupMembershipPeriods)
 
@@ -157,7 +155,7 @@ export function buildOrganizationOverviewState({
 
   return {
     groups,
-    groupHierarchy: buildOverviewGroupHierarchy(groups),
+    groupHierarchy: buildGroupTree(groups),
     memberViews: members.map((member) => {
       const memberLabel = memberLabels.get(member.id) ?? { label: formatMemberFallbackLabel(member), detail: member.id }
       const memberMemberships = membershipPeriods.filter((membership) => membership.memberId === member.id)
@@ -186,53 +184,9 @@ export function buildOrganizationOverviewState({
   }
 }
 
-export function buildOverviewGroupHierarchy(groups: Group[]): OverviewGroupHierarchyNode[] {
-  const nodes = new Map<string, OverviewGroupHierarchyNode>()
-  const roots: OverviewGroupHierarchyNode[] = []
-
-  for (const group of groups) {
-    nodes.set(group.id, { group, depth: 0, children: [] })
-  }
-
-  for (const group of groups) {
-    const node = nodes.get(group.id)
-    if (!node) {
-      continue
-    }
-
-    const parent = group.parentGroupId ? nodes.get(group.parentGroupId) : undefined
-    if (parent) {
-      parent.children.push(node)
-    } else {
-      roots.push(node)
-    }
-  }
-
-  assignGroupHierarchyDepths(roots, 0)
-  sortGroupHierarchy(roots)
-  return roots
-}
-
-function assignGroupHierarchyDepths(nodes: OverviewGroupHierarchyNode[], depth: number) {
-  for (const node of nodes) {
-    node.depth = depth
-    assignGroupHierarchyDepths(node.children, depth + 1)
-  }
-}
-
-function sortGroupHierarchy(nodes: OverviewGroupHierarchyNode[]) {
-  nodes.sort(compareGroupHierarchyNodes)
-  for (const node of nodes) {
-    sortGroupHierarchy(node.children)
-  }
-}
-
-function compareGroupHierarchyNodes(first: OverviewGroupHierarchyNode, second: OverviewGroupHierarchyNode) {
-  return first.group.name.localeCompare(second.group.name) || first.group.id.localeCompare(second.group.id)
-}
-
 function groupPositionScopes({ groups, scopes }: { groups: Group[]; scopes: PositionScope[] }) {
   const groupsById = new Map(groups.map((group) => [group.id, group]))
+  const groupPathLabels = buildGroupPathLabels(groups)
   const scopesByPositionId = new Map<string, OverviewPositionScope[]>()
   for (const scope of scopes) {
     const group = groupsById.get(scope.groupId)
@@ -244,7 +198,7 @@ function groupPositionScopes({ groups, scopes }: { groups: Group[]; scopes: Posi
       {
         ...scope,
         group,
-        groupPath: formatGroupPath(groups, group),
+        groupPath: groupPathLabels.get(group.id) ?? group.name,
       },
     ])
   }

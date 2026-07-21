@@ -6,6 +6,7 @@ import {
   EntityDoesNotExistError,
   InvalidRelationshipError,
 } from '@/features/organization/core/errors'
+import { groupSiblingNamesMatch, isGroupAncestor } from '@/features/organization/core/group-tree'
 import type { GroupKind } from '@/prisma/generated/client'
 
 export const groups = {
@@ -56,7 +57,7 @@ async function assertSiblingGroupNameIsUnique(
 ) {
   const siblings = await prisma.group.findMany({ where: { parentGroupId: input.parentGroupId } })
   const duplicate = siblings.find(
-    (group) => group.id !== excludingGroupId && normalizeName(group.name) === normalizeName(input.name),
+    (group) => group.id !== excludingGroupId && groupSiblingNamesMatch(group.name, input.name),
   )
   if (duplicate) {
     throw new DuplicateEntityError(`A sibling Group named "${input.name}" already exists.`, { field: 'name' })
@@ -72,15 +73,10 @@ async function assertValidGroupParent(groupId: string, parentGroupId: string | n
   }
 
   const allGroups = await groups.list()
-  const groupsById = new Map(allGroups.map((group) => [group.id, group]))
-  let candidate = groupsById.get(parentGroupId)
-  while (candidate) {
-    if (candidate.id === groupId) {
-      throw new InvalidRelationshipError('A Group cannot be moved under one of its child Groups.', {
-        field: 'parentGroupId',
-      })
-    }
-    candidate = candidate.parentGroupId ? groupsById.get(candidate.parentGroupId) : undefined
+  if (isGroupAncestor(allGroups, { groupId: parentGroupId, ancestorGroupId: groupId })) {
+    throw new InvalidRelationshipError('A Group cannot be moved under one of its child Groups.', {
+      field: 'parentGroupId',
+    })
   }
 }
 
@@ -96,10 +92,6 @@ function normalizeGroup(input: {
     description: normalizeOptionalString(input.description),
     parentGroupId: input.parentGroupId || null,
   }
-}
-
-function normalizeName(value: string) {
-  return value.trim().toLocaleLowerCase()
 }
 
 function normalizeOptionalString(value: string | null | undefined) {
