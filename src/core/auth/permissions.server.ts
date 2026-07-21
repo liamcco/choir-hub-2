@@ -1,6 +1,7 @@
 import { headers } from 'next/headers'
 import { auth } from '@/core/auth/auth'
 import { ACCESS_ROLES, type AccessRole, type GlobalPermissionRequest } from '@/core/auth/permissions'
+import { prisma } from '@/core/db'
 
 type RequestActor = {
   userId: string
@@ -15,6 +16,8 @@ export type AuthorizationActorContext = { state: 'authenticated'; userId: string
 export type AuthorizationRequirement =
   | { kind: 'permission'; permission: GlobalPermissionRequest }
   | { kind: 'accessRole'; role: AccessRole }
+  | { kind: 'currentGroupMembership'; groupId: string }
+  | { kind: 'currentPositionAssignment'; positionId: string }
 
 export type AuthorizationDeniedContext = {
   actor: AuthorizationActorContext
@@ -49,6 +52,76 @@ async function getCurrentActor(): Promise<RequestActor | null> {
   return {
     userId: session.user.id,
     roles: parseAccessRoles(session.user.role),
+  }
+}
+
+async function getCurrentMemberId(): Promise<string | null> {
+  const actor = await getCurrentActor()
+  if (!actor) {
+    return null
+  }
+
+  const member = await prisma.member.findUnique({ where: { userId: actor.userId }, select: { id: true } })
+  return member?.id ?? null
+}
+
+export async function canCurrentUserInGroup(input: { groupId: string }): Promise<boolean> {
+  const memberId = await getCurrentMemberId()
+  if (!memberId) {
+    return false
+  }
+
+  const now = new Date()
+  const membership = await prisma.groupMembership.findFirst({
+    where: {
+      memberId,
+      groupId: input.groupId,
+      startsAt: { lte: now },
+      OR: [{ endsAt: null }, { endsAt: { gt: now } }],
+    },
+    select: { id: true },
+  })
+
+  return membership !== null
+}
+
+export async function requireCurrentUserInGroup(input: { groupId: string }): Promise<void> {
+  if (!(await canCurrentUserInGroup(input))) {
+    const actor = await getCurrentActor()
+    throw new AuthorizationDeniedError({
+      actor: actorContext(actor),
+      requirement: { kind: 'currentGroupMembership', groupId: input.groupId },
+    })
+  }
+}
+
+export async function canCurrentUserHoldPosition(input: { positionId: string }): Promise<boolean> {
+  const memberId = await getCurrentMemberId()
+  if (!memberId) {
+    return false
+  }
+
+  const now = new Date()
+  const assignment = await prisma.positionAssignment.findFirst({
+    where: {
+      memberId,
+      positionId: input.positionId,
+      startsAt: { lte: now },
+      OR: [{ endsAt: null }, { endsAt: { gt: now } }],
+    },
+    select: { id: true },
+  })
+
+  return assignment !== null
+}
+
+export async function requireCurrentUserHoldsPosition(input: { positionId: string }): Promise<void> {
+  if (!(await canCurrentUserHoldPosition(input))) {
+    const actor = await getCurrentActor()
+    throw new AuthorizationDeniedError({
+      actor: actorContext(actor),
+      requirement: { kind: 'currentPositionAssignment', positionId: input.positionId },
+    })
   }
 }
 
