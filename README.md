@@ -17,6 +17,14 @@ bun run dev
 
 The development server prints the local URL it is listening on.
 
+To reset the local database and run its seed, select “Reset local database” from the CLI:
+
+```bash
+bun run cli
+```
+
+This command refuses to run unless `DB_MODE=local`.
+
 ## Code Generation
 
 The Prisma client is generated into `src/prisma/generated`, which is ignored by git:

@@ -11,6 +11,7 @@ const MENU = [
   ['admin-bootstrap', 'Bootstrap admin account'],
   ['demo-seed', 'Run demo seed'],
   ['foundation-seed', 'Run foundation seed'],
+  ['reset-db', 'Reset local database'],
 ] as const
 
 function printUsage(): void {
@@ -143,6 +144,9 @@ async function mainCommand(command: string): Promise<void> {
       return
     case 'foundation-seed':
       await run('bun', ['x', 'prisma', 'db', 'seed'], prismaEnvironment())
+      return
+    case 'reset-db':
+      await run('bun', ['scripts/reset-db.ts'])
       return
     default:
       throw new Error(`Unknown command: ${command}`)

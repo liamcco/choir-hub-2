@@ -13,7 +13,8 @@
     "cli": "bun scripts/cli.ts",
     "prisma:generate": "bun x prisma generate",
     "prebuild": "bun prisma:generate",
-    "auth:generate": "bun x auth@latest generate --output src/prisma/schema/auth.prisma"
+    "auth:generate": "bun x auth@latest generate --output src/prisma/schema/auth.prisma",
+    "pr": "bun run test && bun run lint && bun run build"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",

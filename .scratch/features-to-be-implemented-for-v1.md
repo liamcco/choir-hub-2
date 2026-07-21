@@ -11,10 +11,10 @@ The goal is production-usable, polished, and ready to grow. Do not expand v1 int
 - [] Add proper application logging infrastructure, including audit logging for security-relevant events such as denied authorization attempts, admin actions, and account access changes. The access-control v1 plan may proceed before this exists, but permission denials should remain identifiable enough to log once the logger is introduced.
 - [x] Add type-safe environment variable handling in `src/core/environment`, replacing direct scattered `process.env` reads with validated server-side configuration and clear public/server boundaries.
 - [x] Add `.env.example` and keep it aligned with the validated environment schema, including database, Better Auth, app URL, email, logging, and bootstrap variables.
-- [] Add great developer experience for local and production database workflows:
-  - [] make it clear which database each command and environment uses
-  - [] provide safe local setup/reset/seed commands
-  - [] document production database migration and bootstrap flow
+- [x] Add great developer experience for local and production database workflows:
+  - [x] make it clear which database each command and environment uses
+  - [x] provide safe local setup/reset/seed commands
+  - [x] document production bootstrap flow
 - [] Verify scoped email behavior:
   - [] local/dev email mode must not send real mail accidentally
   - [] production SMTP configuration must be documented and fail clearly when incomplete
