@@ -8,17 +8,16 @@ The goal is production-usable, polished, and ready to grow. Do not expand v1 int
 
 ## Infrastructure
 
-- [] Add proper application logging infrastructure, including audit logging for security-relevant events such as denied authorization attempts, admin actions, and account access changes. The access-control v1 plan may proceed before this exists, but permission denials should remain identifiable enough to log once the logger is introduced.
+- [x] Add proper application logging infrastructure, including audit logging for security-relevant events such as denied authorization attempts, admin actions, and account access changes. The access-control v1 plan may proceed before this exists, but permission denials should remain identifiable enough to log once the logger is introduced.
 - [x] Add type-safe environment variable handling in `src/core/environment`, replacing direct scattered `process.env` reads with validated server-side configuration and clear public/server boundaries.
 - [x] Add `.env.example` and keep it aligned with the validated environment schema, including database, Better Auth, app URL, email, logging, and bootstrap variables.
 - [x] Add great developer experience for local and production database workflows:
   - [x] make it clear which database each command and environment uses
   - [x] provide safe local setup/reset/seed commands
   - [x] document production bootstrap flow
-- [] Verify scoped email behavior:
-  - [] local/dev email mode must not send real mail accidentally
-  - [] production SMTP configuration must be documented and fail clearly when incomplete
-  - [] account-related email behavior should be covered by focused tests or a documented smoke check
+- [x] Verify scoped email behavior:
+  - [x] local/dev email mode must not send real mail accidentally
+  - [x] production SMTP configuration must be documented and fail clearly when incomplete
 
 ## Access Control And Security
 
@@ -78,6 +77,7 @@ The goal is production-usable, polished, and ready to grow. Do not expand v1 int
   - [] Prisma schema and migration discipline
   - [] UI conventions
   - [] documentation and ADR expectations
+  - [] logging usage
 - [] Update `README.md` so it matches the actual repo state, including existing tests, environment setup, Prisma generation, deployment assumptions, and production verification commands.
 - [] Document the launch-time production checklist: env vars, database, first admin bootstrap, email mode, build/test gate, and deployment/migration order.
 

@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+const environment = process.env.VERCEL_ENV === 'production' ? 'production' : process.env.ENVIRONMENT
+
 const envSchema = z.object({
   ENVIRONMENT: z.enum(['development', 'production', 'test']).default('production'),
   VERCEL_ENV: z.enum(['development', 'preview', 'production']).default('development'),
@@ -15,7 +17,7 @@ const envSchema = z.object({
   GMAIL_SMTP_APP_PASSWORD: z.string().default('your-16-character-google-app-password'),
   LOG_PRISMA: z.enum(['true', 'false']).default('false'),
 })
-const parsed = envSchema.safeParse(process.env)
+const parsed = envSchema.safeParse({ ...process.env, ENVIRONMENT: environment })
 if (!parsed.success) {
   console.error('❌ Invalid environment variables:', JSON.stringify(z.treeifyError(parsed.error), null, 2))
   process.exit(1)

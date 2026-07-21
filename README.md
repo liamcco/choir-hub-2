@@ -54,4 +54,13 @@ Current baseline gaps:
 
 Set the variables from `.env.example` in Vercel Project Settings. At minimum, production needs `DATABASE_URL`, `BETTER_AUTH_SECRET`, and either `APP_URL`/`BETTER_AUTH_URL` or Vercel system environment variables exposed. The CLI's `foundation-seed` route uses `DATABASE_URL_PROD` instead of `DATABASE_URL` when `DB_MODE=prod`, and fails if the production URL is missing.
 
+Email delivery is deliberately scoped by environment. Keep `EMAIL_MODE=log` for local development and Vercel previews; the app rejects SMTP mode outside production, so local auth flows cannot accidentally send real mail. In the production Vercel environment, set `EMAIL_MODE=smtp`, `ENVIRONMENT=production`, and `VERCEL_ENV=production`, plus real Gmail SMTP credentials:
+
+```text
+GMAIL_SMTP_USER=your-production-account@example.com
+GMAIL_SMTP_APP_PASSWORD=<16-character Google app password>
+```
+
+Production SMTP credentials are validated at startup. Missing values or the placeholder values from `.env` fail with an explicit configuration error. Use a Google app password, not the account password.
+
 `prisma:migrate` uses `npx prisma migrate deploy`, so production schema changes need committed migration files under `src/prisma/migrations`.

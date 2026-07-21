@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer'
+import { env } from '@/core/config/env'
 
 export type EmailMode = 'smtp' | 'log'
 
@@ -40,7 +41,9 @@ export function createGmailSmtpConfig(): SmtpConfig {
   const pass = process.env.GMAIL_SMTP_APP_PASSWORD
 
   if (!user || !pass) {
-    throw new Error('Missing Gmail SMTP credentials. Set GMAIL_SMTP_USER and GMAIL_SMTP_APP_PASSWORD.')
+    throw new Error(
+      'Production email is configured for SMTP, but Gmail SMTP credentials are incomplete. Set real GMAIL_SMTP_USER and GMAIL_SMTP_APP_PASSWORD values.',
+    )
   }
 
   return {
@@ -55,6 +58,15 @@ export function createGmailSmtpConfig(): SmtpConfig {
 export function EmailClient(options: EmailClientOptions = {}) {
   const mode = options.mode ?? getEmailModeFromEnv()
   const logger = options.logger ?? console
+
+  if (mode === 'smtp' && !isProductionEmailEnvironment()) {
+    throw new Error('SMTP email is disabled outside production. Use EMAIL_MODE=log for local and preview environments.')
+  }
+
+  if (mode === 'smtp' && !options.smtp) {
+    // Validate configuration during startup, before an auth callback can try to send mail.
+    createGmailSmtpConfig()
+  }
 
   return {
     async send(message: EmailMessage): Promise<EmailSendResult> {
@@ -115,6 +127,10 @@ function getEmailModeFromEnv(): EmailMode {
   }
 
   throw new Error('Invalid EMAIL_MODE. Expected "smtp" or "log".')
+}
+
+function isProductionEmailEnvironment() {
+  return env.ENVIRONMENT === 'production'
 }
 
 function validateEmailMessage(message: EmailMessage) {
