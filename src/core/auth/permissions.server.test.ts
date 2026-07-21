@@ -13,6 +13,14 @@ const userHasPermission = mock(async ({ body }: { body: { userId: string } }) =>
 }))
 const findMembership = mock(async () => currentMembership)
 const findAssignment = mock(async () => currentAssignment)
+const authorizationDenied = mock(() => {})
+const accountAccessChanged = mock(() => {})
+const logger = {
+  debug: mock(() => {}),
+  info: mock(() => {}),
+  warn: mock(() => {}),
+  error: mock(() => {}),
+}
 
 mock.module('next/headers', () => ({ headers }))
 mock.module('@/core/auth/auth', () => ({ auth: { api: { getSession, userHasPermission } } }))
@@ -22,6 +30,7 @@ mock.module('@/core/db', () => ({
     positionAssignment: { findFirst: findAssignment },
   },
 }))
+mock.module('@/core/logging', () => ({ audit: { authorizationDenied, accountAccessChanged }, logger }))
 
 const {
   AuthorizationDeniedError,
@@ -46,6 +55,7 @@ beforeEach(() => {
   currentAssignment = null
   findMembership.mockClear()
   findAssignment.mockClear()
+  authorizationDenied.mockClear()
 })
 
 describe('current-user global permissions', () => {
@@ -85,8 +95,11 @@ describe('enforcing global permissions', () => {
   test('allows an admin to continue', async () => {
     currentSession = { user: { id: 'user-admin', role: 'admin' } }
 
-    await expect(requireCurrentUserPermission(updateGroup)).resolves.toBeUndefined()
-    await expect(requireAdmin()).resolves.toBeUndefined()
+    await expect(requireCurrentUserPermission(updateGroup)).resolves.toEqual({
+      state: 'authenticated',
+      userId: 'user-admin',
+    })
+    await expect(requireAdmin()).resolves.toEqual({ state: 'authenticated', userId: 'user-admin' })
   })
 
   test('throws a structured authorization denial for a plain user', async () => {
@@ -105,6 +118,11 @@ describe('enforcing global permissions', () => {
         },
       })
     }
+    expect(authorizationDenied).toHaveBeenCalledTimes(1)
+    expect(authorizationDenied).toHaveBeenCalledWith({
+      actor: { state: 'authenticated', userId: 'user-member' },
+      requirement: { kind: 'permission', permission: updateGroup },
+    })
   })
 
   test('throws a distinguishable authorization denial for an unauthenticated actor', async () => {

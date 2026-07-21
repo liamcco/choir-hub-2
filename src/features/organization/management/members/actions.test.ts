@@ -2,14 +2,24 @@ import { beforeEach, describe, expect, mock, test } from 'bun:test'
 import { MemberStatus } from '@/prisma/generated/client'
 
 const revalidatePath = mock(() => {})
-const createLinkedAccount = mock(async () => ({}))
-const linkExistingUser = mock(async () => ({}))
-const updateMemberStatus = mock(async () => ({}))
+const createLinkedAccount = mock(async () => ({ id: 'member-1' }))
+const linkExistingUser = mock(async () => ({ id: 'user-1' }))
+const updateMemberStatus = mock(async () => ({ id: 'member-1' }))
 const updateAccountAccess = mock(async () => ({}))
+const requireAdminActor = mock(async () => ({ state: 'authenticated' as const, userId: 'admin-1' }))
+const requireCurrentUserPermissionActor = mock(async () => ({ state: 'authenticated' as const, userId: 'admin-1' }))
+const adminActionCompleted = mock(() => {})
+const accountAccessChanged = mock(() => {})
 
 mock.module('next/cache', () => ({
   revalidatePath,
 }))
+
+mock.module('@/core/auth/permissions.server', () => ({
+  requireAdmin: requireAdminActor,
+  requireCurrentUserPermission: requireCurrentUserPermissionActor,
+}))
+mock.module('@/core/logging', () => ({ audit: { adminActionCompleted, accountAccessChanged } }))
 
 mock.module('@/features/organization/management/members/service', () => ({
   memberAccountService: {
@@ -29,6 +39,10 @@ beforeEach(() => {
   linkExistingUser.mockClear()
   updateMemberStatus.mockClear()
   updateAccountAccess.mockClear()
+  requireAdminActor.mockClear()
+  requireCurrentUserPermissionActor.mockClear()
+  adminActionCompleted.mockClear()
+  accountAccessChanged.mockClear()
 })
 
 describe('admin Member management actions', () => {
@@ -55,6 +69,11 @@ describe('admin Member management actions', () => {
     expect(linkExistingUser).toHaveBeenCalledWith('user-1', MemberStatus.PASSIVE)
     expect(updateMemberStatus).toHaveBeenCalledWith('member-1', MemberStatus.FORMER)
     expect(updateAccountAccess).toHaveBeenCalledWith('user-1', 'disabled')
+    expect(accountAccessChanged).toHaveBeenCalledWith({
+      actorUserId: 'admin-1',
+      action: 'account.disabled',
+      subjectUserId: 'user-1',
+    })
   })
 })
 

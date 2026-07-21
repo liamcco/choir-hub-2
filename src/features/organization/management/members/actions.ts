@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { requireAdmin, requireCurrentUserPermission } from '@/core/auth/permissions.server'
+import { audit } from '@/core/logging'
 import { ROUTES } from '@/core/navigation/site'
 import { memberAccountService } from '@/features/organization/management/members/service'
 import { handleFormError } from '@/shared/forms/errors'
@@ -16,7 +17,7 @@ export async function createMemberAccountAction(
   formData: FormData,
 ): Promise<MemberAccountFormState> {
   // 1. Authenticate
-  await requireAdmin()
+  const actor = await requireAdmin()
 
   // 2. Validate form data
   const input = CreateMemberAccountFormSchema.safeParse({
@@ -32,7 +33,13 @@ export async function createMemberAccountAction(
 
   // 3. Mutate
   try {
-    await memberAccountService.createLinkedAccount(input.data)
+    const member = await memberAccountService.createLinkedAccount(input.data)
+    audit.adminActionCompleted({
+      actorUserId: actor.userId,
+      action: 'member.create',
+      subject: { type: 'member', id: member.id },
+    })
+    audit.accountAccessChanged({ actorUserId: actor.userId, action: 'account.create', subjectUserId: member.id })
   } catch (error) {
     return handleFormError(error)
   }
@@ -46,14 +53,19 @@ export async function createMemberAccountAction(
 
 export async function createLinkedMemberAction(userId: string, formData: FormData) {
   // 1. Authenticate
-  await requireAdmin()
+  const actor = await requireAdmin()
 
   // 2. Validate form data
   const formInput = MemberStatusSchema.safeParse(String(formData.get('status')))
   if (!formInput.success) throw new Error(z.prettifyError(formInput.error))
 
   // 3. Mutate
-  await memberAccountService.linkExistingUser(userId, formInput.data)
+  const member = await memberAccountService.linkExistingUser(userId, formInput.data)
+  audit.adminActionCompleted({
+    actorUserId: actor.userId,
+    action: 'member.linkExistingUser',
+    subject: { type: 'member', id: member.id },
+  })
 
   // 4. Invalidate
   revalidatePath(ROUTES.adminMembers)
@@ -63,7 +75,7 @@ export async function createLinkedMemberAction(userId: string, formData: FormDat
 
 export async function updateMemberStatusAction(memberId: string, formData: FormData) {
   // 1. Authenticate
-  await requireCurrentUserPermission({ resource: 'member', action: 'update' })
+  const actor = await requireCurrentUserPermission({ resource: 'member', action: 'update' })
 
   // 2. Validate form data
   const formInput = MemberStatusSchema.safeParse(String(formData.get('status')))
@@ -71,6 +83,11 @@ export async function updateMemberStatusAction(memberId: string, formData: FormD
 
   // 3. Mutate
   await memberAccountService.updateMemberStatus(memberId, formInput.data)
+  audit.adminActionCompleted({
+    actorUserId: actor.userId,
+    action: 'member.updateStatus',
+    subject: { type: 'member', id: memberId },
+  })
 
   // 4. Invalidate
   revalidatePath(ROUTES.adminMembers)
@@ -80,7 +97,7 @@ export async function updateMemberStatusAction(memberId: string, formData: FormD
 
 export async function updateAccountAccessAction(userId: string, formData: FormData) {
   // 1. Authenticate
-  await requireAdmin()
+  const actor = await requireAdmin()
 
   // 2. Validate form data
   const formInput = AccountAccessStateSchema.safeParse(String(formData.get('accessState')))
@@ -88,6 +105,12 @@ export async function updateAccountAccessAction(userId: string, formData: FormDa
 
   // 3. Mutate
   await memberAccountService.updateAccountAccess(userId, formInput.data)
+  audit.adminActionCompleted({
+    actorUserId: actor.userId,
+    action: `account.${formInput.data}`,
+    subject: { type: 'authUser', id: userId },
+  })
+  audit.accountAccessChanged({ actorUserId: actor.userId, action: `account.${formInput.data}`, subjectUserId: userId })
 
   // 4. Invalidate
   revalidatePath(ROUTES.adminMembers)

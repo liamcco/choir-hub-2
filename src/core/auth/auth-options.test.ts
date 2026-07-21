@@ -7,7 +7,7 @@ describe('auth options', () => {
     expect(authOptions.emailAndPassword.disableSignUp).toBe(true)
   })
 
-  test('keeps auth email sendouts as console callbacks', () => {
+  test('configures auth email callbacks', () => {
     expect(authOptions.emailAndPassword.sendResetPassword).toBeFunction()
     expect(authOptions.emailVerification.sendVerificationEmail).toBeFunction()
   })

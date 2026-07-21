@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { requireAdmin } from '@/core/auth/permissions.server'
+import { audit } from '@/core/logging'
 import { ROUTES } from '@/core/navigation/site'
 import { organizationService } from '@/features/organization'
 import { normalizeOptionalString } from '@/shared/formatting'
@@ -17,7 +18,7 @@ export async function createPositionAction(
   formData: FormData,
 ): Promise<PositionFormState> {
   // 1. Authenticate
-  await requireAdmin()
+  const actor = await requireAdmin()
 
   // 2. Validate form data
   const formInput = PositionFormSchema.safeParse({
@@ -32,7 +33,12 @@ export async function createPositionAction(
 
   // 3. Mutate
   try {
-    await organizationService.positions.create(formInput.data)
+    const position = await organizationService.positions.create(formInput.data)
+    audit.adminActionCompleted({
+      actorUserId: actor.userId,
+      action: 'position.create',
+      subject: { type: 'position', id: position.id },
+    })
   } catch (error) {
     return handleFormError(error)
   }
@@ -50,7 +56,7 @@ export async function updatePositionAction(
   formData: FormData,
 ): Promise<PositionFormState> {
   // 1. Authenticate
-  await requireAdmin()
+  const actor = await requireAdmin()
 
   // 2. Validate form data
   const formInput = PositionFormSchema.safeParse({
@@ -66,6 +72,11 @@ export async function updatePositionAction(
   // 3. Mutate
   try {
     await organizationService.positions.update(positionId, formInput.data)
+    audit.adminActionCompleted({
+      actorUserId: actor.userId,
+      action: 'position.update',
+      subject: { type: 'position', id: positionId },
+    })
   } catch (error) {
     return handleFormError(error)
   }

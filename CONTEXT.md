@@ -51,3 +51,7 @@ _Avoid_: Group, Position, Member Status
 **Permission Scope**:
 The Better Auth-backed authorization boundary within which an Access Role grants a permission. In v1, Permission Scopes are global; future scoped permissions must remain distinct from choir Groups and Positions unless a later decision explicitly changes that boundary.
 _Avoid_: Group, Position Scope
+
+**Audit Event**:
+A security-relevant record of an attempted or completed action, retained to support operational investigation and accountability. Audit Events identify the actor when available, the action, and the affected subject by stable identifiers, without recording credentials, secrets, or raw request data.
+_Avoid_: Debug log, application error

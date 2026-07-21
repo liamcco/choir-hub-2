@@ -2,6 +2,7 @@ import { headers } from 'next/headers'
 import { auth } from '@/core/auth/auth'
 import { ACCESS_ROLES, type AccessRole, type GlobalPermissionRequest } from '@/core/auth/permissions'
 import { prisma } from '@/core/db'
+import { audit } from '@/core/logging'
 
 type RequestActor = {
   userId: string
@@ -12,6 +13,7 @@ type ExactGlobalPermissionRequest<Request extends GlobalPermissionRequest> = Req
   Record<Exclude<keyof Request, keyof GlobalPermissionRequest>, never>
 
 export type AuthorizationActorContext = { state: 'authenticated'; userId: string } | { state: 'unauthenticated' }
+export type AuthenticatedAuthorizationActorContext = Extract<AuthorizationActorContext, { state: 'authenticated' }>
 
 export type AuthorizationRequirement =
   | { kind: 'permission'; permission: GlobalPermissionRequest }
@@ -31,6 +33,11 @@ export class AuthorizationDeniedError extends Error {
     super('The current actor is not authorized to perform this operation.')
     this.name = 'AuthorizationDeniedError'
   }
+}
+
+function denyAuthorization(context: AuthorizationDeniedContext): never {
+  audit.authorizationDenied(context)
+  throw new AuthorizationDeniedError(context)
 }
 
 function parseAccessRoles(value: unknown): AccessRole[] {
@@ -83,7 +90,7 @@ export async function canCurrentUserInGroup(input: { groupId: string }): Promise
 export async function requireCurrentUserInGroup(input: { groupId: string }): Promise<void> {
   if (!(await canCurrentUserInGroup(input))) {
     const actor = await getCurrentActor()
-    throw new AuthorizationDeniedError({
+    denyAuthorization({
       actor: actorContext(actor),
       requirement: { kind: 'currentGroupMembership', groupId: input.groupId },
     })
@@ -113,7 +120,7 @@ export async function canCurrentUserHoldPosition(input: { positionId: string }):
 export async function requireCurrentUserHoldsPosition(input: { positionId: string }): Promise<void> {
   if (!(await canCurrentUserHoldPosition(input))) {
     const actor = await getCurrentActor()
-    throw new AuthorizationDeniedError({
+    denyAuthorization({
       actor: actorContext(actor),
       requirement: { kind: 'currentPositionAssignment', positionId: input.positionId },
     })
@@ -168,24 +175,30 @@ export async function userIsAdmin(): Promise<boolean> {
 
 export async function requireCurrentUserPermission<const Request extends GlobalPermissionRequest>(
   permission: ExactGlobalPermissionRequest<Request>,
-): Promise<void> {
+): Promise<AuthenticatedAuthorizationActorContext> {
   const actor = await getCurrentActor()
 
-  if (!(await actorHasPermission(actor, permission))) {
-    throw new AuthorizationDeniedError({
+  if (!actor || !(await actorHasPermission(actor, permission))) {
+    denyAuthorization({
       actor: actorContext(actor),
       requirement: { kind: 'permission', permission },
     })
   }
+
+  return { state: 'authenticated', userId: actor.userId }
 }
 
-export async function requireAdmin(session?: { user: { id: string; role?: string | null } } | null): Promise<void> {
+export async function requireAdmin(
+  session?: { user: { id: string; role?: string | null } } | null,
+): Promise<AuthenticatedAuthorizationActorContext> {
   const actor = getActorFromSession(session) ?? (await getCurrentActor())
 
-  if (!actorIsAdmin(actor)) {
-    throw new AuthorizationDeniedError({
+  if (!actor || !actorIsAdmin(actor)) {
+    denyAuthorization({
       actor: actorContext(actor),
       requirement: { kind: 'accessRole', role: 'admin' },
     })
   }
+
+  return { state: 'authenticated', userId: actor.userId }
 }

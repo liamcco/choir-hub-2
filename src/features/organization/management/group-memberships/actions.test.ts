@@ -4,10 +4,20 @@ import { OrganizationOperationError } from '@/features/organization/core/errors'
 const revalidatePath = mock(() => {})
 const createGroupMembership = mock(async () => ({ id: 'membership-1' }))
 const endGroupMembership = mock(async (_id: string, _endsAt: Date) => ({ id: 'membership-1' }))
+const requireAdminActor = mock(async () => ({ state: 'authenticated' as const, userId: 'admin-1' }))
+const requireCurrentUserPermissionActor = mock(async () => ({ state: 'authenticated' as const, userId: 'admin-1' }))
+const adminActionCompleted = mock(() => {})
+const accountAccessChanged = mock(() => {})
 
 mock.module('next/cache', () => ({
   revalidatePath,
 }))
+
+mock.module('@/core/auth/permissions.server', () => ({
+  requireAdmin: requireAdminActor,
+  requireCurrentUserPermission: requireCurrentUserPermissionActor,
+}))
+mock.module('@/core/logging', () => ({ audit: { adminActionCompleted, accountAccessChanged } }))
 
 mock.module('@/features/organization', () => ({
   OrganizationOperationError,
@@ -27,6 +37,8 @@ beforeEach(() => {
   revalidatePath.mockClear()
   createGroupMembership.mockClear()
   endGroupMembership.mockClear()
+  requireCurrentUserPermissionActor.mockClear()
+  adminActionCompleted.mockClear()
 })
 
 describe('admin Group Membership management actions', () => {
@@ -44,6 +56,11 @@ describe('admin Group Membership management actions', () => {
       startsAt: new Date('2026-01-01T00:00:00.000Z'),
     })
     expect(revalidatePath).toHaveBeenCalledWith('/admin/group-memberships')
+    expect(adminActionCompleted).toHaveBeenCalledWith({
+      actorUserId: 'admin-1',
+      action: 'groupMembership.create',
+      subject: { type: 'groupMembership', id: 'membership-1' },
+    })
   })
 
   test('ends a Group Membership from form data and revalidates the admin workflow', async () => {

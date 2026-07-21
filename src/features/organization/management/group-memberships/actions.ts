@@ -2,7 +2,8 @@
 
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
-import { requireAdmin, requireCurrentUserPermission } from '@/core/auth/permissions.server'
+import { requireCurrentUserPermission } from '@/core/auth/permissions.server'
+import { audit } from '@/core/logging'
 import { ROUTES } from '@/core/navigation/site'
 import { organizationService } from '@/features/organization'
 import { handleFormError } from '@/shared/forms/errors'
@@ -19,7 +20,7 @@ export async function createGroupMembershipAction(
   formData: FormData,
 ): Promise<CreateGroupMembershipFormState> {
   // 1. Authenticate
-  await requireCurrentUserPermission({ resource: 'groupMembership', action: 'create' })
+  const actor = await requireCurrentUserPermission({ resource: 'groupMembership', action: 'create' })
 
   // 2. Validate form data
   const formInput = CreateGroupMembershipFormSchema.safeParse({
@@ -34,7 +35,12 @@ export async function createGroupMembershipAction(
 
   // 3. Mutate
   try {
-    await organizationService.groupMemberships.create(formInput.data)
+    const membership = await organizationService.groupMemberships.create(formInput.data)
+    audit.adminActionCompleted({
+      actorUserId: actor.userId,
+      action: 'groupMembership.create',
+      subject: { type: 'groupMembership', id: membership.id },
+    })
   } catch (error) {
     return handleFormError(error)
   }
@@ -52,7 +58,7 @@ export async function endGroupMembershipAction(
   formData: FormData,
 ): Promise<EndGroupMembershipFormState> {
   // 1. Authenticate
-  await requireCurrentUserPermission({ resource: 'groupMembership', action: 'delete' })
+  const actor = await requireCurrentUserPermission({ resource: 'groupMembership', action: 'delete' })
 
   // 2. Validate form data
   const formInput = EndGroupMembershipFormSchema.safeParse({
@@ -65,6 +71,11 @@ export async function endGroupMembershipAction(
   // 3. Mutate
   try {
     await organizationService.groupMemberships.end(membershipId, formInput.data.endsAt)
+    audit.adminActionCompleted({
+      actorUserId: actor.userId,
+      action: 'groupMembership.end',
+      subject: { type: 'groupMembership', id: membershipId },
+    })
   } catch (error) {
     return handleFormError(error)
   }

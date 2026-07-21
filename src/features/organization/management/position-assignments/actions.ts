@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { requireCurrentUserPermission } from '@/core/auth/permissions.server'
+import { audit } from '@/core/logging'
 import { ROUTES } from '@/core/navigation/site'
 import { organizationService } from '@/features/organization'
 import { handleFormError } from '@/shared/forms/errors'
@@ -19,7 +20,7 @@ export async function createPositionAssignmentAction(
   formData: FormData,
 ): Promise<CreatePositionAssignmentFormState> {
   // 1. Authenticate
-  await requireCurrentUserPermission({ resource: 'positionAssignment', action: 'create' })
+  const actor = await requireCurrentUserPermission({ resource: 'positionAssignment', action: 'create' })
 
   // 2. Validate form data
   const formInput = CreatePositionAssignmentFormSchema.safeParse({
@@ -34,7 +35,12 @@ export async function createPositionAssignmentAction(
 
   // 3. Mutate
   try {
-    await organizationService.positionAssignments.create(formInput.data)
+    const assignment = await organizationService.positionAssignments.create(formInput.data)
+    audit.adminActionCompleted({
+      actorUserId: actor.userId,
+      action: 'positionAssignment.create',
+      subject: { type: 'positionAssignment', id: assignment.id },
+    })
   } catch (error) {
     return handleFormError(error)
   }
@@ -52,7 +58,7 @@ export async function endPositionAssignmentAction(
   formData: FormData,
 ): Promise<EndPositionAssignmentFormState> {
   // 1. Authenticate
-  await requireCurrentUserPermission({ resource: 'positionAssignment', action: 'delete' })
+  const actor = await requireCurrentUserPermission({ resource: 'positionAssignment', action: 'delete' })
 
   // 2. Validate form data
   const formInput = EndPositionAssignmentFormSchema.safeParse({
@@ -66,6 +72,11 @@ export async function endPositionAssignmentAction(
   // 3. Mutate
   try {
     await organizationService.positionAssignments.end(assignmentId, formInput.data.endsAt)
+    audit.adminActionCompleted({
+      actorUserId: actor.userId,
+      action: 'positionAssignment.end',
+      subject: { type: 'positionAssignment', id: assignmentId },
+    })
   } catch (error) {
     return handleFormError(error)
   }

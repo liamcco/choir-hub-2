@@ -4,10 +4,20 @@ import { OrganizationOperationError } from '@/features/organization/core/errors'
 const revalidatePath = mock(() => {})
 const createPositionAssignment = mock(async () => ({ id: 'assignment-1' }))
 const endPositionAssignment = mock(async (_id: string, _endsAt: Date) => ({ id: 'assignment-1' }))
+const requireAdminActor = mock(async () => ({ state: 'authenticated' as const, userId: 'admin-1' }))
+const requireCurrentUserPermissionActor = mock(async () => ({ state: 'authenticated' as const, userId: 'admin-1' }))
+const adminActionCompleted = mock(() => {})
+const accountAccessChanged = mock(() => {})
 
 mock.module('next/cache', () => ({
   revalidatePath,
 }))
+
+mock.module('@/core/auth/permissions.server', () => ({
+  requireAdmin: requireAdminActor,
+  requireCurrentUserPermission: requireCurrentUserPermissionActor,
+}))
+mock.module('@/core/logging', () => ({ audit: { adminActionCompleted, accountAccessChanged } }))
 
 mock.module('@/features/organization', () => ({
   OrganizationOperationError,
@@ -27,6 +37,8 @@ beforeEach(() => {
   revalidatePath.mockClear()
   createPositionAssignment.mockClear()
   endPositionAssignment.mockClear()
+  requireCurrentUserPermissionActor.mockClear()
+  adminActionCompleted.mockClear()
 })
 
 describe('admin Position Assignment management actions', () => {
@@ -46,6 +58,11 @@ describe('admin Position Assignment management actions', () => {
       startsAt: new Date('2026-01-01T00:00:00.000Z'),
     })
     expect(revalidatePath).toHaveBeenCalledWith('/admin/position-assignments')
+    expect(adminActionCompleted).toHaveBeenCalledWith({
+      actorUserId: 'admin-1',
+      action: 'positionAssignment.create',
+      subject: { type: 'positionAssignment', id: 'assignment-1' },
+    })
   })
 
   test('ends a Position Assignment from form data and revalidates the admin workflow', async () => {

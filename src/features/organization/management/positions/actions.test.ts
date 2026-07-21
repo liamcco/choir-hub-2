@@ -4,10 +4,20 @@ import { OrganizationOperationError } from '@/features/organization/core/errors'
 const revalidatePath = mock(() => {})
 const createPosition = mock(async () => ({ id: 'position-1' }))
 const updatePosition = mock(async () => ({ id: 'position-1' }))
+const requireAdminActor = mock(async () => ({ state: 'authenticated' as const, userId: 'admin-1' }))
+const requireCurrentUserPermissionActor = mock(async () => ({ state: 'authenticated' as const, userId: 'admin-1' }))
+const adminActionCompleted = mock(() => {})
+const accountAccessChanged = mock(() => {})
 
 mock.module('next/cache', () => ({
   revalidatePath,
 }))
+
+mock.module('@/core/auth/permissions.server', () => ({
+  requireAdmin: requireAdminActor,
+  requireCurrentUserPermission: requireCurrentUserPermissionActor,
+}))
+mock.module('@/core/logging', () => ({ audit: { adminActionCompleted, accountAccessChanged } }))
 
 mock.module('@/features/organization', () => ({
   OrganizationOperationError,
@@ -27,6 +37,8 @@ beforeEach(() => {
   revalidatePath.mockClear()
   createPosition.mockClear()
   updatePosition.mockClear()
+  requireAdminActor.mockClear()
+  adminActionCompleted.mockClear()
 })
 
 describe('admin Position management actions', () => {
@@ -44,6 +56,11 @@ describe('admin Position management actions', () => {
       groupIds: ['group-1', 'group-2'],
     })
     expect(revalidatePath).toHaveBeenCalledWith('/admin/positions')
+    expect(adminActionCompleted).toHaveBeenCalledWith({
+      actorUserId: 'admin-1',
+      action: 'position.create',
+      subject: { type: 'position', id: 'position-1' },
+    })
   })
 
   test('updates a Position and can remove one Group scope without deleting the Position', async () => {

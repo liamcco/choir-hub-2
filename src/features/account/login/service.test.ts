@@ -1,9 +1,11 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test'
+
 const signInEmail = mock(async () => ({
   data: { user: { id: 'user-member', role: 'user' } },
   error: null as null | { message: string },
 }))
 mock.module('@/core/auth/auth-client', () => ({ authClient: { signIn: { email: signInEmail } } }))
+
 import { signInWithEmailPassword } from './service'
 
 beforeEach(() => signInEmail.mockReset())

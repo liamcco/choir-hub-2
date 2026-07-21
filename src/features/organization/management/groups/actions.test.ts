@@ -5,10 +5,20 @@ import { GroupKind } from '@/prisma/generated/client'
 const revalidatePath = mock(() => {})
 const createGroup = mock(async () => ({ id: 'group-1' }))
 const updateGroup = mock(async () => ({ id: 'group-1' }))
+const requireAdminActor = mock(async () => ({ state: 'authenticated' as const, userId: 'admin-1' }))
+const requireCurrentUserPermissionActor = mock(async () => ({ state: 'authenticated' as const, userId: 'admin-1' }))
+const adminActionCompleted = mock(() => {})
+const accountAccessChanged = mock(() => {})
 
 mock.module('next/cache', () => ({
   revalidatePath,
 }))
+
+mock.module('@/core/auth/permissions.server', () => ({
+  requireAdmin: requireAdminActor,
+  requireCurrentUserPermission: requireCurrentUserPermissionActor,
+}))
+mock.module('@/core/logging', () => ({ audit: { adminActionCompleted, accountAccessChanged } }))
 
 mock.module('@/features/organization', () => ({
   OrganizationOperationError,
@@ -26,6 +36,8 @@ beforeEach(() => {
   revalidatePath.mockClear()
   createGroup.mockClear()
   updateGroup.mockClear()
+  requireAdminActor.mockClear()
+  adminActionCompleted.mockClear()
 })
 
 describe('admin Group management actions', () => {
@@ -45,6 +57,11 @@ describe('admin Group management actions', () => {
       parentGroupId: null,
     })
     expect(revalidatePath).toHaveBeenCalledWith('/admin/groups')
+    expect(adminActionCompleted).toHaveBeenCalledWith({
+      actorUserId: 'admin-1',
+      action: 'group.create',
+      subject: { type: 'group', id: 'group-1' },
+    })
   })
 
   test('updates a Group from form data and revalidates the admin workflow', async () => {

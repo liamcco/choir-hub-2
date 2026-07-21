@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { requireAdmin } from '@/core/auth/permissions.server'
+import { audit } from '@/core/logging'
 import { ROUTES } from '@/core/navigation/site'
 import { organizationService } from '@/features/organization'
 import type { GroupKind } from '@/prisma/generated/client'
@@ -15,7 +16,7 @@ export type GroupFormState = FormState<typeof GroupFormSchema>
 
 export async function createGroupAction(_previousState: GroupFormState, formData: FormData): Promise<GroupFormState> {
   // 1. Authenticate
-  await requireAdmin()
+  const actor = await requireAdmin()
 
   // 2. Validate form data
   const formInput = GroupFormSchema.safeParse({
@@ -31,7 +32,12 @@ export async function createGroupAction(_previousState: GroupFormState, formData
 
   // 3. Mutate
   try {
-    await organizationService.groups.create(formInput.data)
+    const group = await organizationService.groups.create(formInput.data)
+    audit.adminActionCompleted({
+      actorUserId: actor.userId,
+      action: 'group.create',
+      subject: { type: 'group', id: group.id },
+    })
   } catch (error) {
     return handleFormError(error)
   }
@@ -49,7 +55,7 @@ export async function updateGroupAction(
   formData: FormData,
 ): Promise<GroupFormState> {
   // 1. Authenticate
-  await requireAdmin()
+  const actor = await requireAdmin()
 
   // 2. Validate form data
   const formInput = GroupFormSchema.safeParse({
@@ -66,6 +72,11 @@ export async function updateGroupAction(
   // 3. Mutate
   try {
     await organizationService.groups.update(groupId, formInput.data)
+    audit.adminActionCompleted({
+      actorUserId: actor.userId,
+      action: 'group.update',
+      subject: { type: 'group', id: groupId },
+    })
   } catch (error) {
     return handleFormError(error)
   }
