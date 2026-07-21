@@ -19,6 +19,16 @@ The Prisma client is generated into `src/prisma/generated`, which is ignored by 
 bun run prisma:generate
 ```
 
+## Script CLI
+
+Run the interactive script menu with:
+
+```bash
+bun run cli
+```
+
+Use the arrow keys and Enter to choose an admin bootstrap, demo seed, or foundation seed. The admin bootstrap defaults to `admin@example.com`, password `password`, and name `Local Admin`, and can prompt for custom values.
+
 ## Codebase Health
 
 Current baseline gaps:
@@ -28,6 +38,6 @@ Current baseline gaps:
 
 ## Deployment
 
-Set the variables from `.env.example` in Vercel Project Settings. At minimum, production needs `DATABASE_URL`, `BETTER_AUTH_SECRET`, and either `APP_URL`/`BETTER_AUTH_URL` or Vercel system environment variables exposed.
+Set the variables from `.env.example` in Vercel Project Settings. At minimum, production needs `DATABASE_URL`, `BETTER_AUTH_SECRET`, and either `APP_URL`/`BETTER_AUTH_URL` or Vercel system environment variables exposed. The CLI's `foundation-seed` route uses `DATABASE_URL_PROD` instead of `DATABASE_URL` when `DB_MODE=prod`, and fails if the production URL is missing.
 
 `prisma:migrate` uses `npx prisma migrate deploy`, so production schema changes need committed migration files under `src/prisma/migrations`.

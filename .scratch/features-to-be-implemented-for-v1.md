@@ -9,14 +9,12 @@ The goal is production-usable, polished, and ready to grow. Do not expand v1 int
 ## Infrastructure
 
 - [] Add proper application logging infrastructure, including audit logging for security-relevant events such as denied authorization attempts, admin actions, and account access changes. The access-control v1 plan may proceed before this exists, but permission denials should remain identifiable enough to log once the logger is introduced.
-- [] Add type-safe environment variable handling in `src/core/environment`, replacing direct scattered `process.env` reads with validated server-side configuration and clear public/server boundaries.
+- [x] Add type-safe environment variable handling in `src/core/environment`, replacing direct scattered `process.env` reads with validated server-side configuration and clear public/server boundaries.
 - [] Add `.env.example` and keep it aligned with the validated environment schema, including database, Better Auth, app URL, email, logging, and bootstrap variables.
-- [] Add great developer experience for local, preview, and production database workflows:
+- [] Add great developer experience for local and production database workflows:
   - [] make it clear which database each command and environment uses
   - [] provide safe local setup/reset/seed commands
   - [] document production database migration and bootstrap flow
-  - [] document Vercel preview database configuration
-  - [] prefer a separate test/preview database for Vercel preview deployments so preview builds never touch production data
 - [] Verify scoped email behavior:
   - [] local/dev email mode must not send real mail accidentally
   - [] production SMTP configuration must be documented and fail clearly when incomplete
@@ -87,10 +85,10 @@ The goal is production-usable, polished, and ready to grow. Do not expand v1 int
 
 - Do not commit partial Prisma migrations while v1 schema is still moving.
 - [] Once v1 is verified and finished, record the first committed Prisma migration as the v1 baseline.
-- [] Add separated seed paths:
-  - [] operational/bootstrap seed data for production needs only
-  - [] demo/dev/e2e seed data with realistic choir Members, Groups, Positions, Group Memberships, and Position Assignments
-- [] Ensure the first-admin bootstrap path is idempotent, documented, and verified before admin route enforcement is treated as production-ready.
+- [x] Add separated seed paths:
+  - [x] operational/bootstrap seed data for production needs only
+  - [x] demo/dev/e2e seed data with realistic choir Members, Groups, Positions, Group Memberships, and Position Assignments
+- [x] Ensure the first-admin bootstrap path is idempotent, documented, and verified before admin route enforcement is treated as production-ready.
 
 ## Verification And Release Gate
 

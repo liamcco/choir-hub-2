@@ -10,9 +10,9 @@
     "lint": "biome check",
     "lint:fix": "biome check --write",
     "format": "biome format --write",
+    "cli": "bun scripts/cli.ts",
     "prisma:generate": "bun x prisma generate",
     "prebuild": "bun prisma:generate",
-    "admin:bootstrap": "bun scripts/bootstrap-admin.ts",
     "auth:generate": "bun x auth@latest generate --output src/prisma/schema/auth.prisma"
   },
   "dependencies": {
