@@ -1,10 +1,11 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import { requireAdmin, requireCurrentUserPermission } from '@/core/auth/permissions.server'
 import { audit } from '@/core/logging'
-import { ROUTES } from '@/core/navigation/site'
+import { adminMemberPath, ROUTES } from '@/core/navigation/site'
 import { memberAccountService } from '@/features/organization/management/members/service'
 import { handleFormError } from '@/shared/forms/errors'
 import type { FormState } from '@/shared/forms/types'
@@ -32,8 +33,9 @@ export async function createMemberAccountAction(
   }
 
   // 3. Mutate
+  let member: Awaited<ReturnType<typeof memberAccountService.createLinkedAccount>>
   try {
-    const member = await memberAccountService.createLinkedAccount(input.data)
+    member = await memberAccountService.createLinkedAccount(input.data)
     audit.adminActionCompleted({
       actorUserId: actor.userId,
       action: 'member.create',
@@ -46,9 +48,9 @@ export async function createMemberAccountAction(
 
   // 4. Invalidate
   revalidatePath(ROUTES.adminMembers)
-  return { success: true, message: 'Member account created.' }
 
   // 5. Navigate
+  redirect(adminMemberPath(member.id))
 }
 
 export async function createLinkedMemberAction(userId: string, formData: FormData) {
@@ -69,6 +71,7 @@ export async function createLinkedMemberAction(userId: string, formData: FormDat
 
   // 4. Invalidate
   revalidatePath(ROUTES.adminMembers)
+  revalidatePath(adminMemberPath(member.id))
 
   // 5. Navigate
 }
@@ -91,6 +94,7 @@ export async function updateMemberStatusAction(memberId: string, formData: FormD
 
   // 4. Invalidate
   revalidatePath(ROUTES.adminMembers)
+  revalidatePath(adminMemberPath(memberId))
 
   // 5. Navigate
 }
@@ -114,6 +118,7 @@ export async function updateAccountAccessAction(userId: string, formData: FormDa
 
   // 4. Invalidate
   revalidatePath(ROUTES.adminMembers)
+  revalidatePath(adminMemberPath(userId))
 
   // 5. Navigate
 }

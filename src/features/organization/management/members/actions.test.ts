@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, mock, test } from 'bun:test'
 import { MemberStatus } from '@/prisma/generated/client'
 
 const revalidatePath = mock(() => {})
+const redirect = mock(() => {})
 const createLinkedAccount = mock(async () => ({ id: 'member-1' }))
 const linkExistingUser = mock(async () => ({ id: 'user-1' }))
 const updateMemberStatus = mock(async () => ({ id: 'member-1' }))
@@ -14,6 +15,7 @@ const accountAccessChanged = mock(() => {})
 mock.module('next/cache', () => ({
   revalidatePath,
 }))
+mock.module('next/navigation', () => ({ redirect }))
 
 mock.module('@/core/auth/permissions.server', () => ({
   requireAdmin: requireAdminActor,
@@ -35,6 +37,7 @@ const { createLinkedMemberAction, createMemberAccountAction, updateAccountAccess
 
 beforeEach(() => {
   revalidatePath.mockClear()
+  redirect.mockClear()
   createLinkedAccount.mockClear()
   linkExistingUser.mockClear()
   updateMemberStatus.mockClear()
@@ -46,6 +49,20 @@ beforeEach(() => {
 })
 
 describe('admin Member management actions', () => {
+  test('navigates successful creation directly to the new Member detail', async () => {
+    await createMemberAccountAction(
+      {},
+      formData({
+        name: 'Ada Lovelace',
+        email: 'ada@example.com',
+        password: 'correct horse battery staple',
+        status: MemberStatus.ACTIVE,
+      }),
+    )
+
+    expect(redirect).toHaveBeenCalledWith('/admin/members/member-1')
+  })
+
   test('creates and updates Members from admin workflow forms', async () => {
     await createMemberAccountAction(
       {},
