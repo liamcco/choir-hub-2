@@ -2,8 +2,8 @@ import { beforeEach, describe, expect, mock, test } from 'bun:test'
 import { MemberStatus } from '@/prisma/generated/client'
 
 const revalidatePath = mock(() => {})
-const createMemberAccount = mock(async () => ({}))
-const createLinkedMember = mock(async () => ({}))
+const createLinkedAccount = mock(async () => ({}))
+const linkExistingUser = mock(async () => ({}))
 const updateMemberStatus = mock(async () => ({}))
 const updateAccountAccess = mock(async () => ({}))
 
@@ -12,10 +12,12 @@ mock.module('next/cache', () => ({
 }))
 
 mock.module('@/features/organization/management/members/service', () => ({
-  createMemberAccount,
-  createLinkedMember,
-  updateMemberStatus,
-  updateAccountAccess,
+  memberAccountService: {
+    createLinkedAccount,
+    linkExistingUser,
+    updateMemberStatus,
+    updateAccountAccess,
+  },
 }))
 
 const { createLinkedMemberAction, createMemberAccountAction, updateAccountAccessAction, updateMemberStatusAction } =
@@ -23,8 +25,8 @@ const { createLinkedMemberAction, createMemberAccountAction, updateAccountAccess
 
 beforeEach(() => {
   revalidatePath.mockClear()
-  createMemberAccount.mockClear()
-  createLinkedMember.mockClear()
+  createLinkedAccount.mockClear()
+  linkExistingUser.mockClear()
   updateMemberStatus.mockClear()
   updateAccountAccess.mockClear()
 })
@@ -44,13 +46,13 @@ describe('admin Member management actions', () => {
     await updateMemberStatusAction('member-1', formData({ status: MemberStatus.FORMER }))
     await updateAccountAccessAction('user-1', formData({ accessState: 'disabled' }))
 
-    expect(createMemberAccount).toHaveBeenCalledWith({
+    expect(createLinkedAccount).toHaveBeenCalledWith({
       name: 'Ada Lovelace',
       email: 'ada@example.com',
       password: 'correct horse battery staple',
       status: MemberStatus.ACTIVE,
     })
-    expect(createLinkedMember).toHaveBeenCalledWith('user-1', MemberStatus.PASSIVE)
+    expect(linkExistingUser).toHaveBeenCalledWith('user-1', MemberStatus.PASSIVE)
     expect(updateMemberStatus).toHaveBeenCalledWith('member-1', MemberStatus.FORMER)
     expect(updateAccountAccess).toHaveBeenCalledWith('user-1', 'disabled')
   })

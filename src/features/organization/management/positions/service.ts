@@ -31,10 +31,11 @@ export function buildPositionManagementState({
   scopes: PositionScope[]
 }) {
   const groupsById = new Map(groups.map((group) => [group.id, group]))
-  const nameCounts = new Map<string, number>()
+
+  const duplicateNameCounts = new Map<string, number>()
   for (const position of positions) {
     const key = normalizeName(position.name)
-    nameCounts.set(key, (nameCounts.get(key) ?? 0) + 1)
+    duplicateNameCounts.set(key, (duplicateNameCounts.get(key) ?? 0) + 1)
   }
 
   return {
@@ -53,7 +54,7 @@ export function buildPositionManagementState({
         scopeGroups,
         scopeLabel: formatPositionScopeLabel(groups, scopeGroups),
         scopeKind: scopeGroups.length > 1 ? 'shared' : scopeGroups.length === 1 ? 'single' : 'unscoped',
-        duplicateNameCount: nameCounts.get(normalizeName(position.name)) ?? 1,
+        duplicateNameCount: duplicateNameCounts.get(normalizeName(position.name)) ?? 1,
       }
     }),
   }

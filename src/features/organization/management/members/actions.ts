@@ -3,12 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { ROUTES } from '@/core/navigation/app-routes'
-import {
-  createLinkedMember,
-  createMemberAccount,
-  updateAccountAccess,
-  updateMemberStatus,
-} from '@/features/organization/management/members/service'
+import { memberAccountService } from '@/features/organization/management/members/service'
 import { handleFormError } from '@/shared/forms/errors'
 import type { FormState } from '@/shared/forms/types'
 import { AccountAccessStateSchema, CreateMemberAccountFormSchema, MemberStatusSchema } from './schemas'
@@ -35,7 +30,7 @@ export async function createMemberAccountAction(
 
   // 3. Mutate
   try {
-    await createMemberAccount(input.data)
+    await memberAccountService.createLinkedAccount(input.data)
   } catch (error) {
     return handleFormError(error)
   }
@@ -55,7 +50,7 @@ export async function createLinkedMemberAction(userId: string, formData: FormDat
   if (!formInput.success) throw new Error(z.prettifyError(formInput.error))
 
   // 3. Mutate
-  await createLinkedMember(userId, formInput.data)
+  await memberAccountService.linkExistingUser(userId, formInput.data)
 
   // 4. Invalidate
   revalidatePath(ROUTES.adminMembers)
@@ -71,7 +66,7 @@ export async function updateMemberStatusAction(memberId: string, formData: FormD
   if (!formInput.success) throw new Error(z.prettifyError(formInput.error))
 
   // 3. Mutate
-  await updateMemberStatus(memberId, formInput.data)
+  await memberAccountService.updateMemberStatus(memberId, formInput.data)
 
   // 4. Invalidate
   revalidatePath(ROUTES.adminMembers)
@@ -87,7 +82,7 @@ export async function updateAccountAccessAction(userId: string, formData: FormDa
   if (!formInput.success) throw new Error(z.prettifyError(formInput.error))
 
   // 3. Mutate
-  await updateAccountAccess(userId, formInput.data)
+  await memberAccountService.updateAccountAccess(userId, formInput.data)
 
   // 4. Invalidate
   revalidatePath(ROUTES.adminMembers)

@@ -4,11 +4,10 @@
 
 **Blocked by:** None — can start immediately.
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] Member management lists linked and unlinked Auth Users through one lifecycle module interface.
-- [ ] Creating a linked account keeps Auth User creation and Member creation in one lifecycle workflow.
-- [ ] If Member creation fails after Auth User creation, the lifecycle workflow compensates by removing the created Auth User.
-- [ ] Member Status changes and access-state changes go through the lifecycle module rather than being coordinated directly by the management workflow.
-- [ ] Tests cover linked/unlinked projection, linked account creation, compensation on failure, Member Status changes, and access-state changes through the module interface.
-- [ ] Existing Member management behavior remains unchanged for users.
+- [x] Member management lists linked and unlinked Auth Users through one lifecycle module interface.
+- [x] Creating a linked account keeps Auth User creation and Member creation in one lifecycle workflow.
+- [x] If Member creation fails after Auth User creation, the lifecycle workflow compensates by removing the created Auth User.
+- [x] Member Status changes and access-state changes go through the lifecycle module rather than being coordinated directly by the management workflow.
+- [x] Existing Member management behavior remains unchanged for users.

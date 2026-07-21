@@ -5,7 +5,7 @@ import {
   updateMemberStatusAction,
 } from '@/features/organization/management/members/actions'
 import { MemberAccountForm } from '@/features/organization/management/members/member-account-form'
-import { listManagedMembers, type ManagedMemberAccount } from '@/features/organization/management/members/service'
+import { type ManagedMemberAccount, memberAccountService } from '@/features/organization/management/members/service'
 import { MemberStatus } from '@/prisma/generated/client'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
@@ -14,7 +14,7 @@ import { NativeSelect, NativeSelectOption } from '@/shared/ui/native-select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 
 export async function MemberManagementScreen() {
-  const accounts = await listManagedMembers()
+  const accounts = await memberAccountService.list()
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
       <div className="flex flex-col gap-1">

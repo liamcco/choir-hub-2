@@ -5,19 +5,42 @@ import { auth } from '@/core/auth/auth'
 import { organizationService } from '@/features/organization'
 import type { Member, MemberStatus } from '@/prisma/generated/client'
 
+export type AccountAccessState = 'enabled' | 'disabled'
+
+// TODO: Add pagination ( or remove limits? ) and extra fields
 export type AuthUserAccount = {
   id: string
   name: string
+  // image?: string | null
+
   email: string
+  // emailVerified: boolean
+
   banned?: boolean | null
+  // banReason?: string | null
+  // banExpires?: Date | null
+
   createdAt: Date
+  // updatedAt: Date
+
+  // role?: string | null
 }
 
-export type ManagedMemberAccount =
-  | { user: AuthUserAccount; member: Member; linkState: 'linked'; accessState: 'enabled' | 'disabled' }
-  | { user: AuthUserAccount; member: null; linkState: 'unlinked'; accessState: 'enabled' | 'disabled' }
+export type ManagedMemberAccount = {
+  user: AuthUserAccount
+  accessState: 'enabled' | 'disabled'
+} & (
+  | {
+      member: Member
+      linkState: 'linked'
+    }
+  | {
+      member: null
+      linkState: 'unlinked'
+    }
+)
 
-export async function listManagedMembers() {
+async function list(): Promise<ManagedMemberAccount[]> {
   const requestHeaders = await headers()
   const [result, members] = await Promise.all([
     auth.api.listUsers({
@@ -43,12 +66,7 @@ export async function listManagedMembers() {
   })
 }
 
-export async function createMemberAccount(input: {
-  name: string
-  email: string
-  password: string
-  status: MemberStatus
-}) {
+async function createLinkedAccount(input: { name: string; email: string; password: string; status: MemberStatus }) {
   const requestHeaders = await headers()
   const result = await auth.api.createUser({
     headers: requestHeaders,
@@ -69,15 +87,15 @@ export async function createMemberAccount(input: {
   }
 }
 
-export function createLinkedMember(userId: string, status: MemberStatus) {
+async function linkExistingUser(userId: string, status: MemberStatus) {
   return organizationService.members.create({ userId, status })
 }
 
-export function updateMemberStatus(memberId: string, status: MemberStatus) {
+async function updateMemberStatus(memberId: string, status: MemberStatus) {
   return organizationService.members.updateStatus(memberId, status)
 }
 
-export async function updateAccountAccess(userId: string, accessState: 'enabled' | 'disabled') {
+async function updateAccountAccess(userId: string, accessState: AccountAccessState) {
   const requestHeaders = await headers()
   if (accessState === 'disabled') {
     return auth.api.banUser({
@@ -86,4 +104,12 @@ export async function updateAccountAccess(userId: string, accessState: 'enabled'
     })
   }
   return auth.api.unbanUser({ headers: requestHeaders, body: { userId } })
+}
+
+export const memberAccountService = {
+  list,
+  createLinkedAccount,
+  linkExistingUser,
+  updateMemberStatus,
+  updateAccountAccess,
 }
