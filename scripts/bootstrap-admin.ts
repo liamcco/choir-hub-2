@@ -1,51 +1,98 @@
 import 'dotenv/config'
 
-const email = process.env.ADMIN_EMAIL?.trim().toLowerCase()
-const password = process.env.ADMIN_PASSWORD
-const name = process.env.ADMIN_NAME?.trim() || 'Local Admin'
+export const DEFAULT_ADMIN_NAME = 'Local Admin'
 
-if (!email || !password) {
-  console.error('ADMIN_EMAIL and ADMIN_PASSWORD are required.')
-  process.exit(1)
+export function normalizeAdminEmail(email: string): string {
+  return email.trim().toLowerCase()
 }
 
-if (password.length < 8) {
-  console.error('ADMIN_PASSWORD must be at least 8 characters.')
-  process.exit(1)
+export function normalizeRoles(role: string | null | undefined): string {
+  const roles = (role ?? '')
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean)
+
+  if (!roles.includes('admin')) {
+    roles.push('admin')
+  }
+
+  return [...new Set(roles)].join(',')
 }
 
-const [{ prisma }, { auth }] = await Promise.all([import('@/core/db'), import('@/core/auth/auth')])
+export function readAdminConfig(environment: { ADMIN_EMAIL?: string; ADMIN_PASSWORD?: string; ADMIN_NAME?: string }) {
+  const email = environment.ADMIN_EMAIL ? normalizeAdminEmail(environment.ADMIN_EMAIL) : ''
+  const password = environment.ADMIN_PASSWORD ?? ''
+  const name = environment.ADMIN_NAME?.trim() || DEFAULT_ADMIN_NAME
 
-const existingUser = await prisma.user.findUnique({
-  where: { email },
-})
+  if (!email || !password) {
+    throw new Error('ADMIN_EMAIL and ADMIN_PASSWORD are required.')
+  }
 
-if (existingUser) {
-  const roleSet = new Set((existingUser.role ?? 'user').split(',').map((role) => role.trim()))
-  roleSet.add('admin')
+  if (password.length < 8) {
+    throw new Error('ADMIN_PASSWORD must be at least 8 characters.')
+  }
 
-  const user = await prisma.user.update({
-    where: { id: existingUser.id },
-    data: {
-      role: [...roleSet].filter(Boolean).join(','),
-      name,
-      emailVerified: true,
-    },
+  return { email, password, name }
+}
+
+type BootstrapDependencies = {
+  prisma: {
+    user: {
+      findUnique: (args: {
+        where: { email: string }
+      }) => Promise<{ id: string; email: string; role?: string | null } | null>
+      update: (args: { where: { id: string }; data: Record<string, unknown> }) => Promise<{ email: string }>
+    }
+    $disconnect: () => Promise<void>
+  }
+  auth: {
+    api: {
+      createUser: (args: {
+        body: { email: string; password: string; name: string; role: 'admin' }
+      }) => Promise<{ user: { email: string } }>
+    }
+  }
+}
+
+export async function bootstrapAdmin(
+  dependencies: BootstrapDependencies,
+  config: { email: string; password: string; name: string },
+) {
+  const existingUser = await dependencies.prisma.user.findUnique({ where: { email: config.email } })
+
+  if (existingUser) {
+    const user = await dependencies.prisma.user.update({
+      where: { id: existingUser.id },
+      data: {
+        role: normalizeRoles(existingUser.role),
+        emailVerified: true,
+      },
+    })
+
+    return { action: 'promoted' as const, user }
+  }
+
+  const result = await dependencies.auth.api.createUser({
+    body: { ...config, role: 'admin' },
   })
 
-  console.log(`Promoted existing user to admin: ${user.email}`)
-  console.log('Existing user password was not changed.')
-} else {
-  const result = await auth.api.createUser({
-    body: {
-      email,
-      password,
-      name,
-      role: 'admin',
-    },
-  })
-
-  console.log(`Created admin user: ${result.user.email}`)
+  return { action: 'created' as const, user: result.user }
 }
 
-await prisma.$disconnect()
+if (import.meta.main) {
+  try {
+    const config = readAdminConfig({
+      ADMIN_EMAIL: process.env.ADMIN_EMAIL,
+      ADMIN_PASSWORD: process.env.ADMIN_PASSWORD,
+      ADMIN_NAME: process.env.ADMIN_NAME,
+    })
+    const [{ prisma }, { auth }] = await Promise.all([import('@/core/db'), import('@/core/auth/auth')])
+    const result = await bootstrapAdmin({ prisma, auth }, config)
+    console.log(`${result.action === 'created' ? 'Created' : 'Promoted existing'} admin user: ${result.user.email}`)
+    if (result.action === 'promoted') console.log('Existing user password was not changed.')
+    await prisma.$disconnect()
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : error)
+    process.exitCode = 1
+  }
+}
