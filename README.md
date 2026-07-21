@@ -4,6 +4,12 @@ Next.js app, Better Auth, Prisma
 
 ## Development
 
+Copy `.example.env` to `.env` and fill in the required values before starting the app:
+
+```bash
+cp .example.env .env
+```
+
 ```bash
 bun install
 bun run dev
