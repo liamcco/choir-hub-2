@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
+import { requireAdmin, requireCurrentUserPermission } from '@/core/auth/permissions.server'
 import { ROUTES } from '@/core/navigation/site'
 import { memberAccountService } from '@/features/organization/management/members/service'
 import { handleFormError } from '@/shared/forms/errors'
@@ -15,6 +16,7 @@ export async function createMemberAccountAction(
   formData: FormData,
 ): Promise<MemberAccountFormState> {
   // 1. Authenticate
+  await requireAdmin()
 
   // 2. Validate form data
   const input = CreateMemberAccountFormSchema.safeParse({
@@ -44,6 +46,7 @@ export async function createMemberAccountAction(
 
 export async function createLinkedMemberAction(userId: string, formData: FormData) {
   // 1. Authenticate
+  await requireAdmin()
 
   // 2. Validate form data
   const formInput = MemberStatusSchema.safeParse(String(formData.get('status')))
@@ -60,6 +63,7 @@ export async function createLinkedMemberAction(userId: string, formData: FormDat
 
 export async function updateMemberStatusAction(memberId: string, formData: FormData) {
   // 1. Authenticate
+  await requireCurrentUserPermission({ resource: 'member', action: 'update' })
 
   // 2. Validate form data
   const formInput = MemberStatusSchema.safeParse(String(formData.get('status')))
@@ -76,6 +80,7 @@ export async function updateMemberStatusAction(memberId: string, formData: FormD
 
 export async function updateAccountAccessAction(userId: string, formData: FormData) {
   // 1. Authenticate
+  await requireAdmin()
 
   // 2. Validate form data
   const formInput = AccountAccessStateSchema.safeParse(String(formData.get('accessState')))

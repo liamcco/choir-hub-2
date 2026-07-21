@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
+import { requireCurrentUserPermission } from '@/core/auth/permissions.server'
 import { ROUTES } from '@/core/navigation/site'
 import { organizationService } from '@/features/organization'
 import { handleFormError } from '@/shared/forms/errors'
@@ -18,6 +19,7 @@ export async function createPositionAssignmentAction(
   formData: FormData,
 ): Promise<CreatePositionAssignmentFormState> {
   // 1. Authenticate
+  await requireCurrentUserPermission({ resource: 'positionAssignment', action: 'create' })
 
   // 2. Validate form data
   const formInput = CreatePositionAssignmentFormSchema.safeParse({
@@ -50,6 +52,7 @@ export async function endPositionAssignmentAction(
   formData: FormData,
 ): Promise<EndPositionAssignmentFormState> {
   // 1. Authenticate
+  await requireCurrentUserPermission({ resource: 'positionAssignment', action: 'delete' })
 
   // 2. Validate form data
   const formInput = EndPositionAssignmentFormSchema.safeParse({

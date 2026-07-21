@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
+import { requireAdmin } from '@/core/auth/permissions.server'
 import { ROUTES } from '@/core/navigation/site'
 import { organizationService } from '@/features/organization'
 import type { GroupKind } from '@/prisma/generated/client'
@@ -14,6 +15,7 @@ export type GroupFormState = FormState<typeof GroupFormSchema>
 
 export async function createGroupAction(_previousState: GroupFormState, formData: FormData): Promise<GroupFormState> {
   // 1. Authenticate
+  await requireAdmin()
 
   // 2. Validate form data
   const formInput = GroupFormSchema.safeParse({
@@ -47,6 +49,7 @@ export async function updateGroupAction(
   formData: FormData,
 ): Promise<GroupFormState> {
   // 1. Authenticate
+  await requireAdmin()
 
   // 2. Validate form data
   const formInput = GroupFormSchema.safeParse({

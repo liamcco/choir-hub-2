@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
+import { requireAdmin, requireCurrentUserPermission } from '@/core/auth/permissions.server'
 import { ROUTES } from '@/core/navigation/site'
 import { organizationService } from '@/features/organization'
 import { handleFormError } from '@/shared/forms/errors'
@@ -18,6 +19,7 @@ export async function createGroupMembershipAction(
   formData: FormData,
 ): Promise<CreateGroupMembershipFormState> {
   // 1. Authenticate
+  await requireCurrentUserPermission({ resource: 'groupMembership', action: 'create' })
 
   // 2. Validate form data
   const formInput = CreateGroupMembershipFormSchema.safeParse({
@@ -50,6 +52,7 @@ export async function endGroupMembershipAction(
   formData: FormData,
 ): Promise<EndGroupMembershipFormState> {
   // 1. Authenticate
+  await requireCurrentUserPermission({ resource: 'groupMembership', action: 'delete' })
 
   // 2. Validate form data
   const formInput = EndGroupMembershipFormSchema.safeParse({

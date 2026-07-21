@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
+import { requireAdmin } from '@/core/auth/permissions.server'
 import { ROUTES } from '@/core/navigation/site'
 import { organizationService } from '@/features/organization'
 import { normalizeOptionalString } from '@/shared/formatting'
@@ -16,6 +17,7 @@ export async function createPositionAction(
   formData: FormData,
 ): Promise<PositionFormState> {
   // 1. Authenticate
+  await requireAdmin()
 
   // 2. Validate form data
   const formInput = PositionFormSchema.safeParse({
@@ -48,6 +50,7 @@ export async function updatePositionAction(
   formData: FormData,
 ): Promise<PositionFormState> {
   // 1. Authenticate
+  await requireAdmin()
 
   // 2. Validate form data
   const formInput = PositionFormSchema.safeParse({
