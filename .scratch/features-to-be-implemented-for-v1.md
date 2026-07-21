@@ -26,7 +26,7 @@ The goal is production-usable, polished, and ready to grow. Do not expand v1 int
 
 - [] Finish the access-control permission module from `.scratch/access-control-permissions/spec.md`.
 - [] Implement the remaining access-control tickets:
-  - [] shared Better Auth permission foundation
+  - [x] shared Better Auth permission foundation
   - [] hardened admin bootstrap
   - [] admin route and navigation enforcement based on resolved session facts, not only cached session-cookie presence
   - [] service-level authorization for organization-management writes

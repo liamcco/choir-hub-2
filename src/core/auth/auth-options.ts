@@ -7,6 +7,7 @@ import { env } from '@/core/config/env'
 import { prisma } from '@/core/db'
 import { EmailClient } from '@/core/email/smtp-email'
 import { isProduction } from '@/core/environment/environment'
+import { adminPluginOptions } from './permissions'
 
 export const BASE_URL = env.BETTER_AUTH_URL
 if (!BASE_URL) {
@@ -73,7 +74,7 @@ export const authOptions = {
   },
   plugins: [
     username(),
-    admin(),
+    admin(adminPluginOptions),
     openAPI(),
     twoFactor(),
     passkey(),

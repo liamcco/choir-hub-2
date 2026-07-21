@@ -4,11 +4,11 @@
 
 **Blocked by:** None — can start immediately
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] Better Auth server and client admin plugin setup use the same shared access-control definitions.
-- [ ] The app permission module exposes the v1 Access Role, Permission Resource, Permission Action, and global permission request vocabulary.
-- [ ] Server-side boolean helpers return allow/deny results for admin, plain user, and unauthenticated current actors.
-- [ ] Server-side enforcing helpers interrupt with a distinguishable app-level authorization denial signal.
-- [ ] V1 global permission helpers do not accept choir-domain scope fields such as Member, Group, Position, Group Membership, or Position Assignment identifiers.
-- [ ] Existing auth configuration expectations, including disabled public email/password self-registration, remain covered by tests.
+- [x] Better Auth server and client admin plugin setup use the same shared access-control definitions.
+- [x] The app permission module exposes the v1 Access Role, Permission Resource, Permission Action, and global permission request vocabulary.
+- [x] Server-side boolean helpers return allow/deny results for admin, plain user, and unauthenticated current actors.
+- [x] Server-side enforcing helpers interrupt with a distinguishable app-level authorization denial signal.
+- [x] V1 global permission helpers do not accept choir-domain scope fields such as Member, Group, Position, Group Membership, or Position Assignment identifiers.
+- [x] Existing auth configuration expectations, including disabled public email/password self-registration, remain covered by tests.
