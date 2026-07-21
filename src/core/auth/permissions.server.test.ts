@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, mock, test } from 'bun:test'
 type TestSession = { user: { id: string; role?: string | null } } | null
 
 let currentSession: TestSession = null
-let currentMember: { id: string } | null = null
 let currentMembership: { id: string } | null = null
 let currentAssignment: { id: string } | null = null
 const requestHeaders = new Headers({ cookie: 'session=abc' })
@@ -12,7 +11,6 @@ const getSession = mock(async () => currentSession)
 const userHasPermission = mock(async ({ body }: { body: { userId: string } }) => ({
   success: currentSession?.user.id === body.userId && currentSession.user.role?.split(',').includes('admin'),
 }))
-const findMember = mock(async () => currentMember)
 const findMembership = mock(async () => currentMembership)
 const findAssignment = mock(async () => currentAssignment)
 
@@ -20,7 +18,6 @@ mock.module('next/headers', () => ({ headers }))
 mock.module('@/core/auth/auth', () => ({ auth: { api: { getSession, userHasPermission } } }))
 mock.module('@/core/db', () => ({
   prisma: {
-    member: { findUnique: findMember },
     groupMembership: { findFirst: findMembership },
     positionAssignment: { findFirst: findAssignment },
   },
@@ -45,10 +42,8 @@ beforeEach(() => {
   headers.mockClear()
   getSession.mockClear()
   userHasPermission.mockClear()
-  currentMember = null
   currentMembership = null
   currentAssignment = null
-  findMember.mockClear()
   findMembership.mockClear()
   findAssignment.mockClear()
 })
@@ -131,8 +126,7 @@ describe('enforcing global permissions', () => {
 
 describe('current-actor domain predicates', () => {
   test('allows a linked Member with current Group Membership', async () => {
-    currentSession = { user: { id: 'user-member', role: 'user' } }
-    currentMember = { id: 'member-1' }
+    currentSession = { user: { id: 'member-1', role: 'user' } }
     currentMembership = { id: 'membership-1' }
 
     await expect(canCurrentUserInGroup({ groupId: 'group-1' })).resolves.toBe(true)
@@ -142,16 +136,14 @@ describe('current-actor domain predicates', () => {
   })
 
   test('denies missing Member or Group Membership, including a former Member', async () => {
-    currentSession = { user: { id: 'user-member', role: 'admin' } }
+    currentSession = { user: { id: 'member-1', role: 'admin' } }
     await expect(canCurrentUserInGroup({ groupId: 'group-1' })).resolves.toBe(false)
 
-    currentMember = { id: 'member-1' }
     await expect(canCurrentUserInGroup({ groupId: 'group-1' })).resolves.toBe(false)
   })
 
   test('allows and denies current Position Assignment independently of Group Membership', async () => {
-    currentSession = { user: { id: 'user-member', role: 'user' } }
-    currentMember = { id: 'member-1' }
+    currentSession = { user: { id: 'member-1', role: 'user' } }
     currentAssignment = { id: 'assignment-1' }
 
     await expect(canCurrentUserHoldPosition({ positionId: 'position-1' })).resolves.toBe(true)
@@ -164,7 +156,7 @@ describe('current-actor domain predicates', () => {
   })
 
   test('enforcing helpers throw structured denials without using Better Auth permissions', async () => {
-    currentSession = { user: { id: 'user-member', role: 'admin' } }
+    currentSession = { user: { id: 'member-1', role: 'admin' } }
 
     await expect(requireCurrentUserInGroup({ groupId: 'group-1' })).rejects.toMatchObject({
       context: { requirement: { kind: 'currentGroupMembership', groupId: 'group-1' } },

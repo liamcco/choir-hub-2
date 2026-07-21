@@ -30,7 +30,8 @@ model Group {
 }
 
 model Member {
-  id                  String               @id @default(uuid())
+  /// Member identity is the same stable identifier as the linked Auth User.
+  id                  String               @id
   userId              String               @unique
   status              MemberStatus         @default(ACTIVE)
   memberships         GroupMembership[]

@@ -20,7 +20,7 @@ export const members = {
 
   create(input: { userId: string; status?: MemberStatus }) {
     return prisma.member.create({
-      data: { userId: input.userId, status: input.status ?? 'ACTIVE' },
+      data: { id: input.userId, userId: input.userId, status: input.status ?? 'ACTIVE' },
     })
   },
 

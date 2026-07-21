@@ -57,12 +57,7 @@ async function getCurrentActor(): Promise<RequestActor | null> {
 
 async function getCurrentMemberId(): Promise<string | null> {
   const actor = await getCurrentActor()
-  if (!actor) {
-    return null
-  }
-
-  const member = await prisma.member.findUnique({ where: { userId: actor.userId }, select: { id: true } })
-  return member?.id ?? null
+  return actor?.userId ?? null
 }
 
 export async function canCurrentUserInGroup(input: { groupId: string }): Promise<boolean> {
