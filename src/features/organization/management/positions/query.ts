@@ -45,6 +45,7 @@ async function listCollection(input?: { at?: Date }) {
     )
 }
 
+// TODO: Wasteful?
 async function getDetail(positionId: string, input?: { at?: Date }) {
   const at = input?.at ?? new Date()
   const [groups, positions, scopes, assignments, members, identities] = await Promise.all([

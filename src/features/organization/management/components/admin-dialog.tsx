@@ -6,7 +6,7 @@ import type { ComponentProps, ReactNode } from 'react'
 import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 
-export function ResponsiveRouteDialog({
+export function AdminDialog({
   title,
   description,
   contentLabel,
@@ -48,9 +48,9 @@ export function ResponsiveRouteDialog({
   )
 }
 
-export function DetailDialog(props: Omit<ComponentProps<typeof ResponsiveRouteDialog>, 'onClose'>) {
+export function ObjectDetailDialog(props: Omit<ComponentProps<typeof AdminDialog>, 'onClose'>) {
   const router = useRouter()
   const pathname = usePathname()
 
-  return <ResponsiveRouteDialog {...props} onClose={() => router.replace(pathname, { scroll: false })} />
+  return <AdminDialog {...props} onClose={() => router.replace(pathname, { scroll: false })} />
 }

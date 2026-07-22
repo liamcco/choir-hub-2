@@ -46,7 +46,6 @@ describe('admin Position Assignment management actions', () => {
     const formData = createAssignmentFormData({
       memberId: 'member-1',
       positionId: 'position-1',
-      startsAt: '2026-01-01',
     })
 
     await expect(createPositionAssignmentAction({}, formData)).resolves.toEqual({
@@ -56,7 +55,6 @@ describe('admin Position Assignment management actions', () => {
     expect(createPositionAssignment).toHaveBeenCalledWith({
       memberId: 'member-1',
       positionId: 'position-1',
-      startsAt: new Date('2026-01-01T00:00:00.000Z'),
     })
     expect(revalidatePath).toHaveBeenCalledWith('/admin/positions')
     expect(adminActionCompleted).toHaveBeenCalledWith({
@@ -80,10 +78,9 @@ describe('admin Position Assignment management actions', () => {
   })
 })
 
-function createAssignmentFormData(input: { memberId: string; positionId: string; startsAt: string }) {
+function createAssignmentFormData(input: { memberId: string; positionId: string }) {
   const formData = new FormData()
   formData.set('memberId', input.memberId)
   formData.set('positionId', input.positionId)
-  formData.set('startsAt', input.startsAt)
   return formData
 }

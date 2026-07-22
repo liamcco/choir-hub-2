@@ -18,6 +18,7 @@ The goal is production-usable, polished, and ready to grow. Do not expand v1 int
 - [x] Verify scoped email behavior:
   - [x] local/dev email mode must not send real mail accidentally
   - [x] production SMTP configuration must be documented and fail clearly when incomplete
+- [] Ensure Vercel Preview is not blocked from using better-auth
 
 ## Access Control And Security
 

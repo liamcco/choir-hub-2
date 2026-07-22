@@ -3,7 +3,7 @@ import { connection } from 'next/server'
 import { Suspense } from 'react'
 import { ROUTES } from '@/core/navigation/site'
 import { CollectionFrame } from '@/features/organization/management/components/collection-frame'
-import { InvalidDetail } from '@/features/organization/management/components/invalid-detail'
+import { InvalidDetailLookup } from '@/features/organization/management/components/invalid-detail-lookup'
 import { PageHeaderActions } from '@/features/organization/management/components/page-header-action'
 import {
   createGroupMembershipAction,
@@ -19,6 +19,7 @@ import {
   endPositionAssignmentAction,
 } from '@/features/organization/management/position-assignments'
 
+// TODO: Look at Suspense...
 export function MemberManagementScreen({ detailId }: { detailId?: string }) {
   return (
     <Suspense fallback={<p className="p-8 text-center text-muted-foreground">Loading Members…</p>}>
@@ -51,7 +52,7 @@ async function MemberCollectionScreen({ detailId }: { detailId?: string }) {
 
 async function MemberDetailOverlay({ memberId }: { memberId: string }) {
   const member = await memberManagementQuery.getDetail(memberId)
-  if (!member) return <InvalidDetail collectionPath={ROUTES.adminMembers} resourceName="Member" />
+  if (!member) return <InvalidDetailLookup collectionPath={ROUTES.adminMembers} resourceName="Member" />
 
   return (
     <MemberDetailRoutePresentation name={member.name} presentation="intercepted">
@@ -81,6 +82,7 @@ async function MemberDetailContent({ memberId }: { memberId: string }) {
   return <MemberDetail actions={memberDetailActions} member={member} />
 }
 
+// TODO what da hell
 const memberDetailActions = {
   createMembership: createGroupMembershipAction,
   endMembership: endGroupMembershipAction,

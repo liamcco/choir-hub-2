@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test'
 import { AppRouterContext } from 'next/dist/shared/lib/app-router-context.shared-runtime'
 import { GroupKind } from '@/prisma/generated/client'
-import { GroupDetailRoutePresentation } from './group-detail-presentation'
+import { GroupDetailDialog } from './group-detail-presentation'
 import { GroupHierarchy } from './group-hierarchy'
 
 const { cleanup, render, screen } = await import('@testing-library/react')
@@ -58,9 +58,9 @@ describe('Group hierarchy', () => {
           <GroupHierarchy groups={hierarchyRows} />
         </main>
         <AppRouterContext.Provider value={router}>
-          <GroupDetailRoutePresentation name="Altos" presentation="intercepted">
+          <GroupDetailDialog name="Altos">
             <h1>Altos</h1>
-          </GroupDetailRoutePresentation>
+          </GroupDetailDialog>
         </AppRouterContext.Provider>
       </>,
     )

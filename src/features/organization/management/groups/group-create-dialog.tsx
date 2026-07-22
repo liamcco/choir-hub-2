@@ -3,7 +3,7 @@
 import { PlusIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { adminGroupPath } from '@/core/navigation/site'
-import { CollectionDialog } from '@/features/organization/management/components/collection-dialog'
+import { ControlledDialog } from '@/features/organization/management/components/controlled-dialog'
 import type { Group } from '@/prisma/generated/client'
 import { Button } from '@/shared/ui/button'
 import { createGroupAction } from './actions'
@@ -12,7 +12,7 @@ import { CreateGroupForm } from './group-form'
 export function GroupCreateDialog({ groups }: { groups: Group[] }) {
   const router = useRouter()
   return (
-    <CollectionDialog
+    <ControlledDialog
       title="Create Group"
       description="Add a durable organizational Group."
       contentLabel="Create Group form"
@@ -23,14 +23,14 @@ export function GroupCreateDialog({ groups }: { groups: Group[] }) {
         </Button>
       )}
     >
-      {(close) => (
+      {(closeDialog) => (
         <CreateGroupForm
           action={createGroupAction}
           groups={groups}
           onCreated={(groupId) => router.push(adminGroupPath(groupId), { scroll: false })}
-          onSuccess={close}
+          onSuccess={closeDialog}
         />
       )}
-    </CollectionDialog>
+    </ControlledDialog>
   )
 }

@@ -2,7 +2,7 @@
 
 import { CircleAlertIcon } from 'lucide-react'
 import Link from 'next/link'
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { adminMemberPath } from '@/core/navigation/site'
 import { formatMemberStatus } from '@/features/organization/core/member-status'
 import { SearchControl } from '@/features/organization/management/components/search-control'
@@ -20,11 +20,10 @@ export type MemberCollectionRow = {
 
 export function MemberCollection({ members }: { members: MemberCollectionRow[] }) {
   const [query, setQuery] = useState('')
-  const filteredMembers = useMemo(() => {
-    const normalizedQuery = query.trim().toLocaleLowerCase()
-    if (!normalizedQuery) return members
-    return members.filter((member) => searchableMemberText(member).includes(normalizedQuery))
-  }, [members, query])
+  const normalizedQuery = query.trim().toLocaleLowerCase()
+  const filteredMembers = !normalizedQuery
+    ? members
+    : members.filter((member) => searchableMemberText(member).includes(normalizedQuery))
 
   return (
     <div className="flex flex-col gap-4">

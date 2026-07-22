@@ -22,7 +22,7 @@ export function GroupCollectionScreen({
       actions={
         <PageHeaderActions>
           <PageHeaderAction
-            className={buttonVariants({ size: 'lg', variant: 'outline' })}
+            className={buttonVariants({ size: 'lg', variant: 'secondary' })}
             href={ROUTES.adminGroupHierarchy}
           >
             <GitForkIcon data-icon="inline-start" />

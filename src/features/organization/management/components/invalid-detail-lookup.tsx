@@ -4,7 +4,13 @@ import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import { toast } from 'sonner'
 
-export function InvalidDetail({ collectionPath, resourceName }: { collectionPath: string; resourceName: string }) {
+export function InvalidDetailLookup({
+  collectionPath,
+  resourceName,
+}: {
+  collectionPath: string
+  resourceName: string
+}) {
   const router = useRouter()
 
   useEffect(() => {

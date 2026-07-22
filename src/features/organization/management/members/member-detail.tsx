@@ -292,6 +292,7 @@ function HistoricalList({ title, items }: { title: string; items: { id: string; 
   )
 }
 
+// TODO: Move this to shared utils
 function formatDate(date: Date) {
   return new Intl.DateTimeFormat('en', { dateStyle: 'medium' }).format(date)
 }

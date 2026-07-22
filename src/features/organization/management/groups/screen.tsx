@@ -1,7 +1,7 @@
 import { connection } from 'next/server'
 import { Suspense } from 'react'
 import { ROUTES } from '@/core/navigation/site'
-import { InvalidDetail } from '@/features/organization/management/components/invalid-detail'
+import { InvalidDetailLookup } from '@/features/organization/management/components/invalid-detail-lookup'
 import {
   createGroupMembershipAction,
   endGroupMembershipAction,
@@ -10,9 +10,13 @@ import { updateGroupAction } from './actions'
 import { GroupCollectionScreen as GroupCollection } from './group-collection-screen'
 import { GroupDetail } from './group-detail'
 import { GroupDetailDialog } from './group-detail-presentation'
+
+// TODO: naming query vs service. The query is for reading data, the service is for writing data.
+// But the naming is inconsistent and confusing.
 import { groupManagementQuery } from './query'
 import { listGroups } from './service'
 
+// TODO: Look at the Suspenses...
 export function GroupManagementScreen({ detailId }: { detailId?: string }) {
   return (
     <Suspense fallback={<p className="p-8 text-center text-muted-foreground">Loading Groups…</p>}>
@@ -21,6 +25,7 @@ export function GroupManagementScreen({ detailId }: { detailId?: string }) {
   )
 }
 
+// TODO: What da hell
 function groupDetailActions(groupId: string) {
   return {
     updateGroup: updateGroupAction.bind(null, groupId),
@@ -42,7 +47,7 @@ async function GroupCollectionScreen({ detailId }: { detailId?: string }) {
 
 async function GroupDetailOverlay({ groupId }: { groupId: string }) {
   const group = await groupManagementQuery.getDetail(groupId)
-  if (!group) return <InvalidDetail collectionPath={ROUTES.adminGroups} resourceName="Group" />
+  if (!group) return <InvalidDetailLookup collectionPath={ROUTES.adminGroups} resourceName="Group" />
 
   return (
     <GroupDetailDialog name={group.name}>

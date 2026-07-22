@@ -46,7 +46,6 @@ describe('admin Group Membership management actions', () => {
     const formData = createMembershipFormData({
       memberId: 'member-1',
       groupId: 'group-1',
-      startsAt: '2026-01-01',
     })
 
     await expect(createGroupMembershipAction({}, formData)).resolves.toEqual({
@@ -56,7 +55,6 @@ describe('admin Group Membership management actions', () => {
     expect(createGroupMembership).toHaveBeenCalledWith({
       memberId: 'member-1',
       groupId: 'group-1',
-      startsAt: new Date('2026-01-01T00:00:00.000Z'),
     })
     expect(revalidatePath).toHaveBeenCalledWith('/admin/members')
     expect(revalidatePath).toHaveBeenCalledWith('/admin/groups')
@@ -83,10 +81,9 @@ describe('admin Group Membership management actions', () => {
   })
 })
 
-function createMembershipFormData(input: { memberId: string; groupId: string; startsAt: string }) {
+function createMembershipFormData(input: { memberId: string; groupId: string }) {
   const formData = new FormData()
   formData.set('memberId', input.memberId)
   formData.set('groupId', input.groupId)
-  formData.set('startsAt', input.startsAt)
   return formData
 }

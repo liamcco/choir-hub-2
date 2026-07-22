@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, mock, test } from 'bun:test'
 const routerBack = mock(() => {})
 const { cleanup, render, screen } = await import('@testing-library/react')
 const userEvent = (await import('@testing-library/user-event')).default
-const { ResponsiveRouteDialog } = await import('./responsive-route-dialog')
+const { AdminDialog: ResponsiveRouteDialog } = await import('./admin-dialog')
 
 beforeEach(() => {
   cleanup()

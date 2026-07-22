@@ -45,6 +45,7 @@ async function listCollection(input?: { at?: Date }) {
     .sort((first, second) => first.name.localeCompare(second.name) || first.id.localeCompare(second.id))
 }
 
+// TODO: Isn't this a bit wasteful?
 async function getDetail(memberId: string, input?: { at?: Date }) {
   const at = input?.at ?? new Date()
   const requestHeaders = await headers()

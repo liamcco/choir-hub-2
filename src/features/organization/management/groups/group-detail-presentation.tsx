@@ -1,21 +1,10 @@
 import type { ReactNode } from 'react'
-import { DetailDialog } from '@/features/organization/management/components/responsive-route-dialog'
+import { ObjectDetailDialog } from '@/features/organization/management/components/admin-dialog'
 
 export function GroupDetailDialog({ name, children }: { name: string; children: ReactNode }) {
   return (
-    <DetailDialog title={name} description="Group detail" contentLabel={`${name} detail content`}>
+    <ObjectDetailDialog title={name} description="Group detail" contentLabel={`${name} detail content`}>
       {children}
-    </DetailDialog>
+    </ObjectDetailDialog>
   )
-}
-
-export function GroupDetailRoutePresentation({
-  name,
-  children,
-}: {
-  name: string
-  children: ReactNode
-  presentation?: 'intercepted'
-}) {
-  return <GroupDetailDialog name={name}>{children}</GroupDetailDialog>
 }

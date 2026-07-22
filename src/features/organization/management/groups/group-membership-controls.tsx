@@ -75,17 +75,6 @@ export function AddGroupMemberControl({
           </NativeSelect>
           <FieldError>{state.fieldErrors?.memberId}</FieldError>
         </Field>
-        <Field>
-          <FieldLabel htmlFor={`group-${groupId}-starts-at`}>Start date</FieldLabel>
-          <Input
-            aria-invalid={!!state.fieldErrors?.startsAt}
-            id={`group-${groupId}-starts-at`}
-            name="startsAt"
-            required
-            type="date"
-          />
-          <FieldError>{state.fieldErrors?.startsAt}</FieldError>
-        </Field>
       </FieldGroup>
       <Button disabled={isPending} type="submit">
         {isPending ? 'Adding' : 'Add Membership'}
@@ -143,17 +132,6 @@ export function AddMemberGroupControl({
             ))}
           </NativeSelect>
           <FieldError>{state.fieldErrors?.groupId}</FieldError>
-        </Field>
-        <Field>
-          <FieldLabel htmlFor={`member-${memberId}-membership-starts-at`}>Start date</FieldLabel>
-          <Input
-            aria-invalid={!!state.fieldErrors?.startsAt}
-            id={`member-${memberId}-membership-starts-at`}
-            name="startsAt"
-            required
-            type="date"
-          />
-          <FieldError>{state.fieldErrors?.startsAt}</FieldError>
         </Field>
       </FieldGroup>
       <Button disabled={isPending} type="submit">

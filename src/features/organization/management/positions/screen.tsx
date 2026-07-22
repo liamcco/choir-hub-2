@@ -3,7 +3,7 @@ import { connection } from 'next/server'
 import { Suspense } from 'react'
 import { ROUTES } from '@/core/navigation/site'
 import { CollectionFrame } from '@/features/organization/management/components/collection-frame'
-import { InvalidDetail } from '@/features/organization/management/components/invalid-detail'
+import { InvalidDetailLookup } from '@/features/organization/management/components/invalid-detail-lookup'
 import { PageHeaderActions } from '@/features/organization/management/components/page-header-action'
 import { PositionCollection } from './position-collection'
 import { PositionCreate } from './position-create'
@@ -12,6 +12,7 @@ import { PositionDetail } from './position-detail'
 import { PositionDetailRoutePresentation } from './position-detail-presentation'
 import { positionManagementQuery } from './query'
 
+// TODO: Look at suspense...
 export function PositionManagementScreen({ detailId }: { detailId?: string }) {
   return (
     <Suspense fallback={<p className="p-8 text-center text-muted-foreground">Loading Positions…</p>}>
@@ -47,7 +48,7 @@ async function PositionCollectionScreen({ detailId }: { detailId?: string }) {
 
 async function PositionDetailOverlay({ positionId }: { positionId: string }) {
   const position = await positionManagementQuery.getDetail(positionId)
-  if (!position) return <InvalidDetail collectionPath={ROUTES.adminPositions} resourceName="Position" />
+  if (!position) return <InvalidDetailLookup collectionPath={ROUTES.adminPositions} resourceName="Position" />
 
   return (
     <PositionDetailRoutePresentation name={position.position.name} presentation="intercepted">

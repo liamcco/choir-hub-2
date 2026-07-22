@@ -3,7 +3,6 @@
 import { useActionState } from 'react'
 import { defaultGroupKind, formatGroupKind, groupKindOptions } from '@/features/organization/core/group-kind'
 import { formatGroupPath } from '@/features/organization/core/labels'
-import type { GroupFormState } from '@/features/organization/management/groups/actions'
 import type { Group } from '@/prisma/generated/client'
 import { FormMessage } from '@/shared/forms/error-handling'
 import { Button } from '@/shared/ui/button'
@@ -11,6 +10,7 @@ import { Field, FieldError, FieldGroup, FieldLabel } from '@/shared/ui/field'
 import { Input } from '@/shared/ui/input'
 import { NativeSelect, NativeSelectOption } from '@/shared/ui/native-select'
 import { Textarea } from '@/shared/ui/textarea'
+import type { GroupFormState } from './actions'
 
 const initialState: GroupFormState = {}
 export type GroupFormAction = (previousState: GroupFormState, formData: FormData) => Promise<GroupFormState>

@@ -105,6 +105,8 @@ function AssignmentList({
     </ul>
   )
 }
+
+// TODO: Move to shared utils
 function formatDate(date: Date) {
   return new Intl.DateTimeFormat('en', { dateStyle: 'medium' }).format(date)
 }

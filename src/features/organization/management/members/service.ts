@@ -39,7 +39,7 @@ export type ManagedMemberAccount = {
       linkState: 'unlinked'
     }
 )
-
+// TODO: getMember()
 async function list(): Promise<ManagedMemberAccount[]> {
   const requestHeaders = await headers()
   const [result, members] = await Promise.all([

@@ -1,9 +1,9 @@
 'use client'
 
 import { type ReactNode, useState } from 'react'
-import { ResponsiveRouteDialog } from './responsive-route-dialog'
+import { AdminDialog } from './admin-dialog'
 
-export function CollectionDialog({
+export function ControlledDialog({
   trigger,
   title,
   description,
@@ -23,9 +23,9 @@ export function CollectionDialog({
     <>
       {trigger(() => setIsOpen(true))}
       {isOpen ? (
-        <ResponsiveRouteDialog title={title} description={description} contentLabel={contentLabel} onClose={close}>
+        <AdminDialog title={title} description={description} contentLabel={contentLabel} onClose={close}>
           {children(close)}
-        </ResponsiveRouteDialog>
+        </AdminDialog>
       ) : null}
     </>
   )

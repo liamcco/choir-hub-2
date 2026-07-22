@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { adminPositionPath } from '@/core/navigation/site'
 import { SearchControl } from '@/features/organization/management/components/search-control'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
@@ -16,12 +16,11 @@ export type PositionCollectionRow = {
 
 export function PositionCollection({ positions }: { positions: PositionCollectionRow[] }) {
   const [query, setQuery] = useState('')
-  const filteredPositions = useMemo(() => {
-    const normalizedQuery = query.trim().toLocaleLowerCase()
-    return normalizedQuery
-      ? positions.filter((position) => searchablePositionText(position).includes(normalizedQuery))
-      : positions
-  }, [positions, query])
+  const normalizedQuery = query.trim().toLocaleLowerCase()
+  const filteredPositions = !normalizedQuery
+    ? positions
+    : positions.filter((position) => searchablePositionText(position).includes(normalizedQuery))
+
   return (
     <div className="flex flex-col gap-4">
       <SearchControl

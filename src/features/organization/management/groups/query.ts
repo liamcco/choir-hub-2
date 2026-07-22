@@ -10,7 +10,7 @@ import { buildGroupTree, type GroupTreeNode } from '@/features/organization/core
 import { buildMemberLabels } from '@/features/organization/core/labels'
 import type { Group, GroupMembership, Member, MemberStatus } from '@/prisma/generated/client'
 
-async function listCollection(input?: { at?: Date }) {
+async function listGroupStructure(input?: { at?: Date }) {
   const at = input?.at ?? new Date()
   const [groups, currentMemberships] = await Promise.all([
     organizationService.groups.list(),
@@ -34,7 +34,8 @@ async function listCollection(input?: { at?: Date }) {
     .sort((first, second) => first.name.localeCompare(second.name) || first.id.localeCompare(second.id))
 }
 
-async function getDetail(groupId: string, input?: { at?: Date }) {
+// TODO: Wasteful? Add a "getGroup" method to the service?
+async function getGroupDetail(groupId: string, input?: { at?: Date }) {
   const at = input?.at ?? new Date()
   const [groups, memberships, members, identities] = await Promise.all([
     organizationService.groups.list(),
@@ -86,7 +87,7 @@ async function getHierarchy(input?: { at?: Date }) {
   return buildGroupHierarchy(groups, members, memberships, at)
 }
 
-export const groupManagementQuery = { listCollection, getDetail, getHierarchy }
+export const groupManagementQuery = { listCollection: listGroupStructure, getDetail: getGroupDetail, getHierarchy }
 
 export type GroupHierarchyRow = {
   id: string

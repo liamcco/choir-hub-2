@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { adminGroupPath } from '@/core/navigation/site'
 import { formatGroupKind } from '@/features/organization/core/group-kind'
 import { SearchControl } from '@/features/organization/management/components/search-control'
@@ -18,19 +18,18 @@ export type GroupCollectionRow = {
 }
 
 export function GroupCollection({ groups }: { groups: GroupCollectionRow[] }) {
-  const [query, setQuery] = useState('')
-  const filteredGroups = useMemo(() => {
-    const normalizedQuery = query.trim().toLocaleLowerCase()
-    if (!normalizedQuery) return groups
-    return groups.filter((group) => searchableGroupText(group).includes(normalizedQuery))
-  }, [groups, query])
+  const [searchQuery, setSearchQuery] = useState('')
+  const normalizedQuery = searchQuery.trim().toLocaleLowerCase()
+  const filteredGroups = normalizedQuery
+    ? groups.filter((group) => searchableGroupText(group).includes(normalizedQuery))
+    : groups
 
   return (
     <div className="flex flex-col gap-4">
       <SearchControl
         label="Search Groups"
-        query={query}
-        onQueryChange={setQuery}
+        query={searchQuery}
+        onQueryChange={setSearchQuery}
         displayedCount={filteredGroups.length}
         totalCount={groups.length}
         resourceName="Groups"

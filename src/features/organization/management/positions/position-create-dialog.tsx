@@ -3,7 +3,7 @@
 import { PlusIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { adminPositionPath } from '@/core/navigation/site'
-import { CollectionDialog } from '@/features/organization/management/components/collection-dialog'
+import { ControlledDialog } from '@/features/organization/management/components/controlled-dialog'
 import { Button } from '@/shared/ui/button'
 import { CreatePositionForm } from './position-form'
 import type { PositionManagementState } from './service'
@@ -11,7 +11,7 @@ import type { PositionManagementState } from './service'
 export function PositionCreateDialog({ groups }: { groups: PositionManagementState['groups'] }) {
   const router = useRouter()
   return (
-    <CollectionDialog
+    <ControlledDialog
       title="Create Position"
       description="Add a durable choir Position and its Group scopes."
       contentLabel="Create Position form"
@@ -22,13 +22,13 @@ export function PositionCreateDialog({ groups }: { groups: PositionManagementSta
         </Button>
       )}
     >
-      {(close) => (
+      {(closeDialog) => (
         <CreatePositionForm
           groups={groups}
           onCreated={(positionId) => router.push(adminPositionPath(positionId), { scroll: false })}
-          onSuccess={close}
+          onSuccess={closeDialog}
         />
       )}
-    </CollectionDialog>
+    </ControlledDialog>
   )
 }

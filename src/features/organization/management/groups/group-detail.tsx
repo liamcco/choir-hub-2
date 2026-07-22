@@ -152,6 +152,7 @@ function MembershipList({
   )
 }
 
+// TODO: Move this to a shared utility file for formatting dates and periods
 function formatPeriod(period: Pick<GroupMembershipView, 'startsAt' | 'endsAt'>) {
   return `${formatDate(period.startsAt)} – ${period.endsAt ? formatDate(period.endsAt) : 'Present'}`
 }

@@ -1,11 +1,11 @@
 import type { ReactNode } from 'react'
-import { DetailDialog } from '@/features/organization/management/components/responsive-route-dialog'
+import { ObjectDetailDialog } from '@/features/organization/management/components/admin-dialog'
 
 export function MemberDetailDialog({ name, children }: { name: string; children: ReactNode }) {
   return (
-    <DetailDialog title={name} description="Member detail" contentLabel={`${name} detail content`}>
+    <ObjectDetailDialog title={name} description="Member detail" contentLabel={`${name} detail content`}>
       {children}
-    </DetailDialog>
+    </ObjectDetailDialog>
   )
 }
 
