@@ -22,12 +22,15 @@ if (!parsed.success) {
   console.error('❌ Invalid environment variables:', JSON.stringify(z.treeifyError(parsed.error), null, 2))
   process.exit(1)
 }
-export const env = parsed.data
+
+const env = parsed.data
 
 if (env.DB_MODE === 'prod') {
   if (!env.DATABASE_URL_PROD) {
     throw new Error('DATABASE_URL_PROD must be set when DB_MODE=prod.')
   }
 
-  process.env.DATABASE_URL = env.DATABASE_URL_PROD
+  env.DATABASE_URL = env.DATABASE_URL_PROD
 }
+
+export { env }
