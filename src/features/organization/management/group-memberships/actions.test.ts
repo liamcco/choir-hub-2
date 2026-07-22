@@ -58,6 +58,7 @@ describe('admin Group Membership management actions', () => {
     expect(revalidatePath).toHaveBeenCalledWith('/admin/group-memberships')
     expect(revalidatePath).toHaveBeenCalledWith('/admin/groups')
     expect(revalidatePath).toHaveBeenCalledWith('/admin/groups/group-1')
+    expect(revalidatePath).toHaveBeenCalledWith('/admin/members/member-1')
     expect(adminActionCompleted).toHaveBeenCalledWith({
       actorUserId: 'admin-1',
       action: 'groupMembership.create',
@@ -69,6 +70,7 @@ describe('admin Group Membership management actions', () => {
     const formData = new FormData()
     formData.set('endsAt', '2026-06-01')
     formData.set('groupId', 'group-1')
+    formData.set('memberId', 'member-1')
 
     await expect(endGroupMembershipAction('membership-1', {}, formData)).resolves.toEqual({
       message: 'Group Membership ended.',
@@ -77,6 +79,7 @@ describe('admin Group Membership management actions', () => {
     expect(revalidatePath).toHaveBeenCalledWith('/admin/group-memberships')
     expect(revalidatePath).toHaveBeenCalledWith('/admin/groups')
     expect(revalidatePath).toHaveBeenCalledWith('/admin/groups/group-1')
+    expect(revalidatePath).toHaveBeenCalledWith('/admin/members/member-1')
   })
 
   test('returns useful overlap and invalid period feedback', async () => {

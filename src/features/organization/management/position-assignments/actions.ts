@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { requireCurrentUserPermission } from '@/core/auth/permissions.server'
 import { audit } from '@/core/logging'
-import { adminPositionPath, ROUTES } from '@/core/navigation/site'
+import { adminMemberPath, adminPositionPath, ROUTES } from '@/core/navigation/site'
 import { organizationService } from '@/features/organization'
 import { handleFormError } from '@/shared/forms/errors'
 import type { FormState } from '@/shared/forms/types'
@@ -48,6 +48,7 @@ export async function createPositionAssignmentAction(
   // 4. Invalidate
   revalidatePath(ROUTES.adminPositionAssignments)
   revalidatePath(adminPositionPath(formInput.data.positionId))
+  revalidatePath(adminMemberPath(formInput.data.memberId))
   return { message: 'Position Assignment added.' }
 
   // 5. Navigate
@@ -86,6 +87,10 @@ export async function endPositionAssignmentAction(
   // 4. Invalidate
   revalidatePath(ROUTES.adminPositionAssignments)
   revalidatePath(adminPositionPath(assignment.positionId))
+  const memberId = formData.get('memberId')
+  if (typeof memberId === 'string' && memberId) {
+    revalidatePath(adminMemberPath(memberId))
+  }
   return { message: 'Position Assignment ended.' }
 
   // 5. Navigate

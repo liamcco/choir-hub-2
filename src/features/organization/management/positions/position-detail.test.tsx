@@ -6,6 +6,7 @@ mock.module('./position-editors', () => ({
 }))
 mock.module('@/features/organization/management/position-assignments/assignment-form', () => ({
   AssignPositionHolderControl: () => <button type="button">Assign holder</button>,
+  AssignMemberPositionControl: () => <button type="button">Assign Position</button>,
   EndPositionAssignmentForm: ({ assignment }: { assignment: { memberLabel: string } }) => (
     <input aria-label={`End ${assignment.memberLabel} assignment to this Position`} />
   ),

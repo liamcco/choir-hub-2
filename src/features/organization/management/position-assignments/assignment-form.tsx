@@ -23,6 +23,15 @@ import { NativeSelect, NativeSelectOption } from '@/shared/ui/native-select'
 
 const createInitialState: CreatePositionAssignmentFormState = {}
 const endInitialState: EndPositionAssignmentFormState = {}
+type CreateAssignmentAction = (
+  previousState: CreatePositionAssignmentFormState,
+  formData: FormData,
+) => Promise<CreatePositionAssignmentFormState>
+type EndAssignmentAction = (
+  assignmentId: string,
+  previousState: EndPositionAssignmentFormState,
+  formData: FormData,
+) => Promise<EndPositionAssignmentFormState>
 
 export function CreatePositionAssignmentForm({
   members,
@@ -108,6 +117,72 @@ export function AssignPositionHolderControl({
   return <AssignPositionHolderForm members={members} positionId={positionId} onCancel={() => setIsAssigning(false)} />
 }
 
+export function AssignMemberPositionControl({
+  memberId,
+  positions,
+  action = createPositionAssignmentAction,
+}: {
+  memberId: string
+  positions: { id: string; label: string }[]
+  action?: CreateAssignmentAction
+}) {
+  const [isAssigning, setIsAssigning] = useState(false)
+  const [state, formAction, isPending] = useActionState(action, createInitialState)
+  if (!isAssigning)
+    return (
+      <Button onClick={() => setIsAssigning(true)} type="button" variant="outline">
+        Assign Position
+      </Button>
+    )
+
+  return (
+    <form action={formAction} className="space-y-4 rounded-lg border bg-muted/20 p-4">
+      <input name="memberId" type="hidden" value={memberId} />
+      <div className="flex items-center justify-between gap-4">
+        <h3 className="font-medium">Assign Position</h3>
+        <Button onClick={() => setIsAssigning(false)} size="sm" type="button" variant="ghost">
+          Cancel
+        </Button>
+      </div>
+      <FieldGroup className="sm:grid sm:grid-cols-2">
+        <Field>
+          <FieldLabel htmlFor={`member-${memberId}-position`}>Position</FieldLabel>
+          <NativeSelect
+            aria-invalid={!!state.fieldErrors?.positionId}
+            className="w-full"
+            id={`member-${memberId}-position`}
+            name="positionId"
+            required
+          >
+            <NativeSelectOption value="">Choose Position</NativeSelectOption>
+            {positions.map((position) => (
+              <NativeSelectOption key={position.id} value={position.id}>
+                {position.label}
+              </NativeSelectOption>
+            ))}
+          </NativeSelect>
+          <FieldError>{state.fieldErrors?.positionId}</FieldError>
+        </Field>
+        <Field>
+          <FieldLabel htmlFor={`member-${memberId}-assignment-starts-at`}>Start date</FieldLabel>
+          <Input
+            aria-invalid={!!state.fieldErrors?.startsAt}
+            id={`member-${memberId}-assignment-starts-at`}
+            name="startsAt"
+            required
+            type="date"
+          />
+          <FieldError>{state.fieldErrors?.startsAt}</FieldError>
+        </Field>
+      </FieldGroup>
+      <Button disabled={isPending} type="submit">
+        {isPending ? 'Assigning' : 'Assign'}
+      </Button>
+      <FormMessage state={state} />
+    </form>
+  )
+}
+
 function AssignPositionHolderForm({
   members,
   positionId,
@@ -167,18 +242,18 @@ function AssignPositionHolderForm({
 
 export function EndPositionAssignmentForm({
   assignment,
+  action = endPositionAssignmentAction,
 }: {
-  assignment: Pick<PositionAssignmentPeriod, 'id' | 'startsAt' | 'memberLabel'> & {
+  assignment: Pick<PositionAssignmentPeriod, 'id' | 'memberId' | 'startsAt' | 'memberLabel'> & {
     position: Pick<PositionAssignmentPeriod['position'], 'name'>
   }
+  action?: EndAssignmentAction
 }) {
-  const [state, formAction, isPending] = useActionState(
-    endPositionAssignmentAction.bind(null, assignment.id),
-    endInitialState,
-  )
+  const [state, formAction, isPending] = useActionState(action.bind(null, assignment.id), endInitialState)
 
   return (
     <form action={formAction} className="flex min-w-44 items-start justify-end gap-2">
+      <input name="memberId" type="hidden" value={assignment.memberId} />
       <div className="flex flex-col gap-1">
         <Input
           name="endsAt"

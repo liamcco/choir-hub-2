@@ -1,4 +1,6 @@
+import { adminMemberPath } from '@/core/navigation/site'
 import type { MemberLabel } from '@/features/organization/core/labels'
+import { RelatedDetailLink } from '@/features/organization/management/components/related-detail-link'
 import {
   AssignPositionHolderControl,
   EndPositionAssignmentForm,
@@ -82,7 +84,7 @@ function AssignmentList({
       {assignments.map((assignment) => (
         <li className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between" key={assignment.id}>
           <div>
-            <p className="font-medium">{assignment.memberLabel}</p>
+            <RelatedDetailLink href={adminMemberPath(assignment.memberId)}>{assignment.memberLabel}</RelatedDetailLink>
             <p className="text-sm text-muted-foreground">
               {assignment.memberDetail} · Since {formatDate(assignment.startsAt)}
             </p>
@@ -91,6 +93,7 @@ function AssignmentList({
             <EndPositionAssignmentForm
               assignment={{
                 id: assignment.id,
+                memberId: assignment.memberId,
                 startsAt: assignment.startsAt,
                 memberLabel: assignment.memberLabel,
                 position: { name: 'this Position' },

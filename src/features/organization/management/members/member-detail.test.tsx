@@ -6,6 +6,11 @@ mock.module('./actions', () => ({
   updateAccountAccessAction: async () => {},
   updateMemberStatusAction: async () => {},
 }))
+mock.module('../position-assignments/assignment-form', () => ({
+  AssignPositionHolderControl: () => <button type="button">Assign holder</button>,
+  AssignMemberPositionControl: () => <button type="button">Assign Position</button>,
+  EndPositionAssignmentForm: () => <button type="button">End</button>,
+}))
 const { MemberDetail } = await import('./member-detail')
 
 beforeEach(cleanup)
@@ -16,6 +21,12 @@ describe('Member detail', () => {
     const user = userEvent.setup()
     render(
       <MemberDetail
+        actions={{
+          createMembership: async () => ({}),
+          endMembership: async () => ({}),
+          createAssignment: async () => ({}),
+          endAssignment: async () => ({}),
+        }}
         member={{
           id: 'member-1',
           name: 'Ada Lovelace',
@@ -25,9 +36,12 @@ describe('Member detail', () => {
           accessRole: 'user',
           createdAt: new Date('2025-01-01T00:00:00Z'),
           updatedAt: new Date('2025-02-01T00:00:00Z'),
+          groups: [{ id: 'group-1', name: 'Chamber Choir' }],
+          positions: [{ id: 'position-1', label: 'Chair · Board' }],
           currentMemberships: [
             {
               id: 'membership-1',
+              groupId: 'group-1',
               groupName: 'Chamber Choir',
               groupKind: GroupKind.CHOIR,
               startsAt: new Date('2024-08-01'),
@@ -36,6 +50,7 @@ describe('Member detail', () => {
           historicalMemberships: [
             {
               id: 'membership-2',
+              groupId: 'group-2',
               groupName: 'Festival Choir',
               groupKind: GroupKind.CHOIR,
               startsAt: new Date('2023-01-01'),
@@ -45,6 +60,7 @@ describe('Member detail', () => {
           currentAssignments: [
             {
               id: 'assignment-1',
+              positionId: 'position-1',
               positionName: 'Chair',
               scopeLabel: 'Board',
               startsAt: new Date('2024-09-01'),
@@ -67,9 +83,14 @@ describe('Member detail', () => {
     expect(screen.getByText('ada@example.com')).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Edit Member Status' })).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Edit Auth User access' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Add Group' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Assign Position' })).toBeTruthy()
     expect(screen.queryByRole('button', { name: 'Disable access' })).toBeNull()
     await user.click(screen.getByRole('button', { name: 'Edit Auth User access' }))
     expect(screen.getByRole('button', { name: 'Disable access' })).toBeTruthy()
+    await user.click(screen.getByRole('button', { name: 'Add Group' }))
+    expect(screen.getByRole('heading', { name: 'Add Group Membership' })).toBeTruthy()
+    expect(screen.getByLabelText('Group')).toBeTruthy()
 
     const history = screen.getByText('History').closest('details')
     expect(history?.hasAttribute('open')).toBe(false)
@@ -88,6 +109,8 @@ describe('Member detail', () => {
           accessRole: 'user',
           createdAt: new Date('2025-01-01T00:00:00Z'),
           updatedAt: new Date('2025-02-01T00:00:00Z'),
+          groups: [],
+          positions: [],
           currentMemberships: [],
           historicalMemberships: [],
           currentAssignments: [],

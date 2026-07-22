@@ -1,7 +1,7 @@
 'use client'
 
-import { XIcon } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { ArrowLeftIcon, XIcon } from 'lucide-react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import type { ComponentProps, ReactNode } from 'react'
 import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
@@ -11,12 +11,14 @@ export function ResponsiveRouteDialog({
   description,
   contentLabel,
   onClose,
+  headerAction,
   children,
 }: {
   title: string
   description?: string
   contentLabel: string
   onClose: () => void
+  headerAction?: ReactNode
   children: ReactNode
 }) {
   return (
@@ -30,10 +32,13 @@ export function ResponsiveRouteDialog({
             <DialogTitle className="truncate text-lg">{title}</DialogTitle>
             {description ? <DialogDescription>{description}</DialogDescription> : null}
           </div>
-          <Button aria-label="Close" onClick={onClose} size="sm" type="button" variant="outline">
-            <XIcon data-icon="inline-start" />
-            Close
-          </Button>
+          <div className="flex items-center gap-2">
+            {headerAction}
+            <Button aria-label="Close" onClick={onClose} size="sm" type="button" variant="outline">
+              <XIcon data-icon="inline-start" />
+              Close
+            </Button>
+          </div>
         </DialogHeader>
         <div aria-label={contentLabel} className="min-h-0 overflow-y-auto px-4 py-6 sm:px-8" role="region">
           {children}
@@ -46,4 +51,27 @@ export function ResponsiveRouteDialog({
 export function RouteBackResponsiveDialog(props: Omit<ComponentProps<typeof ResponsiveRouteDialog>, 'onClose'>) {
   const router = useRouter()
   return <ResponsiveRouteDialog {...props} onClose={() => router.back()} />
+}
+
+export function RouteNavigationResponsiveDialog(props: Omit<ComponentProps<typeof ResponsiveRouteDialog>, 'onClose'>) {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const origin = searchParams?.get('detailOrigin')
+
+  if (!origin?.startsWith('/admin/')) {
+    return <RouteBackResponsiveDialog {...props} />
+  }
+
+  return (
+    <ResponsiveRouteDialog
+      {...props}
+      onClose={() => router.replace(origin)}
+      headerAction={
+        <Button onClick={() => router.back()} size="sm" type="button" variant="outline">
+          <ArrowLeftIcon data-icon="inline-start" />
+          Back
+        </Button>
+      }
+    />
+  )
 }

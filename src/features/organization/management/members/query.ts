@@ -79,6 +79,7 @@ async function getDetail(memberId: string, input?: { at?: Date }) {
       ? [
           {
             id: membership.id,
+            groupId: group.id,
             groupName: formatGroupPath(groups, group),
             groupKind: group.kind,
             startsAt: membership.startsAt,
@@ -96,6 +97,7 @@ async function getDetail(memberId: string, input?: { at?: Date }) {
     return [
       {
         id: assignment.id,
+        positionId: position.id,
         positionName: position.name,
         scopeLabel: formatPositionScopeLabel(groups, scopeGroups),
         startsAt: assignment.startsAt,
@@ -113,6 +115,17 @@ async function getDetail(memberId: string, input?: { at?: Date }) {
     accessRole: authUser.role || 'user',
     createdAt: member.createdAt,
     updatedAt: member.updatedAt,
+    groups: groups
+      .map((group) => ({ id: group.id, name: formatGroupPath(groups, group) }))
+      .sort((first, second) => first.name.localeCompare(second.name) || first.id.localeCompare(second.id)),
+    positions: positions
+      .map((position) => {
+        const scopeGroups = (scopeGroupsByPositionId.get(position.id) ?? []).sort((first, second) =>
+          formatGroupPath(groups, first).localeCompare(formatGroupPath(groups, second)),
+        )
+        return { id: position.id, label: `${position.name} · ${formatPositionScopeLabel(groups, scopeGroups)}` }
+      })
+      .sort((first, second) => first.label.localeCompare(second.label) || first.id.localeCompare(second.id)),
     currentMemberships: membershipViews
       .filter((membership) => isCurrentDatedPeriod({ ...membership, endsAt: membership.endsAt ?? null }, at))
       .sort((first, second) => first.groupName.localeCompare(second.groupName) || first.id.localeCompare(second.id)),

@@ -5,10 +5,18 @@ import { Suspense } from 'react'
 import { ROUTES } from '@/core/navigation/site'
 import { CollectionFrame } from '@/features/organization/management/components/collection-frame'
 import { PageHeaderAction, PageHeaderActions } from '@/features/organization/management/components/page-header-action'
+import {
+  createGroupMembershipAction,
+  endGroupMembershipAction,
+} from '@/features/organization/management/group-memberships'
 import { MemberCollection } from '@/features/organization/management/members/member-collection'
 import { MemberDetail } from '@/features/organization/management/members/member-detail'
 import { MemberDetailRoutePresentation } from '@/features/organization/management/members/member-detail-presentation'
 import { memberManagementQuery } from '@/features/organization/management/members/query'
+import {
+  createPositionAssignmentAction,
+  endPositionAssignmentAction,
+} from '@/features/organization/management/position-assignments'
 
 export function MemberManagementScreen() {
   return (
@@ -58,7 +66,14 @@ export function StandaloneMemberDetailScreen({ memberId }: { memberId: string })
 
 async function MemberDetailContent({ memberId }: { memberId: string }) {
   const member = await loadMemberDetail(memberId)
-  return <MemberDetail member={member} />
+  return <MemberDetail actions={memberDetailActions} member={member} />
+}
+
+const memberDetailActions = {
+  createMembership: createGroupMembershipAction,
+  endMembership: endGroupMembershipAction,
+  createAssignment: createPositionAssignmentAction,
+  endAssignment: endPositionAssignmentAction,
 }
 
 export function InterceptedMemberDetailScreen({ memberId }: { memberId: string }) {
@@ -73,7 +88,7 @@ async function InterceptedMemberDetailContent({ memberId }: { memberId: string }
   const member = await loadMemberDetail(memberId)
   return (
     <MemberDetailRoutePresentation name={member.name} presentation="intercepted">
-      <MemberDetail member={member} />
+      <MemberDetail actions={memberDetailActions} member={member} />
     </MemberDetailRoutePresentation>
   )
 }

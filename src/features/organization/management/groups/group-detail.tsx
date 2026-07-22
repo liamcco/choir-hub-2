@@ -1,5 +1,7 @@
+import { adminMemberPath } from '@/core/navigation/site'
 import { formatGroupKind } from '@/features/organization/core/group-kind'
 import type { MemberLabel } from '@/features/organization/core/labels'
+import { RelatedDetailLink } from '@/features/organization/management/components/related-detail-link'
 import type { Group } from '@/prisma/generated/client'
 import { Badge } from '@/shared/ui/badge'
 import { GroupFieldEditor } from './group-editors'
@@ -136,7 +138,7 @@ function MembershipList({
       {memberships.map((membership) => (
         <li className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between" key={membership.id}>
           <div>
-            <p className="font-medium">{membership.memberLabel}</p>
+            <RelatedDetailLink href={adminMemberPath(membership.memberId)}>{membership.memberLabel}</RelatedDetailLink>
             <p className="text-sm text-muted-foreground">
               {membership.memberDetail} · {formatPeriod(membership)}
             </p>

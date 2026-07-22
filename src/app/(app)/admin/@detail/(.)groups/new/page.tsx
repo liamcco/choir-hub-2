@@ -1,8 +1,7 @@
 import { GroupCreateScreen, RouteBackResponsiveDialog } from '@/features/organization/management'
-
-export default function InterceptedCreateGroupPage() {
+export default function InterceptedGroupCreatePage() {
   return (
-    <RouteBackResponsiveDialog title="Create Group" description="New Group" contentLabel="Create Group content">
+    <RouteBackResponsiveDialog contentLabel="Create Group content" description="Create Group" title="Create Group">
       <GroupCreateScreen presentation="intercepted" />
     </RouteBackResponsiveDialog>
   )

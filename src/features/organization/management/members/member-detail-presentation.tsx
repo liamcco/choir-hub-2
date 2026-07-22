@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { ROUTES } from '@/core/navigation/site'
-import { RouteBackResponsiveDialog } from '@/features/organization/management/components/responsive-route-dialog'
+import { RouteNavigationResponsiveDialog } from '@/features/organization/management/components/responsive-route-dialog'
 import { StandaloneRouteDetail } from '@/features/organization/management/components/standalone-route-detail'
 
 export function MemberDetailRoutePresentation(
@@ -13,12 +13,12 @@ export function MemberDetailRoutePresentation(
   }
 
   return (
-    <RouteBackResponsiveDialog
+    <RouteNavigationResponsiveDialog
       title={props.name}
       description="Member detail"
       contentLabel={`${props.name} detail content`}
     >
       {props.children}
-    </RouteBackResponsiveDialog>
+    </RouteNavigationResponsiveDialog>
   )
 }

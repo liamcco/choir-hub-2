@@ -95,12 +95,81 @@ export function AddGroupMemberControl({
   )
 }
 
+export function AddMemberGroupControl({
+  memberId,
+  groups,
+  action,
+}: {
+  memberId: string
+  groups: { id: string; name: string }[]
+  action: CreateMembershipAction
+}) {
+  const [isOpen, setIsOpen] = useState(false)
+  const [state, formAction, isPending] = useActionState(action, createInitialState)
+
+  if (!isOpen) {
+    return (
+      <Button onClick={() => setIsOpen(true)} type="button" variant="outline">
+        <UserPlusIcon data-icon="inline-start" />
+        Add Group
+      </Button>
+    )
+  }
+
+  return (
+    <form action={formAction} className="space-y-4 rounded-lg border bg-muted/20 p-4">
+      <input name="memberId" type="hidden" value={memberId} />
+      <div className="flex items-center justify-between gap-4">
+        <h3 className="font-medium">Add Group Membership</h3>
+        <Button onClick={() => setIsOpen(false)} size="sm" type="button" variant="ghost">
+          Cancel
+        </Button>
+      </div>
+      <FieldGroup className="sm:grid sm:grid-cols-2">
+        <Field>
+          <FieldLabel htmlFor={`member-${memberId}-group`}>Group</FieldLabel>
+          <NativeSelect
+            aria-invalid={!!state.fieldErrors?.groupId}
+            className="w-full"
+            id={`member-${memberId}-group`}
+            name="groupId"
+            required
+          >
+            <NativeSelectOption value="">Choose Group</NativeSelectOption>
+            {groups.map((group) => (
+              <NativeSelectOption key={group.id} value={group.id}>
+                {group.name}
+              </NativeSelectOption>
+            ))}
+          </NativeSelect>
+          <FieldError>{state.fieldErrors?.groupId}</FieldError>
+        </Field>
+        <Field>
+          <FieldLabel htmlFor={`member-${memberId}-membership-starts-at`}>Start date</FieldLabel>
+          <Input
+            aria-invalid={!!state.fieldErrors?.startsAt}
+            id={`member-${memberId}-membership-starts-at`}
+            name="startsAt"
+            required
+            type="date"
+          />
+          <FieldError>{state.fieldErrors?.startsAt}</FieldError>
+        </Field>
+      </FieldGroup>
+      <Button disabled={isPending} type="submit">
+        {isPending ? 'Adding' : 'Add Membership'}
+      </Button>
+      <FormMessage state={state} />
+    </form>
+  )
+}
+
 export function EndGroupMemberControl({
   membership,
   groupName,
   action,
 }: {
-  membership: { id: string; groupId: string; memberLabel: string; startsAt: Date }
+  membership: { id: string; groupId: string; memberId: string; memberLabel: string; startsAt: Date }
   groupName: string
   action: EndMembershipAction
 }) {
@@ -124,6 +193,7 @@ export function EndGroupMemberControl({
   return (
     <form action={formAction} className="flex flex-col items-start gap-2 sm:items-end">
       <input name="groupId" type="hidden" value={membership.groupId} />
+      <input name="memberId" type="hidden" value={membership.memberId} />
       <div className="flex items-start gap-2">
         <div className="flex flex-col gap-1">
           <Input
