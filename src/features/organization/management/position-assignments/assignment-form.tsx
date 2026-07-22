@@ -1,7 +1,7 @@
 'use client'
 
 import { SaveIcon, UserRoundCheckIcon } from 'lucide-react'
-import { useActionState } from 'react'
+import { useActionState, useState } from 'react'
 import type {
   CreatePositionAssignmentFormState,
   EndPositionAssignmentFormState,
@@ -90,7 +90,88 @@ export function CreatePositionAssignmentForm({
   )
 }
 
-export function EndPositionAssignmentForm({ assignment }: { assignment: PositionAssignmentPeriod }) {
+export function AssignPositionHolderControl({
+  members,
+  positionId,
+}: {
+  members: PositionAssignmentManagementState['members']
+  positionId: string
+}) {
+  const [isAssigning, setIsAssigning] = useState(false)
+  if (!isAssigning) {
+    return (
+      <Button onClick={() => setIsAssigning(true)} type="button" variant="outline">
+        Assign holder
+      </Button>
+    )
+  }
+  return <AssignPositionHolderForm members={members} positionId={positionId} onCancel={() => setIsAssigning(false)} />
+}
+
+function AssignPositionHolderForm({
+  members,
+  positionId,
+  onCancel,
+}: {
+  members: PositionAssignmentManagementState['members']
+  positionId: string
+  onCancel: () => void
+}) {
+  const [state, formAction, isPending] = useActionState(createPositionAssignmentAction, createInitialState)
+  return (
+    <form
+      action={formAction}
+      className="grid gap-3 rounded-lg border bg-muted/20 p-4 sm:grid-cols-[minmax(12rem,1fr)_auto_auto] sm:items-end"
+    >
+      <input name="positionId" type="hidden" value={positionId} />
+      <Field>
+        <FieldLabel htmlFor={`assignment-member-${positionId}`}>Member</FieldLabel>
+        <NativeSelect
+          id={`assignment-member-${positionId}`}
+          name="memberId"
+          required
+          aria-invalid={!!state.fieldErrors?.memberId}
+        >
+          <NativeSelectOption value="">Choose Member</NativeSelectOption>
+          {members.map((option) => (
+            <NativeSelectOption key={option.member.id} value={option.member.id}>
+              {option.label} ({option.detail})
+            </NativeSelectOption>
+          ))}
+        </NativeSelect>
+        <FieldError>{state.fieldErrors?.memberId}</FieldError>
+      </Field>
+      <Field>
+        <FieldLabel htmlFor={`assignment-start-${positionId}`}>Start date</FieldLabel>
+        <Input
+          id={`assignment-start-${positionId}`}
+          name="startsAt"
+          type="date"
+          required
+          aria-invalid={!!state.fieldErrors?.startsAt}
+        />
+        <FieldError>{state.fieldErrors?.startsAt}</FieldError>
+      </Field>
+      <div className="flex gap-2">
+        <Button disabled={isPending} type="submit">
+          {isPending ? 'Assigning' : 'Assign'}
+        </Button>
+        <Button onClick={onCancel} type="button" variant="ghost">
+          Cancel
+        </Button>
+      </div>
+      <FormMessage state={state} />
+    </form>
+  )
+}
+
+export function EndPositionAssignmentForm({
+  assignment,
+}: {
+  assignment: Pick<PositionAssignmentPeriod, 'id' | 'startsAt' | 'memberLabel'> & {
+    position: Pick<PositionAssignmentPeriod['position'], 'name'>
+  }
+}) {
   const [state, formAction, isPending] = useActionState(
     endPositionAssignmentAction.bind(null, assignment.id),
     endInitialState,

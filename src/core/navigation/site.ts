@@ -11,13 +11,14 @@ export const ROUTES = {
   adminGroupHierarchy: '/admin/groups/hierarchy',
   adminGroupMemberships: '/admin/group-memberships',
   adminPositions: '/admin/positions',
+  adminPositionCreate: '/admin/positions/new',
   adminPositionAssignments: '/admin/position-assignments',
 } as const
 
 export type RouteId = keyof typeof ROUTES
 export type NavigationRouteId = Exclude<
   RouteId,
-  'adminRoot' | 'adminMemberCreate' | 'adminGroupCreate' | 'adminGroupHierarchy' | 'home'
+  'adminRoot' | 'adminMemberCreate' | 'adminGroupCreate' | 'adminGroupHierarchy' | 'adminPositionCreate' | 'home'
 >
 
 export function adminMemberPath(memberId: string) {
@@ -26,4 +27,8 @@ export function adminMemberPath(memberId: string) {
 
 export function adminGroupPath(groupId: string) {
   return `${ROUTES.adminGroups}/${encodeURIComponent(groupId)}`
+}
+
+export function adminPositionPath(positionId: string) {
+  return `${ROUTES.adminPositions}/${encodeURIComponent(positionId)}`
 }

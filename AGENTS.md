@@ -10,6 +10,10 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 ## Agent skills
 
+### UI tests
+- Keep permanent frontend tests high-level, high-value, and focused on user-visible functionality. More granular or implementation-specific tests are acceptable temporarily during development, but remove them once that work is complete unless they protect a durable regression that cannot be covered effectively at a higher level.
+
+
 ### Issue tracker
 
 Issues and specs are tracked as local Markdown files under `.scratch/`. See `docs/agents/issue-tracker.md`.

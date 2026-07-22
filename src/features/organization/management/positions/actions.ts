@@ -1,10 +1,11 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import { requireAdmin } from '@/core/auth/permissions.server'
 import { audit } from '@/core/logging'
-import { ROUTES } from '@/core/navigation/site'
+import { adminPositionPath, ROUTES } from '@/core/navigation/site'
 import { organizationService } from '@/features/organization'
 import { normalizeOptionalString } from '@/shared/formatting'
 import { handleFormError } from '@/shared/forms/errors'
@@ -32,8 +33,9 @@ export async function createPositionAction(
   }
 
   // 3. Mutate
+  let position: Awaited<ReturnType<typeof organizationService.positions.create>>
   try {
-    const position = await organizationService.positions.create(formInput.data)
+    position = await organizationService.positions.create(formInput.data)
     audit.adminActionCompleted({
       actorUserId: actor.userId,
       action: 'position.create',
@@ -45,9 +47,9 @@ export async function createPositionAction(
 
   // 4. Invalidate
   revalidatePath(ROUTES.adminPositions)
-  return { success: true, message: 'Position created.' }
 
   // 5. Navigate
+  redirect(adminPositionPath(position.id))
 }
 
 export async function updatePositionAction(
@@ -83,6 +85,7 @@ export async function updatePositionAction(
 
   // 4. Invalidate
   revalidatePath(ROUTES.adminPositions)
+  revalidatePath(adminPositionPath(positionId))
   return { success: true, message: 'Position updated.' }
 
   // 5. Navigate
