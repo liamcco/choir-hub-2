@@ -6,7 +6,9 @@ import {
   isHistoricalDatedPeriod,
   isScheduledDatedPeriod,
 } from '@/features/organization/core/dated-history'
+import { buildGroupTree, type GroupTreeNode } from '@/features/organization/core/group-tree'
 import { buildMemberLabels } from '@/features/organization/core/labels'
+import type { Group, GroupMembership, Member, MemberStatus } from '@/prisma/generated/client'
 
 async function listCollection(input?: { at?: Date }) {
   const at = input?.at ?? new Date()
@@ -74,7 +76,73 @@ async function getDetail(groupId: string, input?: { at?: Date }) {
   }
 }
 
-export const groupManagementQuery = { listCollection, getDetail }
+async function getHierarchy(input?: { at?: Date }) {
+  const at = input?.at ?? new Date()
+  const [groups, members, memberships] = await Promise.all([
+    organizationService.groups.list(),
+    organizationService.members.list(),
+    organizationService.groupMemberships.list({ at }),
+  ])
+  return buildGroupHierarchy(groups, members, memberships, at)
+}
+
+export const groupManagementQuery = { listCollection, getDetail, getHierarchy }
+
+export type GroupHierarchyRow = {
+  id: string
+  name: string
+  kind: Group['kind']
+  depth: number
+  memberCounts: Record<MemberStatus, number>
+}
+
+/** Builds the screen-shaped tree read, counting each current Member once per subtree. */
+export function buildGroupHierarchy(
+  groups: Group[],
+  members: Member[],
+  memberships: GroupMembership[],
+  at: Date,
+): GroupHierarchyRow[] {
+  const membersById = new Map(members.map((member) => [member.id, member]))
+  const currentMemberIdsByGroupId = new Map<string, Set<string>>()
+
+  for (const membership of memberships) {
+    if (!isCurrentDatedPeriod(membership, at) || !membersById.has(membership.memberId)) continue
+    const memberIds = currentMemberIdsByGroupId.get(membership.groupId) ?? new Set<string>()
+    memberIds.add(membership.memberId)
+    currentMemberIdsByGroupId.set(membership.groupId, memberIds)
+  }
+
+  return flattenHierarchy(buildGroupTree(groups), currentMemberIdsByGroupId, membersById)
+}
+
+function flattenHierarchy(
+  nodes: GroupTreeNode[],
+  currentMemberIdsByGroupId: Map<string, Set<string>>,
+  membersById: Map<string, Member>,
+): GroupHierarchyRow[] {
+  return nodes.flatMap((node) => {
+    const descendantMemberIds = collectDescendantMemberIds(node, currentMemberIdsByGroupId)
+    const memberCounts: Record<MemberStatus, number> = { ACTIVE: 0, PASSIVE: 0, FORMER: 0 }
+    for (const memberId of descendantMemberIds) {
+      const member = membersById.get(memberId)
+      if (member) memberCounts[member.status] += 1
+    }
+
+    return [
+      { id: node.group.id, name: node.group.name, kind: node.group.kind, depth: node.depth, memberCounts },
+      ...flattenHierarchy(node.children, currentMemberIdsByGroupId, membersById),
+    ]
+  })
+}
+
+function collectDescendantMemberIds(node: GroupTreeNode, currentMemberIdsByGroupId: Map<string, Set<string>>) {
+  const memberIds = new Set(currentMemberIdsByGroupId.get(node.group.id))
+  for (const child of node.children) {
+    for (const memberId of collectDescendantMemberIds(child, currentMemberIdsByGroupId)) memberIds.add(memberId)
+  }
+  return memberIds
+}
 
 function compareMemberships(
   first: { id: string; memberLabel: string; startsAt: Date },

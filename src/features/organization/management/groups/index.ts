@@ -1,3 +1,4 @@
+export { GroupHierarchyScreen } from './group-hierarchy-screen'
 export {
   AddMemberGroupControl,
   type CreateMembershipAction,
