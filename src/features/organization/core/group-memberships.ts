@@ -20,8 +20,11 @@ export const groupMemberships = {
     })
   },
 
-  async create(input: { memberId: string; groupId: string; startsAt: Date; endsAt?: Date | null }) {
-    const membership = normalizeDatedPeriodInput(input)
+  async create(input: { memberId: string; groupId: string; startsAt?: Date; endsAt?: Date | null }) {
+    const membership = normalizeDatedPeriodInput({
+      ...input,
+      startsAt: input.startsAt ?? new Date(),
+    })
     await assertMemberExists(membership.memberId)
     await assertGroupExists(membership.groupId)
     await assertGroupMembershipDoesNotOverlap(membership)

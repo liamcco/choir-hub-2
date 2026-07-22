@@ -2,25 +2,23 @@
 
 import { SaveIcon, UserPlusIcon } from 'lucide-react'
 import { useActionState } from 'react'
+
 import { formatGroupPath } from '@/features/organization/core/labels'
-import type {
-  CreateGroupMembershipFormState,
-  EndGroupMembershipFormState,
-} from '@/features/organization/management/group-memberships/actions'
-import {
-  createGroupMembershipAction,
-  endGroupMembershipAction,
-} from '@/features/organization/management/group-memberships/actions'
-import type {
-  GroupMembershipManagementState,
-  GroupMembershipPeriod,
-} from '@/features/organization/management/group-memberships/service'
 import { formatDateInput } from '@/shared/formatting'
 import { FormMessage } from '@/shared/forms/error-handling'
+
 import { Button } from '@/shared/ui/button'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/shared/ui/field'
 import { Input } from '@/shared/ui/input'
 import { NativeSelect, NativeSelectOption } from '@/shared/ui/native-select'
+
+import {
+  type CreateGroupMembershipFormState,
+  createGroupMembershipAction,
+  type EndGroupMembershipFormState,
+  endGroupMembershipAction,
+} from './actions'
+import type { GroupMembershipManagementState, GroupMembershipPeriod } from './service'
 
 const createInitialState: CreateGroupMembershipFormState = {}
 const endInitialState: EndGroupMembershipFormState = {}
@@ -69,17 +67,6 @@ export function CreateGroupMembershipForm({
             ))}
           </NativeSelect>
           <FieldError>{state.fieldErrors?.groupId}</FieldError>
-        </Field>
-        <Field>
-          <FieldLabel htmlFor="new-membership-starts-at">Start date</FieldLabel>
-          <Input
-            id="new-membership-starts-at"
-            name="startsAt"
-            type="date"
-            required
-            aria-invalid={!!state.fieldErrors?.startsAt}
-          />
-          <FieldError>{state.fieldErrors?.startsAt}</FieldError>
         </Field>
       </FieldGroup>
       <Button type="submit" className="w-fit" disabled={isPending}>

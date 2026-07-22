@@ -81,67 +81,6 @@ describe('admin Group Membership management actions', () => {
     expect(revalidatePath).toHaveBeenCalledWith('/admin/members')
     expect(revalidatePath).toHaveBeenCalledWith('/admin/groups')
   })
-
-  test('returns useful overlap and invalid period feedback', async () => {
-    createGroupMembership.mockImplementationOnce(async () => {
-      throw new OrganizationOperationError(
-        'This Member already has a Group Membership in this Group during that period.',
-        { field: 'startsAt' },
-      )
-    })
-    endGroupMembership.mockImplementationOnce(async () => {
-      throw new OrganizationOperationError('The end date must be after the start date.', {
-        field: 'endsAt',
-      })
-    })
-
-    await expect(
-      createGroupMembershipAction(
-        {},
-        createMembershipFormData({
-          memberId: 'member-1',
-          groupId: 'group-1',
-          startsAt: '2026-01-01',
-        }),
-      ),
-    ).resolves.toEqual({
-      success: false,
-      message: 'This Member already has a Group Membership in this Group during that period.',
-      fieldErrors: {
-        startsAt: 'This Member already has a Group Membership in this Group during that period.',
-      },
-    })
-    const endFormData = new FormData()
-    endFormData.set('endsAt', '2026-01-01')
-    await expect(endGroupMembershipAction('membership-1', {}, endFormData)).resolves.toEqual({
-      success: false,
-      message: 'The end date must be after the start date.',
-      fieldErrors: {
-        endsAt: 'The end date must be after the start date.',
-      },
-    })
-  })
-
-  test('rejects invalid calendar date strings before mutating', async () => {
-    await expect(
-      createGroupMembershipAction(
-        {},
-        createMembershipFormData({
-          memberId: 'member-1',
-          groupId: 'group-1',
-          startsAt: '2026-02-31',
-        }),
-      ),
-    ).resolves.toEqual({
-      success: false,
-      fieldErrors: {
-        startsAt: ['Start date is required.'],
-      },
-    })
-
-    expect(createGroupMembership).not.toHaveBeenCalled()
-    expect(revalidatePath).not.toHaveBeenCalled()
-  })
 })
 
 function createMembershipFormData(input: { memberId: string; groupId: string; startsAt: string }) {

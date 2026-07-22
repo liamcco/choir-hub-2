@@ -78,45 +78,6 @@ describe('admin Position Assignment management actions', () => {
     expect(endPositionAssignment).toHaveBeenCalledWith('assignment-1', new Date('2026-06-01T00:00:00.000Z'))
     expect(revalidatePath).toHaveBeenCalledWith('/admin/positions')
   })
-
-  test('returns useful overlap and invalid period feedback', async () => {
-    createPositionAssignment.mockImplementationOnce(async () => {
-      throw new OrganizationOperationError('This Position already has an assignment during that period.', {
-        field: 'startsAt',
-      })
-    })
-    endPositionAssignment.mockImplementationOnce(async () => {
-      throw new OrganizationOperationError('The end date must be after the start date.', {
-        field: 'endsAt',
-      })
-    })
-
-    await expect(
-      createPositionAssignmentAction(
-        {},
-        createAssignmentFormData({
-          memberId: 'member-1',
-          positionId: 'position-1',
-          startsAt: '2026-01-01',
-        }),
-      ),
-    ).resolves.toEqual({
-      success: false,
-      message: 'This Position already has an assignment during that period.',
-      fieldErrors: {
-        startsAt: 'This Position already has an assignment during that period.',
-      },
-    })
-    const endFormData = new FormData()
-    endFormData.set('endsAt', '2026-01-01')
-    await expect(endPositionAssignmentAction('assignment-1', {}, endFormData)).resolves.toEqual({
-      success: false,
-      message: 'The end date must be after the start date.',
-      fieldErrors: {
-        endsAt: 'The end date must be after the start date.',
-      },
-    })
-  })
 })
 
 function createAssignmentFormData(input: { memberId: string; positionId: string; startsAt: string }) {

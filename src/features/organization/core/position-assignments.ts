@@ -20,8 +20,11 @@ export const positionAssignments = {
     })
   },
 
-  async create(input: { positionId: string; memberId: string; startsAt: Date; endsAt?: Date | null }) {
-    const assignment = normalizeDatedPeriodInput(input)
+  async create(input: { positionId: string; memberId: string; startsAt?: Date; endsAt?: Date | null }) {
+    const assignment = normalizeDatedPeriodInput({
+      ...input,
+      startsAt: input.startsAt ?? new Date(),
+    })
     await assertPositionExists(assignment.positionId)
     await assertMemberExists(assignment.memberId)
     await assertPositionAssignmentDoesNotOverlap(assignment)

@@ -78,17 +78,6 @@ export function CreatePositionAssignmentForm({
           </NativeSelect>
           <FieldError>{state.fieldErrors?.memberId}</FieldError>
         </Field>
-        <Field>
-          <FieldLabel htmlFor="new-assignment-starts-at">Start date</FieldLabel>
-          <Input
-            id="new-assignment-starts-at"
-            name="startsAt"
-            type="date"
-            required
-            aria-invalid={!!state.fieldErrors?.startsAt}
-          />
-          <FieldError>{state.fieldErrors?.startsAt}</FieldError>
-        </Field>
       </FieldGroup>
       <Button type="submit" className="w-fit" disabled={isPending}>
         <UserRoundCheckIcon data-icon="inline-start" />
@@ -163,17 +152,6 @@ export function AssignMemberPositionControl({
           </NativeSelect>
           <FieldError>{state.fieldErrors?.positionId}</FieldError>
         </Field>
-        <Field>
-          <FieldLabel htmlFor={`member-${memberId}-assignment-starts-at`}>Start date</FieldLabel>
-          <Input
-            aria-invalid={!!state.fieldErrors?.startsAt}
-            id={`member-${memberId}-assignment-starts-at`}
-            name="startsAt"
-            required
-            type="date"
-          />
-          <FieldError>{state.fieldErrors?.startsAt}</FieldError>
-        </Field>
       </FieldGroup>
       <Button disabled={isPending} type="submit">
         {isPending ? 'Assigning' : 'Assign'}
@@ -215,17 +193,6 @@ function AssignPositionHolderForm({
           ))}
         </NativeSelect>
         <FieldError>{state.fieldErrors?.memberId}</FieldError>
-      </Field>
-      <Field>
-        <FieldLabel htmlFor={`assignment-start-${positionId}`}>Start date</FieldLabel>
-        <Input
-          id={`assignment-start-${positionId}`}
-          name="startsAt"
-          type="date"
-          required
-          aria-invalid={!!state.fieldErrors?.startsAt}
-        />
-        <FieldError>{state.fieldErrors?.startsAt}</FieldError>
       </Field>
       <div className="flex gap-2">
         <Button disabled={isPending} type="submit">
