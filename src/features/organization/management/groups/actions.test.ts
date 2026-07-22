@@ -14,7 +14,11 @@ const accountAccessChanged = mock(() => {})
 mock.module('next/cache', () => ({
   revalidatePath,
 }))
-mock.module('next/navigation', () => ({ redirect }))
+mock.module('next/navigation', () => ({
+  redirect,
+  usePathname: () => '/admin/groups',
+  useRouter: () => ({ back() {}, forward() {}, prefetch: async () => {}, push() {}, refresh() {}, replace() {} }),
+}))
 
 mock.module('@/core/auth/permissions.server', () => ({
   requireAdmin: requireAdminActor,
@@ -52,7 +56,11 @@ describe('admin Group management actions', () => {
       parentGroupId: '',
     })
 
-    await expect(createGroupAction({}, formData)).resolves.toBeUndefined()
+    await expect(createGroupAction({}, formData)).resolves.toEqual({
+      success: true,
+      message: 'Group successfully created.',
+      createdId: 'group-1',
+    })
     expect(createGroup).toHaveBeenCalledWith({
       name: ' CSK ',
       description: 'Main choir',
@@ -60,7 +68,7 @@ describe('admin Group management actions', () => {
       parentGroupId: null,
     })
     expect(revalidatePath).toHaveBeenCalledWith('/admin/groups')
-    expect(redirect).toHaveBeenCalledWith('/admin/groups/group-1')
+    expect(redirect).not.toHaveBeenCalled()
     expect(adminActionCompleted).toHaveBeenCalledWith({
       actorUserId: 'admin-1',
       action: 'group.create',

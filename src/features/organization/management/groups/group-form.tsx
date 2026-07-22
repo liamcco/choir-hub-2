@@ -15,7 +15,17 @@ import { Textarea } from '@/shared/ui/textarea'
 const initialState: GroupFormState = {}
 export type GroupFormAction = (previousState: GroupFormState, formData: FormData) => Promise<GroupFormState>
 
-export function CreateGroupForm({ groups, action }: { groups: Group[]; action: GroupFormAction }) {
+export function CreateGroupForm({
+  groups,
+  action,
+  onCreated,
+  onSuccess,
+}: {
+  groups: Group[]
+  action: GroupFormAction
+  onCreated?: (groupId: string) => void
+  onSuccess?: () => void
+}) {
   const [state, formAction, isPending] = useActionState(action, initialState)
 
   return (
@@ -26,7 +36,15 @@ export function CreateGroupForm({ groups, action }: { groups: Group[]; action: G
       <Button type="submit" className="w-fit" disabled={isPending}>
         {isPending ? 'Creating' : 'Create'}
       </Button>
-      <FormMessage state={state} />
+      <FormMessage
+        state={state}
+        onSuccess={onSuccess}
+        successAction={
+          state.createdId && onCreated
+            ? { label: 'View', onClick: () => onCreated(state.createdId as string) }
+            : undefined
+        }
+      />
     </form>
   )
 }

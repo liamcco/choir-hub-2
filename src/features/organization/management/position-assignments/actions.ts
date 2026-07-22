@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { requireCurrentUserPermission } from '@/core/auth/permissions.server'
 import { audit } from '@/core/logging'
-import { adminMemberPath, adminPositionPath, ROUTES } from '@/core/navigation/site'
+import { ROUTES } from '@/core/navigation/site'
 import { organizationService } from '@/features/organization'
 import { handleFormError } from '@/shared/forms/errors'
 import type { FormState } from '@/shared/forms/types'
@@ -47,9 +47,7 @@ export async function createPositionAssignmentAction(
 
   // 4. Invalidate
   revalidatePath(ROUTES.adminPositions)
-  revalidatePath(adminPositionPath(formInput.data.positionId))
-  revalidatePath(adminMemberPath(formInput.data.memberId))
-  return { message: 'Position Assignment added.' }
+  return { success: true, message: 'Position Assignment added.' }
 
   // 5. Navigate
 }
@@ -72,9 +70,8 @@ export async function endPositionAssignmentAction(
   }
 
   // 3. Mutate
-  let assignment: Awaited<ReturnType<typeof organizationService.positionAssignments.end>>
   try {
-    assignment = await organizationService.positionAssignments.end(assignmentId, formInput.data.endsAt)
+    await organizationService.positionAssignments.end(assignmentId, formInput.data.endsAt)
     audit.adminActionCompleted({
       actorUserId: actor.userId,
       action: 'positionAssignment.end',
@@ -86,12 +83,7 @@ export async function endPositionAssignmentAction(
 
   // 4. Invalidate
   revalidatePath(ROUTES.adminPositions)
-  revalidatePath(adminPositionPath(assignment.positionId))
-  const memberId = formData.get('memberId')
-  if (typeof memberId === 'string' && memberId) {
-    revalidatePath(adminMemberPath(memberId))
-  }
-  return { message: 'Position Assignment ended.' }
+  return { success: true, message: 'Position Assignment ended.' }
 
   // 5. Navigate
 }

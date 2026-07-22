@@ -6,7 +6,7 @@ import {
   createMemberAccountAction,
   type MemberAccountFormState,
 } from '@/features/organization/management/members/actions'
-import { Alert, AlertDescription } from '@/shared/ui/alert'
+import { FormMessage } from '@/shared/forms/error-handling'
 import { Button } from '@/shared/ui/button'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/shared/ui/field'
 import { Input } from '@/shared/ui/input'
@@ -14,7 +14,13 @@ import { NativeSelect, NativeSelectOption } from '@/shared/ui/native-select'
 
 const initialState: MemberAccountFormState = {}
 
-export function MemberAccountForm() {
+export function MemberAccountForm({
+  onCreated,
+  onSuccess,
+}: {
+  onCreated?: (memberId: string) => void
+  onSuccess?: () => void
+}) {
   const [state, formAction, isPending] = useActionState(createMemberAccountAction, initialState)
 
   return (
@@ -63,11 +69,15 @@ export function MemberAccountForm() {
         <UserPlusIcon data-icon="inline-start" />
         {isPending ? 'Creating' : 'Create'}
       </Button>
-      {state.message ? (
-        <Alert variant={state.success ? 'default' : 'destructive'}>
-          <AlertDescription>{state.message}</AlertDescription>
-        </Alert>
-      ) : null}
+      <FormMessage
+        state={state}
+        onSuccess={onSuccess}
+        successAction={
+          state.createdId && onCreated
+            ? { label: 'View', onClick: () => onCreated(state.createdId as string) }
+            : undefined
+        }
+      />
     </form>
   )
 }

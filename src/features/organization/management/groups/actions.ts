@@ -1,11 +1,10 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import { requireAdmin } from '@/core/auth/permissions.server'
 import { audit } from '@/core/logging'
-import { adminGroupPath, ROUTES } from '@/core/navigation/site'
+import { ROUTES } from '@/core/navigation/site'
 import { organizationService } from '@/features/organization'
 import type { GroupKind } from '@/prisma/generated/client'
 import { normalizeOptionalString } from '@/shared/formatting'
@@ -13,7 +12,7 @@ import { handleFormError } from '@/shared/forms/errors'
 import type { FormState } from '@/shared/forms/types'
 import { GroupFormSchema } from './schemas'
 
-export type GroupFormState = FormState<typeof GroupFormSchema>
+export type GroupFormState = FormState<typeof GroupFormSchema> & { createdId?: string }
 
 export async function createGroupAction(_previousState: GroupFormState, formData: FormData): Promise<GroupFormState> {
   // 1. Authenticate
@@ -47,8 +46,7 @@ export async function createGroupAction(_previousState: GroupFormState, formData
   // 4. Invalidate
   revalidatePath(ROUTES.adminGroups)
 
-  // 5. Navigate
-  redirect(adminGroupPath(group.id))
+  return { success: true, message: 'Group successfully created.', createdId: group.id }
 }
 
 export async function updateGroupAction(
@@ -85,7 +83,7 @@ export async function updateGroupAction(
 
   // 4. Invalidate
   revalidatePath(ROUTES.adminGroups)
-  revalidatePath(adminGroupPath(groupId))
+
   return { success: true, message: 'Group updated.' }
 
   // 5. Navigate

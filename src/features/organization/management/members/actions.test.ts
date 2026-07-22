@@ -15,7 +15,11 @@ const accountAccessChanged = mock(() => {})
 mock.module('next/cache', () => ({
   revalidatePath,
 }))
-mock.module('next/navigation', () => ({ redirect }))
+mock.module('next/navigation', () => ({
+  redirect,
+  usePathname: () => '/admin/members',
+  useRouter: () => ({ back() {}, forward() {}, prefetch: async () => {}, push() {}, refresh() {}, replace() {} }),
+}))
 
 mock.module('@/core/auth/permissions.server', () => ({
   requireAdmin: requireAdminActor,
@@ -49,18 +53,20 @@ beforeEach(() => {
 })
 
 describe('admin Member management actions', () => {
-  test('navigates successful creation directly to the new Member detail', async () => {
-    await createMemberAccountAction(
-      {},
-      formData({
-        name: 'Ada Lovelace',
-        email: 'ada@example.com',
-        password: 'correct horse battery staple',
-        status: MemberStatus.ACTIVE,
-      }),
-    )
+  test('returns the new Member for local create-modal feedback', async () => {
+    await expect(
+      createMemberAccountAction(
+        {},
+        formData({
+          name: 'Ada Lovelace',
+          email: 'ada@example.com',
+          password: 'correct horse battery staple',
+          status: MemberStatus.ACTIVE,
+        }),
+      ),
+    ).resolves.toEqual({ success: true, message: 'Member successfully created.', createdId: 'member-1' })
 
-    expect(redirect).toHaveBeenCalledWith('/admin/members/member-1')
+    expect(redirect).not.toHaveBeenCalled()
   })
 
   test('creates and updates Members from admin workflow forms', async () => {

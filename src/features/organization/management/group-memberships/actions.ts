@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { requireCurrentUserPermission } from '@/core/auth/permissions.server'
 import { audit } from '@/core/logging'
-import { adminGroupPath, adminMemberPath, ROUTES } from '@/core/navigation/site'
+import { ROUTES } from '@/core/navigation/site'
 import { organizationService } from '@/features/organization'
 import { handleFormError } from '@/shared/forms/errors'
 import type { FormState } from '@/shared/forms/types'
@@ -48,9 +48,7 @@ export async function createGroupMembershipAction(
   // 4. Invalidate
   revalidatePath(ROUTES.adminMembers)
   revalidatePath(ROUTES.adminGroups)
-  revalidatePath(adminGroupPath(formInput.data.groupId))
-  revalidatePath(adminMemberPath(formInput.data.memberId))
-  return { message: 'Group Membership added.' }
+  return { success: true, message: 'Group Membership added.' }
 
   // 5. Navigate
 }
@@ -86,15 +84,7 @@ export async function endGroupMembershipAction(
   // 4. Invalidate
   revalidatePath(ROUTES.adminMembers)
   revalidatePath(ROUTES.adminGroups)
-  const groupId = formData.get('groupId')
-  if (typeof groupId === 'string' && groupId) {
-    revalidatePath(adminGroupPath(groupId))
-  }
-  const memberId = formData.get('memberId')
-  if (typeof memberId === 'string' && memberId) {
-    revalidatePath(adminMemberPath(memberId))
-  }
-  return { message: 'Group Membership ended.' }
+  return { success: true, message: 'Group Membership ended.' }
 
   // 5. Navigate
 }

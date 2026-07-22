@@ -1,19 +1,3 @@
-export { RouteBackResponsiveDialog } from './components/responsive-route-dialog'
-export { StandaloneRouteDetail } from './components/standalone-route-detail'
-export {
-  GroupCreateScreen,
-  InterceptedGroupDetailScreen,
-  StandaloneGroupDetailScreen,
-} from './groups'
-export {
-  InterceptedMemberDetailScreen,
-  MemberCreate,
-  MemberManagementScreen,
-  StandaloneMemberDetailScreen,
-} from './members'
-export {
-  InterceptedPositionDetailScreen,
-  PositionCreateScreen,
-  PositionManagementScreen,
-  StandalonePositionDetailScreen,
-} from './positions'
+export { GroupManagementScreen } from './groups'
+export { MemberCreate, MemberManagementScreen } from './members'
+export { PositionManagementScreen } from './positions'

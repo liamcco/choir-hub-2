@@ -7,17 +7,17 @@ const { RelatedDetailLink } = await import('./related-detail-link')
 beforeEach(cleanup)
 
 describe('related detail navigation', () => {
-  test('preserves the originating detail so related navigation can replace it and return', () => {
+  test('uses the owning collection detail query parameter', () => {
     render(
-      <PathnameContext.Provider value="/admin/members/member-1">
+      <PathnameContext.Provider value="/admin/members">
         <SearchParamsContext.Provider value={new URLSearchParams()}>
-          <RelatedDetailLink href="/admin/groups/group-1">Chamber Choir</RelatedDetailLink>
+          <RelatedDetailLink href="/admin/groups?detail=group-1">Chamber Choir</RelatedDetailLink>
         </SearchParamsContext.Provider>
       </PathnameContext.Provider>,
     )
 
     expect(screen.getByRole('link', { name: 'Chamber Choir' }).getAttribute('href')).toBe(
-      '/admin/groups/group-1?detailOrigin=%2Fadmin%2Fmembers%2Fmember-1',
+      '/admin/groups?detail=group-1',
     )
   })
 })

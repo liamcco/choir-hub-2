@@ -37,7 +37,9 @@ describe('Group collection', () => {
       'Parent',
       'Members',
     ])
-    expect(screen.getByRole('link', { name: 'Chamber Choir' }).getAttribute('href')).toBe('/admin/groups/choir-1')
+    expect(screen.getByRole('link', { name: 'Chamber Choir' }).getAttribute('href')).toBe(
+      '/admin/groups?detail=choir-1',
+    )
     expect(screen.getByRole('cell', { name: '1' })).toBeTruthy()
     expect(screen.getByRole('cell', { name: '7' })).toBeTruthy()
     expect(screen.getByText('No parent Group')).toBeTruthy()

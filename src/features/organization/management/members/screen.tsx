@@ -1,15 +1,16 @@
-import { PlusIcon } from 'lucide-react'
 import { notFound } from 'next/navigation'
 import { connection } from 'next/server'
 import { Suspense } from 'react'
 import { ROUTES } from '@/core/navigation/site'
 import { CollectionFrame } from '@/features/organization/management/components/collection-frame'
-import { PageHeaderAction, PageHeaderActions } from '@/features/organization/management/components/page-header-action'
+import { InvalidDetail } from '@/features/organization/management/components/invalid-detail'
+import { PageHeaderActions } from '@/features/organization/management/components/page-header-action'
 import {
   createGroupMembershipAction,
   endGroupMembershipAction,
 } from '@/features/organization/management/group-memberships'
 import { MemberCollection } from '@/features/organization/management/members/member-collection'
+import { MemberCreateDialog } from '@/features/organization/management/members/member-create-dialog'
 import { MemberDetail } from '@/features/organization/management/members/member-detail'
 import { MemberDetailRoutePresentation } from '@/features/organization/management/members/member-detail-presentation'
 import { memberManagementQuery } from '@/features/organization/management/members/query'
@@ -18,33 +19,44 @@ import {
   endPositionAssignmentAction,
 } from '@/features/organization/management/position-assignments'
 
-export function MemberManagementScreen() {
+export function MemberManagementScreen({ detailId }: { detailId?: string }) {
   return (
     <Suspense fallback={<p className="p-8 text-center text-muted-foreground">Loading Members…</p>}>
-      <MemberCollectionScreen />
+      <MemberCollectionScreen detailId={detailId} />
     </Suspense>
   )
 }
 
-async function MemberCollectionScreen() {
+async function MemberCollectionScreen({ detailId }: { detailId?: string }) {
   await connection()
   const members = await memberManagementQuery.listCollection()
   return (
-    <CollectionFrame
-      activeResource="members"
-      title="Members"
-      description="Browse choir Members and their current organizational place."
-      actions={
-        <PageHeaderActions>
-          <PageHeaderAction href={ROUTES.adminMemberCreate}>
-            <PlusIcon data-icon="inline-start" />
-            Create Member
-          </PageHeaderAction>
-        </PageHeaderActions>
-      }
-    >
-      <MemberCollection members={members} />
-    </CollectionFrame>
+    <>
+      <CollectionFrame
+        activeResource="members"
+        title="Members"
+        description="Browse choir Members and their current organizational place."
+        actions={
+          <PageHeaderActions>
+            <MemberCreateDialog />
+          </PageHeaderActions>
+        }
+      >
+        <MemberCollection members={members} />
+      </CollectionFrame>
+      {detailId ? <MemberDetailOverlay memberId={detailId} /> : null}
+    </>
+  )
+}
+
+async function MemberDetailOverlay({ memberId }: { memberId: string }) {
+  const member = await memberManagementQuery.getDetail(memberId)
+  if (!member) return <InvalidDetail collectionPath={ROUTES.adminMembers} resourceName="Member" />
+
+  return (
+    <MemberDetailRoutePresentation name={member.name} presentation="intercepted">
+      <MemberDetail actions={memberDetailActions} member={member} />
+    </MemberDetailRoutePresentation>
   )
 }
 

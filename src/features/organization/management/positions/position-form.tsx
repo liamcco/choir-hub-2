@@ -17,7 +17,15 @@ import { Textarea } from '@/shared/ui/textarea'
 
 const initialState: PositionFormState = {}
 
-export function CreatePositionForm({ groups }: { groups: PositionManagementState['groups'] }) {
+export function CreatePositionForm({
+  groups,
+  onCreated,
+  onSuccess,
+}: {
+  groups: PositionManagementState['groups']
+  onCreated?: (positionId: string) => void
+  onSuccess?: () => void
+}) {
   const [state, formAction, isPending] = useActionState(createPositionAction, initialState)
 
   return (
@@ -28,7 +36,15 @@ export function CreatePositionForm({ groups }: { groups: PositionManagementState
       <Button type="submit" className="w-fit" disabled={isPending}>
         {isPending ? 'Creating' : 'Create'}
       </Button>
-      <FormMessage state={state} />
+      <FormMessage
+        state={state}
+        onSuccess={onSuccess}
+        successAction={
+          state.createdId && onCreated
+            ? { label: 'View', onClick: () => onCreated(state.createdId as string) }
+            : undefined
+        }
+      />
     </form>
   )
 }

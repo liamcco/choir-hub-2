@@ -1,18 +1,17 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import { requireAdmin } from '@/core/auth/permissions.server'
 import { audit } from '@/core/logging'
-import { adminPositionPath, ROUTES } from '@/core/navigation/site'
+import { ROUTES } from '@/core/navigation/site'
 import { organizationService } from '@/features/organization'
 import { normalizeOptionalString } from '@/shared/formatting'
 import { handleFormError } from '@/shared/forms/errors'
 import type { FormState } from '@/shared/forms/types'
 import { PositionFormSchema } from './schemas'
 
-export type PositionFormState = FormState<typeof PositionFormSchema>
+export type PositionFormState = FormState<typeof PositionFormSchema> & { createdId?: string }
 
 export async function createPositionAction(
   _previousState: PositionFormState,
@@ -48,8 +47,7 @@ export async function createPositionAction(
   // 4. Invalidate
   revalidatePath(ROUTES.adminPositions)
 
-  // 5. Navigate
-  redirect(adminPositionPath(position.id))
+  return { success: true, message: 'Position successfully created.', createdId: position.id }
 }
 
 export async function updatePositionAction(
@@ -85,7 +83,6 @@ export async function updatePositionAction(
 
   // 4. Invalidate
   revalidatePath(ROUTES.adminPositions)
-  revalidatePath(adminPositionPath(positionId))
   return { success: true, message: 'Position updated.' }
 
   // 5. Navigate

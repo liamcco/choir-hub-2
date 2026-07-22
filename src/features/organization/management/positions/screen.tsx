@@ -1,43 +1,58 @@
-import { PlusIcon } from 'lucide-react'
 import { notFound } from 'next/navigation'
 import { connection } from 'next/server'
 import { Suspense } from 'react'
 import { ROUTES } from '@/core/navigation/site'
 import { CollectionFrame } from '@/features/organization/management/components/collection-frame'
-import { PageHeaderAction, PageHeaderActions } from '@/features/organization/management/components/page-header-action'
+import { InvalidDetail } from '@/features/organization/management/components/invalid-detail'
+import { PageHeaderActions } from '@/features/organization/management/components/page-header-action'
 import { PositionCollection } from './position-collection'
 import { PositionCreate } from './position-create'
+import { PositionCreateDialog } from './position-create-dialog'
 import { PositionDetail } from './position-detail'
 import { PositionDetailRoutePresentation } from './position-detail-presentation'
 import { positionManagementQuery } from './query'
 
-export function PositionManagementScreen() {
+export function PositionManagementScreen({ detailId }: { detailId?: string }) {
   return (
     <Suspense fallback={<p className="p-8 text-center text-muted-foreground">Loading Positions…</p>}>
-      <PositionCollectionScreen />
+      <PositionCollectionScreen detailId={detailId} />
     </Suspense>
   )
 }
 
-async function PositionCollectionScreen() {
+async function PositionCollectionScreen({ detailId }: { detailId?: string }) {
   await connection()
-  const positions = await positionManagementQuery.listCollection()
+  const [positions, createState] = await Promise.all([
+    positionManagementQuery.listCollection(),
+    positionManagementQuery.getDetailForCreate(),
+  ])
   return (
-    <CollectionFrame
-      activeResource="positions"
-      title="Positions"
-      description="Browse choir Positions, their Group scopes, and current holders."
-      actions={
-        <PageHeaderActions>
-          <PageHeaderAction href={ROUTES.adminPositionCreate}>
-            <PlusIcon data-icon="inline-start" />
-            Create Position
-          </PageHeaderAction>
-        </PageHeaderActions>
-      }
-    >
-      <PositionCollection positions={positions} />
-    </CollectionFrame>
+    <>
+      <CollectionFrame
+        activeResource="positions"
+        title="Positions"
+        description="Browse choir Positions, their Group scopes, and current holders."
+        actions={
+          <PageHeaderActions>
+            <PositionCreateDialog groups={createState.groups} />
+          </PageHeaderActions>
+        }
+      >
+        <PositionCollection positions={positions} />
+      </CollectionFrame>
+      {detailId ? <PositionDetailOverlay positionId={detailId} /> : null}
+    </>
+  )
+}
+
+async function PositionDetailOverlay({ positionId }: { positionId: string }) {
+  const position = await positionManagementQuery.getDetail(positionId)
+  if (!position) return <InvalidDetail collectionPath={ROUTES.adminPositions} resourceName="Position" />
+
+  return (
+    <PositionDetailRoutePresentation name={position.position.name} presentation="intercepted">
+      <PositionDetail position={position} />
+    </PositionDetailRoutePresentation>
   )
 }
 

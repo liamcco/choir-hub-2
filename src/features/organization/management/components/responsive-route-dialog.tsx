@@ -1,7 +1,7 @@
 'use client'
 
-import { ArrowLeftIcon, XIcon } from 'lucide-react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { XIcon } from 'lucide-react'
+import { usePathname, useRouter } from 'next/navigation'
 import type { ComponentProps, ReactNode } from 'react'
 import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
@@ -48,30 +48,9 @@ export function ResponsiveRouteDialog({
   )
 }
 
-export function RouteBackResponsiveDialog(props: Omit<ComponentProps<typeof ResponsiveRouteDialog>, 'onClose'>) {
+export function DetailDialog(props: Omit<ComponentProps<typeof ResponsiveRouteDialog>, 'onClose'>) {
   const router = useRouter()
-  return <ResponsiveRouteDialog {...props} onClose={() => router.back()} />
-}
+  const pathname = usePathname()
 
-export function RouteNavigationResponsiveDialog(props: Omit<ComponentProps<typeof ResponsiveRouteDialog>, 'onClose'>) {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const origin = searchParams?.get('detailOrigin')
-
-  if (!origin?.startsWith('/admin/')) {
-    return <RouteBackResponsiveDialog {...props} />
-  }
-
-  return (
-    <ResponsiveRouteDialog
-      {...props}
-      onClose={() => router.replace(origin)}
-      headerAction={
-        <Button onClick={() => router.back()} size="sm" type="button" variant="outline">
-          <ArrowLeftIcon data-icon="inline-start" />
-          Back
-        </Button>
-      }
-    />
-  )
+  return <ResponsiveRouteDialog {...props} onClose={() => router.replace(pathname, { scroll: false })} />
 }

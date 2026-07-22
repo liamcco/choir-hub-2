@@ -2,6 +2,11 @@ import { MemberManagementScreen } from '@/features/organization/management/membe
 
 export const instant = false
 
-export default function AdminMembersPage() {
-  return <MemberManagementScreen />
+export default async function AdminMembersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ detail?: string | string[] }>
+}) {
+  const detail = (await searchParams).detail
+  return <MemberManagementScreen detailId={typeof detail === 'string' ? detail : undefined} />
 }

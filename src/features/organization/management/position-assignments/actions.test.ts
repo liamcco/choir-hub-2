@@ -50,6 +50,7 @@ describe('admin Position Assignment management actions', () => {
     })
 
     await expect(createPositionAssignmentAction({}, formData)).resolves.toEqual({
+      success: true,
       message: 'Position Assignment added.',
     })
     expect(createPositionAssignment).toHaveBeenCalledWith({
@@ -58,7 +59,6 @@ describe('admin Position Assignment management actions', () => {
       startsAt: new Date('2026-01-01T00:00:00.000Z'),
     })
     expect(revalidatePath).toHaveBeenCalledWith('/admin/positions')
-    expect(revalidatePath).toHaveBeenCalledWith('/admin/members/member-1')
     expect(adminActionCompleted).toHaveBeenCalledWith({
       actorUserId: 'admin-1',
       action: 'positionAssignment.create',
@@ -72,11 +72,11 @@ describe('admin Position Assignment management actions', () => {
     formData.set('memberId', 'member-1')
 
     await expect(endPositionAssignmentAction('assignment-1', {}, formData)).resolves.toEqual({
+      success: true,
       message: 'Position Assignment ended.',
     })
     expect(endPositionAssignment).toHaveBeenCalledWith('assignment-1', new Date('2026-06-01T00:00:00.000Z'))
     expect(revalidatePath).toHaveBeenCalledWith('/admin/positions')
-    expect(revalidatePath).toHaveBeenCalledWith('/admin/members/member-1')
   })
 
   test('returns useful overlap and invalid period feedback', async () => {

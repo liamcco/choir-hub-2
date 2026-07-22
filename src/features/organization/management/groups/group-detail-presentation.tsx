@@ -1,24 +1,21 @@
 import type { ReactNode } from 'react'
-import { ROUTES } from '@/core/navigation/site'
-import { RouteNavigationResponsiveDialog } from '@/features/organization/management/components/responsive-route-dialog'
-import { StandaloneRouteDetail } from '@/features/organization/management/components/standalone-route-detail'
+import { DetailDialog } from '@/features/organization/management/components/responsive-route-dialog'
 
-export function GroupDetailRoutePresentation(
-  props:
-    | { presentation: 'standalone'; children: ReactNode }
-    | { presentation: 'intercepted'; name: string; children: ReactNode },
-) {
-  if (props.presentation === 'standalone') {
-    return <StandaloneRouteDetail closeHref={ROUTES.adminGroups}>{props.children}</StandaloneRouteDetail>
-  }
-
+export function GroupDetailDialog({ name, children }: { name: string; children: ReactNode }) {
   return (
-    <RouteNavigationResponsiveDialog
-      title={props.name}
-      description="Group detail"
-      contentLabel={`${props.name} detail content`}
-    >
-      {props.children}
-    </RouteNavigationResponsiveDialog>
+    <DetailDialog title={name} description="Group detail" contentLabel={`${name} detail content`}>
+      {children}
+    </DetailDialog>
   )
+}
+
+export function GroupDetailRoutePresentation({
+  name,
+  children,
+}: {
+  name: string
+  children: ReactNode
+  presentation?: 'intercepted'
+}) {
+  return <GroupDetailDialog name={name}>{children}</GroupDetailDialog>
 }

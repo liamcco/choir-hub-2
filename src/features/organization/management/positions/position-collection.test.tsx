@@ -28,7 +28,9 @@ describe('Position collection', () => {
       'Held since',
     ])
     expect(screen.getAllByRole('link', { name: 'Chair' })).toHaveLength(2)
-    expect(screen.getAllByRole('link', { name: 'Chair' })[0]?.getAttribute('href')).toBe('/admin/positions/position-1')
+    expect(screen.getAllByRole('link', { name: 'Chair' })[0]?.getAttribute('href')).toBe(
+      '/admin/positions?detail=position-1',
+    )
     expect(screen.getByText('Choir Board')).toBeTruthy()
     expect(screen.getByText('Festival Committee')).toBeTruthy()
     expect(screen.getByText('Ada Lovelace')).toBeTruthy()

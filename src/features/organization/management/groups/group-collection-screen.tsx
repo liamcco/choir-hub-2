@@ -1,11 +1,19 @@
-import { GitForkIcon, PlusIcon } from 'lucide-react'
+import { GitForkIcon } from 'lucide-react'
 import { ROUTES } from '@/core/navigation/site'
 import { CollectionFrame } from '@/features/organization/management/components/collection-frame'
 import { PageHeaderAction, PageHeaderActions } from '@/features/organization/management/components/page-header-action'
+import type { Group } from '@/prisma/generated/client'
 import { buttonVariants } from '@/shared/ui/button'
 import { GroupCollection, type GroupCollectionRow } from './group-collection'
+import { GroupCreateDialog } from './group-create-dialog'
 
-export function GroupCollectionScreen({ groups }: { groups: GroupCollectionRow[] }) {
+export function GroupCollectionScreen({
+  groups,
+  createGroups,
+}: {
+  groups: GroupCollectionRow[]
+  createGroups: Group[]
+}) {
   return (
     <CollectionFrame
       activeResource="groups"
@@ -20,10 +28,7 @@ export function GroupCollectionScreen({ groups }: { groups: GroupCollectionRow[]
             <GitForkIcon data-icon="inline-start" />
             View hierarchy
           </PageHeaderAction>
-          <PageHeaderAction href={ROUTES.adminGroupCreate}>
-            <PlusIcon data-icon="inline-start" />
-            Create Group
-          </PageHeaderAction>
+          <GroupCreateDialog groups={createGroups} />
         </PageHeaderActions>
       }
     >

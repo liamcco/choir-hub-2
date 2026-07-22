@@ -36,7 +36,9 @@ describe('Member collection', () => {
       'Voice',
       'Status',
     ])
-    expect(screen.getByRole('link', { name: 'Ada Lovelace' }).getAttribute('href')).toBe('/admin/members/member-1')
+    expect(screen.getByRole('link', { name: 'Ada Lovelace' }).getAttribute('href')).toBe(
+      '/admin/members?detail=member-1',
+    )
     expect(screen.getByText('Chamber Choir, Festival Choir')).toBeTruthy()
     expect(screen.getByText('Alto I, Alto II')).toBeTruthy()
     expect(screen.getByLabelText('Multiple current Voices')).toBeTruthy()

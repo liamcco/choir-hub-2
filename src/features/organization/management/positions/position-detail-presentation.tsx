@@ -1,21 +1,20 @@
 import type { ReactNode } from 'react'
-import { ROUTES } from '@/core/navigation/site'
-import { RouteNavigationResponsiveDialog } from '@/features/organization/management/components/responsive-route-dialog'
-import { StandaloneRouteDetail } from '@/features/organization/management/components/standalone-route-detail'
-export function PositionDetailRoutePresentation(
-  props:
-    | { presentation: 'standalone'; children: ReactNode }
-    | { presentation: 'intercepted'; name: string; children: ReactNode },
-) {
-  return props.presentation === 'standalone' ? (
-    <StandaloneRouteDetail closeHref={ROUTES.adminPositions}>{props.children}</StandaloneRouteDetail>
-  ) : (
-    <RouteNavigationResponsiveDialog
-      title={props.name}
-      description="Position detail"
-      contentLabel={`${props.name} detail content`}
-    >
-      {props.children}
-    </RouteNavigationResponsiveDialog>
+import { DetailDialog } from '@/features/organization/management/components/responsive-route-dialog'
+export function PositionDetailDialog({ name, children }: { name: string; children: ReactNode }) {
+  return (
+    <DetailDialog title={name} description="Position detail" contentLabel={`${name} detail content`}>
+      {children}
+    </DetailDialog>
   )
+}
+
+export function PositionDetailRoutePresentation({
+  name = 'Position',
+  children,
+}: {
+  name?: string
+  children: ReactNode
+  presentation?: 'intercepted' | 'standalone'
+}) {
+  return <PositionDetailDialog name={name}>{children}</PositionDetailDialog>
 }

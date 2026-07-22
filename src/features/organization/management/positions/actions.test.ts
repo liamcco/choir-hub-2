@@ -13,7 +13,11 @@ const accountAccessChanged = mock(() => {})
 mock.module('next/cache', () => ({
   revalidatePath,
 }))
-mock.module('next/navigation', () => ({ redirect }))
+mock.module('next/navigation', () => ({
+  redirect,
+  usePathname: () => '/admin/positions',
+  useRouter: () => ({ back() {}, forward() {}, prefetch: async () => {}, push() {}, refresh() {}, replace() {} }),
+}))
 
 mock.module('@/core/auth/permissions.server', () => ({
   requireAdmin: requireAdminActor,
@@ -52,14 +56,18 @@ describe('admin Position management actions', () => {
       groupIds: ['group-1', 'group-2'],
     })
 
-    await expect(createPositionAction({}, formData)).resolves.toBeUndefined()
+    await expect(createPositionAction({}, formData)).resolves.toEqual({
+      success: true,
+      message: 'Position successfully created.',
+      createdId: 'position-1',
+    })
     expect(createPosition).toHaveBeenCalledWith({
       name: ' Chair ',
       description: 'Shared leadership',
       groupIds: ['group-1', 'group-2'],
     })
     expect(revalidatePath).toHaveBeenCalledWith('/admin/positions')
-    expect(redirect).toHaveBeenCalledWith('/admin/positions/position-1')
+    expect(redirect).not.toHaveBeenCalled()
     expect(adminActionCompleted).toHaveBeenCalledWith({
       actorUserId: 'admin-1',
       action: 'position.create',

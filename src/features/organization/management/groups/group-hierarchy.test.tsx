@@ -9,7 +9,7 @@ const userEvent = (await import('@testing-library/user-event')).default
 
 beforeEach(cleanup)
 
-const back = mock(() => {})
+const replace = mock(() => {})
 
 describe('Group hierarchy', () => {
   test('filters visible counts without hiding zero-count Groups and links selection to Group detail', async () => {
@@ -38,7 +38,7 @@ describe('Group hierarchy', () => {
     expect(screen.getAllByRole('cell', { name: '2' })).toHaveLength(1)
     expect(screen.getAllByRole('cell', { name: '0' })).toHaveLength(1)
     expect(screen.getByRole('link', { name: 'Altos' })).toBeTruthy()
-    expect(screen.getByRole('link', { name: 'Altos' }).getAttribute('href')).toBe('/admin/groups/altos')
+    expect(screen.getByRole('link', { name: 'Altos' }).getAttribute('href')).toBe('/admin/groups?detail=altos')
 
     await user.click(screen.getByRole('button', { name: 'Active' }))
     expect(screen.getAllByRole('cell', { name: '1' })).toHaveLength(1)
@@ -51,7 +51,7 @@ describe('Group hierarchy', () => {
 
   test('keeps the hierarchy visible while Group detail is overlaid and returns to it when closed', async () => {
     const user = userEvent.setup()
-    back.mockClear()
+    replace.mockClear()
     render(
       <>
         <main>
@@ -68,7 +68,7 @@ describe('Group hierarchy', () => {
     expect(screen.getByRole('dialog', { name: 'Altos' })).toBeTruthy()
     expect(screen.getAllByText('Choir')).toHaveLength(2)
     await user.click(screen.getByRole('button', { name: 'Close' }))
-    expect(back).toHaveBeenCalledTimes(1)
+    expect(replace).toHaveBeenCalledTimes(1)
     expect(screen.getAllByText('Choir')).toHaveLength(2)
   })
 })
@@ -84,10 +84,10 @@ const hierarchyRows = [
 ]
 
 const router = {
-  back,
+  back() {},
   forward() {},
   prefetch: async () => {},
   push() {},
   refresh() {},
-  replace() {},
+  replace,
 } as never

@@ -49,7 +49,10 @@ describe('admin Group Membership management actions', () => {
       startsAt: '2026-01-01',
     })
 
-    await expect(createGroupMembershipAction({}, formData)).resolves.toEqual({ message: 'Group Membership added.' })
+    await expect(createGroupMembershipAction({}, formData)).resolves.toEqual({
+      success: true,
+      message: 'Group Membership added.',
+    })
     expect(createGroupMembership).toHaveBeenCalledWith({
       memberId: 'member-1',
       groupId: 'group-1',
@@ -57,8 +60,6 @@ describe('admin Group Membership management actions', () => {
     })
     expect(revalidatePath).toHaveBeenCalledWith('/admin/members')
     expect(revalidatePath).toHaveBeenCalledWith('/admin/groups')
-    expect(revalidatePath).toHaveBeenCalledWith('/admin/groups/group-1')
-    expect(revalidatePath).toHaveBeenCalledWith('/admin/members/member-1')
     expect(adminActionCompleted).toHaveBeenCalledWith({
       actorUserId: 'admin-1',
       action: 'groupMembership.create',
@@ -73,13 +74,12 @@ describe('admin Group Membership management actions', () => {
     formData.set('memberId', 'member-1')
 
     await expect(endGroupMembershipAction('membership-1', {}, formData)).resolves.toEqual({
+      success: true,
       message: 'Group Membership ended.',
     })
     expect(endGroupMembership).toHaveBeenCalledWith('membership-1', new Date('2026-06-01T00:00:00.000Z'))
     expect(revalidatePath).toHaveBeenCalledWith('/admin/members')
     expect(revalidatePath).toHaveBeenCalledWith('/admin/groups')
-    expect(revalidatePath).toHaveBeenCalledWith('/admin/groups/group-1')
-    expect(revalidatePath).toHaveBeenCalledWith('/admin/members/member-1')
   })
 
   test('returns useful overlap and invalid period feedback', async () => {
