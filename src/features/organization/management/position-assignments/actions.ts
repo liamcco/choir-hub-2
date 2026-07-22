@@ -46,7 +46,7 @@ export async function createPositionAssignmentAction(
   }
 
   // 4. Invalidate
-  revalidatePath(ROUTES.adminPositionAssignments)
+  revalidatePath(ROUTES.adminPositions)
   revalidatePath(adminPositionPath(formInput.data.positionId))
   revalidatePath(adminMemberPath(formInput.data.memberId))
   return { message: 'Position Assignment added.' }
@@ -85,7 +85,7 @@ export async function endPositionAssignmentAction(
   }
 
   // 4. Invalidate
-  revalidatePath(ROUTES.adminPositionAssignments)
+  revalidatePath(ROUTES.adminPositions)
   revalidatePath(adminPositionPath(assignment.positionId))
   const memberId = formData.get('memberId')
   if (typeof memberId === 'string' && memberId) {

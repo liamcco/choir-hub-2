@@ -9,10 +9,8 @@ export const ROUTES = {
   adminGroups: '/admin/groups',
   adminGroupCreate: '/admin/groups/new',
   adminGroupHierarchy: '/admin/groups/hierarchy',
-  adminGroupMemberships: '/admin/group-memberships',
   adminPositions: '/admin/positions',
   adminPositionCreate: '/admin/positions/new',
-  adminPositionAssignments: '/admin/position-assignments',
 } as const
 
 export type RouteId = keyof typeof ROUTES

@@ -46,7 +46,7 @@ export async function createGroupMembershipAction(
   }
 
   // 4. Invalidate
-  revalidatePath(ROUTES.adminGroupMemberships)
+  revalidatePath(ROUTES.adminMembers)
   revalidatePath(ROUTES.adminGroups)
   revalidatePath(adminGroupPath(formInput.data.groupId))
   revalidatePath(adminMemberPath(formInput.data.memberId))
@@ -84,7 +84,7 @@ export async function endGroupMembershipAction(
   }
 
   // 4. Invalidate
-  revalidatePath(ROUTES.adminGroupMemberships)
+  revalidatePath(ROUTES.adminMembers)
   revalidatePath(ROUTES.adminGroups)
   const groupId = formData.get('groupId')
   if (typeof groupId === 'string' && groupId) {

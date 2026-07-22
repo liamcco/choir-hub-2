@@ -4,4 +4,3 @@ export {
   AssignMemberPositionControl,
   EndPositionAssignmentForm,
 } from './assignment-form'
-export { PositionAssignmentManagementScreen } from './screen'

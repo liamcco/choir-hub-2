@@ -57,7 +57,7 @@ describe('admin Position Assignment management actions', () => {
       positionId: 'position-1',
       startsAt: new Date('2026-01-01T00:00:00.000Z'),
     })
-    expect(revalidatePath).toHaveBeenCalledWith('/admin/position-assignments')
+    expect(revalidatePath).toHaveBeenCalledWith('/admin/positions')
     expect(revalidatePath).toHaveBeenCalledWith('/admin/members/member-1')
     expect(adminActionCompleted).toHaveBeenCalledWith({
       actorUserId: 'admin-1',
@@ -75,7 +75,7 @@ describe('admin Position Assignment management actions', () => {
       message: 'Position Assignment ended.',
     })
     expect(endPositionAssignment).toHaveBeenCalledWith('assignment-1', new Date('2026-06-01T00:00:00.000Z'))
-    expect(revalidatePath).toHaveBeenCalledWith('/admin/position-assignments')
+    expect(revalidatePath).toHaveBeenCalledWith('/admin/positions')
     expect(revalidatePath).toHaveBeenCalledWith('/admin/members/member-1')
   })
 

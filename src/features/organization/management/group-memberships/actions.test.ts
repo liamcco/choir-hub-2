@@ -55,7 +55,7 @@ describe('admin Group Membership management actions', () => {
       groupId: 'group-1',
       startsAt: new Date('2026-01-01T00:00:00.000Z'),
     })
-    expect(revalidatePath).toHaveBeenCalledWith('/admin/group-memberships')
+    expect(revalidatePath).toHaveBeenCalledWith('/admin/members')
     expect(revalidatePath).toHaveBeenCalledWith('/admin/groups')
     expect(revalidatePath).toHaveBeenCalledWith('/admin/groups/group-1')
     expect(revalidatePath).toHaveBeenCalledWith('/admin/members/member-1')
@@ -76,7 +76,7 @@ describe('admin Group Membership management actions', () => {
       message: 'Group Membership ended.',
     })
     expect(endGroupMembership).toHaveBeenCalledWith('membership-1', new Date('2026-06-01T00:00:00.000Z'))
-    expect(revalidatePath).toHaveBeenCalledWith('/admin/group-memberships')
+    expect(revalidatePath).toHaveBeenCalledWith('/admin/members')
     expect(revalidatePath).toHaveBeenCalledWith('/admin/groups')
     expect(revalidatePath).toHaveBeenCalledWith('/admin/groups/group-1')
     expect(revalidatePath).toHaveBeenCalledWith('/admin/members/member-1')

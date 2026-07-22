@@ -6,6 +6,8 @@ test('Group collection, route detail, creation, and direct membership management
   await page.getByLabel('Password').fill('member-dialog-e2e-password')
   await page.getByRole('button', { name: 'Sign in' }).click()
   await page.waitForURL('/')
+  await page.goto('/admin')
+  await page.waitForURL('/admin/members')
   await page.goto('/admin/groups')
 
   expect(await page.getByRole('columnheader').allTextContents()).toEqual(['Name', 'Kind', 'Parent', 'Members'])
@@ -21,10 +23,12 @@ test('Group collection, route detail, creation, and direct membership management
   await parentRow.getByRole('link', { name: 'Group Dialog E2E' }).click()
   const dialog = page.getByRole('dialog', { name: 'Group Dialog E2E' })
   await expect(dialog).toBeVisible()
-  await expect(page.getByRole('heading', { level: 1, name: 'Groups' })).toBeVisible()
+  await expect(page).toHaveURL(parentHref ?? '')
 
   await dialog.getByRole('button', { name: 'Add Member' }).click()
-  await dialog.getByLabel('Member').selectOption({ label: 'Member Dialog E2E (member-dialog-e2e@example.invalid)' })
+  await dialog.getByLabel('Member', { exact: true }).selectOption({
+    label: 'Member Dialog E2E (member-dialog-e2e@example.invalid)',
+  })
   await dialog.getByLabel('Start date').fill('2025-02-01')
   await dialog.getByRole('button', { name: 'Add Membership' }).click()
   await expect(dialog.getByRole('button', { name: 'End Member Dialog E2E membership' })).toBeVisible()

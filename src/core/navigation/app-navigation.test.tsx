@@ -28,7 +28,7 @@ describe('app navigation', () => {
     })
   })
 
-  test('shows all v1 app navigation to authenticated users', () => {
+  test('shows only resource-first admin navigation to authenticated users', () => {
     const items = getNavigationItems({ showAdmin: true })
     const markup = renderToStaticMarkup(<AppNavigationTemplate config={{ showAdmin: true }} />)
 
@@ -37,15 +37,13 @@ describe('app navigation', () => {
       '/account',
       '/admin/members',
       '/admin/groups',
-      '/admin/group-memberships',
       '/admin/positions',
-      '/admin/position-assignments',
     ])
     expect(markup).toContain('Members')
     expect(markup).toContain('Groups')
-    expect(markup).toContain('Group Memberships')
     expect(markup).toContain('Positions')
-    expect(markup).toContain('Position Assignments')
+    expect(markup).not.toContain('Group Memberships')
+    expect(markup).not.toContain('Position Assignments')
   })
 
   test('shows only login navigation to anonymous visitors', () => {
