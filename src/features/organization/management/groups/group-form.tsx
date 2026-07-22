@@ -4,7 +4,6 @@ import { useActionState } from 'react'
 import { defaultGroupKind, formatGroupKind, groupKindOptions } from '@/features/organization/core/group-kind'
 import { formatGroupPath } from '@/features/organization/core/labels'
 import type { GroupFormState } from '@/features/organization/management/groups/actions'
-import { createGroupAction, updateGroupAction } from '@/features/organization/management/groups/actions'
 import type { Group } from '@/prisma/generated/client'
 import { FormMessage } from '@/shared/forms/error-handling'
 import { Button } from '@/shared/ui/button'
@@ -14,9 +13,10 @@ import { NativeSelect, NativeSelectOption } from '@/shared/ui/native-select'
 import { Textarea } from '@/shared/ui/textarea'
 
 const initialState: GroupFormState = {}
+export type GroupFormAction = (previousState: GroupFormState, formData: FormData) => Promise<GroupFormState>
 
-export function CreateGroupForm({ groups }: { groups: Group[] }) {
-  const [state, formAction, isPending] = useActionState(createGroupAction, initialState)
+export function CreateGroupForm({ groups, action }: { groups: Group[]; action: GroupFormAction }) {
+  const [state, formAction, isPending] = useActionState(action, initialState)
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
@@ -31,8 +31,8 @@ export function CreateGroupForm({ groups }: { groups: Group[] }) {
   )
 }
 
-export function UpdateGroupForm({ group, groups }: { group: Group; groups: Group[] }) {
-  const [state, formAction, isPending] = useActionState(updateGroupAction.bind(null, group.id), initialState)
+export function UpdateGroupForm({ group, groups, action }: { group: Group; groups: Group[]; action: GroupFormAction }) {
+  const [state, formAction, isPending] = useActionState(action, initialState)
 
   return (
     <form action={formAction} className="grid gap-4 lg:grid-cols-[minmax(11rem,14rem)_1fr_1fr_auto] lg:items-start">
