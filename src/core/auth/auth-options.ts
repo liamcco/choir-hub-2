@@ -21,7 +21,7 @@ const emailClient = EmailClient()
 
 export const authOptions = {
   appName: 'CSK Choir Hub Auth',
-  baseURL: { allowedHosts: [BASE_URL, '*.vercel.app'] },
+  baseURL: { allowedHosts: ['*.vercel.app'], fallback: BASE_URL },
   emailAndPassword: {
     enabled: true,
     disableSignUp: true,
