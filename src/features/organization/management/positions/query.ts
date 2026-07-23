@@ -2,20 +2,19 @@ import 'server-only'
 
 import { organizationService } from '@/features/organization'
 import { isCurrentDatedPeriod, isHistoricalDatedPeriod } from '@/features/organization/core/dated-history'
-import { buildMemberLabels, formatGroupPath, formatPositionScopeLabel } from '@/features/organization/core/labels'
+import { buildUserLabels, formatGroupPath, formatPositionScopeLabel } from '@/features/organization/core/labels'
 
 async function listCollection(input?: { at?: Date }) {
   const at = input?.at ?? new Date()
-  const [groups, positions, scopes, assignments, members, identities] = await Promise.all([
+  const [groups, positions, scopes, assignments, users] = await Promise.all([
     organizationService.groups.list(),
     organizationService.positions.list(),
     organizationService.positions.listScopes(),
     organizationService.positionAssignments.list({ at }),
-    organizationService.members.list(),
-    organizationService.members.listIdentities(),
+    organizationService.users.list(),
   ])
   const groupsById = new Map(groups.map((group) => [group.id, group]))
-  const memberLabels = new Map(buildMemberLabels(members, identities).map((option) => [option.member.id, option.label]))
+  const memberLabels = new Map(buildUserLabels(users).map((option) => [option.user.id, option.label]))
 
   return positions
     .map((position) => {
@@ -33,7 +32,7 @@ async function listCollection(input?: { at?: Date }) {
         id: position.id,
         name: position.name,
         scopeLabel: formatPositionScopeLabel(groups, scopeGroups),
-        currentHolder: currentAssignment ? (memberLabels.get(currentAssignment.memberId) ?? 'Unknown Member') : null,
+        currentHolder: currentAssignment ? (memberLabels.get(currentAssignment.userId) ?? 'Unknown User') : null,
         heldSince: currentAssignment?.startsAt ?? null,
       }
     })
@@ -48,13 +47,12 @@ async function listCollection(input?: { at?: Date }) {
 // TODO: Wasteful?
 async function getDetail(positionId: string, input?: { at?: Date }) {
   const at = input?.at ?? new Date()
-  const [groups, positions, scopes, assignments, members, identities] = await Promise.all([
+  const [groups, positions, scopes, assignments, users] = await Promise.all([
     organizationService.groups.list(),
     organizationService.positions.list(),
     organizationService.positions.listScopes(),
     organizationService.positionAssignments.list({ positionId }),
-    organizationService.members.list(),
-    organizationService.members.listIdentities(),
+    organizationService.users.list(),
   ])
   const position = positions.find((candidate) => candidate.id === positionId)
   if (!position) return null
@@ -66,13 +64,13 @@ async function getDetail(positionId: string, input?: { at?: Date }) {
       return group ? [group] : []
     })
     .sort((first, second) => formatGroupPath(groups, first).localeCompare(formatGroupPath(groups, second)))
-  const membersById = new Map(buildMemberLabels(members, identities).map((option) => [option.member.id, option]))
+  const membersById = new Map(buildUserLabels(users).map((option) => [option.user.id, option]))
   const assignmentViews = assignments.flatMap((assignment) => {
-    const member = membersById.get(assignment.memberId)
-    return member ? [{ ...assignment, memberLabel: member.label, memberDetail: member.detail }] : []
+    const member = membersById.get(assignment.userId)
+    return member ? [{ ...assignment, userLabel: member.label, userDetail: member.detail }] : []
   })
   const compareAssignments = (first: (typeof assignmentViews)[number], second: (typeof assignmentViews)[number]) =>
-    first.memberLabel.localeCompare(second.memberLabel) ||
+    first.userLabel.localeCompare(second.userLabel) ||
     first.startsAt.getTime() - second.startsAt.getTime() ||
     first.id.localeCompare(second.id)
 
@@ -81,8 +79,8 @@ async function getDetail(positionId: string, input?: { at?: Date }) {
     groups,
     scopeGroups,
     scopeLabel: formatPositionScopeLabel(groups, scopeGroups),
-    members: [...membersById.values()].sort(
-      (first, second) => first.label.localeCompare(second.label) || first.member.id.localeCompare(second.member.id),
+    users: [...membersById.values()].sort(
+      (first, second) => first.label.localeCompare(second.label) || first.user.id.localeCompare(second.user.id),
     ),
     currentAssignments: assignmentViews
       .filter((assignment) => isCurrentDatedPeriod(assignment, at))

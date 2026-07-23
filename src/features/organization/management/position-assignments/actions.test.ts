@@ -44,7 +44,7 @@ beforeEach(() => {
 describe('admin Position Assignment management actions', () => {
   test('creates a Position Assignment from form data and revalidates the admin workflow', async () => {
     const formData = createAssignmentFormData({
-      memberId: 'member-1',
+      userId: 'user-1',
       positionId: 'position-1',
     })
 
@@ -53,7 +53,7 @@ describe('admin Position Assignment management actions', () => {
       message: 'Position Assignment added.',
     })
     expect(createPositionAssignment).toHaveBeenCalledWith({
-      memberId: 'member-1',
+      userId: 'user-1',
       positionId: 'position-1',
     })
     expect(revalidatePath).toHaveBeenCalledWith('/admin/positions')
@@ -67,7 +67,7 @@ describe('admin Position Assignment management actions', () => {
   test('ends a Position Assignment from form data and revalidates the admin workflow', async () => {
     const formData = new FormData()
     formData.set('endsAt', '2026-06-01')
-    formData.set('memberId', 'member-1')
+    formData.set('userId', 'user-1')
 
     await expect(endPositionAssignmentAction('assignment-1', {}, formData)).resolves.toEqual({
       success: true,
@@ -78,9 +78,9 @@ describe('admin Position Assignment management actions', () => {
   })
 })
 
-function createAssignmentFormData(input: { memberId: string; positionId: string }) {
+function createAssignmentFormData(input: { userId: string; positionId: string }) {
   const formData = new FormData()
-  formData.set('memberId', input.memberId)
+  formData.set('userId', input.userId)
   formData.set('positionId', input.positionId)
   return formData
 }

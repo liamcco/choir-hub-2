@@ -24,7 +24,7 @@ export async function createGroupMembershipAction(
 
   // 2. Validate form data
   const formInput = CreateGroupMembershipFormSchema.safeParse({
-    memberId: String(formData.get('memberId')),
+    userId: String(formData.get('userId')),
     groupId: String(formData.get('groupId')),
     startsAt: String(formData.get('startsAt')),
   })
@@ -46,7 +46,7 @@ export async function createGroupMembershipAction(
   }
 
   // 4. Invalidate
-  revalidatePath(ROUTES.adminMembers)
+  revalidatePath(ROUTES.adminUsers)
   revalidatePath(ROUTES.adminGroups)
   return { success: true, message: 'Group Membership added.' }
 
@@ -82,7 +82,7 @@ export async function endGroupMembershipAction(
   }
 
   // 4. Invalidate
-  revalidatePath(ROUTES.adminMembers)
+  revalidatePath(ROUTES.adminUsers)
   revalidatePath(ROUTES.adminGroups)
   return { success: true, message: 'Group Membership ended.' }
 

@@ -7,7 +7,7 @@ test('Group collection, route detail, creation, and direct membership management
   await page.getByRole('button', { name: 'Sign in' }).click()
   await page.waitForURL('/')
   await page.goto('/admin')
-  await page.waitForURL('/admin/members')
+  await page.waitForURL('/admin/users')
   await page.goto('/admin/groups')
 
   expect(await page.getByRole('columnheader').allTextContents()).toEqual(['Name', 'Kind', 'Parent', 'Members'])

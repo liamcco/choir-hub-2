@@ -6,13 +6,13 @@ import type {
   CreateMembershipAction,
   EndMembershipAction,
 } from '@/features/organization/management/groups/relationships'
-import { AddMemberGroupControl, EndGroupMemberControl } from '@/features/organization/management/groups/relationships'
+import { AddUserGroupControl, EndGroupUserControl } from '@/features/organization/management/groups/relationships'
 import type {
   CreatePositionAssignmentFormState,
   EndPositionAssignmentFormState,
 } from '@/features/organization/management/position-assignments/relationships'
 import {
-  AssignMemberPositionControl,
+  AssignUserPositionControl,
   EndPositionAssignmentForm,
 } from '@/features/organization/management/position-assignments/relationships'
 import type { GroupKind, MemberStatus } from '@/prisma/generated/client'
@@ -78,21 +78,21 @@ export function MemberDetail({ member, actions }: { member: MemberDetailView; ac
     <article className="mx-auto flex w-full max-w-4xl flex-col gap-6">
       <header className="flex flex-col gap-3 border-b pb-6 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-2">
-          <p className="text-sm font-medium text-muted-foreground">Member</p>
+          <p className="text-sm font-medium text-muted-foreground">User</p>
           <h1 className="text-3xl font-semibold tracking-tight">{member.name}</h1>
           <Badge variant="secondary">{formatMemberStatus(member.status)}</Badge>
         </div>
-        <MemberStatusEditor memberId={member.id} status={member.status} />
+        <MemberStatusEditor userId={member.id} status={member.status} />
       </header>
 
       <section aria-labelledby="member-information-heading">
         <h2 className="sr-only" id="member-information-heading">
-          Member information
+          User information
         </h2>
         <dl className="grid gap-4 sm:grid-cols-2">
-          <ReadField label="Member ID" value={member.id} />
+          <ReadField label="User ID" value={member.id} />
           <ReadField label="Member Status" value={formatMemberStatus(member.status)} />
-          <ReadField label="Member since" value={formatDate(member.createdAt)} />
+          <ReadField label="User since" value={formatDate(member.createdAt)} />
           <ReadField label="Last updated" value={formatDate(member.updatedAt)} />
         </dl>
       </section>
@@ -103,14 +103,10 @@ export function MemberDetail({ member, actions }: { member: MemberDetailView; ac
             Group Memberships
           </h2>
           {actions ? (
-            <AddMemberGroupControl action={actions.createMembership} groups={member.groups} memberId={member.id} />
+            <AddUserGroupControl action={actions.createMembership} groups={member.groups} userId={member.id} />
           ) : null}
         </div>
-        <MembershipList
-          endAction={actions?.endMembership}
-          memberships={member.currentMemberships}
-          memberId={member.id}
-        />
+        <MembershipList endAction={actions?.endMembership} memberships={member.currentMemberships} userId={member.id} />
       </section>
 
       <section aria-labelledby="position-assignments-heading" className="space-y-4">
@@ -119,21 +115,17 @@ export function MemberDetail({ member, actions }: { member: MemberDetailView; ac
             Position Assignments
           </h2>
           {actions ? (
-            <AssignMemberPositionControl
+            <AssignUserPositionControl
               action={actions.createAssignment}
-              memberId={member.id}
+              userId={member.id}
               positions={member.positions}
             />
           ) : null}
         </div>
-        <AssignmentList
-          assignments={member.currentAssignments}
-          endAction={actions?.endAssignment}
-          memberId={member.id}
-        />
+        <AssignmentList assignments={member.currentAssignments} endAction={actions?.endAssignment} userId={member.id} />
       </section>
 
-      <AuthUserAccess member={member} />
+      <AccountAccess member={member} />
 
       {hasHistory ? (
         <details className="rounded-lg border bg-muted/20">
@@ -166,11 +158,11 @@ export function MemberDetail({ member, actions }: { member: MemberDetailView; ac
   )
 }
 
-function AuthUserAccess({ member }: { member: MemberDetailView }) {
+function AccountAccess({ member }: { member: MemberDetailView }) {
   return (
     <Card className="rounded-lg bg-muted/20 shadow-none">
       <CardHeader>
-        <h2 className="font-heading text-base leading-snug font-medium">Auth User access</h2>
+        <h2 className="font-heading text-base leading-snug font-medium">Account access</h2>
         <CardDescription>Login identity and global application access</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -188,7 +180,7 @@ function AuthUserAccess({ member }: { member: MemberDetailView }) {
             <dd>{member.accessState === 'enabled' ? 'Enabled' : 'Disabled'}</dd>
           </div>
         </dl>
-        <AccountAccessEditor accessState={member.accessState} memberId={member.id} />
+        <AccountAccessEditor accessState={member.accessState} userId={member.id} />
       </CardContent>
     </Card>
   )
@@ -205,11 +197,11 @@ function ReadField({ label, value }: { label: string; value: string }) {
 
 function MembershipList({
   memberships,
-  memberId,
+  userId,
   endAction,
 }: {
   memberships: MemberMembershipView[]
-  memberId: string
+  userId: string
   endAction?: EndMembershipAction
 }) {
   return memberships.length ? (
@@ -223,10 +215,10 @@ function MembershipList({
             </p>
           </div>
           {endAction ? (
-            <EndGroupMemberControl
+            <EndGroupUserControl
               action={endAction}
               groupName={membership.groupName}
-              membership={{ ...membership, memberId, memberLabel: 'this Member' }}
+              membership={{ ...membership, userId, userLabel: 'this User' }}
             />
           ) : null}
         </li>
@@ -239,11 +231,11 @@ function MembershipList({
 
 function AssignmentList({
   assignments,
-  memberId,
+  userId,
   endAction,
 }: {
   assignments: MemberAssignmentView[]
-  memberId: string
+  userId: string
   endAction?: MemberDetailActions['endAssignment']
 }) {
   return assignments.length ? (
@@ -263,8 +255,8 @@ function AssignmentList({
               action={endAction}
               assignment={{
                 ...assignment,
-                memberId,
-                memberLabel: 'this Member',
+                userId,
+                userLabel: 'this User',
                 position: { name: assignment.positionName },
               }}
             />

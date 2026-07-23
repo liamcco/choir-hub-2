@@ -1,5 +1,5 @@
-import { adminMemberPath } from '@/core/navigation/site'
-import type { MemberLabel } from '@/features/organization/core/labels'
+import { adminUserPath } from '@/core/navigation/site'
+import type { UserLabel } from '@/features/organization/core/labels'
 import { RelatedDetailLink } from '@/features/organization/management/components/related-detail-link'
 import {
   AssignPositionHolderControl,
@@ -9,13 +9,13 @@ import type { Group, Position, PositionAssignment } from '@/prisma/generated/cli
 import { formatDate } from '@/shared/formatting'
 import { PositionFieldEditor } from './position-editors'
 
-export type PositionAssignmentView = PositionAssignment & { memberLabel: string; memberDetail: string }
+export type PositionAssignmentView = PositionAssignment & { userLabel: string; userDetail: string }
 export type PositionDetailView = {
   position: Position
   groups: Group[]
   scopeGroups: Group[]
   scopeLabel: string
-  members: MemberLabel[]
+  users: UserLabel[]
   currentAssignments: PositionAssignmentView[]
   historicalAssignments: PositionAssignmentView[]
 }
@@ -45,7 +45,7 @@ export function PositionDetail({ position }: { position: PositionDetailView }) {
           <h2 className="text-lg font-semibold" id="position-assignments-heading">
             Current assignment
           </h2>
-          <AssignPositionHolderControl members={position.members} positionId={position.position.id} />
+          <AssignPositionHolderControl users={position.users} positionId={position.position.id} />
         </div>
         {position.currentAssignments.length ? (
           <AssignmentList assignments={position.currentAssignments} showEndControls />
@@ -85,18 +85,18 @@ function AssignmentList({
       {assignments.map((assignment) => (
         <li className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between" key={assignment.id}>
           <div>
-            <RelatedDetailLink href={adminMemberPath(assignment.memberId)}>{assignment.memberLabel}</RelatedDetailLink>
+            <RelatedDetailLink href={adminUserPath(assignment.userId)}>{assignment.userLabel}</RelatedDetailLink>
             <p className="text-sm text-muted-foreground">
-              {assignment.memberDetail} · Since {formatDate(assignment.startsAt)}
+              {assignment.userDetail} · Since {formatDate(assignment.startsAt)}
             </p>
           </div>
           {showEndControls ? (
             <EndPositionAssignmentForm
               assignment={{
                 id: assignment.id,
-                memberId: assignment.memberId,
+                userId: assignment.userId,
                 startsAt: assignment.startsAt,
-                memberLabel: assignment.memberLabel,
+                userLabel: assignment.userLabel,
                 position: { name: 'this Position' },
               }}
             />

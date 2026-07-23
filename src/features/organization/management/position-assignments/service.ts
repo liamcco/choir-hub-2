@@ -1,15 +1,15 @@
 import { organizationService } from '@/features/organization'
 import { isCurrentDatedPeriod, isHistoricalDatedPeriod } from '@/features/organization/core/dated-history'
-import { buildMemberLabels, formatGroupPath, formatPositionScopeLabel } from '@/features/organization/core/labels'
-import type { Group, Member, Position, PositionAssignment, PositionScope } from '@/prisma/generated/client'
+import { buildUserLabels, formatGroupPath, formatPositionScopeLabel } from '@/features/organization/core/labels'
+import type { Group, Position, PositionAssignment, PositionScope, User } from '@/prisma/generated/client'
 
 export type PositionAssignmentPeriod = PositionAssignment & {
   position: Position
-  member: Member
+  user: User
   positionLabel: string
   positionScopeLabel: string
-  memberLabel: string
-  memberDetail: string
+  userLabel: string
+  userDetail: string
 }
 
 export type PositionAssignmentPositionView = {
@@ -20,26 +20,24 @@ export type PositionAssignmentPositionView = {
   historicalAssignments: PositionAssignmentPeriod[]
 }
 
-export type PositionAssignmentMemberView = {
-  member: Member
-  memberLabel: string
-  memberDetail: string
+export type PositionAssignmentUserView = {
+  user: User
+  userLabel: string
+  userDetail: string
   currentAssignments: PositionAssignmentPeriod[]
   historicalAssignments: PositionAssignmentPeriod[]
 }
 
 export async function listPositionAssignmentManagement(input?: { at?: Date }) {
-  const [groups, members, positions, scopes, assignments, users] = await Promise.all([
+  const [groups, users, positions, scopes, assignments] = await Promise.all([
     organizationService.groups.list(),
-    organizationService.members.list(),
+    organizationService.users.list(),
     organizationService.positions.list(),
     organizationService.positions.listScopes(),
     organizationService.positionAssignments.list(),
-    organizationService.members.listIdentities(),
   ])
   return buildPositionAssignmentManagementState({
     groups,
-    members,
     positions,
     scopes,
     assignments,
@@ -52,43 +50,41 @@ export type PositionAssignmentManagementState = Awaited<ReturnType<typeof listPo
 
 export function buildPositionAssignmentManagementState({
   groups,
-  members,
   positions,
   scopes,
   assignments,
-  users = [],
+  users,
   at,
 }: {
   groups: Group[]
-  members: Member[]
   positions: Position[]
   scopes: PositionScope[]
   assignments: PositionAssignment[]
-  users?: { id: string; name: string; email: string }[]
+  users: User[]
   at: Date
 }) {
   const positionsById = new Map(positions.map((position) => [position.id, position]))
-  const membersById = new Map(members.map((member) => [member.id, member]))
+  const usersById = new Map(users.map((user) => [user.id, user]))
   const positionOptions = buildPositionOptions(groups, positions, scopes)
   const positionOptionsById = new Map(positionOptions.map((option) => [option.position.id, option]))
-  const memberOptions = buildMemberLabels(members, users)
-  const memberOptionsById = new Map(memberOptions.map((option) => [option.member.id, option]))
+  const userOptions = buildUserLabels(users)
+  const userOptionsById = new Map(userOptions.map((option) => [option.user.id, option]))
   const periods = assignments
     .flatMap((assignment): PositionAssignmentPeriod[] => {
       const position = positionsById.get(assignment.positionId)
       const positionOption = position ? positionOptionsById.get(position.id) : undefined
-      const member = membersById.get(assignment.memberId)
-      const memberOption = member ? memberOptionsById.get(member.id) : undefined
-      return position && positionOption && member && memberOption
+      const user = usersById.get(assignment.userId)
+      const userOption = user ? userOptionsById.get(user.id) : undefined
+      return position && positionOption && user && userOption
         ? [
             {
               ...assignment,
               position,
-              member,
+              user,
               positionLabel: positionOption.label,
               positionScopeLabel: positionOption.scopeLabel,
-              memberLabel: memberOption.label,
-              memberDetail: memberOption.detail,
+              userLabel: userOption.label,
+              userDetail: userOption.detail,
             },
           ]
         : []
@@ -96,14 +92,14 @@ export function buildPositionAssignmentManagementState({
     .sort(
       (first, second) =>
         first.positionLabel.localeCompare(second.positionLabel) ||
-        first.memberLabel.localeCompare(second.memberLabel) ||
+        first.userLabel.localeCompare(second.userLabel) ||
         first.startsAt.getTime() - second.startsAt.getTime() ||
         first.id.localeCompare(second.id),
     )
 
   return {
     positions: positionOptions,
-    members: memberOptions,
+    users: userOptions,
     positionViews: positionOptions.map(
       (option): PositionAssignmentPositionView => ({
         position: option.position,
@@ -115,13 +111,13 @@ export function buildPositionAssignmentManagementState({
         ),
       }),
     ),
-    memberViews: memberOptions.map(
-      (option): PositionAssignmentMemberView => ({
-        member: option.member,
-        memberLabel: option.label,
-        memberDetail: option.detail,
+    userViews: userOptions.map(
+      (option): PositionAssignmentUserView => ({
+        user: option.user,
+        userLabel: option.label,
+        userDetail: option.detail,
         ...partitionAssignments(
-          periods.filter((assignment) => assignment.memberId === option.member.id),
+          periods.filter((assignment) => assignment.userId === option.user.id),
           at,
         ),
       }),

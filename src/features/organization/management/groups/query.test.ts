@@ -1,5 +1,5 @@
 import { describe, expect, mock, test } from 'bun:test'
-import { type Group, GroupKind, type GroupMembership, type Member, MemberStatus } from '@/prisma/generated/client'
+import { type Group, GroupKind, type GroupMembership, MemberStatus, type User } from '@/prisma/generated/client'
 
 mock.module('server-only', () => ({}))
 mock.module('@/features/organization', () => ({ organizationService: {} }))
@@ -64,16 +64,24 @@ function group(id: string, name: string, parentGroupId: string | null = null): G
   return { id, name, parentGroupId, kind: GroupKind.SECTION, description: null, createdAt: at, updatedAt: at }
 }
 
-function member(id: string, status: MemberStatus): Member {
-  return { id, status, createdAt: at, updatedAt: at }
+function member(id: string, status: MemberStatus): User {
+  return {
+    id,
+    name: id,
+    email: `${id}@example.invalid`,
+    emailVerified: false,
+    status,
+    createdAt: at,
+    updatedAt: at,
+  } as User
 }
 
 function membership(
   id: string,
-  memberId: string,
+  userId: string,
   groupId: string,
   endsAt: Date | null = null,
   startsAt = new Date('2026-01-01T00:00:00.000Z'),
 ): GroupMembership {
-  return { id, memberId, groupId, startsAt, endsAt }
+  return { id, userId, groupId, startsAt, endsAt }
 }

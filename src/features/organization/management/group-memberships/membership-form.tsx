@@ -23,32 +23,29 @@ import type { GroupMembershipManagementState, GroupMembershipPeriod } from './se
 const createInitialState: CreateGroupMembershipFormState = {}
 const endInitialState: EndGroupMembershipFormState = {}
 
-export function CreateGroupMembershipForm({
-  groups,
-  members,
-}: Pick<GroupMembershipManagementState, 'groups' | 'members'>) {
+export function CreateGroupMembershipForm({ groups, users }: Pick<GroupMembershipManagementState, 'groups' | 'users'>) {
   const [state, formAction, isPending] = useActionState(createGroupMembershipAction, createInitialState)
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
       <FieldGroup>
         <Field>
-          <FieldLabel htmlFor="new-membership-member">Member</FieldLabel>
+          <FieldLabel htmlFor="new-membership-user">User</FieldLabel>
           <NativeSelect
-            id="new-membership-member"
-            name="memberId"
+            id="new-membership-user"
+            name="userId"
             required
             className="w-full"
-            aria-invalid={!!state.fieldErrors?.memberId}
+            aria-invalid={!!state.fieldErrors?.userId}
           >
-            <NativeSelectOption value="">Choose Member</NativeSelectOption>
-            {members.map((option) => (
-              <NativeSelectOption key={option.member.id} value={option.member.id}>
+            <NativeSelectOption value="">Choose User</NativeSelectOption>
+            {users.map((option) => (
+              <NativeSelectOption key={option.user.id} value={option.user.id}>
                 {option.label} ({option.detail})
               </NativeSelectOption>
             ))}
           </NativeSelect>
-          <FieldError>{state.fieldErrors?.memberId}</FieldError>
+          <FieldError>{state.fieldErrors?.userId}</FieldError>
         </Field>
         <Field>
           <FieldLabel htmlFor="new-membership-group">Group</FieldLabel>
@@ -91,7 +88,7 @@ export function EndGroupMembershipForm({ membership }: { membership: GroupMember
           name="endsAt"
           type="date"
           min={formatDateInput(membership.startsAt)}
-          aria-label={`End ${membership.memberLabel} membership in ${membership.group.name}`}
+          aria-label={`End ${membership.userLabel} membership in ${membership.group.name}`}
           aria-invalid={!!state.fieldErrors?.endsAt}
           required
         />

@@ -5,61 +5,60 @@ import { connection } from 'next/server'
 import { auth } from '@/core/auth/auth'
 import { organizationService } from '@/features/organization'
 import { isCurrentDatedPeriod, isHistoricalDatedPeriod } from '@/features/organization/core/dated-history'
-import { buildMemberLabels, formatGroupPath, formatPositionScopeLabel } from '@/features/organization/core/labels'
+import { buildUserLabels, formatGroupPath, formatPositionScopeLabel } from '@/features/organization/core/labels'
 import { GroupKind } from '@/prisma/generated/client'
 
 async function listCollection(input?: { at?: Date }) {
   await connection()
   const at = input?.at ?? new Date()
-  const [members, identities, groups, memberships] = await Promise.all([
-    organizationService.members.list(),
-    organizationService.members.listIdentities(),
+  const [users, groups, memberships] = await Promise.all([
+    organizationService.users.list(),
     organizationService.groups.list(),
     organizationService.groupMemberships.list({ at }),
   ])
   const groupsById = new Map(groups.map((group) => [group.id, group]))
-  const currentGroupsByMemberId = new Map<string, typeof groups>()
+  const currentGroupsByUserId = new Map<string, typeof groups>()
   for (const membership of memberships) {
     const group = groupsById.get(membership.groupId)
     if (!group) continue
-    const memberGroups = currentGroupsByMemberId.get(membership.memberId) ?? []
-    memberGroups.push(group)
-    currentGroupsByMemberId.set(membership.memberId, memberGroups)
+    const userGroups = currentGroupsByUserId.get(membership.userId) ?? []
+    userGroups.push(group)
+    currentGroupsByUserId.set(membership.userId, userGroups)
   }
 
-  return buildMemberLabels(members, identities)
-    .map(({ member, label }) => {
-      const memberGroups = currentGroupsByMemberId.get(member.id) ?? []
+  return buildUserLabels(users)
+    .map(({ user, label }) => {
+      const userGroups = currentGroupsByUserId.get(user.id) ?? []
       return {
-        id: member.id,
+        id: user.id,
         name: label,
-        choirs: memberGroups
+        choirs: userGroups
           .filter((group) => group.kind === GroupKind.CHOIR)
           .sort(compareNamedEntities)
           .map((group) => group.name),
-        voices: memberGroups
+        voices: userGroups
           .filter((group) => group.kind === GroupKind.SECTION)
           .sort(compareNamedEntities)
           .map((group) => group.name),
-        status: member.status,
+        status: user.status,
       }
     })
     .sort((first, second) => first.name.localeCompare(second.name) || first.id.localeCompare(second.id))
 }
 
-async function getDetail(memberId: string, input?: { at?: Date }) {
+async function getDetail(userId: string, input?: { at?: Date }) {
   const at = input?.at ?? new Date()
   const requestHeaders = await headers()
-  const [account, member, groups, memberships, positions, scopes, assignments] = await Promise.all([
-    auth.api.getUser({ headers: requestHeaders, query: { id: memberId } }),
-    organizationService.members.findMember({ memberId }),
+  const [account, user, groups, memberships, positions, scopes, assignments] = await Promise.all([
+    auth.api.getUser({ headers: requestHeaders, query: { id: userId } }),
+    organizationService.users.find({ userId }),
     organizationService.groups.list(),
-    organizationService.groupMemberships.list({ memberId }),
+    organizationService.groupMemberships.list({ userId }),
     organizationService.positions.list(),
     organizationService.positions.listScopes(),
-    organizationService.positionAssignments.list({ memberId }),
+    organizationService.positionAssignments.list({ userId }),
   ])
-  if (!account || !member) return null
+  if (!account || !user) return null
 
   const groupsById = new Map(groups.map((group) => [group.id, group]))
   const positionsById = new Map(positions.map((position) => [position.id, position]))
@@ -109,11 +108,11 @@ async function getDetail(memberId: string, input?: { at?: Date }) {
     id: account.id,
     name: account.name,
     email: account.email,
-    status: member.status,
+    status: user.status,
     accessState: account.banned ? ('disabled' as const) : ('enabled' as const),
     accessRole: account.role || 'user',
-    createdAt: member.createdAt,
-    updatedAt: member.updatedAt,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
     groups: groups
       .map((group) => ({ id: group.id, name: formatGroupPath(groups, group) }))
       .sort((first, second) => first.name.localeCompare(second.name) || first.id.localeCompare(second.id)),
@@ -145,7 +144,7 @@ async function getDetail(memberId: string, input?: { at?: Date }) {
   }
 }
 
-export const memberManagementQuery = { listCollection, getDetail }
+export const userManagementQuery = { listCollection, getDetail }
 
 function compareNamedEntities(first: { id: string; name: string }, second: { id: string; name: string }) {
   return first.name.localeCompare(second.name) || first.id.localeCompare(second.id)

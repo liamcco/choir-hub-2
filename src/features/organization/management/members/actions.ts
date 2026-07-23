@@ -1,119 +1,59 @@
 'use server'
-
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { requireAdmin, requireCurrentUserPermission } from '@/core/auth/permissions.server'
 import { audit } from '@/core/logging'
 import { ROUTES } from '@/core/navigation/site'
-import { memberAccountService } from '@/features/organization/management/members/service'
+import { userService } from '@/features/organization/management/members/service'
 import { handleFormError } from '@/shared/forms/errors'
 import type { FormState } from '@/shared/forms/types'
 import { AccountAccessStateSchema, CreateMemberAccountFormSchema, MemberStatusSchema } from './schemas'
-
-export type MemberAccountFormState = FormState<typeof CreateMemberAccountFormSchema> & { createdId?: string }
-
-export async function createMemberAccountAction(
-  _previousState: MemberAccountFormState,
-  formData: FormData,
-): Promise<MemberAccountFormState> {
-  // 1. Authenticate
+export type UserFormState = FormState<typeof CreateMemberAccountFormSchema> & { createdId?: string }
+export async function createUserAction(_previousState: UserFormState, formData: FormData): Promise<UserFormState> {
   const actor = await requireAdmin()
-
-  // 2. Validate form data
   const input = CreateMemberAccountFormSchema.safeParse({
     name: String(formData.get('name')),
     email: String(formData.get('email')),
     password: String(formData.get('password')),
     status: String(formData.get('status')),
   })
-
-  if (!input.success) {
-    return { success: false, fieldErrors: z.flattenError(input.error).fieldErrors }
-  }
-
-  // 3. Mutate
-  let member: Awaited<ReturnType<typeof memberAccountService.createLinkedAccount>>
+  if (!input.success) return { success: false, fieldErrors: z.flattenError(input.error).fieldErrors }
   try {
-    member = await memberAccountService.createLinkedAccount(input.data)
+    const user = await userService.createUser(input.data)
     audit.adminActionCompleted({
       actorUserId: actor.userId,
-      action: 'member.create',
-      subject: { type: 'member', id: member.id },
+      action: 'user.create',
+      subject: { type: 'user', id: user.id },
     })
-    audit.accountAccessChanged({ actorUserId: actor.userId, action: 'account.create', subjectUserId: member.id })
+    audit.accountAccessChanged({ actorUserId: actor.userId, action: 'account.create', subjectUserId: user.id })
+    revalidatePath(ROUTES.adminUsers)
+    return { success: true, message: 'User successfully created.', createdId: user.id }
   } catch (error) {
     return handleFormError(error)
   }
-
-  // 4. Invalidate
-  revalidatePath(ROUTES.adminMembers)
-
-  return { success: true, message: 'Member successfully created.', createdId: member.id }
 }
-
-export async function createLinkedMemberAction(userId: string, formData: FormData) {
-  // 1. Authenticate
-  const actor = await requireAdmin()
-
-  // 2. Validate form data
-  const formInput = MemberStatusSchema.safeParse(String(formData.get('status')))
-  if (!formInput.success) throw new Error(z.prettifyError(formInput.error))
-
-  // 3. Mutate
-  const member = await memberAccountService.linkExistingUser(userId, formInput.data)
+export async function updateMemberStatusAction(userId: string, formData: FormData) {
+  const actor = await requireCurrentUserPermission({ resource: 'user', action: 'update' })
+  const input = MemberStatusSchema.safeParse(String(formData.get('status')))
+  if (!input.success) throw new Error(z.prettifyError(input.error))
+  await userService.updateMemberStatus(userId, input.data)
   audit.adminActionCompleted({
     actorUserId: actor.userId,
-    action: 'member.linkExistingUser',
-    subject: { type: 'member', id: member.id },
+    action: 'user.updateMemberStatus',
+    subject: { type: 'user', id: userId },
   })
-
-  // 4. Invalidate
-  revalidatePath(ROUTES.adminMembers)
-
-  // 5. Navigate
+  revalidatePath(ROUTES.adminUsers)
 }
-
-export async function updateMemberStatusAction(memberId: string, formData: FormData) {
-  // 1. Authenticate
-  const actor = await requireCurrentUserPermission({ resource: 'member', action: 'update' })
-
-  // 2. Validate form data
-  const formInput = MemberStatusSchema.safeParse(String(formData.get('status')))
-  if (!formInput.success) throw new Error(z.prettifyError(formInput.error))
-
-  // 3. Mutate
-  await memberAccountService.updateMemberStatus(memberId, formInput.data)
-  audit.adminActionCompleted({
-    actorUserId: actor.userId,
-    action: 'member.updateStatus',
-    subject: { type: 'member', id: memberId },
-  })
-
-  // 4. Invalidate
-  revalidatePath(ROUTES.adminMembers)
-
-  // 5. Navigate
-}
-
 export async function updateAccountAccessAction(userId: string, formData: FormData) {
-  // 1. Authenticate
   const actor = await requireAdmin()
-
-  // 2. Validate form data
-  const formInput = AccountAccessStateSchema.safeParse(String(formData.get('accessState')))
-  if (!formInput.success) throw new Error(z.prettifyError(formInput.error))
-
-  // 3. Mutate
-  await memberAccountService.updateAccountAccess(userId, formInput.data)
+  const input = AccountAccessStateSchema.safeParse(String(formData.get('accessState')))
+  if (!input.success) throw new Error(z.prettifyError(input.error))
+  await userService.updateAccountAccess(userId, input.data)
   audit.adminActionCompleted({
     actorUserId: actor.userId,
-    action: `account.${formInput.data}`,
-    subject: { type: 'authUser', id: userId },
+    action: `account.${input.data}`,
+    subject: { type: 'user', id: userId },
   })
-  audit.accountAccessChanged({ actorUserId: actor.userId, action: `account.${formInput.data}`, subjectUserId: userId })
-
-  // 4. Invalidate
-  revalidatePath(ROUTES.adminMembers)
-
-  // 5. Navigate
+  audit.accountAccessChanged({ actorUserId: actor.userId, action: `account.${input.data}`, subjectUserId: userId })
+  revalidatePath(ROUTES.adminUsers)
 }

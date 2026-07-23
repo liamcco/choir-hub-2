@@ -1,6 +1,6 @@
 export {
-  AddMemberGroupControl,
+  AddUserGroupControl,
   type CreateMembershipAction,
-  EndGroupMemberControl,
+  EndGroupUserControl,
   type EndMembershipAction,
 } from './group-membership-controls'

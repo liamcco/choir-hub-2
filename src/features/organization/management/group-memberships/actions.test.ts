@@ -44,7 +44,7 @@ beforeEach(() => {
 describe('admin Group Membership management actions', () => {
   test('creates a Group Membership from form data and revalidates the admin workflow', async () => {
     const formData = createMembershipFormData({
-      memberId: 'member-1',
+      userId: 'user-1',
       groupId: 'group-1',
     })
 
@@ -53,10 +53,10 @@ describe('admin Group Membership management actions', () => {
       message: 'Group Membership added.',
     })
     expect(createGroupMembership).toHaveBeenCalledWith({
-      memberId: 'member-1',
+      userId: 'user-1',
       groupId: 'group-1',
     })
-    expect(revalidatePath).toHaveBeenCalledWith('/admin/members')
+    expect(revalidatePath).toHaveBeenCalledWith('/admin/users')
     expect(revalidatePath).toHaveBeenCalledWith('/admin/groups')
     expect(adminActionCompleted).toHaveBeenCalledWith({
       actorUserId: 'admin-1',
@@ -69,21 +69,21 @@ describe('admin Group Membership management actions', () => {
     const formData = new FormData()
     formData.set('endsAt', '2026-06-01')
     formData.set('groupId', 'group-1')
-    formData.set('memberId', 'member-1')
+    formData.set('userId', 'user-1')
 
     await expect(endGroupMembershipAction('membership-1', {}, formData)).resolves.toEqual({
       success: true,
       message: 'Group Membership ended.',
     })
     expect(endGroupMembership).toHaveBeenCalledWith('membership-1', new Date('2026-06-01T00:00:00.000Z'))
-    expect(revalidatePath).toHaveBeenCalledWith('/admin/members')
+    expect(revalidatePath).toHaveBeenCalledWith('/admin/users')
     expect(revalidatePath).toHaveBeenCalledWith('/admin/groups')
   })
 })
 
-function createMembershipFormData(input: { memberId: string; groupId: string }) {
+function createMembershipFormData(input: { userId: string; groupId: string }) {
   const formData = new FormData()
-  formData.set('memberId', input.memberId)
+  formData.set('userId', input.userId)
   formData.set('groupId', input.groupId)
   return formData
 }

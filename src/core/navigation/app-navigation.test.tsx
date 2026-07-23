@@ -9,18 +9,18 @@ describe('app navigation', () => {
     expect(getRouteAccessPolicy(ROUTES.login)).toEqual({ kind: 'public' })
     expect(getRouteAccessPolicy(ROUTES.account)).toEqual({ kind: 'authenticated' })
     expect(getRouteAccessPolicy('/')).toEqual({ kind: 'authenticated' })
-    expect(getRouteAccessPolicy(ROUTES.adminMembers)).toEqual({ kind: 'admin' })
+    expect(getRouteAccessPolicy(ROUTES.adminUsers)).toEqual({ kind: 'admin' })
     expect(getRouteAccessPolicy('/admin/future')).toEqual({ kind: 'admin' })
   })
 
   test('decides route access from authentication only', async () => {
-    expect(await getRouteAccessDecision('/admin/members', null)).toEqual({ kind: 'redirect', location: '/login' })
+    expect(await getRouteAccessDecision('/admin/users', null)).toEqual({ kind: 'redirect', location: '/login' })
     expect(await getRouteAccessDecision('/account', null)).toEqual({ kind: 'redirect', location: '/login' })
     expect(await getRouteAccessDecision('/login', null)).toEqual({ kind: 'allow' })
-    expect(await getRouteAccessDecision('/admin/members', { user: { id: 'member', role: 'user' } })).toEqual({
+    expect(await getRouteAccessDecision('/admin/users', { user: { id: 'user', role: 'user' } })).toEqual({
       kind: 'forbidden',
     })
-    expect(await getRouteAccessDecision('/admin/members', { user: { id: 'admin', role: 'admin' } })).toEqual({
+    expect(await getRouteAccessDecision('/admin/users', { user: { id: 'admin', role: 'admin' } })).toEqual({
       kind: 'allow',
     })
     expect(await getRouteAccessDecision('/organization', { user: { id: 'member', role: 'user' } })).toEqual({
@@ -35,11 +35,11 @@ describe('app navigation', () => {
     expect(items.map((item) => item.href)).toEqual([
       '/organization',
       '/account',
-      '/admin/members',
+      '/admin/users',
       '/admin/groups',
       '/admin/positions',
     ])
-    expect(markup).toContain('Members')
+    expect(markup).toContain('Users')
     expect(markup).toContain('Groups')
     expect(markup).toContain('Positions')
     expect(markup).not.toContain('Group Memberships')

@@ -1,5 +1,5 @@
 export type { CreatePositionAssignmentFormState, EndPositionAssignmentFormState } from './actions'
 export {
-  AssignMemberPositionControl,
+  AssignUserPositionControl,
   EndPositionAssignmentForm,
 } from './assignment-form'

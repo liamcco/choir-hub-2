@@ -11,7 +11,7 @@ import {
 describe('global permissions', () => {
   test('exposes the v1 access-control vocabulary', () => {
     expect(ACCESS_ROLES).toEqual(['user', 'admin'])
-    expect(PERMISSION_RESOURCES).toEqual(['member', 'group', 'groupMembership', 'position', 'positionAssignment'])
+    expect(PERMISSION_RESOURCES).toEqual(['user', 'group', 'groupMembership', 'position', 'positionAssignment'])
     expect(PERMISSION_ACTIONS).toEqual(['read', 'create', 'update', 'delete'])
   })
 

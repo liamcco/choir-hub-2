@@ -2,7 +2,7 @@ import { createAccessControl } from 'better-auth/plugins/access'
 import { defaultRoles, defaultStatements } from 'better-auth/plugins/admin/access'
 
 export const ACCESS_ROLES = ['user', 'admin'] as const
-export const PERMISSION_RESOURCES = ['member', 'group', 'groupMembership', 'position', 'positionAssignment'] as const
+export const PERMISSION_RESOURCES = ['group', 'groupMembership', 'position', 'positionAssignment'] as const
 export const PERMISSION_ACTIONS = ['read', 'create', 'update', 'delete'] as const
 export const PERMISSION_SCOPE = 'global' as const
 

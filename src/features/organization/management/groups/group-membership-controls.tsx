@@ -2,7 +2,7 @@
 
 import { SaveIcon, UserPlusIcon } from 'lucide-react'
 import { useActionState, useState } from 'react'
-import type { MemberLabel } from '@/features/organization/core/labels'
+import type { UserLabel } from '@/features/organization/core/labels'
 import type {
   CreateGroupMembershipFormState,
   EndGroupMembershipFormState,
@@ -26,13 +26,13 @@ export type EndMembershipAction = (
   formData: FormData,
 ) => Promise<EndGroupMembershipFormState>
 
-export function AddGroupMemberControl({
+export function AddGroupUserControl({
   groupId,
-  members,
+  users,
   action,
 }: {
   groupId: string
-  members: MemberLabel[]
+  users: UserLabel[]
   action: CreateMembershipAction
 }) {
   const [isOpen, setIsOpen] = useState(false)
@@ -42,7 +42,7 @@ export function AddGroupMemberControl({
     return (
       <Button onClick={() => setIsOpen(true)} type="button" variant="outline">
         <UserPlusIcon data-icon="inline-start" />
-        Add Member
+        Add User
       </Button>
     )
   }
@@ -58,22 +58,22 @@ export function AddGroupMemberControl({
       </div>
       <FieldGroup className="sm:grid sm:grid-cols-2">
         <Field>
-          <FieldLabel htmlFor={`group-${groupId}-member`}>Member</FieldLabel>
+          <FieldLabel htmlFor={`group-${groupId}-user`}>User</FieldLabel>
           <NativeSelect
-            aria-invalid={!!state.fieldErrors?.memberId}
+            aria-invalid={!!state.fieldErrors?.userId}
             className="w-full"
-            id={`group-${groupId}-member`}
-            name="memberId"
+            id={`group-${groupId}-user`}
+            name="userId"
             required
           >
-            <NativeSelectOption value="">Choose Member</NativeSelectOption>
-            {members.map((option) => (
-              <NativeSelectOption key={option.member.id} value={option.member.id}>
+            <NativeSelectOption value="">Choose User</NativeSelectOption>
+            {users.map((option) => (
+              <NativeSelectOption key={option.user.id} value={option.user.id}>
                 {option.label} ({option.detail})
               </NativeSelectOption>
             ))}
           </NativeSelect>
-          <FieldError>{state.fieldErrors?.memberId}</FieldError>
+          <FieldError>{state.fieldErrors?.userId}</FieldError>
         </Field>
       </FieldGroup>
       <Button disabled={isPending} type="submit">
@@ -84,12 +84,12 @@ export function AddGroupMemberControl({
   )
 }
 
-export function AddMemberGroupControl({
-  memberId,
+export function AddUserGroupControl({
+  userId,
   groups,
   action,
 }: {
-  memberId: string
+  userId: string
   groups: { id: string; name: string }[]
   action: CreateMembershipAction
 }) {
@@ -107,7 +107,7 @@ export function AddMemberGroupControl({
 
   return (
     <form action={formAction} className="space-y-4 rounded-lg border bg-muted/20 p-4">
-      <input name="memberId" type="hidden" value={memberId} />
+      <input name="userId" type="hidden" value={userId} />
       <div className="flex items-center justify-between gap-4">
         <h3 className="font-medium">Add Group Membership</h3>
         <Button onClick={() => setIsOpen(false)} size="sm" type="button" variant="ghost">
@@ -116,11 +116,11 @@ export function AddMemberGroupControl({
       </div>
       <FieldGroup className="sm:grid sm:grid-cols-2">
         <Field>
-          <FieldLabel htmlFor={`member-${memberId}-group`}>Group</FieldLabel>
+          <FieldLabel htmlFor={`user-${userId}-group`}>Group</FieldLabel>
           <NativeSelect
             aria-invalid={!!state.fieldErrors?.groupId}
             className="w-full"
-            id={`member-${memberId}-group`}
+            id={`user-${userId}-group`}
             name="groupId"
             required
           >
@@ -142,12 +142,12 @@ export function AddMemberGroupControl({
   )
 }
 
-export function EndGroupMemberControl({
+export function EndGroupUserControl({
   membership,
   groupName,
   action,
 }: {
-  membership: { id: string; groupId: string; memberId: string; memberLabel: string; startsAt: Date }
+  membership: { id: string; groupId: string; userId: string; userLabel: string; startsAt: Date }
   groupName: string
   action: EndMembershipAction
 }) {
@@ -157,7 +157,7 @@ export function EndGroupMemberControl({
   if (!isOpen) {
     return (
       <Button
-        aria-label={`End ${membership.memberLabel} membership`}
+        aria-label={`End ${membership.userLabel} membership`}
         onClick={() => setIsOpen(true)}
         size="sm"
         type="button"
@@ -171,12 +171,12 @@ export function EndGroupMemberControl({
   return (
     <form action={formAction} className="flex flex-col items-start gap-2 sm:items-end">
       <input name="groupId" type="hidden" value={membership.groupId} />
-      <input name="memberId" type="hidden" value={membership.memberId} />
+      <input name="userId" type="hidden" value={membership.userId} />
       <div className="flex items-start gap-2">
         <div className="flex flex-col gap-1">
           <Input
             aria-invalid={!!state.fieldErrors?.endsAt}
-            aria-label={`End ${membership.memberLabel} membership in ${groupName}`}
+            aria-label={`End ${membership.userLabel} membership in ${groupName}`}
             min={formatDateInput(membership.startsAt)}
             name="endsAt"
             required

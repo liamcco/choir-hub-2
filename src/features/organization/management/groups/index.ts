@@ -1,8 +1,8 @@
 export { GroupHierarchyScreen } from './group-hierarchy-screen'
 export {
-  AddMemberGroupControl,
+  AddUserGroupControl,
   type CreateMembershipAction,
-  EndGroupMemberControl,
+  EndGroupUserControl,
   type EndMembershipAction,
 } from './group-membership-controls'
 export { GroupManagementScreen } from './screen'

@@ -4,14 +4,14 @@ import {
   isHistoricalDatedPeriod,
   isScheduledDatedPeriod,
 } from '@/features/organization/core/dated-history'
-import { buildMemberLabels, formatGroupPath } from '@/features/organization/core/labels'
-import type { Group, GroupMembership, Member } from '@/prisma/generated/client'
+import { buildUserLabels, formatGroupPath } from '@/features/organization/core/labels'
+import type { Group, GroupMembership, User } from '@/prisma/generated/client'
 
 export type GroupMembershipPeriod = GroupMembership & {
   group: Group
-  member: Member
-  memberLabel: string
-  memberDetail: string
+  user: User
+  userLabel: string
+  userDetail: string
 }
 
 export type GroupMembershipGroupView = {
@@ -21,25 +21,23 @@ export type GroupMembershipGroupView = {
   historicalMemberships: GroupMembershipPeriod[]
 }
 
-export type GroupMembershipMemberView = {
-  member: Member
-  memberLabel: string
-  memberDetail: string
+export type GroupMembershipUserView = {
+  user: User
+  userLabel: string
+  userDetail: string
   currentMemberships: GroupMembershipPeriod[]
   scheduledMemberships: GroupMembershipPeriod[]
   historicalMemberships: GroupMembershipPeriod[]
 }
 
 export async function listGroupMembershipManagement(input?: { at?: Date }) {
-  const [groups, members, memberships, users] = await Promise.all([
+  const [groups, users, memberships] = await Promise.all([
     organizationService.groups.list(),
-    organizationService.members.list(),
+    organizationService.users.list(),
     organizationService.groupMemberships.list(),
-    organizationService.members.listIdentities(),
   ])
   return buildGroupMembershipManagementState({
     groups,
-    members,
     memberships,
     users,
     at: input?.at ?? new Date(),
@@ -50,33 +48,31 @@ export type GroupMembershipManagementState = Awaited<ReturnType<typeof listGroup
 
 export function buildGroupMembershipManagementState({
   groups,
-  members,
   memberships,
-  users = [],
+  users,
   at,
 }: {
   groups: Group[]
-  members: Member[]
   memberships: GroupMembership[]
-  users?: { id: string; name: string; email: string }[]
+  users: User[]
   at: Date
 }) {
   const groupsById = new Map(groups.map((group) => [group.id, group]))
-  const membersById = new Map(members.map((member) => [member.id, member]))
-  const memberOptions = buildMemberLabels(members, users)
-  const memberOptionsByMemberId = new Map(memberOptions.map((option) => [option.member.id, option]))
+  const usersById = new Map(users.map((user) => [user.id, user]))
+  const userOptions = buildUserLabels(users)
+  const userOptionsById = new Map(userOptions.map((option) => [option.user.id, option]))
   const periods = memberships
     .flatMap((membership): GroupMembershipPeriod[] => {
       const group = groupsById.get(membership.groupId)
-      const member = membersById.get(membership.memberId)
-      const memberOption = member ? memberOptionsByMemberId.get(member.id) : undefined
-      return group && member && memberOption
-        ? [{ ...membership, group, member, memberLabel: memberOption.label, memberDetail: memberOption.detail }]
+      const user = usersById.get(membership.userId)
+      const userOption = user ? userOptionsById.get(user.id) : undefined
+      return group && user && userOption
+        ? [{ ...membership, group, user, userLabel: userOption.label, userDetail: userOption.detail }]
         : []
     })
     .sort(
       (first, second) =>
-        first.memberLabel.localeCompare(second.memberLabel) ||
+        first.userLabel.localeCompare(second.userLabel) ||
         formatGroupPath(groups, first.group).localeCompare(formatGroupPath(groups, second.group)) ||
         first.startsAt.getTime() - second.startsAt.getTime() ||
         first.id.localeCompare(second.id),
@@ -84,7 +80,7 @@ export function buildGroupMembershipManagementState({
 
   return {
     groups,
-    members: memberOptions,
+    users: userOptions,
     groupViews: groups.map(
       (group): GroupMembershipGroupView => ({
         group,
@@ -94,13 +90,13 @@ export function buildGroupMembershipManagementState({
         ),
       }),
     ),
-    memberViews: memberOptions.map(
-      (option): GroupMembershipMemberView => ({
-        member: option.member,
-        memberLabel: option.label,
-        memberDetail: option.detail,
+    userViews: userOptions.map(
+      (option): GroupMembershipUserView => ({
+        user: option.user,
+        userLabel: option.label,
+        userDetail: option.detail,
         ...partitionMembershipPeriods(
-          periods.filter((membership) => membership.memberId === option.member.id),
+          periods.filter((membership) => membership.userId === option.user.id),
           at,
         ),
       }),

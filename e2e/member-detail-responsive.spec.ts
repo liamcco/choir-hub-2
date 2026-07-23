@@ -7,7 +7,7 @@ test('member route dialog is bounded on desktop and full-screen on mobile', asyn
   await page.getByLabel('Password').fill('member-dialog-e2e-password')
   await page.getByRole('button', { name: 'Sign in' }).click()
   await page.waitForURL('/')
-  await page.goto('/admin/members')
+  await page.goto('/admin/users')
   await page.getByRole('link', { name: 'Member Dialog E2E' }).click()
 
   const dialog = page.getByRole('dialog', { name: 'Member Dialog E2E' })

@@ -1,32 +1,15 @@
-import type { Member } from '@/prisma/generated/client'
+import type { User } from '@/prisma/generated/client'
 
-export type AuthUserIdentity = {
-  id: string
-  name: string
-  email: string
+export type UserLabel = { user: User; label: string; detail: string }
+
+export function buildUserLabels(users: User[]): UserLabel[] {
+  return users.map((user) => ({
+    user,
+    label: user.name || formatUserFallbackLabel(user),
+    detail: user.email || user.id,
+  }))
 }
 
-export type MemberLabel = {
-  member: Member
-  label: string
-  detail: string
-}
-
-export function buildMemberLabels(
-  members: Member[],
-  users: Pick<AuthUserIdentity, 'id' | 'name' | 'email'>[],
-): MemberLabel[] {
-  const usersById = new Map(users.map((user) => [user.id, user]))
-  return members.map((member) => {
-    const user = usersById.get(member.id)
-    return {
-      member,
-      label: user?.name || formatMemberFallbackLabel(member),
-      detail: user?.email ?? member.id,
-    }
-  })
-}
-
-export function formatMemberFallbackLabel(member: Member) {
-  return `Member ${member.id}`
+export function formatUserFallbackLabel(user: User) {
+  return `User ${user.id}`
 }

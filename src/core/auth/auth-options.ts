@@ -64,6 +64,15 @@ export const authOptions = {
       maxAge: 300, // 5 minutes
     },
   },
+  user: {
+    additionalFields: {
+      status: {
+        type: 'string',
+        defaultValue: 'ACTIVE',
+        input: false,
+      },
+    },
+  },
   advanced: {
     defaultCookieAttributes: {
       sameSite: 'lax',

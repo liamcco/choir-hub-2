@@ -21,7 +21,6 @@ async function removeFixture() {
   const existing = await prisma.user.findUnique({ where: { email } })
   if (!existing) return
   if (existing.name !== name) throw new Error(`Refusing to replace non-test account ${email}.`)
-  await prisma.member.deleteMany({ where: { id: existing.id } })
   await prisma.user.delete({ where: { id: existing.id } })
 }
 
@@ -35,7 +34,6 @@ async function main() {
   const result = await auth.api.createUser({
     body: { email, name, password: 'member-dialog-e2e-password', role: 'admin' },
   })
-  await prisma.member.create({ data: { id: result.user.id, status: 'ACTIVE' } })
   const parentGroup = await prisma.group.create({
     data: { ...parentGroupFixture, kind: 'CHOIR' },
   })
@@ -47,7 +45,7 @@ async function main() {
     },
   })
   await prisma.groupMembership.create({
-    data: { groupId: childGroup.id, memberId: result.user.id, startsAt: new Date('2025-01-01T00:00:00Z') },
+    data: { groupId: childGroup.id, userId: result.user.id, startsAt: new Date('2025-01-01T00:00:00Z') },
   })
 }
 

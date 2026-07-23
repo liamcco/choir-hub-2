@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 import { ROUTES } from '@/core/navigation/site'
 import { cn } from '@/shared/utils'
 
-type ManagementResource = 'members' | 'groups' | 'positions'
+type ManagementResource = 'users' | 'groups' | 'positions'
 
 export function CollectionFrame({
   activeResource,
@@ -48,7 +48,7 @@ export function CollectionFrame({
 }
 
 const managementResources = [
-  { id: 'members', label: 'Members', href: ROUTES.adminMembers },
+  { id: 'users', label: 'Users', href: ROUTES.adminUsers },
   { id: 'groups', label: 'Groups', href: ROUTES.adminGroups },
   { id: 'positions', label: 'Positions', href: ROUTES.adminPositions },
 ] as const

@@ -30,7 +30,7 @@ const NAVIGATION_PRESENTATION = {
   login: { label: 'Login', Icon: LogInIcon },
   organization: { label: 'Organization', Icon: GitForkIcon },
   account: { label: 'Account', Icon: KeyRoundIcon },
-  adminMembers: { label: 'Members', Icon: UserRoundCogIcon },
+  adminUsers: { label: 'Users', Icon: UserRoundCogIcon },
   adminGroups: { label: 'Groups', Icon: Building2Icon },
   adminPositions: { label: 'Positions', Icon: BriefcaseBusinessIcon },
 } satisfies Record<NavigationRouteId, { label: string; Icon: LucideIcon }>
@@ -38,7 +38,7 @@ const NAVIGATION_PRESENTATION = {
 const AUTHENTICATED_NAVIGATION_ROUTES = [
   { id: 'organization', href: ROUTES.organization, section: 'member' },
   { id: 'account', href: ROUTES.account, section: 'member' },
-  { id: 'adminMembers', href: ROUTES.adminMembers, section: 'admin' },
+  { id: 'adminUsers', href: ROUTES.adminUsers, section: 'admin' },
   { id: 'adminGroups', href: ROUTES.adminGroups, section: 'admin' },
   { id: 'adminPositions', href: ROUTES.adminPositions, section: 'admin' },
 ] as const satisfies readonly NavigationRoute[]

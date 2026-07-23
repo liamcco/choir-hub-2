@@ -9,7 +9,7 @@ import { NativeSelect, NativeSelectOption } from '@/shared/ui/native-select'
 import { updateAccountAccessAction, updateMemberStatusAction } from './actions'
 import type { AccountAccessState } from './service'
 
-export function MemberStatusEditor({ memberId, status }: { memberId: string; status: MemberStatus }) {
+export function MemberStatusEditor({ userId, status }: { userId: string; status: MemberStatus }) {
   const [isEditing, setIsEditing] = useState(false)
   return (
     <div className="rounded-lg border bg-background p-3">
@@ -23,7 +23,7 @@ export function MemberStatusEditor({ memberId, status }: { memberId: string; sta
         Edit Member Status
       </Button>
       {isEditing ? (
-        <form action={updateMemberStatusAction.bind(null, memberId)} className="mt-3 flex gap-2">
+        <form action={updateMemberStatusAction.bind(null, userId)} className="mt-3 flex gap-2">
           <NativeSelect aria-label="Member Status" defaultValue={status} name="status" size="sm">
             <NativeSelectOption value="ACTIVE">Active</NativeSelectOption>
             <NativeSelectOption value="PASSIVE">Passive</NativeSelectOption>
@@ -36,7 +36,7 @@ export function MemberStatusEditor({ memberId, status }: { memberId: string; sta
   )
 }
 
-export function AccountAccessEditor({ memberId, accessState }: { memberId: string; accessState: AccountAccessState }) {
+export function AccountAccessEditor({ userId, accessState }: { userId: string; accessState: AccountAccessState }) {
   const [isEditing, setIsEditing] = useState(false)
   const nextAccessState: AccountAccessState = accessState === 'enabled' ? 'disabled' : 'enabled'
 
@@ -49,10 +49,10 @@ export function AccountAccessEditor({ memberId, accessState }: { memberId: strin
         type="button"
         variant="ghost"
       >
-        Edit Auth User access
+        Edit account access
       </Button>
       {isEditing ? (
-        <form action={updateAccountAccessAction.bind(null, memberId)}>
+        <form action={updateAccountAccessAction.bind(null, userId)}>
           <input name="accessState" type="hidden" value={nextAccessState} />
           <PendingAccessSubmit accessState={accessState} />
         </form>

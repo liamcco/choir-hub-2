@@ -26,9 +26,9 @@ describe('Group detail', () => {
             group('choir-1', 'Chamber Choir', GroupKind.CHOIR),
             group('section-1', 'Altos', GroupKind.SECTION, 'choir-1'),
           ],
-          members: [
+          users: [
             {
-              member: member('member-2'),
+              user: member('member-2') as never,
               label: 'Grace Hopper',
               detail: 'grace@example.com',
             },
@@ -60,9 +60,9 @@ describe('Group detail', () => {
 
     expect(screen.getByRole('heading', { name: 'Group Memberships' })).toBeTruthy()
     expect(screen.getByText('Ada Lovelace')).toBeTruthy()
-    expect(screen.queryByLabelText('Member')).toBeNull()
-    await user.click(screen.getByRole('button', { name: 'Add Member' }))
-    expect(screen.getByLabelText('Member')).toBeTruthy()
+    expect(screen.queryByLabelText('User')).toBeNull()
+    await user.click(screen.getByRole('button', { name: 'Add User' }))
+    expect(screen.getByLabelText('User')).toBeTruthy()
     expect(screen.queryByRole('dialog', { name: /membership/i })).toBeNull()
 
     expect(screen.queryByLabelText('End Ada Lovelace membership in Altos')).toBeNull()
@@ -88,7 +88,7 @@ describe('Group detail', () => {
           parentGroupId: null,
           parentName: null,
           groups: [group('choir-1', 'Chamber Choir', GroupKind.CHOIR)],
-          members: [],
+          users: [],
           currentMemberships: [],
           scheduledMemberships: [],
           historicalMemberships: [],
@@ -124,6 +124,9 @@ function group(id: string, name: string, kind: GroupKind, parentGroupId: string 
 function member(id: string) {
   return {
     id,
+    name: id,
+    email: `${id}@example.invalid`,
+    emailVerified: false,
     status: MemberStatus.ACTIVE,
     createdAt: new Date('2024-01-01'),
     updatedAt: new Date('2024-01-01'),
@@ -132,18 +135,18 @@ function member(id: string) {
 
 function membership(
   id: string,
-  memberId: string,
-  memberLabel: string,
-  memberDetail: string,
+  userId: string,
+  userLabel: string,
+  userDetail: string,
   startsAt: string,
   endsAt?: string,
 ) {
   return {
     id,
     groupId: 'section-1',
-    memberId,
-    memberLabel,
-    memberDetail,
+    userId,
+    userLabel,
+    userDetail,
     startsAt: new Date(startsAt),
     endsAt: endsAt ? new Date(endsAt) : null,
   }

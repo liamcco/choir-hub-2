@@ -1,3 +1,4 @@
+
 model User {
   id               String      @id
   name             String
@@ -18,9 +19,20 @@ model User {
   twofactors       TwoFactor[]
   passkeys         Passkey[]
 
+  status MemberStatus @default(ACTIVE)
+
+  memberships         GroupMembership[]
+  positionAssignments PositionAssignment[]
+
   @@unique([email])
   @@unique([username])
   @@map("user")
+}
+
+enum MemberStatus {
+  ACTIVE  @map("active")
+  PASSIVE @map("passive")
+  FORMER  @map("former")
 }
 
 model Session {
@@ -79,6 +91,9 @@ model TwoFactor {
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   verified    Boolean? @default(true)
+
+  failedVerificationCount Int?      @default(0)
+  lockedUntil             DateTime?
 
   @@index([secret])
   @@index([userId])

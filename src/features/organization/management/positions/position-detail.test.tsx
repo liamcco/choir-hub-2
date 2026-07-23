@@ -6,9 +6,8 @@ mock.module('./position-editors', () => ({
 }))
 mock.module('@/features/organization/management/position-assignments/assignment-form', () => ({
   AssignPositionHolderControl: () => <button type="button">Assign holder</button>,
-  AssignMemberPositionControl: () => <button type="button">Assign Position</button>,
-  EndPositionAssignmentForm: ({ assignment }: { assignment: { memberLabel: string } }) => (
-    <input aria-label={`End ${assignment.memberLabel} assignment to this Position`} />
+  EndPositionAssignmentForm: ({ assignment }: { assignment: { userLabel: string } }) => (
+    <input aria-label={`End ${assignment.userLabel} assignment to this Position`} />
   ),
 }))
 const { cleanup, render, screen } = await import('@testing-library/react')
@@ -31,8 +30,16 @@ const position = {
   createdAt: new Date(),
   updatedAt: new Date(),
 }
-const member = {
-  member: { id: 'member-1', status: MemberStatus.ACTIVE, createdAt: new Date(), updatedAt: new Date() },
+const user = {
+  user: {
+    id: 'member-1',
+    name: 'Ada Lovelace',
+    email: 'ada@example.invalid',
+    emailVerified: false,
+    status: MemberStatus.ACTIVE,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
   label: 'Ada Lovelace',
   detail: 'ada@example.com',
 }
@@ -45,29 +52,29 @@ describe('Position detail', () => {
           groups: [group],
           scopeGroups: [group],
           scopeLabel: 'Choir Board',
-          members: [member],
+          users: [user as never],
           currentAssignments: [
             {
               id: 'assignment-1',
               positionId: position.id,
-              memberId: member.member.id,
+              userId: user.user.id,
               startsAt: new Date('2025-01-15'),
               endsAt: null,
               createdAt: new Date(),
-              memberLabel: member.label,
-              memberDetail: member.detail,
+              userLabel: user.label,
+              userDetail: user.detail,
             },
           ],
           historicalAssignments: [
             {
               id: 'assignment-2',
               positionId: position.id,
-              memberId: member.member.id,
+              userId: user.user.id,
               startsAt: new Date('2024-01-01'),
               endsAt: new Date('2024-12-31'),
               createdAt: new Date(),
-              memberLabel: member.label,
-              memberDetail: member.detail,
+              userLabel: user.label,
+              userDetail: user.detail,
             },
           ],
         }}
@@ -91,7 +98,7 @@ describe('Position detail', () => {
           groups: [group],
           scopeGroups: [group],
           scopeLabel: 'Choir Board',
-          members: [member],
+          users: [user as never],
           currentAssignments: [],
           historicalAssignments: [],
         }}

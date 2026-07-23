@@ -2,7 +2,7 @@
 
 import { PlusIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { adminMemberPath } from '@/core/navigation/site'
+import { adminUserPath } from '@/core/navigation/site'
 import { ControlledDialog } from '@/features/organization/management/components/controlled-dialog'
 import { Button } from '@/shared/ui/button'
 import { MemberAccountForm } from './member-account-form'
@@ -11,19 +11,19 @@ export function MemberCreateDialog() {
   const router = useRouter()
   return (
     <ControlledDialog
-      title="Create Member"
-      description="Create an Auth User and its linked skeletal Member together."
-      contentLabel="Create Member form"
+      title="Create User"
+      description="Create a User and set their initial Member Status."
+      contentLabel="Create User form"
       trigger={(open) => (
         <Button onClick={open} size="lg" type="button">
           <PlusIcon data-icon="inline-start" />
-          Create Member
+          Create User
         </Button>
       )}
     >
       {(closeDialog) => (
         <MemberAccountForm
-          onCreated={(memberId) => router.push(adminMemberPath(memberId), { scroll: false })}
+          onCreated={(userId) => router.push(adminUserPath(userId), { scroll: false })}
           onSuccess={closeDialog}
         />
       )}

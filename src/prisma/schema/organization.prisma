@@ -6,12 +6,6 @@ enum GroupKind {
   PROJECT   @map("project")
 }
 
-enum MemberStatus {
-  ACTIVE  @map("active")
-  PASSIVE @map("passive")
-  FORMER  @map("former")
-}
-
 model Group {
   id             String            @id @default(uuid())
   kind           GroupKind
@@ -29,27 +23,17 @@ model Group {
   @@index([parentGroupId])
 }
 
-model Member {
-  /// Member identity is the same stable identifier as the linked Auth User.
-  id                  String               @id
-  status              MemberStatus         @default(ACTIVE)
-  memberships         GroupMembership[]
-  positionAssignments PositionAssignment[]
-  createdAt           DateTime             @default(now())
-  updatedAt           DateTime             @updatedAt
-}
-
 model GroupMembership {
   id       String    @id @default(uuid())
-  memberId String
-  member   Member    @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  userId String
+  user   User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   groupId  String
   group    Group     @relation(fields: [groupId], references: [id], onDelete: Cascade)
   startsAt DateTime  @default(now())
   endsAt   DateTime?
 
-  @@unique([memberId, groupId, startsAt])
-  @@index([memberId, endsAt])
+  @@unique([userId, groupId, startsAt])
+  @@index([userId, endsAt])
   @@index([groupId, endsAt])
 }
 
@@ -77,13 +61,13 @@ model PositionAssignment {
   id         String    @id @default(uuid())
   positionId String
   position   Position  @relation(fields: [positionId], references: [id], onDelete: Cascade)
-  memberId   String
-  member     Member    @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   startsAt   DateTime  @default(now())
   endsAt     DateTime?
   createdAt  DateTime  @default(now())
 
   @@unique([positionId, startsAt])
   @@index([positionId, endsAt])
-  @@index([memberId, endsAt])
+  @@index([userId, endsAt])
 }

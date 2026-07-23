@@ -2,7 +2,7 @@ import z from 'zod'
 import { dateInput } from '@/shared/validation'
 
 export const CreatePositionAssignmentFormSchema = z.object({
-  memberId: z.string().refine((value) => value.trim().length > 0, 'Member is required.'),
+  userId: z.string().refine((value) => value.trim().length > 0, 'User is required.'),
   positionId: z.string().refine((value) => value.trim().length > 0, 'Position is required.'),
 })
 

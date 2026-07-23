@@ -4,19 +4,18 @@ import { prisma } from '@/core/db'
 import { isCurrentDatedPeriod, isHistoricalDatedPeriod } from '@/features/organization/core/dated-history'
 import { buildGroupPathLabels, buildGroupTree, type GroupTreeNode } from '@/features/organization/core/group-tree'
 import {
-  type AuthUserIdentity,
-  buildMemberLabels,
-  formatMemberFallbackLabel,
+  buildUserLabels,
   formatPositionScopeLabel,
+  formatUserFallbackLabel,
   noGroupScopesLabel,
 } from '@/features/organization/core/labels'
 import type {
   Group,
   GroupMembership,
-  Member,
   Position,
   PositionAssignment,
   PositionScope,
+  User,
 } from '@/prisma/generated/client'
 
 export type OverviewGroupHierarchyNode = GroupTreeNode<Group>
@@ -33,7 +32,7 @@ export type OverviewPositionScope = PositionScope & {
 
 export type OverviewPositionAssignmentPeriod = PositionAssignment & {
   position: Position
-  member: Member
+  member: User
   positionLabel: string
   positionScopeLabel: string
   memberLabel: string
@@ -41,7 +40,7 @@ export type OverviewPositionAssignmentPeriod = PositionAssignment & {
 }
 
 export type OverviewMemberView = {
-  member: Member
+  member: User
   memberLabel: string
   memberDetail: string
   currentMemberships: OverviewGroupMembershipPeriod[]
@@ -66,32 +65,27 @@ export type OrganizationOverviewState = {
 }
 
 export async function listOrganizationOverview(input?: { at?: Date }) {
-  const [groups, members, memberships, positions, scopes, assignments, users] = await Promise.all([
+  const [groups, users, memberships, positions, scopes, assignments] = await Promise.all([
     prisma.group.findMany({
       orderBy: [{ parentGroupId: 'asc' }, { name: 'asc' }],
     }),
-    prisma.member.findMany({
+    prisma.user.findMany({
       orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
     }),
     prisma.groupMembership.findMany({
-      orderBy: [{ groupId: 'asc' }, { memberId: 'asc' }, { startsAt: 'asc' }],
+      orderBy: [{ groupId: 'asc' }, { userId: 'asc' }, { startsAt: 'asc' }],
     }),
     prisma.position.findMany({ orderBy: [{ name: 'asc' }, { id: 'asc' }] }),
     prisma.positionScope.findMany({ orderBy: [{ positionId: 'asc' }, { groupId: 'asc' }] }),
     prisma.positionAssignment.findMany({ orderBy: [{ positionId: 'asc' }, { startsAt: 'asc' }] }),
-    prisma.user.findMany({
-      orderBy: [{ name: 'asc' }, { id: 'asc' }],
-      select: { id: true, name: true, email: true },
-    }),
   ])
   return buildOrganizationOverviewState({
     groups,
-    members,
+    members: users,
     memberships,
     positions,
     scopes,
     assignments,
-    users,
     at: input?.at ?? new Date(),
   })
 }
@@ -103,24 +97,20 @@ export function buildOrganizationOverviewState({
   positions,
   scopes,
   assignments,
-  users = [],
   at,
 }: {
   groups: Group[]
-  members: Member[]
+  members: User[]
   memberships: GroupMembership[]
   positions: Position[]
   scopes: PositionScope[]
   assignments: PositionAssignment[]
-  users?: AuthUserIdentity[]
   at: Date
 }): OrganizationOverviewState {
   const groupsById = new Map(groups.map((group) => [group.id, group]))
   const groupPathLabels = buildGroupPathLabels(groups)
   const membersById = new Map(members.map((member) => [member.id, member]))
-  const memberLabels = new Map(
-    buildMemberLabels(members, users).map((memberLabel) => [memberLabel.member.id, memberLabel]),
-  )
+  const memberLabels = new Map(buildUserLabels(members).map((memberLabel) => [memberLabel.user.id, memberLabel]))
   const positionScopesByPositionId = groupPositionScopes({ groups, scopes })
   const positionScopeLabels = buildPositionScopeLabels({ groups, positions, positionScopesByPositionId })
 
@@ -135,7 +125,7 @@ export function buildOrganizationOverviewState({
   const assignmentPeriods = assignments
     .flatMap((assignment): OverviewPositionAssignmentPeriod[] => {
       const position = positions.find((candidate) => candidate.id === assignment.positionId)
-      const member = membersById.get(assignment.memberId)
+      const member = membersById.get(assignment.userId)
       const memberLabel = member ? memberLabels.get(member.id) : undefined
       return position && member && memberLabel
         ? [
@@ -157,9 +147,9 @@ export function buildOrganizationOverviewState({
     groups,
     groupHierarchy: buildGroupTree(groups),
     memberViews: members.map((member) => {
-      const memberLabel = memberLabels.get(member.id) ?? { label: formatMemberFallbackLabel(member), detail: member.id }
-      const memberMemberships = membershipPeriods.filter((membership) => membership.memberId === member.id)
-      const memberAssignments = assignmentPeriods.filter((assignment) => assignment.memberId === member.id)
+      const memberLabel = memberLabels.get(member.id) ?? { label: formatUserFallbackLabel(member), detail: member.id }
+      const memberMemberships = membershipPeriods.filter((membership) => membership.userId === member.id)
+      const memberAssignments = assignmentPeriods.filter((assignment) => assignment.userId === member.id)
       return {
         member,
         memberLabel: memberLabel.label,

@@ -8,7 +8,11 @@ mock.module('./actions', () => ({
 }))
 mock.module('../position-assignments/assignment-form', () => ({
   AssignPositionHolderControl: () => <button type="button">Assign holder</button>,
-  AssignMemberPositionControl: () => <button type="button">Assign Position</button>,
+  AssignUserPositionControl: () => <button type="button">Assign Position</button>,
+  EndPositionAssignmentForm: () => <button type="button">End</button>,
+}))
+mock.module('../position-assignments/relationships', () => ({
+  AssignUserPositionControl: () => <button type="button">Assign Position</button>,
   EndPositionAssignmentForm: () => <button type="button">End</button>,
 }))
 const { MemberDetail } = await import('./member-detail')
@@ -79,14 +83,14 @@ describe('Member detail', () => {
     expect(screen.getByText('Chamber Choir')).toBeTruthy()
     expect(screen.getByRole('heading', { name: 'Position Assignments' })).toBeTruthy()
     expect(screen.getByText('Chair')).toBeTruthy()
-    expect(screen.getByRole('heading', { name: 'Auth User access' })).toBeTruthy()
+    expect(screen.getByRole('heading', { name: 'Account access' })).toBeTruthy()
     expect(screen.getByText('ada@example.com')).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Edit Member Status' })).toBeTruthy()
-    expect(screen.getByRole('button', { name: 'Edit Auth User access' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Edit account access' })).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Add Group' })).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Assign Position' })).toBeTruthy()
     expect(screen.queryByRole('button', { name: 'Disable access' })).toBeNull()
-    await user.click(screen.getByRole('button', { name: 'Edit Auth User access' }))
+    await user.click(screen.getByRole('button', { name: 'Edit account access' }))
     expect(screen.getByRole('button', { name: 'Disable access' })).toBeTruthy()
     await user.click(screen.getByRole('button', { name: 'Add Group' }))
     expect(screen.getByRole('heading', { name: 'Add Group Membership' })).toBeTruthy()

@@ -1,6 +1,6 @@
-import { adminMemberPath } from '@/core/navigation/site'
+import { adminUserPath } from '@/core/navigation/site'
 import { formatGroupKind } from '@/features/organization/core/group-kind'
-import type { MemberLabel } from '@/features/organization/core/labels'
+import type { UserLabel } from '@/features/organization/core/labels'
 import { RelatedDetailLink } from '@/features/organization/management/components/related-detail-link'
 import type { Group } from '@/prisma/generated/client'
 import { formatPeriod } from '@/shared/formatting'
@@ -8,18 +8,18 @@ import { Badge } from '@/shared/ui/badge'
 import { GroupFieldEditor } from './group-editors'
 import type { GroupFormAction } from './group-form'
 import {
-  AddGroupMemberControl,
+  AddGroupUserControl,
   type CreateMembershipAction,
-  EndGroupMemberControl,
+  EndGroupUserControl,
   type EndMembershipAction,
 } from './group-membership-controls'
 
 export type GroupMembershipView = {
   id: string
   groupId: string
-  memberId: string
-  memberLabel: string
-  memberDetail: string
+  userId: string
+  userLabel: string
+  userDetail: string
   startsAt: Date
   endsAt: Date | null
 }
@@ -27,7 +27,7 @@ export type GroupMembershipView = {
 export type GroupDetailView = Group & {
   parentName: string | null
   groups: Group[]
-  members: MemberLabel[]
+  users: UserLabel[]
   currentMemberships: GroupMembershipView[]
   scheduledMemberships: GroupMembershipView[]
   historicalMemberships: GroupMembershipView[]
@@ -68,7 +68,7 @@ export function GroupDetail({ group, actions }: { group: GroupDetailView; action
           <h2 className="text-lg font-semibold" id="group-memberships-heading">
             Group Memberships
           </h2>
-          <AddGroupMemberControl action={actions.createMembership} groupId={group.id} members={group.members} />
+          <AddGroupUserControl action={actions.createMembership} groupId={group.id} users={group.users} />
         </div>
         <MembershipList
           emptyText="No current Group Memberships"
@@ -139,13 +139,13 @@ function MembershipList({
       {memberships.map((membership) => (
         <li className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between" key={membership.id}>
           <div>
-            <RelatedDetailLink href={adminMemberPath(membership.memberId)}>{membership.memberLabel}</RelatedDetailLink>
+            <RelatedDetailLink href={adminUserPath(membership.userId)}>{membership.userLabel}</RelatedDetailLink>
             <p className="text-sm text-muted-foreground">
-              {membership.memberDetail} · {formatPeriod(membership)}
+              {membership.userDetail} · {formatPeriod(membership)}
             </p>
           </div>
           {showEndControls && endAction ? (
-            <EndGroupMemberControl action={endAction} groupName={groupName} membership={membership} />
+            <EndGroupUserControl action={endAction} groupName={groupName} membership={membership} />
           ) : null}
         </li>
       ))}

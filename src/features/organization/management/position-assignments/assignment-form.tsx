@@ -2,6 +2,7 @@
 
 import { SaveIcon, UserRoundCheckIcon } from 'lucide-react'
 import { useActionState, useState } from 'react'
+import type { UserLabel } from '@/features/organization/core/labels'
 import type {
   CreatePositionAssignmentFormState,
   EndPositionAssignmentFormState,
@@ -10,10 +11,7 @@ import {
   createPositionAssignmentAction,
   endPositionAssignmentAction,
 } from '@/features/organization/management/position-assignments/actions'
-import type {
-  PositionAssignmentManagementState,
-  PositionAssignmentPeriod,
-} from '@/features/organization/management/position-assignments/service'
+import type { PositionAssignmentManagementState } from '@/features/organization/management/position-assignments/service'
 import { formatDateInput } from '@/shared/formatting'
 import { FormMessage } from '@/shared/forms/error-handling'
 import { Button } from '@/shared/ui/button'
@@ -23,6 +21,8 @@ import { NativeSelect, NativeSelectOption } from '@/shared/ui/native-select'
 
 const createInitialState: CreatePositionAssignmentFormState = {}
 const endInitialState: EndPositionAssignmentFormState = {}
+type UserOptions = UserLabel[]
+type AssignmentForEnd = { id: string; userId: string; startsAt: Date; userLabel: string }
 type CreateAssignmentAction = (
   previousState: CreatePositionAssignmentFormState,
   formData: FormData,
@@ -34,9 +34,12 @@ type EndAssignmentAction = (
 ) => Promise<EndPositionAssignmentFormState>
 
 export function CreatePositionAssignmentForm({
-  members,
+  users,
   positions,
-}: Pick<PositionAssignmentManagementState, 'members' | 'positions'>) {
+}: {
+  users: UserOptions
+  positions: PositionAssignmentManagementState['positions']
+}) {
   const [state, formAction, isPending] = useActionState(createPositionAssignmentAction, createInitialState)
 
   return (
@@ -61,22 +64,22 @@ export function CreatePositionAssignmentForm({
           <FieldError>{state.fieldErrors?.positionId}</FieldError>
         </Field>
         <Field>
-          <FieldLabel htmlFor="new-assignment-member">Member</FieldLabel>
+          <FieldLabel htmlFor="new-assignment-user">User</FieldLabel>
           <NativeSelect
-            id="new-assignment-member"
-            name="memberId"
+            id="new-assignment-user"
+            name="userId"
             required
             className="w-full"
-            aria-invalid={!!state.fieldErrors?.memberId}
+            aria-invalid={!!state.fieldErrors?.userId}
           >
-            <NativeSelectOption value="">Choose Member</NativeSelectOption>
-            {members.map((option) => (
-              <NativeSelectOption key={option.member.id} value={option.member.id}>
+            <NativeSelectOption value="">Choose User</NativeSelectOption>
+            {users.map((option) => (
+              <NativeSelectOption key={option.user.id} value={option.user.id}>
                 {option.label} ({option.detail})
               </NativeSelectOption>
             ))}
           </NativeSelect>
-          <FieldError>{state.fieldErrors?.memberId}</FieldError>
+          <FieldError>{state.fieldErrors?.userId}</FieldError>
         </Field>
       </FieldGroup>
       <Button type="submit" className="w-fit" disabled={isPending}>
@@ -88,13 +91,7 @@ export function CreatePositionAssignmentForm({
   )
 }
 
-export function AssignPositionHolderControl({
-  members,
-  positionId,
-}: {
-  members: PositionAssignmentManagementState['members']
-  positionId: string
-}) {
+export function AssignPositionHolderControl({ users, positionId }: { users: UserOptions; positionId: string }) {
   const [isAssigning, setIsAssigning] = useState(false)
   if (!isAssigning) {
     return (
@@ -103,15 +100,15 @@ export function AssignPositionHolderControl({
       </Button>
     )
   }
-  return <AssignPositionHolderForm members={members} positionId={positionId} onCancel={() => setIsAssigning(false)} />
+  return <AssignPositionHolderForm users={users} positionId={positionId} onCancel={() => setIsAssigning(false)} />
 }
 
-export function AssignMemberPositionControl({
-  memberId,
+export function AssignUserPositionControl({
+  userId,
   positions,
   action = createPositionAssignmentAction,
 }: {
-  memberId: string
+  userId: string
   positions: { id: string; label: string }[]
   action?: CreateAssignmentAction
 }) {
@@ -126,7 +123,7 @@ export function AssignMemberPositionControl({
 
   return (
     <form action={formAction} className="space-y-4 rounded-lg border bg-muted/20 p-4">
-      <input name="memberId" type="hidden" value={memberId} />
+      <input name="userId" type="hidden" value={userId} />
       <div className="flex items-center justify-between gap-4">
         <h3 className="font-medium">Assign Position</h3>
         <Button onClick={() => setIsAssigning(false)} size="sm" type="button" variant="ghost">
@@ -135,11 +132,11 @@ export function AssignMemberPositionControl({
       </div>
       <FieldGroup className="sm:grid sm:grid-cols-2">
         <Field>
-          <FieldLabel htmlFor={`member-${memberId}-position`}>Position</FieldLabel>
+          <FieldLabel htmlFor={`user-${userId}-position`}>Position</FieldLabel>
           <NativeSelect
             aria-invalid={!!state.fieldErrors?.positionId}
             className="w-full"
-            id={`member-${memberId}-position`}
+            id={`user-${userId}-position`}
             name="positionId"
             required
           >
@@ -162,11 +159,11 @@ export function AssignMemberPositionControl({
 }
 
 function AssignPositionHolderForm({
-  members,
+  users,
   positionId,
   onCancel,
 }: {
-  members: PositionAssignmentManagementState['members']
+  users: UserOptions
   positionId: string
   onCancel: () => void
 }) {
@@ -178,21 +175,21 @@ function AssignPositionHolderForm({
     >
       <input name="positionId" type="hidden" value={positionId} />
       <Field>
-        <FieldLabel htmlFor={`assignment-member-${positionId}`}>Member</FieldLabel>
+        <FieldLabel htmlFor={`assignment-user-${positionId}`}>User</FieldLabel>
         <NativeSelect
-          id={`assignment-member-${positionId}`}
-          name="memberId"
+          id={`assignment-user-${positionId}`}
+          name="userId"
           required
-          aria-invalid={!!state.fieldErrors?.memberId}
+          aria-invalid={!!state.fieldErrors?.userId}
         >
-          <NativeSelectOption value="">Choose Member</NativeSelectOption>
-          {members.map((option) => (
-            <NativeSelectOption key={option.member.id} value={option.member.id}>
+          <NativeSelectOption value="">Choose User</NativeSelectOption>
+          {users.map((option) => (
+            <NativeSelectOption key={option.user.id} value={option.user.id}>
               {option.label} ({option.detail})
             </NativeSelectOption>
           ))}
         </NativeSelect>
-        <FieldError>{state.fieldErrors?.memberId}</FieldError>
+        <FieldError>{state.fieldErrors?.userId}</FieldError>
       </Field>
       <div className="flex gap-2">
         <Button disabled={isPending} type="submit">
@@ -211,8 +208,8 @@ export function EndPositionAssignmentForm({
   assignment,
   action = endPositionAssignmentAction,
 }: {
-  assignment: Pick<PositionAssignmentPeriod, 'id' | 'memberId' | 'startsAt' | 'memberLabel'> & {
-    position: Pick<PositionAssignmentPeriod['position'], 'name'>
+  assignment: AssignmentForEnd & {
+    position: { name: string }
   }
   action?: EndAssignmentAction
 }) {
@@ -220,13 +217,13 @@ export function EndPositionAssignmentForm({
 
   return (
     <form action={formAction} className="flex min-w-44 items-start justify-end gap-2">
-      <input name="memberId" type="hidden" value={assignment.memberId} />
+      <input name="userId" type="hidden" value={assignment.userId} />
       <div className="flex flex-col gap-1">
         <Input
           name="endsAt"
           type="date"
           min={formatDateInput(assignment.startsAt)}
-          aria-label={`End ${assignment.memberLabel} assignment to ${assignment.position.name}`}
+          aria-label={`End ${assignment.userLabel} assignment to ${assignment.position.name}`}
           aria-invalid={!!state.fieldErrors?.endsAt}
           required
         />

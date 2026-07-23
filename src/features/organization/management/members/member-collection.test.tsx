@@ -11,7 +11,7 @@ describe('Member collection', () => {
   test('shows each Member with every current Choir and Voice in the four-column collection', () => {
     render(
       <MemberCollection
-        members={[
+        users={[
           {
             id: 'member-1',
             name: 'Ada Lovelace',
@@ -36,9 +36,7 @@ describe('Member collection', () => {
       'Voice',
       'Status',
     ])
-    expect(screen.getByRole('link', { name: 'Ada Lovelace' }).getAttribute('href')).toBe(
-      '/admin/members?detail=member-1',
-    )
+    expect(screen.getByRole('link', { name: 'Ada Lovelace' }).getAttribute('href')).toBe('/admin/users?detail=member-1')
     expect(screen.getByText('Chamber Choir, Festival Choir')).toBeTruthy()
     expect(screen.getByText('Alto I, Alto II')).toBeTruthy()
     expect(screen.getByLabelText('Multiple current Voices')).toBeTruthy()
@@ -50,7 +48,7 @@ describe('Member collection', () => {
     const user = userEvent.setup()
     render(
       <MemberCollection
-        members={[
+        users={[
           {
             id: 'member-1',
             name: 'Ada Lovelace',
@@ -76,10 +74,10 @@ describe('Member collection', () => {
       />,
     )
 
-    const search = screen.getByRole('searchbox', { name: 'Search Members' })
+    const search = screen.getByRole('searchbox', { name: 'Search Users' })
     await user.type(search, 'former')
 
-    expect(screen.getByRole('status').textContent).toBe('1 of 3 Members displayed')
+    expect(screen.getByRole('status').textContent).toBe('1 of 3 Users displayed')
     expect(screen.getByRole('link', { name: 'Katherine Johnson' })).toBeTruthy()
     expect(screen.queryByRole('link', { name: 'Ada Lovelace' })).toBeNull()
 

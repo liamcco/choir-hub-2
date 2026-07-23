@@ -1,42 +1,18 @@
 import 'server-only'
 
 import { prisma } from '@/core/db'
-import { EntityDoesNotExistError } from '@/features/organization/core/errors'
 import type { MemberStatus } from '@/prisma/generated/client'
 
-export const members = {
+export const users = {
   list() {
-    return prisma.member.findMany({
-      orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
-    })
+    return prisma.user.findMany({ orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] })
   },
 
-  listIdentities() {
-    return prisma.user.findMany({
-      orderBy: [{ name: 'asc' }, { id: 'asc' }],
-      select: { id: true, name: true, email: true },
-    })
+  find({ userId }: { userId: string }) {
+    return prisma.user.findUnique({ where: { id: userId } })
   },
 
-  findMember({ memberId }: { memberId: string }) {
-    return prisma.member.findUnique({ where: { id: memberId } })
+  updateMemberStatus(userId: string, status: MemberStatus) {
+    return prisma.user.update({ where: { id: userId }, data: { status } })
   },
-
-  create(input: { userId: string; status?: MemberStatus }) {
-    return prisma.member.create({
-      data: { id: input.userId, status: input.status ?? 'ACTIVE' },
-    })
-  },
-
-  async updateStatus(memberId: string, status: MemberStatus) {
-    await assertMemberExists(memberId)
-    return prisma.member.update({ where: { id: memberId }, data: { status } })
-  },
-}
-
-async function assertMemberExists(memberId: string) {
-  const member = await prisma.member.findUnique({ where: { id: memberId }, select: { id: true } })
-  if (!member) {
-    throw new EntityDoesNotExistError('Choose an existing Member.')
-  }
 }
