@@ -32,6 +32,7 @@ export async function createUserAction(_previousState: UserFormState, formData: 
     return handleFormError(error)
   }
 }
+
 export async function updateMemberStatusAction(userId: string, formData: FormData) {
   const actor = await requireCurrentUserPermission({ resource: 'user', action: 'update' })
   const input = MemberStatusSchema.safeParse(String(formData.get('status')))

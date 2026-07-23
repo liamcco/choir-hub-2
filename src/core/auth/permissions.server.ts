@@ -1,6 +1,6 @@
 import { headers } from 'next/headers'
 import { auth } from '@/core/auth/auth'
-import { ACCESS_ROLES, type AccessRole, type GlobalPermissionRequest } from '@/core/auth/permissions'
+import { type AccessRole, accessRoles, type GlobalPermissionRequest } from '@/core/auth/permissions'
 import { prisma } from '@/core/db'
 import { audit } from '@/core/logging'
 
@@ -42,7 +42,7 @@ function denyAuthorization(context: AuthorizationDeniedContext): never {
 
 function parseAccessRoles(value: unknown): AccessRole[] {
   const storedRoles = Array.isArray(value) ? value : typeof value === 'string' ? value.split(',') : ['user']
-  const knownRoles = new Set<string>(ACCESS_ROLES)
+  const knownRoles = new Set<string>(Object.keys(accessRoles))
 
   return storedRoles
     .map((role) => (typeof role === 'string' ? role.trim() : ''))

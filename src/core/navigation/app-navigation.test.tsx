@@ -32,13 +32,7 @@ describe('app navigation', () => {
     const items = getNavigationItems({ showAdmin: true })
     const markup = renderToStaticMarkup(<AppNavigationTemplate config={{ showAdmin: true }} />)
 
-    expect(items.map((item) => item.href)).toEqual([
-      '/organization',
-      '/account',
-      '/admin/users',
-      '/admin/groups',
-      '/admin/positions',
-    ])
+    expect(items.map((item) => item.href)).toEqual(['/account', '/admin/users', '/admin/groups', '/admin/positions'])
     expect(markup).toContain('Users')
     expect(markup).toContain('Groups')
     expect(markup).toContain('Positions')
@@ -57,6 +51,6 @@ describe('app navigation', () => {
 
   test('hides admin navigation from authenticated non-admins', () => {
     const items = getNavigationItems({ showAdmin: false })
-    expect(items.map((item) => item.href)).toEqual(['/organization', '/account'])
+    expect(items.map((item) => item.href)).toEqual(['/account'])
   })
 })

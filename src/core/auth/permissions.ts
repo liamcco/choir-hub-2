@@ -1,46 +1,52 @@
 import { createAccessControl } from 'better-auth/plugins/access'
 import { defaultRoles, defaultStatements } from 'better-auth/plugins/admin/access'
 
-export const ACCESS_ROLES = ['user', 'admin'] as const
-export const PERMISSION_RESOURCES = ['group', 'groupMembership', 'position', 'positionAssignment'] as const
-export const PERMISSION_ACTIONS = ['read', 'create', 'update', 'delete'] as const
-export const PERMISSION_SCOPE = 'global' as const
+const APP_ACTIONS = ['read', 'create', 'update', 'delete'] as const
 
-export type AccessRole = (typeof ACCESS_ROLES)[number]
-export type PermissionResource = (typeof PERMISSION_RESOURCES)[number]
-export type PermissionAction = (typeof PERMISSION_ACTIONS)[number]
-export type PermissionScope = typeof PERMISSION_SCOPE
+const customStatements = {
+  group: APP_ACTIONS,
+  groupMembership: APP_ACTIONS,
+  position: APP_ACTIONS,
+  positionAssignment: APP_ACTIONS,
+} as const
+
+export const statements = {
+  ...defaultStatements, // user, session, and their native actions
+  ...customStatements, // application resources
+} as const
+
+const accessControl = createAccessControl(statements)
+
+export type PermissionResource = keyof typeof statements
+
+export type PermissionAction<Resource extends PermissionResource> = (typeof statements)[Resource][number]
 
 export type GlobalPermissionRequest = {
-  resource: PermissionResource
-  action: PermissionAction
-}
+  [Resource in PermissionResource]: {
+    resource: Resource
+    action: PermissionAction<Resource>
+  }
+}[PermissionResource]
 
-function permissionStatements<Actions extends readonly PermissionAction[]>(actions: Actions) {
-  return Object.fromEntries(PERMISSION_RESOURCES.map((resource) => [resource, actions])) as Record<
-    PermissionResource,
-    Actions
-  >
-}
-
-const organizationPermissions = permissionStatements(PERMISSION_ACTIONS)
-const noOrganizationPermissions = permissionStatements([])
-
-export const accessControl = createAccessControl({
-  ...defaultStatements,
-  ...organizationPermissions,
-})
+const noCustomPermissions = {
+  group: [],
+  groupMembership: [],
+  position: [],
+  positionAssignment: [],
+} as const
 
 export const accessRoles = {
   user: accessControl.newRole({
     ...defaultRoles.user.statements,
-    ...noOrganizationPermissions,
+    ...noCustomPermissions,
   }),
   admin: accessControl.newRole({
     ...defaultRoles.admin.statements,
-    ...organizationPermissions,
+    ...customStatements,
   }),
-} satisfies Record<AccessRole, ReturnType<typeof accessControl.newRole>>
+} as const
+
+export type AccessRole = keyof typeof accessRoles
 
 export const adminPluginOptions = {
   ac: accessControl,
