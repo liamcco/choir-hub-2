@@ -2,6 +2,7 @@ import 'server-only'
 
 import { prisma } from '@/core/db'
 import { EntityDoesNotExistError, InvalidRelationshipError } from '@/features/organization/core/errors'
+import { normalizeOptionalString } from '@/shared/formatting'
 
 export const positions = {
   list() {
@@ -10,6 +11,10 @@ export const positions = {
 
   listScopes() {
     return prisma.positionScope.findMany({ orderBy: [{ positionId: 'asc' }, { groupId: 'asc' }] })
+  },
+
+  findPosition({ positionId }: { positionId: string }) {
+    return prisma.position.findUnique({ where: { id: positionId } })
   },
 
   async create(input: { name: string; description?: string | null; groupIds: string[] }) {
@@ -64,9 +69,4 @@ async function validateGroupIds(rawGroupIds: string[]) {
     })
   }
   return groupIds
-}
-
-function normalizeOptionalString(value: string | null | undefined) {
-  const normalized = value?.trim()
-  return normalized || null
 }

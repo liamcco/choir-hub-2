@@ -149,7 +149,7 @@ describe('current-actor domain predicates', () => {
 
     await expect(canCurrentUserInGroup({ groupId: 'group-1' })).resolves.toBe(true)
     expect(findMembership).toHaveBeenCalledWith(
-      expect.objectContaining({ where: expect.objectContaining({ memberId: 'member-1', groupId: 'group-1' }) }),
+      expect.objectContaining({ where: expect.objectContaining({ userId: 'member-1', groupId: 'group-1' }) }),
     )
   })
 
@@ -166,7 +166,7 @@ describe('current-actor domain predicates', () => {
 
     await expect(canCurrentUserHoldPosition({ positionId: 'position-1' })).resolves.toBe(true)
     expect(findAssignment).toHaveBeenCalledWith(
-      expect.objectContaining({ where: expect.objectContaining({ memberId: 'member-1', positionId: 'position-1' }) }),
+      expect.objectContaining({ where: expect.objectContaining({ userId: 'member-1', positionId: 'position-1' }) }),
     )
 
     currentAssignment = null

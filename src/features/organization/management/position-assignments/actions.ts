@@ -24,7 +24,7 @@ export async function createPositionAssignmentAction(
 
   // 2. Validate form data
   const formInput = CreatePositionAssignmentFormSchema.safeParse({
-    memberId: String(formData.get('memberId')),
+    userId: String(formData.get('userId')),
     positionId: String(formData.get('positionId')),
     startsAt: String(formData.get('startsAt')),
   })
@@ -46,8 +46,9 @@ export async function createPositionAssignmentAction(
   }
 
   // 4. Invalidate
-  revalidatePath(ROUTES.adminPositionAssignments)
-  return { message: 'Position Assignment added.' }
+  revalidatePath(ROUTES.adminPositions)
+  revalidatePath(ROUTES.adminUsers)
+  return { success: true, message: 'Position Assignment added.' }
 
   // 5. Navigate
 }
@@ -82,8 +83,9 @@ export async function endPositionAssignmentAction(
   }
 
   // 4. Invalidate
-  revalidatePath(ROUTES.adminPositionAssignments)
-  return { message: 'Position Assignment ended.' }
+  revalidatePath(ROUTES.adminPositions)
+  revalidatePath(ROUTES.adminUsers)
+  return { success: true, message: 'Position Assignment ended.' }
 
   // 5. Navigate
 }

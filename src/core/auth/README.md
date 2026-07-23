@@ -6,7 +6,7 @@ This directory owns Better Auth configuration and the app's global permission sy
 
 The v1 model has two global Access Roles:
 
-- `user`: an ordinary authenticated Auth User with no organization-management permissions.
+- `user`: an ordinary authenticated User with no organization-management permissions.
 - `admin`: an administrator with every configured organization-management permission.
 
 App permissions use five Permission Resources:
@@ -84,7 +84,7 @@ Do not convert authorization denial into a normal form-validation error.
 
 ## Global-only boundary
 
-Global helpers accept only `{ resource, action }`. They intentionally reject fields such as `memberId`, `groupId`, `positionId`, `groupMembershipId`, or `positionAssignmentId`.
+Global helpers accept only `{ resource, action }`. They intentionally reject fields such as `userId`, `groupId`, `positionId`, `groupMembershipId`, or `positionAssignmentId`.
 
 Do not extend `GlobalPermissionRequest` with optional scope identifiers. Future scoped authority must use either:
 

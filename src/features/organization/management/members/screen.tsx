@@ -1,165 +1,69 @@
-import { LockIcon, SaveIcon, UnlockIcon, UserPlusIcon } from 'lucide-react'
+import { connection } from 'next/server'
+import { Suspense } from 'react'
+import { ROUTES } from '@/core/navigation/site'
+import { CollectionFrame } from '@/features/organization/management/components/collection-frame'
+import { InvalidDetailLookup } from '@/features/organization/management/components/invalid-detail-lookup'
+import { PageHeaderActions } from '@/features/organization/management/components/page-header-action'
 import {
-  createLinkedMemberAction,
-  updateAccountAccessAction,
-  updateMemberStatusAction,
-} from '@/features/organization/management/members/actions'
-import { MemberAccountForm } from '@/features/organization/management/members/member-account-form'
-import { type ManagedMemberAccount, memberAccountService } from '@/features/organization/management/members/service'
-import { MemberStatus } from '@/prisma/generated/client'
-import { Badge } from '@/shared/ui/badge'
-import { Button } from '@/shared/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
-import { NativeSelect, NativeSelectOption } from '@/shared/ui/native-select'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
+  createGroupMembershipAction,
+  endGroupMembershipAction,
+} from '@/features/organization/management/group-memberships'
+import { MemberCollection as UserCollection } from '@/features/organization/management/members/member-collection'
+import { MemberCreateDialog as UserCreateDialog } from '@/features/organization/management/members/member-create-dialog'
+import { MemberDetail as UserDetail } from '@/features/organization/management/members/member-detail'
+import { MemberDetailRoutePresentation as UserDetailRoutePresentation } from '@/features/organization/management/members/member-detail-presentation'
+import { userManagementQuery } from '@/features/organization/management/members/query'
+import {
+  createPositionAssignmentAction,
+  endPositionAssignmentAction,
+} from '@/features/organization/management/position-assignments'
 
-export async function MemberManagementScreen() {
-  const accounts = await memberAccountService.list()
+// TODO: Look at Suspense...
+export function UserManagementScreen({ detailId }: { detailId?: string }) {
   return (
-    <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
-      <div className="flex flex-col gap-1">
-        <h1 className="font-semibold text-2xl tracking-normal">Members</h1>
-        <p className="text-muted-foreground text-sm">Account access and overall Member Status</p>
-      </div>
-
-      <section className="grid gap-6 lg:grid-cols-[minmax(18rem,24rem)_1fr] lg:items-start">
-        <CreateMemberAccountCard />
-        <ManagedAccountsCard accounts={accounts} />
-      </section>
-    </main>
+    <Suspense fallback={<p className="p-8 text-center text-muted-foreground">Loading Users…</p>}>
+      <UserCollectionScreen detailId={detailId} />
+    </Suspense>
   )
 }
 
-function CreateMemberAccountCard() {
+async function UserCollectionScreen({ detailId }: { detailId?: string }) {
+  await connection()
+  const users = await userManagementQuery.listCollection()
   return (
-    <Card className="rounded-lg">
-      <CardHeader>
-        <CardTitle>Create account</CardTitle>
-        <CardDescription>User account with linked skeletal Member</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <MemberAccountForm />
-      </CardContent>
-    </Card>
+    <>
+      <CollectionFrame
+        activeResource="users"
+        title="Users"
+        description="Browse Users and their current organizational place."
+        actions={
+          <PageHeaderActions>
+            <UserCreateDialog />
+          </PageHeaderActions>
+        }
+      >
+        <UserCollection users={users} />
+      </CollectionFrame>
+      {detailId ? <UserDetailOverlay userId={detailId} /> : null}
+    </>
   )
 }
 
-function ManagedAccountsCard({ accounts }: { accounts: ManagedMemberAccount[] }) {
+async function UserDetailOverlay({ userId }: { userId: string }) {
+  const user = await userManagementQuery.getDetail(userId)
+  if (!user) return <InvalidDetailLookup collectionPath={ROUTES.adminUsers} resourceName="User" />
+
   return (
-    <Card className="rounded-lg">
-      <CardHeader>
-        <CardTitle>Accounts</CardTitle>
-        <CardDescription>{accounts.length} total</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Table className="min-w-[52rem]">
-          <TableHeader>
-            <TableRow>
-              <TableHead>Person</TableHead>
-              <TableHead>Member</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Access</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {accounts.map((account) => (
-              <ManagedAccountRow key={account.user.id} account={account} />
-            ))}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
+    <UserDetailRoutePresentation name={user.name}>
+      <UserDetail actions={userDetailActions} member={user} />
+    </UserDetailRoutePresentation>
   )
 }
 
-function ManagedAccountRow({ account }: { account: ManagedMemberAccount }) {
-  return (
-    <TableRow>
-      <TableCell>
-        <div className="flex min-w-52 flex-col gap-0.5">
-          <span className="font-medium">{account.user.name}</span>
-          <span className="text-muted-foreground text-xs">{account.user.email}</span>
-        </div>
-      </TableCell>
-      <TableCell>
-        {account.linkState === 'linked' ? (
-          <span className="font-mono text-xs">{account.member.id}</span>
-        ) : (
-          <Badge variant="outline">No Member</Badge>
-        )}
-      </TableCell>
-      <TableCell>
-        {account.linkState === 'linked' ? (
-          <form action={updateMemberStatusAction.bind(null, account.member.id)} className="flex gap-2">
-            <MemberStatusSelect
-              name="status"
-              size="sm"
-              defaultValue={account.member.status}
-              aria-label={`${account.user.name} Member Status`}
-            />
-            <Button type="submit" variant="outline" size="icon-sm" aria-label="Save Member Status">
-              <SaveIcon />
-            </Button>
-          </form>
-        ) : (
-          <form action={createLinkedMemberAction.bind(null, account.user.id)} className="flex gap-2">
-            <MemberStatusSelect
-              name="status"
-              size="sm"
-              defaultValue={MemberStatus.ACTIVE}
-              aria-label={`${account.user.name} initial Member Status`}
-            />
-            <Button type="submit" variant="outline" size="sm">
-              <UserPlusIcon data-icon="inline-start" />
-              Link Member
-            </Button>
-          </form>
-        )}
-      </TableCell>
-      <TableCell>
-        <Badge variant={account.accessState === 'enabled' ? 'secondary' : 'destructive'}>
-          {account.accessState === 'enabled' ? 'Enabled' : 'Disabled'}
-        </Badge>
-      </TableCell>
-      <TableCell className="text-right">
-        <form action={updateAccountAccessAction.bind(null, account.user.id)} className="inline-flex justify-end">
-          <input type="hidden" name="accessState" value={account.accessState === 'enabled' ? 'disabled' : 'enabled'} />
-          <Button type="submit" variant={account.accessState === 'enabled' ? 'destructive' : 'outline'} size="sm">
-            {account.accessState === 'enabled' ? (
-              <LockIcon data-icon="inline-start" />
-            ) : (
-              <UnlockIcon data-icon="inline-start" />
-            )}
-            {account.accessState === 'enabled' ? 'Disable' : 'Enable'}
-          </Button>
-        </form>
-      </TableCell>
-    </TableRow>
-  )
-}
-
-function MemberStatusSelect({ className, ...props }: Omit<React.ComponentProps<typeof NativeSelect>, 'children'>) {
-  return (
-    <NativeSelect className={className} {...props}>
-      {memberStatusOptions.map((status) => (
-        <NativeSelectOption key={status} value={status}>
-          {formatMemberStatus(status)}
-        </NativeSelectOption>
-      ))}
-    </NativeSelect>
-  )
-}
-
-const memberStatusOptions = [MemberStatus.ACTIVE, MemberStatus.PASSIVE, MemberStatus.FORMER]
-
-function formatMemberStatus(status: MemberStatus) {
-  switch (status) {
-    case MemberStatus.ACTIVE:
-      return 'Active'
-    case MemberStatus.PASSIVE:
-      return 'Passive'
-    case MemberStatus.FORMER:
-      return 'Former'
-  }
+// TODO what da hell
+const userDetailActions = {
+  createMembership: createGroupMembershipAction,
+  endMembership: endGroupMembershipAction,
+  createAssignment: createPositionAssignmentAction,
+  endAssignment: endPositionAssignmentAction,
 }

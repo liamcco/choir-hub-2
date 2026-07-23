@@ -2,55 +2,50 @@
 
 import { SaveIcon, UserPlusIcon } from 'lucide-react'
 import { useActionState } from 'react'
+
 import { formatGroupPath } from '@/features/organization/core/labels'
-import type {
-  CreateGroupMembershipFormState,
-  EndGroupMembershipFormState,
-} from '@/features/organization/management/group-memberships/actions'
-import {
-  createGroupMembershipAction,
-  endGroupMembershipAction,
-} from '@/features/organization/management/group-memberships/actions'
-import type {
-  GroupMembershipManagementState,
-  GroupMembershipPeriod,
-} from '@/features/organization/management/group-memberships/service'
 import { formatDateInput } from '@/shared/formatting'
 import { FormMessage } from '@/shared/forms/error-handling'
+
 import { Button } from '@/shared/ui/button'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/shared/ui/field'
 import { Input } from '@/shared/ui/input'
 import { NativeSelect, NativeSelectOption } from '@/shared/ui/native-select'
 
+import {
+  type CreateGroupMembershipFormState,
+  createGroupMembershipAction,
+  type EndGroupMembershipFormState,
+  endGroupMembershipAction,
+} from './actions'
+import type { GroupMembershipManagementState, GroupMembershipPeriod } from './service'
+
 const createInitialState: CreateGroupMembershipFormState = {}
 const endInitialState: EndGroupMembershipFormState = {}
 
-export function CreateGroupMembershipForm({
-  groups,
-  members,
-}: Pick<GroupMembershipManagementState, 'groups' | 'members'>) {
+export function CreateGroupMembershipForm({ groups, users }: Pick<GroupMembershipManagementState, 'groups' | 'users'>) {
   const [state, formAction, isPending] = useActionState(createGroupMembershipAction, createInitialState)
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
       <FieldGroup>
         <Field>
-          <FieldLabel htmlFor="new-membership-member">Member</FieldLabel>
+          <FieldLabel htmlFor="new-membership-user">User</FieldLabel>
           <NativeSelect
-            id="new-membership-member"
-            name="memberId"
+            id="new-membership-user"
+            name="userId"
             required
             className="w-full"
-            aria-invalid={!!state.fieldErrors?.memberId}
+            aria-invalid={!!state.fieldErrors?.userId}
           >
-            <NativeSelectOption value="">Choose Member</NativeSelectOption>
-            {members.map((option) => (
-              <NativeSelectOption key={option.member.id} value={option.member.id}>
+            <NativeSelectOption value="">Choose User</NativeSelectOption>
+            {users.map((option) => (
+              <NativeSelectOption key={option.user.id} value={option.user.id}>
                 {option.label} ({option.detail})
               </NativeSelectOption>
             ))}
           </NativeSelect>
-          <FieldError>{state.fieldErrors?.memberId}</FieldError>
+          <FieldError>{state.fieldErrors?.userId}</FieldError>
         </Field>
         <Field>
           <FieldLabel htmlFor="new-membership-group">Group</FieldLabel>
@@ -69,17 +64,6 @@ export function CreateGroupMembershipForm({
             ))}
           </NativeSelect>
           <FieldError>{state.fieldErrors?.groupId}</FieldError>
-        </Field>
-        <Field>
-          <FieldLabel htmlFor="new-membership-starts-at">Start date</FieldLabel>
-          <Input
-            id="new-membership-starts-at"
-            name="startsAt"
-            type="date"
-            required
-            aria-invalid={!!state.fieldErrors?.startsAt}
-          />
-          <FieldError>{state.fieldErrors?.startsAt}</FieldError>
         </Field>
       </FieldGroup>
       <Button type="submit" className="w-fit" disabled={isPending}>
@@ -104,7 +88,7 @@ export function EndGroupMembershipForm({ membership }: { membership: GroupMember
           name="endsAt"
           type="date"
           min={formatDateInput(membership.startsAt)}
-          aria-label={`End ${membership.memberLabel} membership in ${membership.group.name}`}
+          aria-label={`End ${membership.userLabel} membership in ${membership.group.name}`}
           aria-invalid={!!state.fieldErrors?.endsAt}
           required
         />

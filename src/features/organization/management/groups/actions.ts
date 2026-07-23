@@ -12,7 +12,7 @@ import { handleFormError } from '@/shared/forms/errors'
 import type { FormState } from '@/shared/forms/types'
 import { GroupFormSchema } from './schemas'
 
-export type GroupFormState = FormState<typeof GroupFormSchema>
+export type GroupFormState = FormState<typeof GroupFormSchema> & { createdId?: string }
 
 export async function createGroupAction(_previousState: GroupFormState, formData: FormData): Promise<GroupFormState> {
   // 1. Authenticate
@@ -31,8 +31,9 @@ export async function createGroupAction(_previousState: GroupFormState, formData
   }
 
   // 3. Mutate
+  let group: Awaited<ReturnType<typeof organizationService.groups.create>>
   try {
-    const group = await organizationService.groups.create(formInput.data)
+    group = await organizationService.groups.create(formInput.data)
     audit.adminActionCompleted({
       actorUserId: actor.userId,
       action: 'group.create',
@@ -44,9 +45,8 @@ export async function createGroupAction(_previousState: GroupFormState, formData
 
   // 4. Invalidate
   revalidatePath(ROUTES.adminGroups)
-  return { success: true, message: 'Group created.' }
 
-  // 5. Navigate
+  return { success: true, message: 'Group successfully created.', createdId: group.id }
 }
 
 export async function updateGroupAction(
@@ -83,6 +83,7 @@ export async function updateGroupAction(
 
   // 4. Invalidate
   revalidatePath(ROUTES.adminGroups)
+
   return { success: true, message: 'Group updated.' }
 
   // 5. Navigate

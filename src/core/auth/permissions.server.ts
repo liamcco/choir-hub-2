@@ -62,21 +62,21 @@ async function getCurrentActor(): Promise<RequestActor | null> {
   }
 }
 
-async function getCurrentMemberId(): Promise<string | null> {
+async function getCurrentUserId(): Promise<string | null> {
   const actor = await getCurrentActor()
   return actor?.userId ?? null
 }
 
 export async function canCurrentUserInGroup(input: { groupId: string }): Promise<boolean> {
-  const memberId = await getCurrentMemberId()
-  if (!memberId) {
+  const userId = await getCurrentUserId()
+  if (!userId) {
     return false
   }
 
   const now = new Date()
   const membership = await prisma.groupMembership.findFirst({
     where: {
-      memberId,
+      userId,
       groupId: input.groupId,
       startsAt: { lte: now },
       OR: [{ endsAt: null }, { endsAt: { gt: now } }],
@@ -98,15 +98,15 @@ export async function requireCurrentUserInGroup(input: { groupId: string }): Pro
 }
 
 export async function canCurrentUserHoldPosition(input: { positionId: string }): Promise<boolean> {
-  const memberId = await getCurrentMemberId()
-  if (!memberId) {
+  const userId = await getCurrentUserId()
+  if (!userId) {
     return false
   }
 
   const now = new Date()
   const assignment = await prisma.positionAssignment.findFirst({
     where: {
-      memberId,
+      userId,
       positionId: input.positionId,
       startsAt: { lte: now },
       OR: [{ endsAt: null }, { endsAt: { gt: now } }],

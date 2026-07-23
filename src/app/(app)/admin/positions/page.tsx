@@ -2,6 +2,11 @@ import { PositionManagementScreen } from '@/features/organization/management/pos
 
 export const instant = false
 
-export default function AdminPositionsPage() {
-  return <PositionManagementScreen />
+export default async function AdminPositionsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ detail?: string | string[] }>
+}) {
+  const detail = (await searchParams).detail
+  return <PositionManagementScreen detailId={typeof detail === 'string' ? detail : undefined} />
 }

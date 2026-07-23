@@ -2,20 +2,23 @@
 
 import { UserPlusIcon } from 'lucide-react'
 import { useActionState } from 'react'
-import {
-  createMemberAccountAction,
-  type MemberAccountFormState,
-} from '@/features/organization/management/members/actions'
-import { Alert, AlertDescription } from '@/shared/ui/alert'
+import { createUserAction, type UserFormState } from '@/features/organization/management/members/actions'
+import { FormMessage } from '@/shared/forms/error-handling'
 import { Button } from '@/shared/ui/button'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/shared/ui/field'
 import { Input } from '@/shared/ui/input'
 import { NativeSelect, NativeSelectOption } from '@/shared/ui/native-select'
 
-const initialState: MemberAccountFormState = {}
+const initialState: UserFormState = {}
 
-export function MemberAccountForm() {
-  const [state, formAction, isPending] = useActionState(createMemberAccountAction, initialState)
+export function MemberAccountForm({
+  onCreated,
+  onSuccess,
+}: {
+  onCreated?: (userId: string) => void
+  onSuccess?: () => void
+}) {
+  const [state, formAction, isPending] = useActionState(createUserAction, initialState)
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
@@ -63,11 +66,15 @@ export function MemberAccountForm() {
         <UserPlusIcon data-icon="inline-start" />
         {isPending ? 'Creating' : 'Create'}
       </Button>
-      {state.message ? (
-        <Alert variant={state.success ? 'default' : 'destructive'}>
-          <AlertDescription>{state.message}</AlertDescription>
-        </Alert>
-      ) : null}
+      <FormMessage
+        state={state}
+        onSuccess={onSuccess}
+        successAction={
+          state.createdId && onCreated
+            ? { label: 'View', onClick: () => onCreated(state.createdId as string) }
+            : undefined
+        }
+      />
     </form>
   )
 }

@@ -23,7 +23,7 @@ export const audit = {
     logger.info('audit.account.access.changed', {
       ...(input.actorUserId ? { actorUserId: input.actorUserId } : {}),
       action: input.action,
-      subject: { type: 'authUser', id: input.subjectUserId },
+      subject: { type: 'user', id: input.subjectUserId },
     })
   },
 }

@@ -1,1 +1,1 @@
-export { GroupMembershipManagementScreen } from './screen'
+export { createGroupMembershipAction, endGroupMembershipAction } from './actions'

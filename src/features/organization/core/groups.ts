@@ -8,12 +8,17 @@ import {
 } from '@/features/organization/core/errors'
 import { groupSiblingNamesMatch, isGroupAncestor } from '@/features/organization/core/group-tree'
 import type { GroupKind } from '@/prisma/generated/client'
+import { normalizeOptionalString } from '@/shared/formatting'
 
 export const groups = {
   list() {
     return prisma.group.findMany({
       orderBy: [{ parentGroupId: 'asc' }, { name: 'asc' }],
     })
+  },
+
+  get(groupId: string) {
+    return prisma.group.findUnique({ where: { id: groupId } })
   },
 
   async create(input: { kind: GroupKind; name: string; description?: string | null; parentGroupId?: string | null }) {
@@ -92,9 +97,4 @@ function normalizeGroup(input: {
     description: normalizeOptionalString(input.description),
     parentGroupId: input.parentGroupId || null,
   }
-}
-
-function normalizeOptionalString(value: string | null | undefined) {
-  const normalized = value?.trim()
-  return normalized || null
 }

@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, mock, test } from 'bun:test'
 import { OrganizationOperationError } from '@/features/organization/core/errors'
 
 const revalidatePath = mock(() => {})
+const redirect = mock(() => {})
 const createPosition = mock(async () => ({ id: 'position-1' }))
 const updatePosition = mock(async () => ({ id: 'position-1' }))
 const requireAdminActor = mock(async () => ({ state: 'authenticated' as const, userId: 'admin-1' }))
@@ -11,6 +12,11 @@ const accountAccessChanged = mock(() => {})
 
 mock.module('next/cache', () => ({
   revalidatePath,
+}))
+mock.module('next/navigation', () => ({
+  redirect,
+  usePathname: () => '/admin/positions',
+  useRouter: () => ({ back() {}, forward() {}, prefetch: async () => {}, push() {}, refresh() {}, replace() {} }),
 }))
 
 mock.module('@/core/auth/permissions.server', () => ({
@@ -35,6 +41,7 @@ const { createPositionAction, updatePositionAction } = await import(
 
 beforeEach(() => {
   revalidatePath.mockClear()
+  redirect.mockClear()
   createPosition.mockClear()
   updatePosition.mockClear()
   requireAdminActor.mockClear()
@@ -49,13 +56,18 @@ describe('admin Position management actions', () => {
       groupIds: ['group-1', 'group-2'],
     })
 
-    await expect(createPositionAction({}, formData)).resolves.toEqual({ success: true, message: 'Position created.' })
+    await expect(createPositionAction({}, formData)).resolves.toEqual({
+      success: true,
+      message: 'Position successfully created.',
+      createdId: 'position-1',
+    })
     expect(createPosition).toHaveBeenCalledWith({
       name: ' Chair ',
       description: 'Shared leadership',
       groupIds: ['group-1', 'group-2'],
     })
     expect(revalidatePath).toHaveBeenCalledWith('/admin/positions')
+    expect(redirect).not.toHaveBeenCalled()
     expect(adminActionCompleted).toHaveBeenCalledWith({
       actorUserId: 'admin-1',
       action: 'position.create',

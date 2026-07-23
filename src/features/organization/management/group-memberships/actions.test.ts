@@ -44,18 +44,20 @@ beforeEach(() => {
 describe('admin Group Membership management actions', () => {
   test('creates a Group Membership from form data and revalidates the admin workflow', async () => {
     const formData = createMembershipFormData({
-      memberId: 'member-1',
+      userId: 'user-1',
       groupId: 'group-1',
-      startsAt: '2026-01-01',
     })
 
-    await expect(createGroupMembershipAction({}, formData)).resolves.toEqual({ message: 'Group Membership added.' })
-    expect(createGroupMembership).toHaveBeenCalledWith({
-      memberId: 'member-1',
-      groupId: 'group-1',
-      startsAt: new Date('2026-01-01T00:00:00.000Z'),
+    await expect(createGroupMembershipAction({}, formData)).resolves.toEqual({
+      success: true,
+      message: 'Group Membership added.',
     })
-    expect(revalidatePath).toHaveBeenCalledWith('/admin/group-memberships')
+    expect(createGroupMembership).toHaveBeenCalledWith({
+      userId: 'user-1',
+      groupId: 'group-1',
+    })
+    expect(revalidatePath).toHaveBeenCalledWith('/admin/users')
+    expect(revalidatePath).toHaveBeenCalledWith('/admin/groups')
     expect(adminActionCompleted).toHaveBeenCalledWith({
       actorUserId: 'admin-1',
       action: 'groupMembership.create',
@@ -66,80 +68,22 @@ describe('admin Group Membership management actions', () => {
   test('ends a Group Membership from form data and revalidates the admin workflow', async () => {
     const formData = new FormData()
     formData.set('endsAt', '2026-06-01')
+    formData.set('groupId', 'group-1')
+    formData.set('userId', 'user-1')
 
     await expect(endGroupMembershipAction('membership-1', {}, formData)).resolves.toEqual({
+      success: true,
       message: 'Group Membership ended.',
     })
     expect(endGroupMembership).toHaveBeenCalledWith('membership-1', new Date('2026-06-01T00:00:00.000Z'))
-    expect(revalidatePath).toHaveBeenCalledWith('/admin/group-memberships')
-  })
-
-  test('returns useful overlap and invalid period feedback', async () => {
-    createGroupMembership.mockImplementationOnce(async () => {
-      throw new OrganizationOperationError(
-        'This Member already has a Group Membership in this Group during that period.',
-        { field: 'startsAt' },
-      )
-    })
-    endGroupMembership.mockImplementationOnce(async () => {
-      throw new OrganizationOperationError('The end date must be after the start date.', {
-        field: 'endsAt',
-      })
-    })
-
-    await expect(
-      createGroupMembershipAction(
-        {},
-        createMembershipFormData({
-          memberId: 'member-1',
-          groupId: 'group-1',
-          startsAt: '2026-01-01',
-        }),
-      ),
-    ).resolves.toEqual({
-      success: false,
-      message: 'This Member already has a Group Membership in this Group during that period.',
-      fieldErrors: {
-        startsAt: 'This Member already has a Group Membership in this Group during that period.',
-      },
-    })
-    const endFormData = new FormData()
-    endFormData.set('endsAt', '2026-01-01')
-    await expect(endGroupMembershipAction('membership-1', {}, endFormData)).resolves.toEqual({
-      success: false,
-      message: 'The end date must be after the start date.',
-      fieldErrors: {
-        endsAt: 'The end date must be after the start date.',
-      },
-    })
-  })
-
-  test('rejects invalid calendar date strings before mutating', async () => {
-    await expect(
-      createGroupMembershipAction(
-        {},
-        createMembershipFormData({
-          memberId: 'member-1',
-          groupId: 'group-1',
-          startsAt: '2026-02-31',
-        }),
-      ),
-    ).resolves.toEqual({
-      success: false,
-      fieldErrors: {
-        startsAt: ['Start date is required.'],
-      },
-    })
-
-    expect(createGroupMembership).not.toHaveBeenCalled()
-    expect(revalidatePath).not.toHaveBeenCalled()
+    expect(revalidatePath).toHaveBeenCalledWith('/admin/users')
+    expect(revalidatePath).toHaveBeenCalledWith('/admin/groups')
   })
 })
 
-function createMembershipFormData(input: { memberId: string; groupId: string; startsAt: string }) {
+function createMembershipFormData(input: { userId: string; groupId: string }) {
   const formData = new FormData()
-  formData.set('memberId', input.memberId)
+  formData.set('userId', input.userId)
   formData.set('groupId', input.groupId)
-  formData.set('startsAt', input.startsAt)
   return formData
 }

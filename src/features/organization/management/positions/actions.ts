@@ -11,7 +11,7 @@ import { handleFormError } from '@/shared/forms/errors'
 import type { FormState } from '@/shared/forms/types'
 import { PositionFormSchema } from './schemas'
 
-export type PositionFormState = FormState<typeof PositionFormSchema>
+export type PositionFormState = FormState<typeof PositionFormSchema> & { createdId?: string }
 
 export async function createPositionAction(
   _previousState: PositionFormState,
@@ -32,8 +32,9 @@ export async function createPositionAction(
   }
 
   // 3. Mutate
+  let position: Awaited<ReturnType<typeof organizationService.positions.create>>
   try {
-    const position = await organizationService.positions.create(formInput.data)
+    position = await organizationService.positions.create(formInput.data)
     audit.adminActionCompleted({
       actorUserId: actor.userId,
       action: 'position.create',
@@ -45,9 +46,8 @@ export async function createPositionAction(
 
   // 4. Invalidate
   revalidatePath(ROUTES.adminPositions)
-  return { success: true, message: 'Position created.' }
 
-  // 5. Navigate
+  return { success: true, message: 'Position successfully created.', createdId: position.id }
 }
 
 export async function updatePositionAction(

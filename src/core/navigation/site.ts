@@ -1,15 +1,29 @@
 export const ROUTES = {
   home: '/',
   login: '/login',
-  organization: '/organization',
   account: '/account',
   adminRoot: '/admin',
-  adminMembers: '/admin/members',
+  adminUsers: '/admin/users',
   adminGroups: '/admin/groups',
-  adminGroupMemberships: '/admin/group-memberships',
+  adminGroupHierarchy: '/admin/groups/hierarchy',
   adminPositions: '/admin/positions',
-  adminPositionAssignments: '/admin/position-assignments',
 } as const
 
 export type RouteId = keyof typeof ROUTES
-export type NavigationRouteId = Exclude<RouteId, 'adminRoot' | 'home'>
+export type NavigationRouteId = Exclude<RouteId, 'adminRoot' | 'adminGroupHierarchy' | 'home'>
+
+export function adminUserPath(userId: string) {
+  return adminDetailPath(ROUTES.adminUsers, userId)
+}
+
+export function adminGroupPath(groupId: string) {
+  return adminDetailPath(ROUTES.adminGroups, groupId)
+}
+
+export function adminPositionPath(positionId: string) {
+  return adminDetailPath(ROUTES.adminPositions, positionId)
+}
+
+function adminDetailPath(collectionPath: string, detailId: string) {
+  return `${collectionPath}?detail=${encodeURIComponent(detailId)}`
+}

@@ -3,6 +3,7 @@ import { OrganizationOperationError } from '@/features/organization/core/errors'
 import { GroupKind } from '@/prisma/generated/client'
 
 const revalidatePath = mock(() => {})
+const redirect = mock(() => {})
 const createGroup = mock(async () => ({ id: 'group-1' }))
 const updateGroup = mock(async () => ({ id: 'group-1' }))
 const requireAdminActor = mock(async () => ({ state: 'authenticated' as const, userId: 'admin-1' }))
@@ -12,6 +13,11 @@ const accountAccessChanged = mock(() => {})
 
 mock.module('next/cache', () => ({
   revalidatePath,
+}))
+mock.module('next/navigation', () => ({
+  redirect,
+  usePathname: () => '/admin/groups',
+  useRouter: () => ({ back() {}, forward() {}, prefetch: async () => {}, push() {}, refresh() {}, replace() {} }),
 }))
 
 mock.module('@/core/auth/permissions.server', () => ({
@@ -34,6 +40,7 @@ const { createGroupAction, updateGroupAction } = await import('@/features/organi
 
 beforeEach(() => {
   revalidatePath.mockClear()
+  redirect.mockClear()
   createGroup.mockClear()
   updateGroup.mockClear()
   requireAdminActor.mockClear()
@@ -49,7 +56,11 @@ describe('admin Group management actions', () => {
       parentGroupId: '',
     })
 
-    await expect(createGroupAction({}, formData)).resolves.toEqual({ success: true, message: 'Group created.' })
+    await expect(createGroupAction({}, formData)).resolves.toEqual({
+      success: true,
+      message: 'Group successfully created.',
+      createdId: 'group-1',
+    })
     expect(createGroup).toHaveBeenCalledWith({
       name: ' CSK ',
       description: 'Main choir',
@@ -57,6 +68,7 @@ describe('admin Group management actions', () => {
       parentGroupId: null,
     })
     expect(revalidatePath).toHaveBeenCalledWith('/admin/groups')
+    expect(redirect).not.toHaveBeenCalled()
     expect(adminActionCompleted).toHaveBeenCalledWith({
       actorUserId: 'admin-1',
       action: 'group.create',
