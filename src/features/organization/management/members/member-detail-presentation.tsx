@@ -9,13 +9,6 @@ export function MemberDetailDialog({ name, children }: { name: string; children:
   )
 }
 
-export function MemberDetailRoutePresentation({
-  name = 'Member',
-  children,
-}: {
-  name?: string
-  children: ReactNode
-  presentation?: 'intercepted' | 'standalone'
-}) {
+export function MemberDetailRoutePresentation({ name = 'Member', children }: { name?: string; children: ReactNode }) {
   return <MemberDetailDialog name={name}>{children}</MemberDetailDialog>
 }

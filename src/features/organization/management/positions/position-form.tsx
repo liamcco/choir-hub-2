@@ -126,6 +126,14 @@ function PositionFields({
         />
         <FieldError>{state.fieldErrors?.description}</FieldError>
       </Field>
+
+      {/* 
+      // TODO:
+      // Should show only groups of kind "CHOIR" 
+      // Each choir is selectable, and the position will be scoped to the selected choirs.
+      // If no choirs are selected, the position will be scoped to all choirs.
+      // Each choir also has a dropdown button, showing the choir's subgroups, flattened, which can also be selected.
+      */}
       <FieldSet className="gap-3 lg:col-span-2">
         <FieldLegend variant="label">Position Scopes</FieldLegend>
         <div className="grid gap-2 sm:grid-cols-2">

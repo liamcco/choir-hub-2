@@ -1,4 +1,3 @@
-import { notFound } from 'next/navigation'
 import { connection } from 'next/server'
 import { Suspense } from 'react'
 import { ROUTES } from '@/core/navigation/site'
@@ -51,61 +50,21 @@ async function PositionDetailOverlay({ positionId }: { positionId: string }) {
   if (!position) return <InvalidDetailLookup collectionPath={ROUTES.adminPositions} resourceName="Position" />
 
   return (
-    <PositionDetailRoutePresentation name={position.position.name} presentation="intercepted">
+    <PositionDetailRoutePresentation name={position.position.name}>
       <PositionDetail position={position} />
     </PositionDetailRoutePresentation>
   )
 }
 
-export function PositionCreateScreen({ presentation }: { presentation: 'standalone' | 'intercepted' }) {
+export function PositionCreateScreen() {
   return (
     <Suspense fallback={<p className="py-12 text-center text-muted-foreground">Loading Position form…</p>}>
-      <PositionCreateContent presentation={presentation} />
+      <PositionCreateContent />
     </Suspense>
   )
 }
-async function PositionCreateContent({ presentation }: { presentation: 'standalone' | 'intercepted' }) {
+async function PositionCreateContent() {
   await connection()
   const position = await positionManagementQuery.getDetailForCreate()
-  return <PositionCreate groups={position.groups} showHeading={presentation === 'standalone'} />
-}
-
-function PositionDetailScreen({ positionId }: { positionId: string }) {
-  return (
-    <Suspense fallback={<p className="py-12 text-center text-muted-foreground">Loading Position…</p>}>
-      <PositionDetailContent positionId={positionId} />
-    </Suspense>
-  )
-}
-async function PositionDetailContent({ positionId }: { positionId: string }) {
-  const position = await loadPositionDetail(positionId)
-  return <PositionDetail position={position} />
-}
-export function StandalonePositionDetailScreen({ positionId }: { positionId: string }) {
-  return (
-    <PositionDetailRoutePresentation presentation="standalone">
-      <PositionDetailScreen positionId={positionId} />
-    </PositionDetailRoutePresentation>
-  )
-}
-export function InterceptedPositionDetailScreen({ positionId }: { positionId: string }) {
-  return (
-    <Suspense fallback={null}>
-      <InterceptedPositionDetailContent positionId={positionId} />
-    </Suspense>
-  )
-}
-async function InterceptedPositionDetailContent({ positionId }: { positionId: string }) {
-  const position = await loadPositionDetail(positionId)
-  return (
-    <PositionDetailRoutePresentation name={position.position.name} presentation="intercepted">
-      <PositionDetail position={position} />
-    </PositionDetailRoutePresentation>
-  )
-}
-async function loadPositionDetail(positionId: string) {
-  await connection()
-  const position = await positionManagementQuery.getDetail(positionId)
-  if (!position) notFound()
-  return position
+  return <PositionCreate groups={position.groups} />
 }

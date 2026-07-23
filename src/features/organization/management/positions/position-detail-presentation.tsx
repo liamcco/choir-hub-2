@@ -14,7 +14,6 @@ export function PositionDetailRoutePresentation({
 }: {
   name?: string
   children: ReactNode
-  presentation?: 'intercepted' | 'standalone'
 }) {
   return <PositionDetailDialog name={name}>{children}</PositionDetailDialog>
 }
