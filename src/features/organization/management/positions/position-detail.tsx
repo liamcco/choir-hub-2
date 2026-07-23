@@ -6,6 +6,7 @@ import {
   EndPositionAssignmentForm,
 } from '@/features/organization/management/position-assignments/assignment-form'
 import type { Group, Position, PositionAssignment } from '@/prisma/generated/client'
+import { formatDate } from '@/shared/formatting'
 import { PositionFieldEditor } from './position-editors'
 
 export type PositionAssignmentView = PositionAssignment & { memberLabel: string; memberDetail: string }
@@ -104,9 +105,4 @@ function AssignmentList({
       ))}
     </ul>
   )
-}
-
-// TODO: Move to shared utils
-function formatDate(date: Date) {
-  return new Intl.DateTimeFormat('en', { dateStyle: 'medium' }).format(date)
 }

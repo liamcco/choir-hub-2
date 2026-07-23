@@ -3,6 +3,7 @@ import { formatGroupKind } from '@/features/organization/core/group-kind'
 import type { MemberLabel } from '@/features/organization/core/labels'
 import { RelatedDetailLink } from '@/features/organization/management/components/related-detail-link'
 import type { Group } from '@/prisma/generated/client'
+import { formatPeriod } from '@/shared/formatting'
 import { Badge } from '@/shared/ui/badge'
 import { GroupFieldEditor } from './group-editors'
 import type { GroupFormAction } from './group-form'
@@ -150,13 +151,4 @@ function MembershipList({
       ))}
     </ul>
   )
-}
-
-// TODO: Move this to a shared utility file for formatting dates and periods
-function formatPeriod(period: Pick<GroupMembershipView, 'startsAt' | 'endsAt'>) {
-  return `${formatDate(period.startsAt)} – ${period.endsAt ? formatDate(period.endsAt) : 'Present'}`
-}
-
-function formatDate(date: Date) {
-  return new Intl.DateTimeFormat('en', { dateStyle: 'medium' }).format(date)
 }

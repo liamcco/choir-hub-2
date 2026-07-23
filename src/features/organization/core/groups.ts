@@ -8,6 +8,7 @@ import {
 } from '@/features/organization/core/errors'
 import { groupSiblingNamesMatch, isGroupAncestor } from '@/features/organization/core/group-tree'
 import type { GroupKind } from '@/prisma/generated/client'
+import { normalizeOptionalString } from '@/shared/formatting'
 
 export const groups = {
   list() {
@@ -92,9 +93,4 @@ function normalizeGroup(input: {
     description: normalizeOptionalString(input.description),
     parentGroupId: input.parentGroupId || null,
   }
-}
-
-function normalizeOptionalString(value: string | null | undefined) {
-  const normalized = value?.trim()
-  return normalized || null
 }

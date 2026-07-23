@@ -16,6 +16,7 @@ import {
   EndPositionAssignmentForm,
 } from '@/features/organization/management/position-assignments/relationships'
 import type { GroupKind, MemberStatus } from '@/prisma/generated/client'
+import { formatDate, formatPeriod } from '@/shared/formatting'
 import { Badge } from '@/shared/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader } from '@/shared/ui/card'
 import { AccountAccessEditor, MemberStatusEditor } from './member-editors'
@@ -290,13 +291,4 @@ function HistoricalList({ title, items }: { title: string; items: { id: string; 
       </ul>
     </section>
   )
-}
-
-// TODO: Move this to shared utils
-function formatDate(date: Date) {
-  return new Intl.DateTimeFormat('en', { dateStyle: 'medium' }).format(date)
-}
-
-function formatPeriod(period: MemberRelationshipPeriod) {
-  return `${formatDate(period.startsAt)} – ${period.endsAt ? formatDate(period.endsAt) : 'Present'}`
 }
