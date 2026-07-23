@@ -1,6 +1,7 @@
 import 'server-only'
 
 import { headers } from 'next/headers'
+import { connection } from 'next/server'
 import { auth } from '@/core/auth/auth'
 import { organizationService } from '@/features/organization'
 import { isCurrentDatedPeriod, isHistoricalDatedPeriod } from '@/features/organization/core/dated-history'
@@ -8,6 +9,7 @@ import { buildMemberLabels, formatGroupPath, formatPositionScopeLabel } from '@/
 import { GroupKind } from '@/prisma/generated/client'
 
 async function listCollection(input?: { at?: Date }) {
+  await connection()
   const at = input?.at ?? new Date()
   const [members, identities, groups, memberships] = await Promise.all([
     organizationService.members.list(),
@@ -45,23 +47,19 @@ async function listCollection(input?: { at?: Date }) {
     .sort((first, second) => first.name.localeCompare(second.name) || first.id.localeCompare(second.id))
 }
 
-// TODO: Isn't this a bit wasteful?
 async function getDetail(memberId: string, input?: { at?: Date }) {
   const at = input?.at ?? new Date()
   const requestHeaders = await headers()
-  const [members, identities, groups, memberships, positions, scopes, assignments, authUser] = await Promise.all([
-    organizationService.members.list(),
-    organizationService.members.listIdentities(),
+  const [account, member, groups, memberships, positions, scopes, assignments] = await Promise.all([
+    auth.api.getUser({ headers: requestHeaders, query: { id: memberId } }),
+    organizationService.members.findMember({ memberId }),
     organizationService.groups.list(),
     organizationService.groupMemberships.list({ memberId }),
     organizationService.positions.list(),
     organizationService.positions.listScopes(),
     organizationService.positionAssignments.list({ memberId }),
-    auth.api.getUser({ headers: requestHeaders, query: { id: memberId } }),
   ])
-  const member = members.find((candidate) => candidate.id === memberId)
-  const identity = identities.find((candidate) => candidate.id === memberId)
-  if (!member || !identity || !authUser) return null
+  if (!account || !member) return null
 
   const groupsById = new Map(groups.map((group) => [group.id, group]))
   const positionsById = new Map(positions.map((position) => [position.id, position]))
@@ -108,12 +106,12 @@ async function getDetail(memberId: string, input?: { at?: Date }) {
   })
 
   return {
-    id: member.id,
-    name: identity.name,
-    email: identity.email,
+    id: account.id,
+    name: account.name,
+    email: account.email,
     status: member.status,
-    accessState: authUser.banned ? ('disabled' as const) : ('enabled' as const),
-    accessRole: authUser.role || 'user',
+    accessState: account.banned ? ('disabled' as const) : ('enabled' as const),
+    accessRole: account.role || 'user',
     createdAt: member.createdAt,
     updatedAt: member.updatedAt,
     groups: groups

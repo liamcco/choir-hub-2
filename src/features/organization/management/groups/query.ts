@@ -34,7 +34,6 @@ async function listGroupStructure(input?: { at?: Date }) {
     .sort((first, second) => first.name.localeCompare(second.name) || first.id.localeCompare(second.id))
 }
 
-// TODO: Wasteful? Add a "getGroup" method to the service?
 async function getGroupDetail(groupId: string, input?: { at?: Date }) {
   const at = input?.at ?? new Date()
   const [groups, memberships, members, identities] = await Promise.all([

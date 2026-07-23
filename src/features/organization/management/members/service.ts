@@ -7,23 +7,22 @@ import type { Member, MemberStatus } from '@/prisma/generated/client'
 
 export type AccountAccessState = 'enabled' | 'disabled'
 
-// TODO: Add pagination ( or remove limits? ) and extra fields
 export type AuthUserAccount = {
   id: string
   name: string
-  // image?: string | null
+  image?: string | null
 
   email: string
-  // emailVerified: boolean
+  emailVerified: boolean
 
   banned?: boolean | null
-  // banReason?: string | null
-  // banExpires?: Date | null
+  banReason?: string | null
+  banExpires?: Date | null
 
   createdAt: Date
-  // updatedAt: Date
+  updatedAt: Date
 
-  // role?: string | null
+  role?: string | null
 }
 
 export type ManagedMemberAccount = {
@@ -39,13 +38,17 @@ export type ManagedMemberAccount = {
       linkState: 'unlinked'
     }
 )
-// TODO: getMember()
+
 async function list(): Promise<ManagedMemberAccount[]> {
   const requestHeaders = await headers()
   const [result, members] = await Promise.all([
     auth.api.listUsers({
       headers: requestHeaders,
-      query: { limit: 1000, sortBy: 'name', sortDirection: 'asc' },
+      query: {
+        // limit: 1000,
+        sortBy: 'name',
+        sortDirection: 'asc',
+      },
     }),
     organizationService.members.list(),
   ])
@@ -58,7 +61,12 @@ async function list(): Promise<ManagedMemberAccount[]> {
         name: user.name,
         email: user.email,
         banned: user.banned,
+        emailVerified: user.emailVerified,
+        banReason: user.banReason,
+        banExpires: user.banExpires,
         createdAt: new Date(user.createdAt),
+        updatedAt: new Date(user.updatedAt),
+        role: user.role,
       },
       accessState: user.banned ? ('disabled' as const) : ('enabled' as const),
     }

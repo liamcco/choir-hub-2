@@ -17,6 +17,10 @@ export const groups = {
     })
   },
 
+  get(groupId: string) {
+    return prisma.group.findUnique({ where: { id: groupId } })
+  },
+
   async create(input: { kind: GroupKind; name: string; description?: string | null; parentGroupId?: string | null }) {
     const group = normalizeGroup(input)
     await assertParentGroupExists(group.parentGroupId)

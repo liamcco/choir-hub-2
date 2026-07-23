@@ -13,6 +13,10 @@ export const positions = {
     return prisma.positionScope.findMany({ orderBy: [{ positionId: 'asc' }, { groupId: 'asc' }] })
   },
 
+  findPosition({ positionId }: { positionId: string }) {
+    return prisma.position.findUnique({ where: { id: positionId } })
+  },
+
   async create(input: { name: string; description?: string | null; groupIds: string[] }) {
     const groupIds = await validateGroupIds(input.groupIds)
     return prisma.$transaction(async (transaction) => {

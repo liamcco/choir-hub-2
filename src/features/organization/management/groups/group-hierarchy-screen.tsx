@@ -8,7 +8,6 @@ import { GroupHierarchy } from './group-hierarchy'
 import { groupManagementQuery } from './query'
 
 export async function GroupHierarchyScreen() {
-  // TODO: When is await connection() necessary? It seems to be required for the query to work, but I don't understand why.
   await connection()
   const groups = await groupManagementQuery.getHierarchy()
   return (

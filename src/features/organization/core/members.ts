@@ -18,6 +18,10 @@ export const members = {
     })
   },
 
+  findMember({ memberId }: { memberId: string }) {
+    return prisma.member.findUnique({ where: { id: memberId } })
+  },
+
   create(input: { userId: string; status?: MemberStatus }) {
     return prisma.member.create({
       data: { id: input.userId, status: input.status ?? 'ACTIVE' },
