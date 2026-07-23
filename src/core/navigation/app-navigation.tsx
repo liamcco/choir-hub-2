@@ -1,7 +1,6 @@
 import {
   BriefcaseBusinessIcon,
   Building2Icon,
-  GitForkIcon,
   KeyRoundIcon,
   LogInIcon,
   type LucideIcon,
@@ -28,7 +27,6 @@ export type NavigationItem = NavigationRoute & {
 
 const NAVIGATION_PRESENTATION = {
   login: { label: 'Login', Icon: LogInIcon },
-  organization: { label: 'Organization', Icon: GitForkIcon },
   account: { label: 'Account', Icon: KeyRoundIcon },
   adminUsers: { label: 'Users', Icon: UserRoundCogIcon },
   adminGroups: { label: 'Groups', Icon: Building2Icon },
@@ -36,7 +34,6 @@ const NAVIGATION_PRESENTATION = {
 } satisfies Record<NavigationRouteId, { label: string; Icon: LucideIcon }>
 
 const AUTHENTICATED_NAVIGATION_ROUTES = [
-  { id: 'organization', href: ROUTES.organization, section: 'member' },
   { id: 'account', href: ROUTES.account, section: 'member' },
   { id: 'adminUsers', href: ROUTES.adminUsers, section: 'admin' },
   { id: 'adminGroups', href: ROUTES.adminGroups, section: 'admin' },
