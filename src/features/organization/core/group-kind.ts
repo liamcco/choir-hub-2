@@ -1,14 +1,14 @@
 import type { GroupKind } from '@/drizzle/schema'
 
-export const groupKindOptions = ['COMMITTEE', 'BOARD'] as const satisfies readonly GroupKind[]
+export const groupKindOptions = ['committee', 'board'] as const satisfies readonly GroupKind[]
 
-export const defaultGroupKind = 'COMMITTEE' satisfies GroupKind
+export const defaultGroupKind = 'committee' satisfies GroupKind
 
-export function formatGroupKind(kind: GroupKind) {
+export function formatGroupKind(kind: GroupKind): string {
   switch (kind) {
-    case 'COMMITTEE':
+    case 'committee':
       return 'Committee'
-    case 'BOARD':
+    case 'board':
       return 'Board'
   }
 }

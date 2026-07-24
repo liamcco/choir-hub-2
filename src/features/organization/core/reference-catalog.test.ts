@@ -50,7 +50,7 @@ describe('reference catalog', () => {
         ...referenceCatalog,
         groups: [
           ...referenceCatalog.groups,
-          { id: 'invalid', kind: 'COMMITTEE', name: 'Invalid', scope: { type: 'choir', choirId: 'unknown' } },
+          { id: 'invalid', kind: 'committee', name: 'Invalid', scope: { type: 'choir', choirId: 'unknown' } },
         ],
       } as ReferenceCatalog),
     ).toThrow('unknown Choir')

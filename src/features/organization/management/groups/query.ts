@@ -1,10 +1,13 @@
 import 'server-only'
 
-import type { Group } from '@/drizzle/schema'
 import { db } from '@/core/db'
 import { choir } from '@/drizzle/schema'
 import { organizationService } from '@/features/organization'
-import { isCurrentDatedPeriod, isHistoricalDatedPeriod, isScheduledDatedPeriod } from '@/features/organization/core/dated-history'
+import {
+  isCurrentDatedPeriod,
+  isHistoricalDatedPeriod,
+  isScheduledDatedPeriod,
+} from '@/features/organization/core/dated-history'
 import { buildUserLabels } from '@/features/organization/core/labels'
 
 async function listGroupStructure(input?: { at?: Date }) {
@@ -16,7 +19,14 @@ async function listGroupStructure(input?: { at?: Date }) {
   ])
   const choirNames = new Map(choirs.map((choir) => [choir.id, choir.name]))
   const memberIds = new Map<string, Set<string>>()
-  for (const membership of currentMemberships) (memberIds.get(membership.groupId) ?? (memberIds.set(membership.groupId, new Set()), memberIds.get(membership.groupId)!)).add(membership.userId)
+  for (const membership of currentMemberships) {
+    let memberIdsForGroup = memberIds.get(membership.groupId)
+    if (!memberIdsForGroup) {
+      memberIdsForGroup = new Set()
+      memberIds.set(membership.groupId, memberIdsForGroup)
+    }
+    memberIdsForGroup.add(membership.userId)
+  }
 
   return groups
     .map((group) => ({
@@ -45,7 +55,19 @@ async function getGroupDetail(groupId: string, input?: { at?: Date }) {
   const memberOptionsById = new Map(memberOptions.map((option) => [option.user.id, option]))
   const membershipViews = memberships.flatMap((membership) => {
     const option = memberOptionsById.get(membership.userId)
-    return option ? [{ ...membership, userLabel: option.label, userDetail: option.detail, sourceLabels: membership.sources.map((source) => source.type === 'explicit' ? 'Explicit membership' : 'Position-derived') }] : []
+    return option
+      ? [
+          {
+            ...membership,
+            id: `${membership.groupId}:${membership.userId}:${membership.startsAt.toISOString()}`,
+            userLabel: option.label,
+            userDetail: option.detail,
+            sourceLabels: membership.sources.map((source) =>
+              source.type === 'explicit' ? 'Explicit membership' : 'Position-derived',
+            ),
+          },
+        ]
+      : []
   })
 
   return {
@@ -70,12 +92,12 @@ export const listGroupCollection = listGroupStructure
 export { getGroupDetail }
 
 function compareMemberships(
-  first: { id: string; userLabel: string; startsAt: Date },
-  second: { id: string; userLabel: string; startsAt: Date },
+  first: { userId: string; userLabel: string; startsAt: Date },
+  second: { userId: string; userLabel: string; startsAt: Date },
 ) {
   return (
     first.userLabel.localeCompare(second.userLabel) ||
     first.startsAt.getTime() - second.startsAt.getTime() ||
-    first.id.localeCompare(second.id)
+    first.userId.localeCompare(second.userId)
   )
 }

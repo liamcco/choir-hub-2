@@ -131,7 +131,7 @@ function buildPositionOptions(groups: Group[], positions: Position[], scopes: Po
     const scopeGroups = scopes
       .filter((scope) => scope.positionId === position.id)
       .flatMap((scope) => {
-        const group = groupsById.get(scope.groupId)
+        const group = scope.groupId ? groupsById.get(scope.groupId) : undefined
         return group ? [group] : []
       })
       .sort((first, second) => formatGroupPath(groups, first).localeCompare(formatGroupPath(groups, second)))

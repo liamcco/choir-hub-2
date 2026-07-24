@@ -5,7 +5,12 @@ import type { UserLabel } from '@/features/organization/core/labels'
 import { RelatedDetailLink } from '@/features/organization/management/components/related-detail-link'
 import { formatPeriod } from '@/shared/formatting'
 import { Badge } from '@/shared/ui/badge'
-import { AddGroupUserControl, type CreateMembershipAction, EndGroupUserControl, type EndMembershipAction } from '../group-membership-controls'
+import {
+  AddGroupUserControl,
+  type CreateMembershipAction,
+  EndGroupUserControl,
+  type EndMembershipAction,
+} from '../group-membership-controls'
 
 export type GroupMembershipView = {
   id: string
@@ -57,13 +62,15 @@ export function GroupDetail({ group, actions }: { group: GroupDetailView; action
           <h2 className="text-lg font-semibold" id="group-memberships-heading">
             Effective members
           </h2>
-          {group.kind === 'COMMITTEE' ? <AddGroupUserControl action={actions.createMembership} groupId={group.id} users={group.users} /> : null}
+          {group.kind === 'committee' ? (
+            <AddGroupUserControl action={actions.createMembership} groupId={group.id} users={group.users} />
+          ) : null}
         </div>
         <MembershipList
           emptyText="No current effective members"
           groupName={group.name}
           memberships={group.currentMemberships}
-          showEndControls={group.kind === 'COMMITTEE'}
+          showEndControls={group.kind === 'committee'}
           endAction={actions.endMembership}
         />
       </section>

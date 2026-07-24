@@ -15,14 +15,14 @@ describe('Group collection', () => {
           {
             id: 'choir-1',
             name: 'Chamber Choir',
-            kind: 'COMMITTEE',
+            kind: 'committee',
             scope: 'CSK-wide',
             memberCount: 1,
           },
           {
             id: 'section-1',
             name: 'Altos',
-            kind: 'COMMITTEE',
+            kind: 'committee',
             scope: 'Manskören',
             memberCount: 7,
           },

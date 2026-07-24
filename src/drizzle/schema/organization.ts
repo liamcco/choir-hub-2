@@ -184,8 +184,8 @@ export const schema = {
   positionAssignment,
 }
 
-export const GroupKind = { COMMITTEE: 'COMMITTEE', BOARD: 'BOARD' } as const
-export type GroupKind = keyof typeof GroupKind
+export const GroupKind = { COMMITTEE: 'committee', BOARD: 'board' } as const
+export type GroupKind = (typeof GroupKind)[keyof typeof GroupKind]
 export type Choir = typeof choir.$inferSelect
 export type Section = typeof section.$inferSelect
 export type ChoirMembership = typeof choirMembership.$inferSelect

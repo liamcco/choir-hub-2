@@ -27,8 +27,13 @@ async function listCollection(input?: { at?: Date }) {
       return {
         id: user.id,
         name: label,
-        homeChoir: choirById.get(choirMemberships.find((m) => m.userId === user.id && isCurrentDatedPeriod(m, at))?.choirId ?? '')?.name ?? null,
-        section: sectionById.get(placements.find((p) => p.userId === user.id && isCurrentDatedPeriod(p, at))?.sectionId ?? '')?.name ?? null,
+        homeChoir:
+          choirById.get(
+            choirMemberships.find((m) => m.userId === user.id && isCurrentDatedPeriod(m, at))?.choirId ?? '',
+          )?.name ?? null,
+        section:
+          sectionById.get(placements.find((p) => p.userId === user.id && isCurrentDatedPeriod(p, at))?.sectionId ?? '')
+            ?.name ?? null,
         status: user.status,
       }
     })
@@ -38,7 +43,19 @@ async function listCollection(input?: { at?: Date }) {
 async function getDetail(userId: string, input?: { at?: Date }) {
   const at = input?.at ?? new Date()
   const requestHeaders = await headers()
-  const [account, user, groups, memberships, positions, scopes, assignments, choirMemberships, placements, choirs, sections] = await Promise.all([
+  const [
+    account,
+    user,
+    groups,
+    memberships,
+    positions,
+    scopes,
+    assignments,
+    choirMemberships,
+    placements,
+    choirs,
+    sections,
+  ] = await Promise.all([
     auth.api.getUser({ headers: requestHeaders, query: { id: userId } }),
     organizationService.users.find({ userId }),
     organizationService.groups.list(),
@@ -108,11 +125,21 @@ async function getDetail(userId: string, input?: { at?: Date }) {
     email: account.email,
     status: user.status,
     homePlacement: {
-      choir: currentChoir ? { id: currentChoir.choirId, name: choirById.get(currentChoir.choirId)?.name ?? 'Unknown Choir' } : null,
-      section: currentSection ? { id: currentSection.sectionId, name: sectionById.get(currentSection.sectionId)?.name ?? 'Unknown Section' } : null,
+      choir: currentChoir
+        ? { id: currentChoir.choirId, name: choirById.get(currentChoir.choirId)?.name ?? 'Unknown Choir' }
+        : null,
+      section: currentSection
+        ? { id: currentSection.sectionId, name: sectionById.get(currentSection.sectionId)?.name ?? 'Unknown Section' }
+        : null,
     },
-    choirMembershipHistory: choirMemberships.map((item) => ({ ...item, choirName: choirById.get(item.choirId)?.name ?? 'Unknown Choir' })),
-    sectionPlacementHistory: placements.map((item) => ({ ...item, sectionName: sectionById.get(item.sectionId)?.name ?? 'Unknown Section' })),
+    choirMembershipHistory: choirMemberships.map((item) => ({
+      ...item,
+      choirName: choirById.get(item.choirId)?.name ?? 'Unknown Choir',
+    })),
+    sectionPlacementHistory: placements.map((item) => ({
+      ...item,
+      sectionName: sectionById.get(item.sectionId)?.name ?? 'Unknown Section',
+    })),
     accessState: account.banned ? ('disabled' as const) : ('enabled' as const),
     accessRole: account.role || 'user',
     createdAt: user.createdAt,

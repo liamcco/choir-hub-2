@@ -10,7 +10,13 @@ export function formatPositionScopeLabel(
   scopes: PositionScopeView[] | Group[],
   references: { choirs: Choir[]; sections: Section[]; groups: Group[] } | Group[],
 ) {
-  if (Array.isArray(references)) return scopes.length ? (scopes as Group[]).map((group) => group.name).sort().join(' · ') : 'No scopes'
+  if (Array.isArray(references))
+    return scopes.length
+      ? (scopes as Group[])
+          .map((group) => group.name)
+          .sort()
+          .join(' · ')
+      : 'No scopes'
   const typedScopes = scopes as PositionScopeView[]
   const choirById = new Map(references.choirs.map((choir) => [choir.id, choir]))
   const sectionById = new Map(references.sections.map((section) => [section.id, section]))

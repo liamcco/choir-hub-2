@@ -5,8 +5,12 @@ import { db } from '@/core/db'
 import { choir, positionScope, position as positionTable, section } from '@/drizzle/schema'
 
 export const positions = {
-  listChoirs() { return db.select().from(choir) },
-  listSections() { return db.select().from(section) },
+  listChoirs() {
+    return db.select().from(choir)
+  },
+  listSections() {
+    return db.select().from(section)
+  },
   list() {
     return db.select().from(positionTable).orderBy(asc(positionTable.name), asc(positionTable.id))
   },
@@ -23,5 +27,4 @@ export const positions = {
       .limit(1)
       .then((rows) => rows[0] ?? null)
   },
-
 }

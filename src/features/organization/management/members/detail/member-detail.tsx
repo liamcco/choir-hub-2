@@ -75,7 +75,11 @@ type MemberDetailActions = {
 }
 
 export function MemberDetail({ member, actions }: { member: MemberDetailView; actions?: MemberDetailActions }) {
-  const hasHistory = member.historicalMemberships.length > 0 || member.historicalAssignments.length > 0 || (member.choirMembershipHistory?.length ?? 0) > 0 || (member.sectionPlacementHistory?.length ?? 0) > 0
+  const hasHistory =
+    member.historicalMemberships.length > 0 ||
+    member.historicalAssignments.length > 0 ||
+    (member.choirMembershipHistory?.length ?? 0) > 0 ||
+    (member.sectionPlacementHistory?.length ?? 0) > 0
 
   return (
     <article className="mx-auto flex w-full max-w-4xl flex-col gap-6">
@@ -101,12 +105,16 @@ export function MemberDetail({ member, actions }: { member: MemberDetailView; ac
       </section>
 
       <section aria-labelledby="home-placement-heading" className="space-y-4">
-        <h2 className="text-lg font-semibold" id="home-placement-heading">Home placement</h2>
+        <h2 className="text-lg font-semibold" id="home-placement-heading">
+          Home placement
+        </h2>
         <dl className="grid gap-4 sm:grid-cols-2">
           <ReadField label="Home Choir" value={member.homePlacement?.choir?.name ?? 'No Home Choir'} />
           <ReadField label="Section" value={member.homePlacement?.section?.name ?? 'No Section'} />
         </dl>
-        <p className="text-sm text-muted-foreground">Home placement changes are governed by the Home Placement module.</p>
+        <p className="text-sm text-muted-foreground">
+          Home placement changes are governed by the Home Placement module.
+        </p>
       </section>
 
       <section aria-labelledby="group-memberships-heading" className="space-y-4">
@@ -237,7 +245,9 @@ function MembershipList({
       ))}
     </ul>
   ) : (
-    <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">No current Committee Memberships</p>
+    <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
+      No current Committee Memberships
+    </p>
   )
 }
 

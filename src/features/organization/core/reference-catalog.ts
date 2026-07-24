@@ -27,13 +27,13 @@ export const sectionCatalog = choirCatalog.flatMap((choir) =>
 
 export type CatalogGroup = {
   id: string
-  kind: 'COMMITTEE' | 'BOARD'
+  kind: 'committee' | 'board'
   name: string
   scope: { type: 'csk' } | { type: 'choir'; choirId: string }
 }
 
 export const groupCatalog: readonly CatalogGroup[] = [
-  { id: 'board', kind: 'BOARD', name: 'Board', scope: { type: 'csk' } },
+  { id: 'board', kind: 'board', name: 'Board', scope: { type: 'csk' } },
   ...[
     ['concert-mastery', 'Concert Mastery'],
     ['gig-mastery', 'Gig Mastery'],
@@ -41,7 +41,7 @@ export const groupCatalog: readonly CatalogGroup[] = [
     ['web-mastery', 'Web Mastery'],
     ['tour-committee', 'Tour Committee'],
     ['recruitment-committee', 'Recruitment Committee'],
-  ].map(([id, name]) => ({ id, kind: 'COMMITTEE' as const, name, scope: { type: 'csk' as const } })),
+  ].map(([id, name]) => ({ id, kind: 'committee' as const, name, scope: { type: 'csk' as const } })),
   ...choirCatalog.flatMap((choir) =>
     [
       ['concert', 'Concert'],
@@ -49,7 +49,7 @@ export const groupCatalog: readonly CatalogGroup[] = [
       ['rodd', 'Rodd'],
     ].map(([id, name]) => ({
       id: `${choir.id}-${id}`,
-      kind: 'COMMITTEE' as const,
+      kind: 'committee' as const,
       name: `${name} Group`,
       scope: { type: 'choir' as const, choirId: choir.id },
     })),

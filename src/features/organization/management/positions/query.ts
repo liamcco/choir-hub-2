@@ -26,29 +26,34 @@ async function listCollection(input?: { at?: Date }) {
   return positions
     .map((position) => {
       const positionScopes = scopes.filter((scope) => scope.positionId === position.id)
-      const currentAssignment = assignments.find((assignment) => assignment.positionId === position.id && isCurrentDatedPeriod(assignment, at))
+      const currentAssignment = assignments.find(
+        (assignment) => assignment.positionId === position.id && isCurrentDatedPeriod(assignment, at),
+      )
       return {
         id: position.id,
         name: position.name,
         scopeLabel: formatPositionScopeLabel(positionScopes as never, { choirs, sections, groups }),
-        currentHolder: currentAssignment ? labels.get(currentAssignment.userId) ?? 'Unknown User' : null,
+        currentHolder: currentAssignment ? (labels.get(currentAssignment.userId) ?? 'Unknown User') : null,
         heldSince: currentAssignment?.startsAt ?? null,
       }
     })
-    .sort((a, b) => a.name.localeCompare(b.name) || a.scopeLabel.localeCompare(b.scopeLabel) || a.id.localeCompare(b.id))
+    .sort(
+      (a, b) => a.name.localeCompare(b.name) || a.scopeLabel.localeCompare(b.scopeLabel) || a.id.localeCompare(b.id),
+    )
 }
 
 async function getDetail(positionId: string, input?: { at?: Date }) {
   const at = input?.at ?? new Date()
-  const [{ groups, choirs, sections }, positions, scopes, assignments, users, memberships, placements] = await Promise.all([
-    loadReferences(),
-    organizationService.positions.list(),
-    organizationService.positions.listScopes(),
-    organizationService.positionAssignments.list({ positionId }),
-    organizationService.users.list(),
-    organizationService.homePlacement.listChoirMemberships(),
-    organizationService.homePlacement.listSectionPlacements(),
-  ])
+  const [{ groups, choirs, sections }, positions, scopes, assignments, users, memberships, placements] =
+    await Promise.all([
+      loadReferences(),
+      organizationService.positions.list(),
+      organizationService.positions.listScopes(),
+      organizationService.positionAssignments.list({ positionId }),
+      organizationService.users.list(),
+      organizationService.homePlacement.listChoirMemberships(),
+      organizationService.homePlacement.listSectionPlacements(),
+    ])
   const position = positions.find((candidate) => candidate.id === positionId)
   if (!position) return null
   const positionScopes = scopes.filter((scope) => scope.positionId === positionId)
@@ -66,19 +71,43 @@ async function getDetail(positionId: string, input?: { at?: Date }) {
     sections,
     positionScopes,
     scopeLabel: formatPositionScopeLabel(positionScopes as never, { choirs, sections, groups }),
-    users: [...membersById.values()].filter((member) => isEligible(member.user.id, position, positionScopes, memberships, placements, at)).sort((a, b) => a.label.localeCompare(b.label)),
+    users: [...membersById.values()]
+      .filter((member) => isEligible(member.user.id, position, positionScopes, memberships, placements, at))
+      .sort((a, b) => a.label.localeCompare(b.label)),
     currentAssignments: assignmentViews.filter((a) => isCurrentDatedPeriod(a, at)).sort(compare),
-    historicalAssignments: assignmentViews.filter((a) => isHistoricalDatedPeriod(a, at)).sort((a, b) => (b.endsAt?.getTime() ?? 0) - (a.endsAt?.getTime() ?? 0) || compare(a, b)),
+    historicalAssignments: assignmentViews
+      .filter((a) => isHistoricalDatedPeriod(a, at))
+      .sort((a, b) => (b.endsAt?.getTime() ?? 0) - (a.endsAt?.getTime() ?? 0) || compare(a, b)),
   }
 }
 
-function isEligible(userId: string, position: { name: string }, scopes: Array<{ targetType: string; choirId: string | null; sectionId: string | null }>, memberships: Array<{ userId: string; choirId: string; startsAt: Date; endsAt: Date | null }>, placements: Array<{ userId: string; sectionId: string; startsAt: Date; endsAt: Date | null }>, at: Date) {
-  const current = (period: { startsAt: Date; endsAt: Date | null }) => period.startsAt <= at && (!period.endsAt || period.endsAt > at)
+function isEligible(
+  userId: string,
+  position: { name: string },
+  scopes: Array<{ targetType: string; choirId: string | null; sectionId: string | null }>,
+  memberships: Array<{ userId: string; choirId: string; startsAt: Date; endsAt: Date | null }>,
+  placements: Array<{ userId: string; sectionId: string; startsAt: Date; endsAt: Date | null }>,
+  at: Date,
+) {
+  const current = (period: { startsAt: Date; endsAt: Date | null }) =>
+    period.startsAt <= at && (!period.endsAt || period.endsAt > at)
   if (position.name === 'Conductor') return true
   const sectionScopes = scopes.filter((scope) => scope.targetType === 'section' && scope.sectionId)
-  if (sectionScopes.length) return placements.some((placement) => placement.userId === userId && current(placement) && sectionScopes.some((scope) => scope.sectionId === placement.sectionId))
+  if (sectionScopes.length)
+    return placements.some(
+      (placement) =>
+        placement.userId === userId &&
+        current(placement) &&
+        sectionScopes.some((scope) => scope.sectionId === placement.sectionId),
+    )
   const choirScopes = scopes.filter((scope) => scope.targetType === 'choir' && scope.choirId)
-  if (choirScopes.length && (position.name === 'Master of Concerts' || position.name === 'Master of Gigs')) return memberships.some((membership) => membership.userId === userId && current(membership) && choirScopes.some((scope) => scope.choirId === membership.choirId))
+  if (choirScopes.length && (position.name === 'Master of Concerts' || position.name === 'Master of Gigs'))
+    return memberships.some(
+      (membership) =>
+        membership.userId === userId &&
+        current(membership) &&
+        choirScopes.some((scope) => scope.choirId === membership.choirId),
+    )
   return true
 }
 
