@@ -67,23 +67,23 @@ describe('global permissions', () => {
       action: 'revoke',
     } satisfies GlobalPermissionRequest
 
-    test('preserves Better Auth admin user permissions', () => {
-      expect(accessRoles.admin.authorize({ user: ['get'] })).toEqual({
-        success: true,
-      })
-    })
-
-    test('preserves Better Auth admin session permissions', () => {
-      expect(accessRoles.admin.authorize({ session: ['revoke'] })).toEqual({
-        success: true,
-      })
-    })
-
     expect(customPermission).toEqual({ resource: 'group', action: 'update' })
     expect(betterAuthUserPermission).toEqual({ resource: 'user', action: 'get' })
     expect(betterAuthSessionPermission).toEqual({
       resource: 'session',
       action: 'revoke',
+    })
+  })
+
+  test('preserves Better Auth admin user permissions', () => {
+    expect(accessRoles.admin.authorize({ user: ['get'] })).toEqual({
+      success: true,
+    })
+  })
+
+  test('preserves Better Auth admin session permissions', () => {
+    expect(accessRoles.admin.authorize({ session: ['revoke'] })).toEqual({
+      success: true,
     })
   })
 })

@@ -1,5 +1,5 @@
-import type { PrismaClient } from '@/prisma/generated/client'
-
+import { auth } from '@/core/auth/auth'
+import type { MemberStatus, PrismaClient } from '@/prisma/generated/client'
 import { seedFoundation } from './foundation'
 
 /**
@@ -11,42 +11,98 @@ import { seedFoundation } from './foundation'
 export async function seedDemo(prisma: PrismaClient): Promise<void> {
   await seedFoundation(prisma)
 
-  const users = [
-    { id: 'seed-member-anna', name: 'Anna', email: 'anna@example.invalid', status: 'ACTIVE' as const },
-    { id: 'seed-member-ben', name: 'Ben', email: 'ben@example.invalid', status: 'ACTIVE' as const },
-    { id: 'seed-member-clara', name: 'Clara', email: 'clara@example.invalid', status: 'PASSIVE' as const },
+  const voices = ['a1', 'a2', 'b1', 'b2', 's1', 's2', 't1', 't2'] as const
+  const statuses: MemberStatus[] = [
+    'ACTIVE',
+    'ACTIVE',
+    'ACTIVE',
+    'ACTIVE',
+    'ACTIVE',
+    'PASSIVE',
+    'ACTIVE',
+    'FORMER',
+    'ACTIVE',
+    'ACTIVE',
   ]
+  const users = voices.flatMap((voice) =>
+    Array.from({ length: 10 }, (_, index) => {
+      const number = index + 1
+      return {
+        id: `demo-user-${voice}-${number}`,
+        name: `${voice.toUpperCase()} Demo ${number}`,
+        email: `demo-${voice}-${number}@example.com`,
+        status: statuses[index],
+        voice,
+      }
+    }),
+  )
 
   for (const user of users) {
-    await prisma.user.upsert({ where: { id: user.id }, create: user, update: user })
+    const existing = await prisma.user.findUnique({ where: { email: user.email } })
+    if (!existing) {
+      const result = await auth.api.createUser({
+        body: {
+          email: user.email,
+          password: 'password',
+          name: user.name,
+          data: { status: user.status },
+        },
+      })
+      await prisma.user.update({ where: { id: result.user.id }, data: { id: user.id, status: user.status } })
+    } else {
+      await prisma.user.update({ where: { id: existing.id }, data: { name: user.name, status: user.status } })
+    }
   }
 
   const startsAt = new Date('2026-01-01T00:00:00.000Z')
-  const memberships = [
-    { userId: 'seed-member-anna', groupId: 'seed-group-sopranos' },
-    { userId: 'seed-member-ben', groupId: 'seed-group-altos' },
-    { userId: 'seed-member-clara', groupId: 'seed-group-committee' },
-  ]
+  const choirIds = ['mk', 'dk', 'kk'] as const
+  const memberships = users.flatMap((user, index) => [
+    { userId: user.id, groupId: user.voice },
+    { userId: user.id, groupId: choirIds[index % choirIds.length] },
+  ])
 
   for (const membership of memberships) {
     await prisma.groupMembership.upsert({
-      where: { id: `seed-membership-${membership.userId}-${membership.groupId}` },
-      create: { id: `seed-membership-${membership.userId}-${membership.groupId}`, ...membership, startsAt },
+      where: { id: `demo-membership-${membership.userId}-${membership.groupId}` },
+      create: { id: `demo-membership-${membership.userId}-${membership.groupId}`, ...membership, startsAt },
       update: { endsAt: null, startsAt },
     })
   }
 
-  const assignments = [
-    { id: 'seed-assignment-conductor', positionId: 'seed-position-conductor', userId: 'seed-member-anna' },
-    { id: 'seed-assignment-soprano-lead', positionId: 'seed-position-section-lead', userId: 'seed-member-anna' },
-    { id: 'seed-assignment-board-chair', positionId: 'seed-position-board-chair', userId: 'seed-member-clara' },
-  ]
+  const boardUsers = users.slice(0, 8)
+  for (const [index, user] of boardUsers.entries()) {
+    const membershipId = `demo-membership-${user.id}-board`
+    await prisma.groupMembership.upsert({
+      where: { id: membershipId },
+      create: { id: membershipId, userId: user.id, groupId: 'board', startsAt },
+      update: { endsAt: null, startsAt },
+    })
 
-  for (const assignment of assignments) {
+    const positionId = [
+      'president',
+      'vice-president',
+      'treasurer',
+      'secretary',
+      'master-of-parties',
+      'master-of-gigs',
+      'master-of-concerts',
+      'master-of-pr',
+    ][index]
     await prisma.positionAssignment.upsert({
-      where: { id: assignment.id },
-      create: { ...assignment, startsAt },
-      update: { endsAt: null, startsAt, userId: assignment.userId, positionId: assignment.positionId },
+      where: { id: `demo-assignment-${positionId}` },
+      create: { id: `demo-assignment-${positionId}`, positionId, userId: user.id, startsAt },
+      update: { endsAt: null, startsAt, userId: user.id },
+    })
+  }
+
+  const committeeIds = ['concertmastery', 'gigmastery', 'partymastery', 'webmastery', 'tourcommittee', 'reccommittee']
+  for (const [index, committeeId] of committeeIds.entries()) {
+    const user = users[20 + index]
+    const id = `demo-membership-${user.id}-${committeeId}`
+    await prisma.groupMembership.upsert({
+      where: { id },
+      create: { id, userId: user.id, groupId: committeeId, startsAt },
+      update: { endsAt: null, startsAt },
     })
   }
 }
