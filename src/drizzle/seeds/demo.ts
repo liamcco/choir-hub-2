@@ -1,124 +1,69 @@
 import { eq } from 'drizzle-orm'
 import { auth } from '@/core/auth/auth'
 import type { db } from '@/core/db'
-import type { MemberStatus } from '@/drizzle/schema'
-import { groupMembership, positionAssignment, user as userTable } from '@/drizzle/schema'
+import { choirMembership, groupMembership, positionAssignment, sectionPlacement, user } from '@/drizzle/schema'
+import { demoSeedData } from './demo-data'
 import { seedFoundation } from './foundation'
 
-/**
- * Demo/development/e2e seed data.
- *
- * Add realistic Users, Groups, Positions, Group Memberships, and Position
- * Assignments here. Prefer stable IDs so e2e fixtures can refer to records.
- */
+/** Seed the demo data defined in demo-data.ts. */
 export async function seedDemo(database: typeof db): Promise<void> {
   await seedFoundation(database)
 
-  const voices = ['a1', 'a2', 'b1', 'b2', 's1', 's2', 't1', 't2'] as const
-  const statuses: MemberStatus[] = [
-    'ACTIVE',
-    'ACTIVE',
-    'ACTIVE',
-    'ACTIVE',
-    'ACTIVE',
-    'PASSIVE',
-    'ACTIVE',
-    'FORMER',
-    'ACTIVE',
-    'ACTIVE',
-  ]
-  const users = voices.flatMap((voice) =>
-    Array.from({ length: 10 }, (_, index) => {
-      const number = index + 1
-      return {
-        id: `demo-user-${voice}-${number}`,
-        name: `${voice.toUpperCase()} Demo ${number}`,
-        email: `demo-${voice}-${number}@example.com`,
-        status: statuses[index],
-        voice,
-      }
-    }),
-  )
-
+  const startsAt = new Date(demoSeedData.startsAt)
   const userIds = new Map<string, string>()
-  const userIdFor = (email: string) => {
-    const id = userIds.get(email)
-    if (!id) throw new Error(`Demo seed could not resolve User ${email}.`)
-    return id
-  }
 
-  for (const user of users) {
-    const [existing] = await database.select().from(userTable).where(eq(userTable.email, user.email)).limit(1)
-    if (!existing) {
-      const result = await auth.api.createUser({
-        body: {
-          email: user.email,
-          password: 'password',
-          name: user.name,
-          data: { status: user.status.toLowerCase() },
-        },
-      })
-      userIds.set(user.email, result.user.id)
+  for (const [index, person] of demoSeedData.people.entries()) {
+    const [existing] = await database.select().from(user).where(eq(user.email, person.email)).limit(1)
+    const userId =
+      existing?.id ??
+      (
+        await auth.api.createUser({
+          body: { email: person.email, password: demoSeedData.userPassword, name: person.name },
+        })
+      ).user.id
+
+    userIds.set(person.key, userId)
+    await database.update(user).set({ name: person.name, status: person.status }).where(eq(user.id, userId))
+
+    if ('choirId' in person && 'sectionId' in person && 'voiceType' in person) {
       await database
-        .update(userTable)
-        .set({ status: user.status.toLowerCase() as typeof userTable.$inferInsert.status })
-        .where(eq(userTable.id, result.user.id))
-    } else {
-      userIds.set(user.email, existing.id)
+        .insert(choirMembership)
+        .values({ id: `demo-choir-membership-${index}`, userId, choirId: person.choirId, startsAt })
+        .onConflictDoUpdate({
+          target: choirMembership.id,
+          set: { userId, choirId: person.choirId, startsAt, endsAt: null },
+        })
       await database
-        .update(userTable)
-        .set({ name: user.name, status: user.status.toLowerCase() as typeof userTable.$inferInsert.status })
-        .where(eq(userTable.id, existing.id))
+        .insert(sectionPlacement)
+        .values({
+          id: `demo-section-placement-${index}`,
+          userId,
+          sectionId: person.sectionId,
+          voiceType: person.voiceType,
+          startsAt,
+        })
+        .onConflictDoUpdate({
+          target: sectionPlacement.id,
+          set: { userId, sectionId: person.sectionId, voiceType: person.voiceType, startsAt, endsAt: null },
+        })
     }
   }
 
-  const startsAt = new Date('2026-01-01T00:00:00.000Z')
-  const choirIds = ['mk', 'dk', 'kk'] as const
-  const memberships = users.flatMap((user, index) => [
-    { userId: userIdFor(user.email), groupId: user.voice },
-    { userId: userIdFor(user.email), groupId: choirIds[index % choirIds.length] },
-  ])
-
-  for (const membership of memberships) {
-    await database
-      .insert(groupMembership)
-      .values({ id: `demo-membership-${membership.userId}-${membership.groupId}`, ...membership, startsAt })
-      .onConflictDoUpdate({ target: groupMembership.id, set: { endsAt: null, startsAt } })
-  }
-
-  const boardUsers = users.slice(0, 8)
-  for (const [index, user] of boardUsers.entries()) {
-    const userId = userIdFor(user.email)
-    const membershipId = `demo-membership-${userId}-board`
-    await database
-      .insert(groupMembership)
-      .values({ id: membershipId, userId, groupId: 'board', startsAt })
-      .onConflictDoUpdate({ target: groupMembership.id, set: { endsAt: null, startsAt } })
-
-    const positionId = [
-      'president',
-      'vice-president',
-      'treasurer',
-      'secretary',
-      'master-of-parties',
-      'master-of-gigs',
-      'master-of-concerts',
-      'master-of-pr',
-    ][index]
+  for (const assignment of demoSeedData.positionAssignments) {
+    const userId = userIds.get(assignment.personKey)
+    if (!userId) throw new Error(`Demo seed references an unknown person: ${assignment.personKey}.`)
     await database
       .insert(positionAssignment)
-      .values({ id: `demo-assignment-${positionId}`, positionId, userId, startsAt })
-      .onConflictDoUpdate({ target: positionAssignment.id, set: { endsAt: null, startsAt, userId } })
+      .values({ id: `demo-assignment-${assignment.positionId}`, positionId: assignment.positionId, userId, startsAt })
+      .onConflictDoUpdate({ target: positionAssignment.id, set: { userId, startsAt, endsAt: null } })
   }
 
-  const committeeIds = ['concertmastery', 'gigmastery', 'partymastery', 'webmastery', 'tourcommittee', 'reccommittee']
-  for (const [index, committeeId] of committeeIds.entries()) {
-    const user = users[20 + index]
-    const userId = userIdFor(user.email)
-    const id = `demo-membership-${userId}-${committeeId}`
+  for (const membership of demoSeedData.groupMemberships) {
+    const userId = userIds.get(membership.personKey)
+    if (!userId) throw new Error(`Demo seed references an unknown person: ${membership.personKey}.`)
     await database
       .insert(groupMembership)
-      .values({ id, userId, groupId: committeeId, startsAt })
-      .onConflictDoUpdate({ target: groupMembership.id, set: { endsAt: null, startsAt } })
+      .values({ id: membership.id, userId, groupId: membership.groupId, startsAt })
+      .onConflictDoUpdate({ target: groupMembership.id, set: { userId, startsAt, endsAt: null } })
   }
 }

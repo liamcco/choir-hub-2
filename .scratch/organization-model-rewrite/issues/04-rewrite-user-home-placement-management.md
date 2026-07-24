@@ -1,0 +1,22 @@
+# 04 — Rewrite User Home placement management
+
+**What to build:** Build the User management experience around explicit Home Choir, Section Placement, Committee membership, and Position Assignment relationships using the composable management modules.
+
+**Blocked by:** 03 — Establish the composable organization-management UI.
+
+**Status:** ready-for-agent
+
+- [x] The User collection displays exactly `Name | Home Choir | Voice | Status`.
+- [x] Home Choir and Voice are singular nullable values; Voice displays only the bare fine-grained Voice Type.
+- [ ] Multiple-value rendering, separators, and warning indicators are removed.
+- [x] Search matches the displayed Home Choir and Voice labels and readable unassigned states.
+- [x] User detail presents current Home placement separately from Committee memberships and Position Assignments.
+- [ ] Admins can start, transfer, or end Home Choir through the Home Placement module.
+- [ ] Admins can start, change, or end Section Placement only within the matching Home Choir.
+- [ ] Placement forms make valid Choir/Section combinations easy to choose without duplicating authoritative validation.
+- [x] User detail manages explicit Committee memberships but never direct Board membership.
+- [ ] Position Assignment controls surface eligibility failures clearly.
+- [ ] History distinguishes Choir Membership, Section Placement, explicit Committee membership, and Position Assignment.
+- [x] Existing account access and Member Status behavior remains unchanged.
+- [ ] Successful mutations revalidate every affected User, Group, and Position read.
+- [ ] Screen tests cover singular placement, nullable states, transfers, typed history, Committee membership, Assignment eligibility, and responsive detail behavior.

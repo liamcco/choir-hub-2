@@ -1,5 +1,7 @@
 import { FormError } from '@/shared/forms/errors'
 
+export { DuplicateEntityError, InvalidRelationshipError } from '@/core/reference-catalog/errors'
+
 export class OrganizationOperationError extends FormError {
   readonly field?: string
 
@@ -14,20 +16,6 @@ export class EntityDoesNotExistError extends OrganizationOperationError {
   constructor(message: string, options: { field?: string } = {}) {
     super(message, options)
     this.name = 'EntityDoesNotExistError'
-  }
-}
-
-export class DuplicateEntityError extends OrganizationOperationError {
-  constructor(message: string, options: { field?: string } = {}) {
-    super(message, options)
-    this.name = 'DuplicateEntityError'
-  }
-}
-
-export class InvalidRelationshipError extends OrganizationOperationError {
-  constructor(message: string, options: { field?: string } = {}) {
-    super(message, options)
-    this.name = 'InvalidRelationshipError'
   }
 }
 

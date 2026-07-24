@@ -45,6 +45,9 @@ export type MemberDetailView = {
   name: string
   email: string
   status: MemberStatus
+  homePlacement?: { choir: { id: string; name: string } | null; section: { id: string; name: string } | null }
+  choirMembershipHistory?: { id: string; choirName: string; startsAt: Date; endsAt: Date | null }[]
+  sectionPlacementHistory?: { id: string; sectionName: string; startsAt: Date; endsAt: Date | null }[]
   accessState: AccountAccessState
   accessRole: string
   createdAt: Date
@@ -72,7 +75,11 @@ type MemberDetailActions = {
 }
 
 export function MemberDetail({ member, actions }: { member: MemberDetailView; actions?: MemberDetailActions }) {
-  const hasHistory = member.historicalMemberships.length > 0 || member.historicalAssignments.length > 0
+  const hasHistory =
+    member.historicalMemberships.length > 0 ||
+    member.historicalAssignments.length > 0 ||
+    (member.choirMembershipHistory?.length ?? 0) > 0 ||
+    (member.sectionPlacementHistory?.length ?? 0) > 0
 
   return (
     <article className="mx-auto flex w-full max-w-4xl flex-col gap-6">
@@ -97,10 +104,23 @@ export function MemberDetail({ member, actions }: { member: MemberDetailView; ac
         </dl>
       </section>
 
+      <section aria-labelledby="home-placement-heading" className="space-y-4">
+        <h2 className="text-lg font-semibold" id="home-placement-heading">
+          Home placement
+        </h2>
+        <dl className="grid gap-4 sm:grid-cols-2">
+          <ReadField label="Home Choir" value={member.homePlacement?.choir?.name ?? 'No Home Choir'} />
+          <ReadField label="Section" value={member.homePlacement?.section?.name ?? 'No Section'} />
+        </dl>
+        <p className="text-sm text-muted-foreground">
+          Home placement changes are governed by the Home Placement module.
+        </p>
+      </section>
+
       <section aria-labelledby="group-memberships-heading" className="space-y-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-lg font-semibold" id="group-memberships-heading">
-            Group Memberships
+            Committee Memberships
           </h2>
           {actions ? (
             <AddUserGroupControl action={actions.createMembership} groups={member.groups} userId={member.id} />
@@ -133,7 +153,7 @@ export function MemberDetail({ member, actions }: { member: MemberDetailView; ac
           <div className="grid gap-6 border-t p-4 sm:grid-cols-2">
             {member.historicalMemberships.length ? (
               <HistoricalList
-                title="Ended Group Memberships"
+                title="Ended Committee Memberships"
                 items={member.historicalMemberships.map((membership) => ({
                   id: membership.id,
                   title: membership.groupName,
@@ -225,7 +245,9 @@ function MembershipList({
       ))}
     </ul>
   ) : (
-    <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">No current Group Memberships</p>
+    <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
+      No current Committee Memberships
+    </p>
   )
 }
 

@@ -4,7 +4,8 @@ import { auth } from '@/core/auth/auth'
 import { type AccessRole, accessRoles, type GlobalPermissionRequest } from '@/core/auth/permissions'
 import { db } from '@/core/db'
 import { audit } from '@/core/logging'
-import { groupMembership, positionAssignment } from '@/drizzle/schema'
+import { positionAssignment } from '@/drizzle/schema'
+import { effectiveGroupMembership } from '@/features/organization/core/effective-group-membership'
 
 type RequestActor = {
   userId: string
@@ -75,21 +76,7 @@ export async function canCurrentUserInGroup(input: { groupId: string }): Promise
     return false
   }
 
-  const now = new Date()
-  const [membership] = await db
-    .select({ id: groupMembership.id })
-    .from(groupMembership)
-    .where(
-      and(
-        eq(groupMembership.userId, userId),
-        eq(groupMembership.groupId, input.groupId),
-        lte(groupMembership.startsAt, now),
-        or(isNull(groupMembership.endsAt), gt(groupMembership.endsAt, now)),
-      ),
-    )
-    .limit(1)
-
-  return membership !== undefined
+  return effectiveGroupMembership.isMember({ userId, groupId: input.groupId, at: new Date() })
 }
 
 export async function requireCurrentUserInGroup(input: { groupId: string }): Promise<void> {

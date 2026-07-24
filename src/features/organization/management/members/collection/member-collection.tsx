@@ -1,6 +1,5 @@
 'use client'
 
-import { CircleAlertIcon } from 'lucide-react'
 import Link from 'next/link'
 import { useState } from 'react'
 import { adminUserPath } from '@/core/navigation/site'
@@ -13,8 +12,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 export type MemberCollectionRow = {
   id: string
   name: string
-  choirs: string[]
-  voices: string[]
+  homeChoir: string | null
+  voice: string | null
   status: MemberStatus
 }
 
@@ -58,19 +57,10 @@ export function MemberCollection({ users }: { users: MemberCollectionRow[] }) {
                     </Link>
                   </TableCell>
                   <TableCell>
-                    <TextValues values={user.choirs} />
+                    <TextValue value={user.homeChoir} fallback="No Choir" />
                   </TableCell>
                   <TableCell>
-                    <span className="inline-flex items-center gap-2">
-                      <TextValues values={user.voices} />
-                      {user.voices.length > 1 ? (
-                        <CircleAlertIcon
-                          aria-label="Multiple current Voices"
-                          className="size-4 text-amber-600"
-                          role="img"
-                        />
-                      ) : null}
-                    </span>
+                    <TextValue value={user.voice} fallback="No Voice" />
                   </TableCell>
                   <TableCell>
                     <Badge variant="secondary">{formatMemberStatus(user.status)}</Badge>
@@ -92,11 +82,11 @@ export function MemberCollection({ users }: { users: MemberCollectionRow[] }) {
 }
 
 function searchableUserText(user: MemberCollectionRow) {
-  const choirs = user.choirs.length ? user.choirs : ['Not assigned']
-  const voices = user.voices.length ? user.voices : ['Not assigned']
-  return [user.name, ...choirs, ...voices, formatMemberStatus(user.status)].join(' ').toLocaleLowerCase()
+  return [user.name, user.homeChoir ?? 'No Choir', user.voice ?? 'No Voice', formatMemberStatus(user.status)]
+    .join(' ')
+    .toLocaleLowerCase()
 }
 
-function TextValues({ values }: { values: string[] }) {
-  return values.length ? values.join(', ') : <span className="text-muted-foreground">Not assigned</span>
+function TextValue({ value, fallback }: { value: string | null; fallback: string }) {
+  return value ?? <span className="text-muted-foreground">{fallback}</span>
 }

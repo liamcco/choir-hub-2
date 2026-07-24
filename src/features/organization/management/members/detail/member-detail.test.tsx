@@ -47,7 +47,7 @@ describe('Member detail', () => {
               id: 'membership-1',
               groupId: 'group-1',
               groupName: 'Chamber Choir',
-              groupKind: GroupKind.CHOIR,
+              groupKind: GroupKind.COMMITTEE,
               startsAt: new Date('2024-08-01'),
             },
           ],
@@ -56,7 +56,7 @@ describe('Member detail', () => {
               id: 'membership-2',
               groupId: 'group-2',
               groupName: 'Festival Choir',
-              groupKind: GroupKind.CHOIR,
+              groupKind: GroupKind.COMMITTEE,
               startsAt: new Date('2023-01-01'),
               endsAt: new Date('2023-12-31'),
             },
@@ -79,7 +79,7 @@ describe('Member detail', () => {
     expect(screen.getAllByText('Active').length).toBeGreaterThan(0)
     expect(screen.getByText('member-1')).toBeTruthy()
     expect(screen.getByText('Feb 1, 2025')).toBeTruthy()
-    expect(screen.getByRole('heading', { name: 'Group Memberships' })).toBeTruthy()
+    expect(screen.getByRole('heading', { name: 'Committee Memberships' })).toBeTruthy()
     expect(screen.getByText('Chamber Choir')).toBeTruthy()
     expect(screen.getByRole('heading', { name: 'Position Assignments' })).toBeTruthy()
     expect(screen.getByText('Chair')).toBeTruthy()
@@ -124,7 +124,7 @@ describe('Member detail', () => {
     )
 
     expect(screen.queryByText('History')).toBeNull()
-    expect(screen.getByText('No current Group Memberships')).toBeTruthy()
+    expect(screen.getByText('No current Committee Memberships')).toBeTruthy()
     expect(screen.getByText('No current Position Assignments')).toBeTruthy()
   })
 })

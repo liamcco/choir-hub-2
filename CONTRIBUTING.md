@@ -14,7 +14,7 @@ bun run db:push
 bun run db:push
 ```
 
-`drizzle-kit push` is temporarily required to bootstrap a fresh local database because the repository has no committed migration history. Do not use it to submit a schema change or update production. See [Drizzle schema and migrations](#drizzle-schema-and-migrations).
+Use the committed initial migration to bootstrap a fresh disposable database. Do not use `drizzle-kit push` to submit a schema change or update production. See [Drizzle schema and migrations](#drizzle-schema-and-migrations).
 
 Use `bun run cli` to run foundation/demo seeds or bootstrap a local admin. Never commit `.env`, credentials, generated Drizzle files, `.next`, or local database artifacts.
 
@@ -159,7 +159,7 @@ Drizzle owns a multi-file schema under `src/drizzle/schema`:
 - `organization.ts` owns choir organization models.
 - Future capabilities should get their own schema file rather than accumulating unrelated models in an existing file.
 
-Schema files under `src/drizzle/schema` are checked in and reviewed. Use `bun run db:push` for disposable development databases.
+Schema files and migrations under `src/drizzle` are checked in and reviewed. Apply the initial migration to a disposable development database with `bun x drizzle-kit migrate`; do not run it from this task.
 
 For a schema contribution:
 
@@ -171,18 +171,18 @@ For a schema contribution:
    bun x drizzle-kit generate --name concise_change_name
    ```
 
-4. Inspect the generated SQL. Add deliberate SQL for constraints Drizzle cannot express, such as partial indexes.
+4. Inspect the generated SQL. Add deliberate SQL for constraints Drizzle cannot express, such as partial indexes, exclusion constraints, and cross-table guards.
 5. Commit the schema files and the complete `src/drizzle/migrations/<timestamp>_<name>/migration.sql` directory together.
 6. Run:
 
    ```bash
    bun x drizzle-kit check
-   bun run db:push
+   bun x drizzle-kit migrate
    bun test
    bun run build
    ```
 
-The repository currently has no committed migration history. The first migration-bearing change must establish a reviewed baseline or an agreed migration path for existing databases; do not casually generate an “initial” migration and assume it is safe for production.
+The committed initial migration is the complete V1 schema. Existing databases are disposable during this rewrite: do not add baselines, backfills, compatibility layers, or preservation machinery.
 
 Never use `drizzle-kit push` as a production migration or as the submitted record of a schema change. Do not edit an already-deployed migration; add a new migration. Production deployment must run `bun x drizzle-kit migrate` separately because build/start do not apply migrations.
 

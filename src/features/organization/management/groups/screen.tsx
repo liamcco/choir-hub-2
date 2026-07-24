@@ -6,7 +6,6 @@ import {
   createGroupMembershipAction,
   endGroupMembershipAction,
 } from '@/features/organization/management/group-memberships/actions'
-import { updateGroupAction } from './actions'
 import { GroupCollectionScreen as GroupCollection } from './collection/group-collection-screen'
 import { GroupDetail } from './detail/group-detail'
 import { GroupDetailDialog } from './detail/group-detail-presentation'
@@ -14,7 +13,6 @@ import { GroupDetailDialog } from './detail/group-detail-presentation'
 // TODO: naming query vs service. The query is for reading data, the service is for writing data.
 // But the naming is inconsistent and confusing.
 import { getGroupDetail, listGroupCollection } from './query'
-import { listGroups } from './service'
 
 // TODO: Look at the Suspenses...
 export function GroupManagementScreen({ detailId }: { detailId?: string }) {
@@ -26,20 +24,12 @@ export function GroupManagementScreen({ detailId }: { detailId?: string }) {
 }
 
 // TODO: What da hell
-function groupDetailActions(groupId: string) {
-  return {
-    updateGroup: updateGroupAction.bind(null, groupId),
-    createMembership: createGroupMembershipAction,
-    endMembership: endGroupMembershipAction,
-  }
-}
-
 async function GroupCollectionScreen({ detailId }: { detailId?: string }) {
   await connection()
-  const [groups, createGroups] = await Promise.all([listGroupCollection(), listGroups()])
+  const groups = await listGroupCollection()
   return (
     <>
-      <GroupCollection createGroups={createGroups} groups={groups} />
+      <GroupCollection groups={groups} />
       {detailId ? <GroupDetailOverlay groupId={detailId} /> : null}
     </>
   )
@@ -51,7 +41,10 @@ async function GroupDetailOverlay({ groupId }: { groupId: string }) {
 
   return (
     <GroupDetailDialog name={group.name}>
-      <GroupDetail actions={groupDetailActions(group.id)} group={group} />
+      <GroupDetail
+        actions={{ createMembership: createGroupMembershipAction, endMembership: endGroupMembershipAction }}
+        group={group}
+      />
     </GroupDetailDialog>
   )
 }

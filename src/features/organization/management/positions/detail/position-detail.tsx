@@ -1,5 +1,5 @@
 import { adminUserPath } from '@/core/navigation/site'
-import type { Group, Position, PositionAssignment } from '@/drizzle/schema'
+import type { Choir, Group, Position, PositionAssignment, PositionScope, Section } from '@/drizzle/schema'
 import type { UserLabel } from '@/features/organization/core/labels'
 import { RelatedDetailLink } from '@/features/organization/management/components/related-detail-link'
 import {
@@ -7,13 +7,14 @@ import {
   EndPositionAssignmentForm,
 } from '@/features/organization/management/position-assignments/assignment-form'
 import { formatDate } from '@/shared/formatting'
-import { PositionFieldEditor } from './position-editors'
 
 export type PositionAssignmentView = PositionAssignment & { userLabel: string; userDetail: string }
 export type PositionDetailView = {
   position: Position
   groups: Group[]
-  scopeGroups: Group[]
+  choirs: Choir[]
+  sections: Section[]
+  positionScopes: PositionScope[]
   scopeLabel: string
   users: UserLabel[]
   currentAssignments: PositionAssignmentView[]
@@ -28,7 +29,6 @@ export function PositionDetail({ position }: { position: PositionDetailView }) {
           <p className="text-sm font-medium text-muted-foreground">Position</p>
           <h1 className="text-3xl font-semibold tracking-tight">{position.position.name}</h1>
         </div>
-        <PositionFieldEditor position={position} />
       </header>
       <section aria-labelledby="position-information-heading">
         <h2 className="sr-only" id="position-information-heading">
@@ -36,8 +36,7 @@ export function PositionDetail({ position }: { position: PositionDetailView }) {
         </h2>
         <dl className="grid gap-4 sm:grid-cols-2">
           <ReadField label="Name" value={position.position.name} />
-          <ReadField label="Description" value={position.position.description ?? 'No description'} />
-          <ReadField label="Group scopes" value={position.scopeLabel} />
+          <ReadField label="Scopes" value={position.scopeLabel} />
         </dl>
       </section>
       <section aria-labelledby="position-assignments-heading" className="space-y-4">

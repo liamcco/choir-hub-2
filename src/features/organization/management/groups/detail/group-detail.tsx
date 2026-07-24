@@ -1,6 +1,5 @@
 import { adminUserPath } from '@/core/navigation/site'
 import type { Group } from '@/drizzle/schema'
-import { formatGroupKind } from '@/features/organization/core/group-kind'
 import type { UserLabel } from '@/features/organization/core/labels'
 import { RelatedDetailLink } from '@/features/organization/management/components/related-detail-link'
 import { formatPeriod } from '@/shared/formatting'
@@ -11,8 +10,6 @@ import {
   EndGroupUserControl,
   type EndMembershipAction,
 } from '../group-membership-controls'
-import { GroupFieldEditor } from './group-editors'
-import type { GroupFormAction } from './group-form'
 
 export type GroupMembershipView = {
   id: string
@@ -22,11 +19,10 @@ export type GroupMembershipView = {
   userDetail: string
   startsAt: Date
   endsAt: Date | null
+  sourceLabels: string[]
 }
 
 export type GroupDetailView = Group & {
-  parentName: string | null
-  groups: Group[]
   users: UserLabel[]
   currentMemberships: GroupMembershipView[]
   scheduledMemberships: GroupMembershipView[]
@@ -34,7 +30,6 @@ export type GroupDetailView = Group & {
 }
 
 export type GroupDetailActions = {
-  updateGroup: GroupFormAction
   createMembership: CreateMembershipAction
   endMembership: EndMembershipAction
 }
@@ -46,9 +41,7 @@ export function GroupDetail({ group, actions }: { group: GroupDetailView; action
         <div className="space-y-2">
           <p className="text-sm font-medium text-muted-foreground">Group</p>
           <h1 className="text-3xl font-semibold tracking-tight">{group.name}</h1>
-          <Badge variant="secondary">{formatGroupKind(group.kind)}</Badge>
         </div>
-        <GroupFieldEditor action={actions.updateGroup} group={group} groups={group.groups} />
       </header>
 
       <section aria-labelledby="group-information-heading">
@@ -57,24 +50,23 @@ export function GroupDetail({ group, actions }: { group: GroupDetailView; action
         </h2>
         <dl className="grid gap-4 sm:grid-cols-2">
           <ReadField label="Name" value={group.name} />
-          <ReadField label="Group Kind" value={formatGroupKind(group.kind)} />
-          <ReadField label="Parent Group" value={group.parentName ?? 'No parent Group'} />
-          <ReadField label="Description" value={group.description ?? 'No description'} />
         </dl>
       </section>
 
       <section aria-labelledby="group-memberships-heading" className="space-y-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-lg font-semibold" id="group-memberships-heading">
-            Group Memberships
+            Effective members
           </h2>
-          <AddGroupUserControl action={actions.createMembership} groupId={group.id} users={group.users} />
+          {group.kind === 'committee' ? (
+            <AddGroupUserControl action={actions.createMembership} groupId={group.id} users={group.users} />
+          ) : null}
         </div>
         <MembershipList
-          emptyText="No current Group Memberships"
+          emptyText="No current effective members"
           groupName={group.name}
           memberships={group.currentMemberships}
-          showEndControls
+          showEndControls={group.kind === 'committee'}
           endAction={actions.endMembership}
         />
       </section>
@@ -140,9 +132,16 @@ function MembershipList({
         <li className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between" key={membership.id}>
           <div>
             <RelatedDetailLink href={adminUserPath(membership.userId)}>{membership.userLabel}</RelatedDetailLink>
-            <p className="text-sm text-muted-foreground">
-              {membership.userDetail} · {formatPeriod(membership)}
-            </p>
+            <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+              <span>{membership.userDetail}</span>
+              <span aria-hidden="true">·</span>
+              <span>{formatPeriod(membership)}</span>
+              {membership.sourceLabels.map((sourceLabel) => (
+                <Badge key={sourceLabel} variant="secondary">
+                  {sourceLabel}
+                </Badge>
+              ))}
+            </div>
           </div>
           {showEndControls && endAction ? (
             <EndGroupUserControl action={endAction} groupName={groupName} membership={membership} />

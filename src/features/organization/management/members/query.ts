@@ -3,43 +3,38 @@ import 'server-only'
 import { headers } from 'next/headers'
 import { connection } from 'next/server'
 import { auth } from '@/core/auth/auth'
-import { GroupKind } from '@/drizzle/schema'
+import { db } from '@/core/db'
+import { choir, section } from '@/drizzle/schema'
 import { organizationService } from '@/features/organization'
 import { isCurrentDatedPeriod, isHistoricalDatedPeriod } from '@/features/organization/core/dated-history'
-import { buildUserLabels, formatGroupPath, formatPositionScopeLabel } from '@/features/organization/core/labels'
+import {
+  buildUserLabels,
+  formatFineGrainedPlacementName,
+  formatGroupPath,
+  formatPositionScopeLabel,
+} from '@/features/organization/core/labels'
 
 async function listCollection(input?: { at?: Date }) {
   await connection()
   const at = input?.at ?? new Date()
-  const [users, groups, memberships] = await Promise.all([
+  const [users, choirMemberships, placements, choirs] = await Promise.all([
     organizationService.users.list(),
-    organizationService.groups.list(),
-    organizationService.groupMemberships.list({ at }),
+    organizationService.homePlacement.listChoirMemberships(),
+    organizationService.homePlacement.listSectionPlacements(),
+    db.select().from(choir),
   ])
-  const groupsById = new Map(groups.map((group) => [group.id, group]))
-  const currentGroupsByUserId = new Map<string, typeof groups>()
-  for (const membership of memberships) {
-    const group = groupsById.get(membership.groupId)
-    if (!group) continue
-    const userGroups = currentGroupsByUserId.get(membership.userId) ?? []
-    userGroups.push(group)
-    currentGroupsByUserId.set(membership.userId, userGroups)
-  }
+  const choirById = new Map(choirs.map((item) => [item.id, item]))
 
   return buildUserLabels(users)
     .map(({ user, label }) => {
-      const userGroups = currentGroupsByUserId.get(user.id) ?? []
       return {
         id: user.id,
         name: label,
-        choirs: userGroups
-          .filter((group) => group.kind === GroupKind.CHOIR)
-          .sort(compareNamedEntities)
-          .map((group) => group.name),
-        voices: userGroups
-          .filter((group) => group.kind === GroupKind.SECTION)
-          .sort(compareNamedEntities)
-          .map((group) => group.name),
+        homeChoir:
+          choirById.get(
+            choirMemberships.find((m) => m.userId === user.id && isCurrentDatedPeriod(m, at))?.choirId ?? '',
+          )?.shortName ?? null,
+        voice: formatPlacementVoice(placements.find((p) => p.userId === user.id && isCurrentDatedPeriod(p, at))),
         status: user.status,
       }
     })
@@ -49,22 +44,43 @@ async function listCollection(input?: { at?: Date }) {
 async function getDetail(userId: string, input?: { at?: Date }) {
   const at = input?.at ?? new Date()
   const requestHeaders = await headers()
-  const [account, user, groups, memberships, positions, scopes, assignments] = await Promise.all([
+  const [
+    account,
+    user,
+    groups,
+    memberships,
+    positions,
+    scopes,
+    assignments,
+    choirMemberships,
+    placements,
+    choirs,
+    sections,
+  ] = await Promise.all([
     auth.api.getUser({ headers: requestHeaders, query: { id: userId } }),
     organizationService.users.find({ userId }),
     organizationService.groups.list(),
-    organizationService.groupMemberships.list({ userId }),
+    organizationService.committeeMembership.list({ userId }),
     organizationService.positions.list(),
     organizationService.positions.listScopes(),
     organizationService.positionAssignments.list({ userId }),
+    organizationService.homePlacement.listChoirMemberships({ userId }),
+    organizationService.homePlacement.listSectionPlacements({ userId }),
+    db.select().from(choir),
+    db.select().from(section),
   ])
   if (!account || !user) return null
+
+  const choirById = new Map(choirs.map((item) => [item.id, item]))
+  const sectionById = new Map(sections.map((item) => [item.id, item]))
+  const currentChoir = choirMemberships.find((item) => isCurrentDatedPeriod(item, at))
+  const currentSection = placements.find((item) => isCurrentDatedPeriod(item, at))
 
   const groupsById = new Map(groups.map((group) => [group.id, group]))
   const positionsById = new Map(positions.map((position) => [position.id, position]))
   const scopeGroupsByPositionId = new Map<string, typeof groups>()
   for (const scope of scopes) {
-    const group = groupsById.get(scope.groupId)
+    const group = scope.groupId ? groupsById.get(scope.groupId) : undefined
     if (!group) continue
     const scopeGroups = scopeGroupsByPositionId.get(scope.positionId) ?? []
     scopeGroups.push(group)
@@ -109,6 +125,25 @@ async function getDetail(userId: string, input?: { at?: Date }) {
     name: account.name,
     email: account.email,
     status: user.status,
+    homePlacement: {
+      choir: currentChoir
+        ? { id: currentChoir.choirId, name: choirById.get(currentChoir.choirId)?.name ?? 'Unknown Choir' }
+        : null,
+      section: currentSection
+        ? {
+            id: currentSection.sectionId,
+            name: formatPlacementLabel(currentSection, sectionById, choirById) ?? 'Unknown Section',
+          }
+        : null,
+    },
+    choirMembershipHistory: choirMemberships.map((item) => ({
+      ...item,
+      choirName: choirById.get(item.choirId)?.name ?? 'Unknown Choir',
+    })),
+    sectionPlacementHistory: placements.map((item) => ({
+      ...item,
+      sectionName: formatPlacementLabel(item, sectionById, choirById) ?? 'Unknown Section',
+    })),
     accessState: account.banned ? ('disabled' as const) : ('enabled' as const),
     accessRole: account.role || 'user',
     createdAt: user.createdAt,
@@ -147,8 +182,20 @@ async function getDetail(userId: string, input?: { at?: Date }) {
 export const listMemberCollection = listCollection
 export const getMemberDetail = getDetail
 
-function compareNamedEntities(first: { id: string; name: string }, second: { id: string; name: string }) {
-  return first.name.localeCompare(second.name) || first.id.localeCompare(second.id)
+function formatPlacementLabel(
+  placement: { sectionId: string; voiceType: string } | undefined,
+  sections: Map<string, { name: string; choirId: string }>,
+  choirs: Map<string, { shortName: string }>,
+) {
+  if (!placement) return null
+  const section = sections.get(placement.sectionId)
+  const choir = section ? choirs.get(section.choirId) : undefined
+  return choir ? formatFineGrainedPlacementName(choir.shortName, placement.voiceType) : null
+}
+
+function formatPlacementVoice(placement: { voiceType: string } | undefined) {
+  if (!placement) return null
+  return placement.voiceType
 }
 
 function compareEndedPeriods(first: { id: string; endsAt?: Date }, second: { id: string; endsAt?: Date }) {

@@ -35,7 +35,7 @@ export async function createGroupMembershipAction(
 
   // 3. Mutate
   try {
-    const membership = await organizationService.groupMemberships.create(formInput.data)
+    const membership = await organizationService.committeeMembership.start(formInput.data)
     audit.adminActionCompleted({
       actorUserId: actor.userId,
       action: 'groupMembership.create',
@@ -71,7 +71,7 @@ export async function endGroupMembershipAction(
 
   // 3. Mutate
   try {
-    await organizationService.groupMemberships.end(membershipId, formInput.data.endsAt)
+    await organizationService.committeeMembership.end(membershipId, formInput.data.endsAt)
     audit.adminActionCompleted({
       actorUserId: actor.userId,
       action: 'groupMembership.end',

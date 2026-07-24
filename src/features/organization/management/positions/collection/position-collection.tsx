@@ -1,14 +1,17 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import { adminPositionPath } from '@/core/navigation/site'
 import { SearchControl } from '@/features/organization/management/components/search-control'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 
+const POSITION_GROUP_ORDER = ['Board', 'KK', 'MK', 'DK', 'Other'] as const
+
 export type PositionCollectionRow = {
   id: string
   name: string
+  group: string
   scopeLabel: string
   currentHolder: string | null
   heldSince: Date | null
@@ -20,6 +23,10 @@ export function PositionCollection({ positions }: { positions: PositionCollectio
   const filteredPositions = !normalizedQuery
     ? positions
     : positions.filter((position) => searchablePositionText(position).includes(normalizedQuery))
+  const groupedPositions = POSITION_GROUP_ORDER.flatMap((group) => {
+    const groupPositions = filteredPositions.filter((position) => position.group === group)
+    return groupPositions.length ? [{ group, positions: groupPositions }] : []
+  })
 
   return (
     <div className="flex flex-col gap-4">
@@ -43,20 +50,29 @@ export function PositionCollection({ positions }: { positions: PositionCollectio
           </TableHeader>
           <TableBody>
             {filteredPositions.length ? (
-              filteredPositions.map((position) => (
-                <TableRow className="relative" key={position.id}>
-                  <TableCell>
-                    <Link
-                      className="font-medium after:absolute after:inset-0 hover:underline focus-visible:underline"
-                      href={adminPositionPath(position.id)}
-                    >
-                      {position.name}
-                    </Link>
-                  </TableCell>
-                  <TableCell>{position.scopeLabel}</TableCell>
-                  <TableCell>{position.currentHolder ?? <EmptyValue />}</TableCell>
-                  <TableCell>{position.heldSince ? formatDate(position.heldSince) : <EmptyValue />}</TableCell>
-                </TableRow>
+              groupedPositions.map(({ group, positions: groupPositions }) => (
+                <Fragment key={group}>
+                  <TableRow className="bg-muted/30 hover:bg-muted/30">
+                    <TableCell className="font-semibold" colSpan={4}>
+                      {group}
+                    </TableCell>
+                  </TableRow>
+                  {groupPositions.map((position) => (
+                    <TableRow className="relative" key={position.id}>
+                      <TableCell>
+                        <Link
+                          className="font-medium after:absolute after:inset-0 hover:underline focus-visible:underline"
+                          href={adminPositionPath(position.id)}
+                        >
+                          {position.name}
+                        </Link>
+                      </TableCell>
+                      <TableCell>{position.scopeLabel}</TableCell>
+                      <TableCell>{position.currentHolder ?? <EmptyValue />}</TableCell>
+                      <TableCell>{position.heldSince ? formatDate(position.heldSince) : <EmptyValue />}</TableCell>
+                    </TableRow>
+                  ))}
+                </Fragment>
               ))
             ) : (
               <TableRow>
@@ -77,6 +93,7 @@ function EmptyValue() {
 function searchablePositionText(position: PositionCollectionRow) {
   return [
     position.name,
+    position.group,
     position.scopeLabel,
     position.currentHolder ?? 'Vacant',
     position.heldSince ? formatDate(position.heldSince) : 'Vacant',

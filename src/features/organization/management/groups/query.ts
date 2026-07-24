@@ -1,45 +1,55 @@
 import 'server-only'
 
-import type { Group, GroupMembership, MemberStatus, User } from '@/drizzle/schema'
+import { db } from '@/core/db'
+import { choir } from '@/drizzle/schema'
 import { organizationService } from '@/features/organization'
 import {
   isCurrentDatedPeriod,
   isHistoricalDatedPeriod,
   isScheduledDatedPeriod,
 } from '@/features/organization/core/dated-history'
-import { buildGroupTree, type GroupTreeNode } from '@/features/organization/core/group-tree'
 import { buildUserLabels } from '@/features/organization/core/labels'
 
 async function listGroupStructure(input?: { at?: Date }) {
   const at = input?.at ?? new Date()
-  const [groups, currentMemberships] = await Promise.all([
+  const [groups, currentMemberships, choirs] = await Promise.all([
     organizationService.groups.list(),
-    organizationService.groupMemberships.list({ at }),
+    organizationService.effectiveGroupMembership.list({ at }),
+    db.select({ id: choir.id, shortName: choir.shortName }).from(choir),
   ])
-  const groupsById = new Map(groups.map((group) => [group.id, group]))
-  const directMemberCountByGroupId = new Map<string, number>()
-
+  const choirNames = new Map(choirs.map((choir) => [choir.id, choir.shortName]))
+  const memberIds = new Map<string, Set<string>>()
   for (const membership of currentMemberships) {
-    directMemberCountByGroupId.set(membership.groupId, (directMemberCountByGroupId.get(membership.groupId) ?? 0) + 1)
+    let memberIdsForGroup = memberIds.get(membership.groupId)
+    if (!memberIdsForGroup) {
+      memberIdsForGroup = new Set()
+      memberIds.set(membership.groupId, memberIdsForGroup)
+    }
+    memberIdsForGroup.add(membership.userId)
   }
 
   return groups
     .map((group) => ({
       id: group.id,
       name: group.name,
-      kind: group.kind,
-      parentName: group.parentGroupId ? (groupsById.get(group.parentGroupId)?.name ?? null) : null,
-      directMemberCount: directMemberCountByGroupId.get(group.id) ?? 0,
+      scope: group.scopeType === 'csk' ? 'CSK' : (choirNames.get(group.choirId ?? '') ?? group.scopeKey.toUpperCase()),
+      memberCount: memberIds.get(group.id)?.size ?? 0,
     }))
-    .sort((first, second) => first.name.localeCompare(second.name) || first.id.localeCompare(second.id))
+    .sort(
+      (first, second) =>
+        ['CSK', 'KK', 'MK', 'DK'].indexOf(first.scope) - ['CSK', 'KK', 'MK', 'DK'].indexOf(second.scope) ||
+        first.name.localeCompare(second.name) ||
+        first.id.localeCompare(second.id),
+    )
 }
 
 async function getGroupDetail(groupId: string, input?: { at?: Date }) {
   const at = input?.at ?? new Date()
-  const [groups, memberships, users] = await Promise.all([
+  const [groups, memberships, users, positions] = await Promise.all([
     organizationService.groups.list(),
-    organizationService.groupMemberships.list({ groupId }),
+    organizationService.effectiveGroupMembership.list({ groupId }),
     organizationService.users.list(),
+    organizationService.positions.list(),
   ])
   const group = groups.find((candidate) => candidate.id === groupId)
   if (!group) return null
@@ -48,17 +58,28 @@ async function getGroupDetail(groupId: string, input?: { at?: Date }) {
     (first, second) => first.label.localeCompare(second.label) || first.user.id.localeCompare(second.user.id),
   )
   const memberOptionsById = new Map(memberOptions.map((option) => [option.user.id, option]))
+  const positionsById = new Map(positions.map((position) => [position.id, position.name]))
   const membershipViews = memberships.flatMap((membership) => {
     const option = memberOptionsById.get(membership.userId)
-    return option ? [{ ...membership, userLabel: option.label, userDetail: option.detail }] : []
+    return option
+      ? [
+          {
+            ...membership,
+            id: `${membership.groupId}:${membership.userId}:${membership.startsAt.toISOString()}`,
+            userLabel: option.label,
+            userDetail: option.detail,
+            sourceLabels: membership.sources.map((source) =>
+              source.type === 'explicit'
+                ? 'Explicit membership'
+                : (positionsById.get(source.positionId ?? '') ?? 'Position assignment'),
+            ),
+          },
+        ]
+      : []
   })
 
   return {
     ...group,
-    parentName: group.parentGroupId
-      ? (groups.find((candidate) => candidate.id === group.parentGroupId)?.name ?? null)
-      : null,
-    groups,
     users: memberOptions,
     currentMemberships: membershipViews
       .filter((membership) => isCurrentDatedPeriod(membership, at))
@@ -75,82 +96,16 @@ async function getGroupDetail(groupId: string, input?: { at?: Date }) {
   }
 }
 
-async function getHierarchy(input?: { at?: Date }) {
-  const at = input?.at ?? new Date()
-  const [groups, users, memberships] = await Promise.all([
-    organizationService.groups.list(),
-    organizationService.users.list(),
-    organizationService.groupMemberships.list({ at }),
-  ])
-  return buildGroupHierarchy(groups, users, memberships, at)
-}
-
 export const listGroupCollection = listGroupStructure
-export { getGroupDetail, getHierarchy as getGroupHierarchy }
-
-export type GroupHierarchyRow = {
-  id: string
-  name: string
-  kind: Group['kind']
-  depth: number
-  memberCounts: Record<MemberStatus, number>
-}
-
-/** Builds the screen-shaped tree read, counting each current Member once per subtree. */
-export function buildGroupHierarchy(
-  groups: Group[],
-  members: User[],
-  memberships: GroupMembership[],
-  at: Date,
-): GroupHierarchyRow[] {
-  const membersById = new Map(members.map((member) => [member.id, member]))
-  const currentUserIdsByGroupId = new Map<string, Set<string>>()
-
-  for (const membership of memberships) {
-    if (!isCurrentDatedPeriod(membership, at) || !membersById.has(membership.userId)) continue
-    const userIds = currentUserIdsByGroupId.get(membership.groupId) ?? new Set<string>()
-    userIds.add(membership.userId)
-    currentUserIdsByGroupId.set(membership.groupId, userIds)
-  }
-
-  return flattenHierarchy(buildGroupTree(groups), currentUserIdsByGroupId, membersById)
-}
-
-function flattenHierarchy(
-  nodes: GroupTreeNode[],
-  currentUserIdsByGroupId: Map<string, Set<string>>,
-  membersById: Map<string, User>,
-): GroupHierarchyRow[] {
-  return nodes.flatMap((node) => {
-    const descendantUserIds = collectDescendantUserIds(node, currentUserIdsByGroupId)
-    const memberCounts: Record<MemberStatus, number> = { ACTIVE: 0, PASSIVE: 0, FORMER: 0 }
-    for (const userId of descendantUserIds) {
-      const user = membersById.get(userId)
-      if (user) memberCounts[user.status] += 1
-    }
-
-    return [
-      { id: node.group.id, name: node.group.name, kind: node.group.kind, depth: node.depth, memberCounts },
-      ...flattenHierarchy(node.children, currentUserIdsByGroupId, membersById),
-    ]
-  })
-}
-
-function collectDescendantUserIds(node: GroupTreeNode, currentUserIdsByGroupId: Map<string, Set<string>>) {
-  const userIds = new Set(currentUserIdsByGroupId.get(node.group.id))
-  for (const child of node.children) {
-    for (const userId of collectDescendantUserIds(child, currentUserIdsByGroupId)) userIds.add(userId)
-  }
-  return userIds
-}
+export { getGroupDetail }
 
 function compareMemberships(
-  first: { id: string; userLabel: string; startsAt: Date },
-  second: { id: string; userLabel: string; startsAt: Date },
+  first: { userId: string; userLabel: string; startsAt: Date },
+  second: { userId: string; userLabel: string; startsAt: Date },
 ) {
   return (
     first.userLabel.localeCompare(second.userLabel) ||
     first.startsAt.getTime() - second.startsAt.getTime() ||
-    first.id.localeCompare(second.id)
+    first.userId.localeCompare(second.userId)
   )
 }

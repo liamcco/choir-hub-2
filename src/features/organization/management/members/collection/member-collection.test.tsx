@@ -8,22 +8,22 @@ const userEvent = (await import('@testing-library/user-event')).default
 beforeEach(cleanup)
 
 describe('Member collection', () => {
-  test('shows each Member with every current Choir and Voice in the four-column collection', () => {
+  test('shows shortened Choir and bare Voice Type values in the four-column collection', () => {
     render(
       <MemberCollection
         users={[
           {
             id: 'member-1',
             name: 'Ada Lovelace',
-            choirs: ['Chamber Choir', 'Festival Choir'],
-            voices: ['Alto I', 'Alto II'],
+            homeChoir: 'KK',
+            voice: 'A1',
             status: MemberStatus.ACTIVE,
           },
           {
             id: 'member-2',
             name: 'Grace Hopper',
-            choirs: [],
-            voices: [],
+            homeChoir: null,
+            voice: null,
             status: MemberStatus.PASSIVE,
           },
         ]}
@@ -37,10 +37,9 @@ describe('Member collection', () => {
       'Status',
     ])
     expect(screen.getByRole('link', { name: 'Ada Lovelace' }).getAttribute('href')).toBe('/admin/users?detail=member-1')
-    expect(screen.getByText('Chamber Choir, Festival Choir')).toBeTruthy()
-    expect(screen.getByText('Alto I, Alto II')).toBeTruthy()
-    expect(screen.getByLabelText('Multiple current Voices')).toBeTruthy()
-    expect(screen.getAllByText('Not assigned')).toHaveLength(2)
+    expect(screen.getByText('KK')).toBeTruthy()
+    expect(screen.getByText('A1')).toBeTruthy()
+    expect(screen.getAllByText(/No (Choir|Voice)/)).toHaveLength(2)
     expect(screen.queryByRole('columnheader', { name: /actions/i })).toBeNull()
   })
 
@@ -52,22 +51,22 @@ describe('Member collection', () => {
           {
             id: 'member-1',
             name: 'Ada Lovelace',
-            choirs: ['Chamber Choir'],
-            voices: ['Alto I'],
+            homeChoir: 'KK',
+            voice: 'A1',
             status: MemberStatus.ACTIVE,
           },
           {
             id: 'member-2',
             name: 'Grace Hopper',
-            choirs: ['Festival Choir'],
-            voices: ['Soprano'],
+            homeChoir: 'DK',
+            voice: 'S1',
             status: MemberStatus.PASSIVE,
           },
           {
             id: 'member-3',
             name: 'Katherine Johnson',
-            choirs: [],
-            voices: [],
+            homeChoir: null,
+            voice: null,
             status: MemberStatus.FORMER,
           },
         ]}
@@ -82,7 +81,7 @@ describe('Member collection', () => {
     expect(screen.queryByRole('link', { name: 'Ada Lovelace' })).toBeNull()
 
     await user.clear(search)
-    await user.type(search, 'festival')
+    await user.type(search, 'dk')
 
     expect(screen.getByRole('link', { name: 'Grace Hopper' })).toBeTruthy()
     expect(window.location.search).toBe('')
