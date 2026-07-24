@@ -5,14 +5,14 @@ import { RelatedDetailLink } from '@/features/organization/management/components
 import type { Group } from '@/prisma/generated/client'
 import { formatPeriod } from '@/shared/formatting'
 import { Badge } from '@/shared/ui/badge'
-import { GroupFieldEditor } from './group-editors'
-import type { GroupFormAction } from './group-form'
 import {
   AddGroupUserControl,
   type CreateMembershipAction,
   EndGroupUserControl,
   type EndMembershipAction,
-} from './group-membership-controls'
+} from '../group-membership-controls'
+import { GroupFieldEditor } from './group-editors'
+import type { GroupFormAction } from './group-form'
 
 export type GroupMembershipView = {
   id: string

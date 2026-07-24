@@ -6,8 +6,8 @@ import { useFormStatus } from 'react-dom'
 import type { MemberStatus } from '@/prisma/generated/client'
 import { Button } from '@/shared/ui/button'
 import { NativeSelect, NativeSelectOption } from '@/shared/ui/native-select'
-import { updateAccountAccessAction, updateMemberStatusAction } from './actions'
-import type { AccountAccessState } from './service'
+import { updateAccountAccessAction, updateMemberStatusAction } from '../actions'
+import type { AccountAccessState } from '../service'
 
 export function MemberStatusEditor({ userId, status }: { userId: string; status: MemberStatus }) {
   const [isEditing, setIsEditing] = useState(false)

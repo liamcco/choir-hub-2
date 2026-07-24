@@ -2,16 +2,16 @@ import { beforeEach, describe, expect, mock, test } from 'bun:test'
 import { GroupKind, MemberStatus } from '@/prisma/generated/client'
 
 const { cleanup, render, screen } = await import('@testing-library/react')
-mock.module('./actions', () => ({
+mock.module('../actions', () => ({
   updateAccountAccessAction: async () => {},
   updateMemberStatusAction: async () => {},
 }))
-mock.module('../position-assignments/assignment-form', () => ({
+mock.module('../../position-assignments/assignment-form', () => ({
   AssignPositionHolderControl: () => <button type="button">Assign holder</button>,
   AssignUserPositionControl: () => <button type="button">Assign Position</button>,
   EndPositionAssignmentForm: () => <button type="button">End</button>,
 }))
-mock.module('../position-assignments/relationships', () => ({
+mock.module('../../position-assignments/relationships', () => ({
   AssignUserPositionControl: () => <button type="button">Assign Position</button>,
   EndPositionAssignmentForm: () => <button type="button">End</button>,
 }))

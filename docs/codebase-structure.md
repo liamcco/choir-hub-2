@@ -55,6 +55,22 @@ Use `src/core` for infrastructure and app shell modules:
 
 Do not promote code to shared space just because two files currently look similar. Promote only when the interface is stable and the shared module improves locality.
 
+### Workflow-local structure
+
+Keep a feature folder at its current level when it represents one coherent product capability, but group files inside it by meaningful workflow when that improves locality. Do not create folders mechanically or based on a fixed file-count threshold.
+
+For example, a groups management feature may eventually be organized like this:
+
+```text
+groups/
+  collection/
+  detail/
+  hierarchy/
+  index.ts
+```
+
+The subfolders are illustrative workflow boundaries, not a required template. Shared group-specific actions, schemas, helpers, or types may remain at the `groups/` root when they genuinely serve multiple workflows. A folder should earn its place by keeping related changes together and reducing the knowledge required by callers.
+
 ## Dependency Direction
 
 Dependencies should point inward toward stable infrastructure and generic helpers:
@@ -97,6 +113,14 @@ For screens with real behavior, split along meaningful seams:
 
 Prefer small, named UI modules when they protect locality. Avoid splitting JSX mechanically into tiny fragments that do not reduce knowledge required by callers.
 
+### Read functions
+
+Expose focused read functions directly rather than collecting unrelated screen reads in a broad query object. Names should describe the workflow and contract, such as `listGroupCollection`, `getGroupDetail`, or `getGroupHierarchy`.
+
+Each read function should serve one caller or one coherent workflow and return a deliberately shaped result. A screen-shaped result is appropriate when it keeps persistence and composition details behind the module boundary; “focused” does not mean that every caller must assemble raw entity data itself. Separate workflows should have separate read functions even when they share lower-level service operations.
+
+Focused reads improve locality, make data dependencies explicit, reduce accidental over-fetching, keep return types understandable, and give each workflow a stable testable seam. Avoid a single query function or return type that combines the needs of collection, detail, hierarchy, and other unrelated screens.
+
 Server Components are the default. Use Client Components only for interaction, browser APIs, optimistic state, or controlled UI state. Put `"use client"` as low in the tree as practical.
 
 ## Reuse And Duplication
@@ -128,6 +152,8 @@ Prefer composable, editable UI over one large TSX file. If changing a repeated v
 
 Test through module interfaces. If a test needs to reach into implementation details, reconsider the module shape.
 
-Prefer focused tests for domain logic, validation, and write behavior. UI tests should cover meaningful workflows and regressions rather than snapshots of incidental structure.
+Prefer focused tests for domain logic, validation, authorization, write behavior, and meaningful query transformations. Routine unit tests for `.tsx` files and presentational components are not required. UI tests should cover meaningful user-visible workflows and regressions rather than snapshots or implementation details.
+
+Use a limited number of high-value end-to-end tests for important workflows. Add a lower-level UI test only when it protects a durable user-visible regression that is not better covered through end-to-end testing. Temporary implementation-specific UI tests may be useful during development, but should be removed afterward unless they protect such a regression.
 
 When adding a seam, only introduce an adapter abstraction when at least two adapters are real or imminent. One adapter usually means the seam is hypothetical.

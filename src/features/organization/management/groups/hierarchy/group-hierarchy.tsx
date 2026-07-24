@@ -9,7 +9,7 @@ import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Label } from '@/shared/ui/label'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
-import type { GroupHierarchyRow } from './query'
+import type { GroupHierarchyRow } from '../query'
 
 type MemberPopulation = 'all' | 'active' | 'passive'
 

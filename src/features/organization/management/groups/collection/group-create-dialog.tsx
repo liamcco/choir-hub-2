@@ -6,8 +6,8 @@ import { adminGroupPath } from '@/core/navigation/site'
 import { ControlledDialog } from '@/features/organization/management/components/controlled-dialog'
 import type { Group } from '@/prisma/generated/client'
 import { Button } from '@/shared/ui/button'
-import { createGroupAction } from './actions'
-import { CreateGroupForm } from './group-form'
+import { createGroupAction } from '../actions'
+import { CreateGroupForm } from '../detail/group-form'
 
 export function GroupCreateDialog({ groups }: { groups: Group[] }) {
   const router = useRouter()

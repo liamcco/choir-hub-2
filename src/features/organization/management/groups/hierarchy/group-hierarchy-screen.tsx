@@ -4,12 +4,12 @@ import { connection } from 'next/server'
 import { ROUTES } from '@/core/navigation/site'
 import { CollectionFrame } from '@/features/organization/management/components/collection-frame'
 import { buttonVariants } from '@/shared/ui/button'
+import { getGroupHierarchy } from '../query'
 import { GroupHierarchy } from './group-hierarchy'
-import { groupManagementQuery } from './query'
 
 export async function GroupHierarchyScreen() {
   await connection()
-  const groups = await groupManagementQuery.getHierarchy()
+  const groups = await getGroupHierarchy()
   return (
     <CollectionFrame
       activeResource="groups"

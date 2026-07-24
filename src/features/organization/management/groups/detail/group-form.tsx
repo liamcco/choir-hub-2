@@ -10,7 +10,7 @@ import { Field, FieldError, FieldGroup, FieldLabel } from '@/shared/ui/field'
 import { Input } from '@/shared/ui/input'
 import { NativeSelect, NativeSelectOption } from '@/shared/ui/native-select'
 import { Textarea } from '@/shared/ui/textarea'
-import type { GroupFormState } from './actions'
+import type { GroupFormState } from '../actions'
 
 const initialState: GroupFormState = {}
 export type GroupFormAction = (previousState: GroupFormState, formData: FormData) => Promise<GroupFormState>

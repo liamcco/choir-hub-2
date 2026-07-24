@@ -85,7 +85,8 @@ async function getHierarchy(input?: { at?: Date }) {
   return buildGroupHierarchy(groups, users, memberships, at)
 }
 
-export const groupManagementQuery = { listCollection: listGroupStructure, getDetail: getGroupDetail, getHierarchy }
+export const listGroupCollection = listGroupStructure
+export { getGroupDetail, getHierarchy as getGroupHierarchy }
 
 export type GroupHierarchyRow = {
   id: string

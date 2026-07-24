@@ -4,12 +4,12 @@ import { ROUTES } from '@/core/navigation/site'
 import { CollectionFrame } from '@/features/organization/management/components/collection-frame'
 import { InvalidDetailLookup } from '@/features/organization/management/components/invalid-detail-lookup'
 import { PageHeaderActions } from '@/features/organization/management/components/page-header-action'
-import { PositionCollection } from './position-collection'
-import { PositionCreate } from './position-create'
-import { PositionCreateDialog } from './position-create-dialog'
-import { PositionDetail } from './position-detail'
-import { PositionDetailRoutePresentation } from './position-detail-presentation'
-import { positionManagementQuery } from './query'
+import { PositionCollection } from './collection/position-collection'
+import { PositionCreate } from './create/position-create'
+import { PositionCreateDialog } from './create/position-create-dialog'
+import { PositionDetail } from './detail/position-detail'
+import { PositionDetailRoutePresentation } from './detail/position-detail-presentation'
+import { getPositionDetail, getPositionDetailForCreate, listPositionCollection } from './query'
 
 // TODO: Look at suspense...
 export function PositionManagementScreen({ detailId }: { detailId?: string }) {
@@ -22,10 +22,7 @@ export function PositionManagementScreen({ detailId }: { detailId?: string }) {
 
 async function PositionCollectionScreen({ detailId }: { detailId?: string }) {
   await connection()
-  const [positions, createState] = await Promise.all([
-    positionManagementQuery.listCollection(),
-    positionManagementQuery.getDetailForCreate(),
-  ])
+  const [positions, createState] = await Promise.all([listPositionCollection(), getPositionDetailForCreate()])
   return (
     <>
       <CollectionFrame
@@ -46,7 +43,7 @@ async function PositionCollectionScreen({ detailId }: { detailId?: string }) {
 }
 
 async function PositionDetailOverlay({ positionId }: { positionId: string }) {
-  const position = await positionManagementQuery.getDetail(positionId)
+  const position = await getPositionDetail(positionId)
   if (!position) return <InvalidDetailLookup collectionPath={ROUTES.adminPositions} resourceName="Position" />
 
   return (
@@ -65,6 +62,6 @@ export function PositionCreateScreen() {
 }
 async function PositionCreateContent() {
   await connection()
-  const position = await positionManagementQuery.getDetailForCreate()
+  const position = await getPositionDetailForCreate()
   return <PositionCreate groups={position.groups} />
 }

@@ -19,8 +19,8 @@ import type { GroupKind, MemberStatus } from '@/prisma/generated/client'
 import { formatDate, formatPeriod } from '@/shared/formatting'
 import { Badge } from '@/shared/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader } from '@/shared/ui/card'
+import type { AccountAccessState } from '../service'
 import { AccountAccessEditor, MemberStatusEditor } from './member-editors'
-import type { AccountAccessState } from './service'
 
 export type MemberRelationshipPeriod = {
   id: string

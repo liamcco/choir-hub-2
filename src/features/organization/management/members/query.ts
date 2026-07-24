@@ -144,7 +144,8 @@ async function getDetail(userId: string, input?: { at?: Date }) {
   }
 }
 
-export const userManagementQuery = { listCollection, getDetail }
+export const listMemberCollection = listCollection
+export const getMemberDetail = getDetail
 
 function compareNamedEntities(first: { id: string; name: string }, second: { id: string; name: string }) {
   return first.name.localeCompare(second.name) || first.id.localeCompare(second.id)

@@ -98,4 +98,6 @@ async function getDetailForCreate() {
   return { groups: await organizationService.groups.list() }
 }
 
-export const positionManagementQuery = { listCollection, getDetail, getDetailForCreate }
+export const listPositionCollection = listCollection
+export const getPositionDetail = getDetail
+export const getPositionDetailForCreate = getDetailForCreate

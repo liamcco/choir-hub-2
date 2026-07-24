@@ -7,13 +7,13 @@ import {
   endGroupMembershipAction,
 } from '@/features/organization/management/group-memberships/actions'
 import { updateGroupAction } from './actions'
-import { GroupCollectionScreen as GroupCollection } from './group-collection-screen'
-import { GroupDetail } from './group-detail'
-import { GroupDetailDialog } from './group-detail-presentation'
+import { GroupCollectionScreen as GroupCollection } from './collection/group-collection-screen'
+import { GroupDetail } from './detail/group-detail'
+import { GroupDetailDialog } from './detail/group-detail-presentation'
 
 // TODO: naming query vs service. The query is for reading data, the service is for writing data.
 // But the naming is inconsistent and confusing.
-import { groupManagementQuery } from './query'
+import { getGroupDetail, listGroupCollection } from './query'
 import { listGroups } from './service'
 
 // TODO: Look at the Suspenses...
@@ -36,7 +36,7 @@ function groupDetailActions(groupId: string) {
 
 async function GroupCollectionScreen({ detailId }: { detailId?: string }) {
   await connection()
-  const [groups, createGroups] = await Promise.all([groupManagementQuery.listCollection(), listGroups()])
+  const [groups, createGroups] = await Promise.all([listGroupCollection(), listGroups()])
   return (
     <>
       <GroupCollection createGroups={createGroups} groups={groups} />
@@ -46,7 +46,7 @@ async function GroupCollectionScreen({ detailId }: { detailId?: string }) {
 }
 
 async function GroupDetailOverlay({ groupId }: { groupId: string }) {
-  const group = await groupManagementQuery.getDetail(groupId)
+  const group = await getGroupDetail(groupId)
   if (!group) return <InvalidDetailLookup collectionPath={ROUTES.adminGroups} resourceName="Group" />
 
   return (

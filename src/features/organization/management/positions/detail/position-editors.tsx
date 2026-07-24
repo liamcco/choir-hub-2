@@ -1,8 +1,8 @@
 'use client'
 import { useState } from 'react'
 import { Button } from '@/shared/ui/button'
+import { UpdatePositionForm } from '../create/position-form'
 import type { PositionDetailView } from './position-detail'
-import { UpdatePositionForm } from './position-form'
 export function PositionFieldEditor({ position }: { position: PositionDetailView }) {
   const [isEditing, setIsEditing] = useState(false)
   if (!isEditing)

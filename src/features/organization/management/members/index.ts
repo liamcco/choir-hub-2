@@ -1,2 +1,2 @@
-export { MemberCreate } from './member-create'
+export { MemberCreate } from './create/member-create'
 export { UserManagementScreen } from './screen'

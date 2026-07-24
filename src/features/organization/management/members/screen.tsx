@@ -8,11 +8,11 @@ import {
   createGroupMembershipAction,
   endGroupMembershipAction,
 } from '@/features/organization/management/group-memberships'
-import { MemberCollection as UserCollection } from '@/features/organization/management/members/member-collection'
-import { MemberCreateDialog as UserCreateDialog } from '@/features/organization/management/members/member-create-dialog'
-import { MemberDetail as UserDetail } from '@/features/organization/management/members/member-detail'
-import { MemberDetailRoutePresentation as UserDetailRoutePresentation } from '@/features/organization/management/members/member-detail-presentation'
-import { userManagementQuery } from '@/features/organization/management/members/query'
+import { MemberCollection as UserCollection } from '@/features/organization/management/members/collection/member-collection'
+import { MemberCreateDialog as UserCreateDialog } from '@/features/organization/management/members/create/member-create-dialog'
+import { MemberDetail as UserDetail } from '@/features/organization/management/members/detail/member-detail'
+import { MemberDetailRoutePresentation as UserDetailRoutePresentation } from '@/features/organization/management/members/detail/member-detail-presentation'
+import { getMemberDetail, listMemberCollection } from '@/features/organization/management/members/query'
 import {
   createPositionAssignmentAction,
   endPositionAssignmentAction,
@@ -29,7 +29,7 @@ export function UserManagementScreen({ detailId }: { detailId?: string }) {
 
 async function UserCollectionScreen({ detailId }: { detailId?: string }) {
   await connection()
-  const users = await userManagementQuery.listCollection()
+  const users = await listMemberCollection()
   return (
     <>
       <CollectionFrame
@@ -50,7 +50,7 @@ async function UserCollectionScreen({ detailId }: { detailId?: string }) {
 }
 
 async function UserDetailOverlay({ userId }: { userId: string }) {
-  const user = await userManagementQuery.getDetail(userId)
+  const user = await getMemberDetail(userId)
   if (!user) return <InvalidDetailLookup collectionPath={ROUTES.adminUsers} resourceName="User" />
 
   return (
