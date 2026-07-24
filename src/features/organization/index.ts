@@ -12,14 +12,4 @@ export { defaultGroupKind, formatGroupKind, groupKindOptions } from '@/features/
 export { homePlacement } from '@/features/organization/core/home-placement'
 export { formatMemberStatus } from '@/features/organization/core/member-status'
 export { positionAssignment } from '@/features/organization/core/position-assignment'
-export {
-  choirCatalog,
-  groupCatalog,
-  positionCatalog,
-  referenceCatalog,
-  sectionCatalog,
-  synchronizeReferenceCatalog,
-  validateReferenceCatalog,
-} from '@/features/organization/core/reference-catalog'
-export { referenceCatalogData } from '@/features/organization/core/reference-catalog-data'
 export { organizationService } from '@/features/organization/core/service'

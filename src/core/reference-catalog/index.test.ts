@@ -1,12 +1,6 @@
 import { describe, expect, test } from 'bun:test'
-import type { ReferenceCatalog } from './reference-catalog'
-import {
-  groupCatalog,
-  positionCatalog,
-  referenceCatalog,
-  sectionCatalog,
-  validateReferenceCatalog,
-} from './reference-catalog'
+import type { ReferenceCatalog } from './index'
+import { groupCatalog, positionCatalog, referenceCatalog, sectionCatalog, validateReferenceCatalog } from './index'
 
 describe('reference catalog', () => {
   test('contains the fixed choir and section topology', () => {

@@ -1,8 +1,10 @@
 import type { db } from '@/core/db'
 import { choir, group, position, positionScope, section } from '@/drizzle/schema'
+import { referenceCatalogData } from './data'
 import { DuplicateEntityError, InvalidRelationshipError } from './errors'
 
-import { referenceCatalogData } from './reference-catalog-data'
+export { referenceCatalogData } from './data'
+export { DuplicateEntityError, InvalidRelationshipError } from './errors'
 
 export const choirCatalog = referenceCatalogData.choirs.map(({ sections: _sections, ...choir }) => choir)
 
@@ -46,7 +48,7 @@ export const groupCatalog: readonly CatalogGroup[] = [
   ),
 ]
 
-export type PositionDefinition = { id: string; name: string; scopes: PositionScopeDefinition[] }
+export type PositionDefinition = { id: string; name: string; scopes: readonly PositionScopeDefinition[] }
 export type PositionScopeDefinition =
   | { type: 'csk' }
   | { type: 'choir'; choirId: string }
