@@ -21,4 +21,5 @@ export {
   synchronizeReferenceCatalog,
   validateReferenceCatalog,
 } from '@/features/organization/core/reference-catalog'
+export { referenceCatalogData } from '@/features/organization/core/reference-catalog-data'
 export { organizationService } from '@/features/organization/core/service'

@@ -2,22 +2,14 @@ import type { db } from '@/core/db'
 import { choir, group, position, positionScope, section } from '@/drizzle/schema'
 import { DuplicateEntityError, InvalidRelationshipError } from './errors'
 
-export const choirCatalog = [
-  { id: 'mk', name: 'Manskören', shortName: 'MK' },
-  { id: 'kk', name: 'Kammarkören', shortName: 'KK' },
-  { id: 'dk', name: 'Damkören', shortName: 'DK' },
-] as const
+import { referenceCatalogData } from './reference-catalog-data'
 
-const choirSections = {
-  mk: ['T1', 'T2', 'B1', 'B2'],
-  kk: ['S1', 'S2', 'A1', 'A2', 'T1', 'T2', 'B1', 'B2'],
-  dk: ['S1', 'S2', 'A1', 'A2'],
-} as const
+export const choirCatalog = referenceCatalogData.choirs.map(({ sections: _sections, ...choir }) => choir)
 
-export type SectionVoiceType = (typeof choirSections)[keyof typeof choirSections][number]
+export type SectionVoiceType = (typeof referenceCatalogData.choirs)[number]['sections'][number]
 
-export const sectionCatalog = choirCatalog.flatMap((choir) =>
-  choirSections[choir.id].map((voiceType) => ({
+export const sectionCatalog = referenceCatalogData.choirs.flatMap((choir) =>
+  choir.sections.map((voiceType) => ({
     id: `${choir.id}-${voiceType.toLowerCase()}`,
     choirId: choir.id,
     name: voiceType,
@@ -33,104 +25,63 @@ export type CatalogGroup = {
 }
 
 export const groupCatalog: readonly CatalogGroup[] = [
-  { id: 'board', kind: 'board', name: 'Board', scope: { type: 'csk' } },
-  ...[
-    ['concert-mastery', 'Concert Mastery'],
-    ['gig-mastery', 'Gig Mastery'],
-    ['party-mastery', 'Party Mastery'],
-    ['web-mastery', 'Web Mastery'],
-    ['tour-committee', 'Tour Committee'],
-    ['recruitment-committee', 'Recruitment Committee'],
-  ].map(([id, name]) => ({ id, kind: 'committee' as const, name, scope: { type: 'csk' as const } })),
+  ...referenceCatalogData.groups.csk.map((group) => ({ ...group, scope: { type: 'csk' as const } })),
   ...choirCatalog.flatMap((choir) =>
-    [
-      ['concert', 'Concert'],
-      ['party', 'Party'],
-      ['rodd', 'Rodd'],
-    ].map(([id, name]) => ({
-      id: `${choir.id}-${id}`,
+    referenceCatalogData.groups.perChoir.map((group) => ({
+      id: `${choir.id}-${group.id}`,
       kind: 'committee' as const,
-      name: `${name} Group`,
+      name: group.name,
       scope: { type: 'choir' as const, choirId: choir.id },
     })),
   ),
 ]
 
-type PositionDefinition = { id: string; name: string; scopes: PositionScopeDefinition[] }
-type PositionScopeDefinition =
+export type PositionDefinition = { id: string; name: string; scopes: PositionScopeDefinition[] }
+export type PositionScopeDefinition =
   | { type: 'csk' }
   | { type: 'choir'; choirId: string }
   | { type: 'section'; sectionId: string }
   | { type: 'group'; groupId: string }
 
-const boardOfficeScopes = [
-  ['president', 'President'],
-  ['vice-president', 'Vice President'],
-  ['treasurer', 'Treasurer'],
-  ['secretary', 'Secretary'],
-  ['master-of-parties', 'Master of Parties'],
-  ['master-of-gigs', 'Master of Gigs'],
-  ['master-of-concerts', '1st Master of Concerts'],
-  ['master-of-pr', 'Master of PR'],
-] as const
-
 export const positionCatalog: readonly PositionDefinition[] = [
-  ...boardOfficeScopes.map(([id, name]) => ({
+  ...referenceCatalogData.positions.board.map(({ id, name, additionalGroupIds }) => ({
     id,
     name,
     scopes: [
-      {
-        type: 'group' as const,
-        groupId:
-          id === 'master-of-parties'
-            ? 'board'
-            : id === 'master-of-gigs'
-              ? 'board'
-              : id === 'master-of-concerts'
-                ? 'board'
-                : id === 'master-of-pr'
-                  ? 'board'
-                  : 'board',
-      },
-      ...(id === 'master-of-parties' ? [{ type: 'group' as const, groupId: 'party-mastery' }] : []),
-      ...(id === 'master-of-gigs' ? [{ type: 'group' as const, groupId: 'gig-mastery' }] : []),
-      ...(id === 'master-of-concerts' ? [{ type: 'group' as const, groupId: 'concert-mastery' }] : []),
+      { type: 'group' as const, groupId: 'board' },
+      ...additionalGroupIds.map((groupId) => ({ type: 'group' as const, groupId })),
     ],
   })),
   ...choirCatalog.flatMap((choir) =>
-    [
-      ['conductor', 'Conductor', []],
-      ['master-of-concerts', 'Master of Concerts', ['concert-mastery']],
-      ['master-of-gigs', 'Master of Gigs', ['gig-mastery']],
-    ].map(([kind, name, masteryIds]) => ({
+    referenceCatalogData.positions.perChoir.map(({ id: kind, name, additionalGroupIds }) => ({
       id: `${choir.id}-${kind}`,
-      name: name as string,
+      name,
       scopes: [
         { type: 'choir' as const, choirId: choir.id },
-        ...(masteryIds as string[]).map((groupId) => ({ type: 'group' as const, groupId })),
+        ...additionalGroupIds.map((groupId) => ({ type: 'group' as const, groupId })),
       ],
     })),
   ),
-  { id: 'party-mistress', name: 'Party Mistress', scopes: [{ type: 'group', groupId: 'party-mastery' }] },
-  { id: 'tour-treasurer', name: 'Treasurer', scopes: [{ type: 'group', groupId: 'tour-committee' }] },
-  ...(['mk', 'dk'] as const).flatMap((choirId) =>
-    choirSections[choirId].map((voiceType) => ({
+  ...referenceCatalogData.positions.csk.map(({ id, name, groupIds }) => ({
+    id,
+    name,
+    scopes: groupIds.map((groupId) => ({ type: 'group' as const, groupId })),
+  })),
+  ...referenceCatalogData.positions.voiceParents.individualSections.flatMap(({ choirId, voiceTypes }) =>
+    voiceTypes.map((voiceType) => ({
       id: `${choirId}-${voiceType.toLowerCase()}-voice-parent`,
       name: 'Voice Parent',
       scopes: [{ type: 'section' as const, sectionId: `${choirId}-${voiceType.toLowerCase()}` }],
     })),
   ),
-  ...[
-    ['s', 'S1', 'S2'],
-    ['a', 'A1', 'A2'],
-    ['t', 'T1', 'T2'],
-    ['b', 'B1', 'B2'],
-  ].map(([id, first, second]) => ({
+  ...referenceCatalogData.positions.voiceParents.kammarkorenFamilies.map(({ id, voiceTypes }) => ({
     id: `kk-${id}-voice-parent`,
     name: 'Voice Parent',
     scopes: [
-      { type: 'section' as const, sectionId: `kk-${first.toLowerCase()}` },
-      { type: 'section' as const, sectionId: `kk-${second.toLowerCase()}` },
+      ...voiceTypes.map((voiceType) => ({
+        type: 'section' as const,
+        sectionId: `kk-${voiceType.toLowerCase()}`,
+      })),
     ],
   })),
 ]
