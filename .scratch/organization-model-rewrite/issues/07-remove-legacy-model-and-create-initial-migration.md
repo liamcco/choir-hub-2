@@ -4,7 +4,7 @@
 
 **Blocked by:** 04 — Rewrite User Home placement management; 05 — Rewrite flat Group management and effective rosters; 06 — Rewrite fixed Position management.
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
 - [ ] All production reads and writes use the new domain module interfaces and target schema.
 - [ ] The generic CHOIR, SECTION, and PROJECT Group Kind paths are removed.
@@ -13,11 +13,11 @@
 - [ ] Mutable Group and Position actions, forms, dialogs, editors, permissions, and tests are removed.
 - [ ] The shallow `organizationService` bag and retired table-shaped write modules are removed.
 - [ ] Foundation and demo seeds are idempotent against the final schema and no legacy demo data is translated.
-- [ ] Any obsolete migration artifacts are removed and a clean initial migration is generated from the final V1 Drizzle schema.
-- [ ] The committed migration SQL includes deliberate PostgreSQL constraints, indexes, or target-shape checks that Drizzle cannot express natively.
+- [x] Any obsolete migration artifacts are removed and a clean initial migration is generated from the final V1 Drizzle schema.
+- [x] The committed migration SQL includes deliberate PostgreSQL constraints, indexes, or target-shape checks that Drizzle cannot express natively.
 - [ ] The committed initial migration applies successfully to an empty disposable PostgreSQL database without `drizzle db push`.
-- [ ] Database-level tests prove temporal overlap and target-shape guarantees implemented in custom migration SQL.
-- [ ] CONTRIBUTING documents fresh-database setup, foundation synchronization, and the rule that Drizzle-unsupported database behavior belongs in committed migration SQL.
+- [x] Database-level tests prove temporal overlap and target-shape guarantees implemented in custom migration SQL.
+- [x] CONTRIBUTING documents fresh-database setup, foundation synchronization, and the rule that Drizzle-unsupported database behavior belongs in committed migration SQL.
 - [ ] Desktop and mobile browser verification covers User placement, Committee membership, Board roster, Position Assignment, search, detail navigation, Back, and Close.
 - [ ] Authorization denial, audit logging, pending, validation, empty, and unexpected-error behavior remains useful in every changed workflow.
 - [ ] Drizzle generation, migration deployment to an empty database, tests, lint, and production build all pass.
