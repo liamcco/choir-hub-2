@@ -1,7 +1,8 @@
 import 'server-only'
 
-import { database } from '@/core/db'
-import type { GroupKind } from '@/drizzle/schema'
+import { asc, eq, isNull } from 'drizzle-orm'
+import { db } from '@/core/db'
+import { type GroupKind, group as groupTable } from '@/drizzle/schema'
 import {
   DuplicateEntityError,
   EntityDoesNotExistError,
@@ -12,20 +13,31 @@ import { normalizeOptionalString } from '@/shared/formatting'
 
 export const groups = {
   list() {
-    return database.group.findMany({
-      orderBy: [{ parentGroupId: 'asc' }, { name: 'asc' }],
-    })
+    return db
+      .select()
+      .from(groupTable)
+      .orderBy(asc(groupTable.parentGroupId), asc(groupTable.name))
+      .then((rows) => rows.map(toDomainGroup))
   },
 
   get(groupId: string) {
-    return database.group.findUnique({ where: { id: groupId } })
+    return db
+      .select()
+      .from(groupTable)
+      .where(eq(groupTable.id, groupId))
+      .limit(1)
+      .then((rows) => (rows[0] ? toDomainGroup(rows[0]) : null))
   },
 
   async create(input: { kind: GroupKind; name: string; description?: string | null; parentGroupId?: string | null }) {
     const group = normalizeGroup(input)
     await assertParentGroupExists(group.parentGroupId)
     await assertSiblingGroupNameIsUnique(group)
-    return database.group.create({ data: group })
+    return db
+      .insert(groupTable)
+      .values({ ...group, kind: group.kind.toLowerCase() as never })
+      .returning()
+      .then((rows) => toDomainGroup(rows[0]))
   },
 
   async update(
@@ -37,12 +49,17 @@ export const groups = {
     await assertParentGroupExists(group.parentGroupId)
     await assertValidGroupParent(groupId, group.parentGroupId)
     await assertSiblingGroupNameIsUnique(group, groupId)
-    return database.group.update({ where: { id: groupId }, data: group })
+    return db
+      .update(groupTable)
+      .set({ ...group, kind: group.kind.toLowerCase() as never, updatedAt: new Date() })
+      .where(eq(groupTable.id, groupId))
+      .returning()
+      .then((rows) => toDomainGroup(rows[0]))
   },
 }
 
 async function assertGroupExists(groupId: string) {
-  const group = await database.group.findUnique({ where: { id: groupId }, select: { id: true } })
+  const [group] = await db.select({ id: groupTable.id }).from(groupTable).where(eq(groupTable.id, groupId)).limit(1)
   if (!group) {
     throw new EntityDoesNotExistError('Choose an existing Group.')
   }
@@ -50,7 +67,11 @@ async function assertGroupExists(groupId: string) {
 
 async function assertParentGroupExists(parentGroupId: string | null) {
   if (!parentGroupId) return
-  const parent = await database.group.findUnique({ where: { id: parentGroupId }, select: { id: true } })
+  const [parent] = await db
+    .select({ id: groupTable.id })
+    .from(groupTable)
+    .where(eq(groupTable.id, parentGroupId))
+    .limit(1)
   if (!parent) {
     throw new EntityDoesNotExistError('Choose an existing parent Group.', { field: 'parentGroupId' })
   }
@@ -60,7 +81,14 @@ async function assertSiblingGroupNameIsUnique(
   input: { name: string; parentGroupId: string | null },
   excludingGroupId?: string,
 ) {
-  const siblings = await database.group.findMany({ where: { parentGroupId: input.parentGroupId } })
+  const siblings = await db
+    .select()
+    .from(groupTable)
+    .where(
+      input.parentGroupId === null
+        ? isNull(groupTable.parentGroupId)
+        : eq(groupTable.parentGroupId, input.parentGroupId),
+    )
   const duplicate = siblings.find(
     (group) => group.id !== excludingGroupId && groupSiblingNamesMatch(group.name, input.name),
   )
@@ -97,4 +125,8 @@ function normalizeGroup(input: {
     description: normalizeOptionalString(input.description),
     parentGroupId: input.parentGroupId || null,
   }
+}
+
+function toDomainGroup(row: typeof groupTable.$inferSelect) {
+  return { ...row, kind: row.kind.toUpperCase() as GroupKind }
 }

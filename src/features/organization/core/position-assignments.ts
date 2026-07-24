@@ -1,5 +1,7 @@
 import 'server-only'
-import { database } from '@/core/db'
+import { and, asc, eq, gt, isNull, lte, or } from 'drizzle-orm'
+import { db } from '@/core/db'
+import { position, positionAssignment, user } from '@/drizzle/schema'
 import {
   assertValidDatedPeriod,
   findOverlappingDatedPeriod,
@@ -8,37 +10,54 @@ import {
 import { DateOverlapError, EntityDoesNotExistError } from '@/features/organization/core/errors'
 export const positionAssignments = {
   list(input?: { positionId?: string; userId?: string; at?: Date }) {
-    return database.positionAssignment.findMany({
-      where: {
-        positionId: input?.positionId,
-        userId: input?.userId,
-        ...(input?.at ? currentDatedPeriodWhere(input.at) : {}),
-      },
-      orderBy: [{ positionId: 'asc' }, { startsAt: 'asc' }],
-    })
+    return db
+      .select()
+      .from(positionAssignment)
+      .where(
+        and(
+          input?.positionId ? eq(positionAssignment.positionId, input.positionId) : undefined,
+          input?.userId ? eq(positionAssignment.userId, input.userId) : undefined,
+          input?.at
+            ? and(
+                lte(positionAssignment.startsAt, input.at),
+                or(isNull(positionAssignment.endsAt), gt(positionAssignment.endsAt, input.at)),
+              )
+            : undefined,
+        ),
+      )
+      .orderBy(asc(positionAssignment.positionId), asc(positionAssignment.startsAt))
   },
   async create(input: { positionId: string; userId: string; startsAt?: Date; endsAt?: Date | null }) {
     const assignment = normalizeDatedPeriodInput({ ...input, startsAt: input.startsAt ?? new Date() })
     await assertPositionExists(assignment.positionId)
     await assertUserExists(assignment.userId)
     await assertNoOverlap(assignment)
-    return database.positionAssignment.create({ data: assignment })
+    return db
+      .insert(positionAssignment)
+      .values(assignment)
+      .returning()
+      .then((rows) => rows[0])
   },
   async end(assignmentId: string, endsAt: Date) {
-    const current = await database.positionAssignment.findUnique({ where: { id: assignmentId } })
+    const [current] = await db.select().from(positionAssignment).where(eq(positionAssignment.id, assignmentId)).limit(1)
     if (!current) throw new EntityDoesNotExistError('Choose an existing Position Assignment.')
     const period = { startsAt: current.startsAt, endsAt }
     assertValidDatedPeriod(period)
     await assertNoOverlap({ ...current, ...period }, assignmentId)
-    return database.positionAssignment.update({ where: { id: assignmentId }, data: { endsAt } })
+    return db
+      .update(positionAssignment)
+      .set({ endsAt })
+      .where(eq(positionAssignment.id, assignmentId))
+      .returning()
+      .then((rows) => rows[0])
   },
 }
 async function assertPositionExists(positionId: string) {
-  if (!(await database.position.findUnique({ where: { id: positionId }, select: { id: true } })))
+  if (!(await db.select({ id: position.id }).from(position).where(eq(position.id, positionId)).limit(1)).length)
     throw new EntityDoesNotExistError('Choose an existing Position.', { field: 'positionId' })
 }
 async function assertUserExists(userId: string) {
-  if (!(await database.user.findUnique({ where: { id: userId }, select: { id: true } })))
+  if (!(await db.select({ id: user.id }).from(user).where(eq(user.id, userId)).limit(1)).length)
     throw new EntityDoesNotExistError('Choose an existing User.', { field: 'userId' })
 }
 async function assertNoOverlap(
@@ -53,7 +72,4 @@ async function assertNoOverlap(
     )
   )
     throw new DateOverlapError('This Position already has an assignment during that period.', { field: 'startsAt' })
-}
-function currentDatedPeriodWhere(at: Date) {
-  return { startsAt: { lte: at }, OR: [{ endsAt: null }, { endsAt: { gt: at } }] }
 }

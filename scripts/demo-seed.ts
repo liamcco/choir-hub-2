@@ -1,15 +1,15 @@
 import 'dotenv/config'
 
-import { database } from '@/core/db'
+import { db, sql } from '@/core/db'
 
 import { seedDemo } from '@/drizzle/seeds/demo'
 
 async function main(): Promise<void> {
   try {
-    await seedDemo(database)
+    await seedDemo(db)
     console.log('Completed demo seed.')
   } finally {
-    await database.$disconnect()
+    await sql.end()
   }
 }
 

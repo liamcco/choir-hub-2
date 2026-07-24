@@ -1,8 +1,9 @@
 import 'server-only'
+import { eq } from 'drizzle-orm'
 import { headers } from 'next/headers'
 import { auth } from '@/core/auth/auth'
-import { database } from '@/core/db'
-import type { MemberStatus } from '@/drizzle/schema'
+import { db } from '@/core/db'
+import { type MemberStatus, user } from '@/drizzle/schema'
 export type AccountAccessState = 'enabled' | 'disabled'
 async function createUser(input: { name: string; email: string; password: string; status: MemberStatus }) {
   const requestHeaders = await headers()
@@ -16,10 +17,20 @@ async function createUser(input: { name: string; email: string; password: string
       data: { emailVerified: true },
     },
   })
-  return database.user.update({ where: { id: result.user.id }, data: { status: input.status } })
+  return db
+    .update(user)
+    .set({ status: input.status.toLowerCase() as never, updatedAt: new Date() })
+    .where(eq(user.id, result.user.id))
+    .returning()
+    .then((rows) => rows[0])
 }
 async function updateMemberStatus(userId: string, status: MemberStatus) {
-  return database.user.update({ where: { id: userId }, data: { status } })
+  return db
+    .update(user)
+    .set({ status: status.toLowerCase() as never, updatedAt: new Date() })
+    .where(eq(user.id, userId))
+    .returning()
+    .then((rows) => rows[0])
 }
 async function updateAccountAccess(userId: string, accessState: AccountAccessState) {
   const requestHeaders = await headers()

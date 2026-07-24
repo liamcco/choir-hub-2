@@ -36,15 +36,8 @@ export function readAdminConfig(environment: { ADMIN_EMAIL?: string; ADMIN_PASSW
 }
 
 type BootstrapDependencies = {
-  database: {
-    user: {
-      findUnique: (args: {
-        where: { email: string }
-      }) => Promise<{ id: string; email: string; role?: string | null } | null>
-      update: (args: { where: { id: string }; data: Record<string, unknown> }) => Promise<{ email: string }>
-    }
-    $disconnect: () => Promise<void>
-  }
+  findUser: (email: string) => Promise<{ id: string; email: string; role?: string | null } | null>
+  updateUser: (id: string, data: Record<string, unknown>) => Promise<{ email: string }>
   auth: {
     api: {
       createUser: (args: {
@@ -58,15 +51,12 @@ export async function bootstrapAdmin(
   dependencies: BootstrapDependencies,
   config: { email: string; password: string; name: string },
 ) {
-  const existingUser = await dependencies.database.user.findUnique({ where: { email: config.email } })
+  const existingUser = await dependencies.findUser(config.email)
 
   if (existingUser) {
-    const user = await dependencies.database.user.update({
-      where: { id: existingUser.id },
-      data: {
-        role: normalizeRoles(existingUser.role),
-        emailVerified: true,
-      },
+    const user = await dependencies.updateUser(existingUser.id, {
+      role: normalizeRoles(existingUser.role),
+      emailVerified: true,
     })
 
     return { action: 'promoted' as const, user }
@@ -86,11 +76,36 @@ if (import.meta.main) {
       ADMIN_PASSWORD: process.env.ADMIN_PASSWORD,
       ADMIN_NAME: process.env.ADMIN_NAME,
     })
-    const [{ database }, { auth }] = await Promise.all([import('@/core/db'), import('@/core/auth/auth')])
-    const result = await bootstrapAdmin({ database, auth }, config)
+    const [{ db, sql }, { user }, { auth }] = await Promise.all([
+      import('@/core/db'),
+      import('@/drizzle/schema'),
+      import('@/core/auth/auth'),
+    ])
+    const result = await bootstrapAdmin(
+      {
+        findUser: async (email) =>
+          (
+            await db
+              .select()
+              .from(user)
+              .where((await import('drizzle-orm')).eq(user.email, email))
+              .limit(1)
+          )[0] ?? null,
+        updateUser: async (id, data) =>
+          (
+            await db
+              .update(user)
+              .set(data)
+              .where((await import('drizzle-orm')).eq(user.id, id))
+              .returning()
+          )[0],
+        auth,
+      },
+      config,
+    )
     console.log(`${result.action === 'created' ? 'Created' : 'Promoted existing'} admin user: ${result.user.email}`)
     if (result.action === 'promoted') console.log('Existing user password was not changed.')
-    await database.$disconnect()
+    await sql.end()
     process.exit(0)
   } catch (error) {
     console.error(error instanceof Error ? error.message : error)

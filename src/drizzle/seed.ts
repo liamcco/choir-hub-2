@@ -1,15 +1,15 @@
 import 'dotenv/config'
 
-import { database } from '@/core/db'
+import { db, sql } from '@/core/db'
 
 import { seedFoundation } from './seeds/foundation'
 
 async function main(): Promise<void> {
   try {
-    await seedFoundation(database)
+    await seedFoundation(db)
     console.log('Completed production foundation seed.')
   } finally {
-    await database.$disconnect()
+    await sql.end()
   }
 }
 

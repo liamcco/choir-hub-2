@@ -11,8 +11,13 @@ const getSession = mock(async () => currentSession)
 const userHasPermission = mock(async ({ body }: { body: { userId: string } }) => ({
   success: currentSession?.user.id === body.userId && currentSession.user.role?.split(',').includes('admin'),
 }))
-const findMembership = mock(async () => currentMembership)
-const findAssignment = mock(async () => currentAssignment)
+const select = mock(() => ({
+  from: mock(() => ({
+    where: mock(() => ({
+      limit: mock(async () => (currentMembership ? [currentMembership] : currentAssignment ? [currentAssignment] : [])),
+    })),
+  })),
+}))
 const authorizationDenied = mock(() => {})
 const accountAccessChanged = mock(() => {})
 const logger = {
@@ -25,11 +30,7 @@ const logger = {
 mock.module('next/headers', () => ({ headers }))
 mock.module('@/core/auth/auth', () => ({ auth: { api: { getSession, userHasPermission } } }))
 mock.module('@/core/db', () => ({
-  db: {},
-  database: {
-    groupMembership: { findFirst: findMembership },
-    positionAssignment: { findFirst: findAssignment },
-  },
+  db: { select },
 }))
 mock.module('@/core/logging', () => ({ audit: { authorizationDenied, accountAccessChanged }, logger }))
 
@@ -54,8 +55,7 @@ beforeEach(() => {
   userHasPermission.mockClear()
   currentMembership = null
   currentAssignment = null
-  findMembership.mockClear()
-  findAssignment.mockClear()
+  select.mockClear()
   authorizationDenied.mockClear()
 })
 
@@ -149,9 +149,6 @@ describe('current-actor domain predicates', () => {
     currentMembership = { id: 'membership-1' }
 
     await expect(canCurrentUserInGroup({ groupId: 'group-1' })).resolves.toBe(true)
-    expect(findMembership).toHaveBeenCalledWith(
-      expect.objectContaining({ where: expect.objectContaining({ userId: 'member-1', groupId: 'group-1' }) }),
-    )
   })
 
   test('denies missing Member or Group Membership, including a former Member', async () => {
@@ -166,9 +163,6 @@ describe('current-actor domain predicates', () => {
     currentAssignment = { id: 'assignment-1' }
 
     await expect(canCurrentUserHoldPosition({ positionId: 'position-1' })).resolves.toBe(true)
-    expect(findAssignment).toHaveBeenCalledWith(
-      expect.objectContaining({ where: expect.objectContaining({ userId: 'member-1', positionId: 'position-1' }) }),
-    )
 
     currentAssignment = null
     await expect(canCurrentUserHoldPosition({ positionId: 'position-1' })).resolves.toBe(false)

@@ -1,8 +1,10 @@
+import { and, eq, gt, isNull, lte, or } from 'drizzle-orm'
 import { headers } from 'next/headers'
 import { auth } from '@/core/auth/auth'
 import { type AccessRole, accessRoles, type GlobalPermissionRequest } from '@/core/auth/permissions'
-import { database } from '@/core/db'
+import { db } from '@/core/db'
 import { audit } from '@/core/logging'
+import { groupMembership, positionAssignment } from '@/drizzle/schema'
 
 type RequestActor = {
   userId: string
@@ -74,17 +76,20 @@ export async function canCurrentUserInGroup(input: { groupId: string }): Promise
   }
 
   const now = new Date()
-  const membership = await database.groupMembership.findFirst({
-    where: {
-      userId,
-      groupId: input.groupId,
-      startsAt: { lte: now },
-      OR: [{ endsAt: null }, { endsAt: { gt: now } }],
-    },
-    select: { id: true },
-  })
+  const [membership] = await db
+    .select({ id: groupMembership.id })
+    .from(groupMembership)
+    .where(
+      and(
+        eq(groupMembership.userId, userId),
+        eq(groupMembership.groupId, input.groupId),
+        lte(groupMembership.startsAt, now),
+        or(isNull(groupMembership.endsAt), gt(groupMembership.endsAt, now)),
+      ),
+    )
+    .limit(1)
 
-  return membership !== null
+  return membership !== undefined
 }
 
 export async function requireCurrentUserInGroup(input: { groupId: string }): Promise<void> {
@@ -104,17 +109,20 @@ export async function canCurrentUserHoldPosition(input: { positionId: string }):
   }
 
   const now = new Date()
-  const assignment = await database.positionAssignment.findFirst({
-    where: {
-      userId,
-      positionId: input.positionId,
-      startsAt: { lte: now },
-      OR: [{ endsAt: null }, { endsAt: { gt: now } }],
-    },
-    select: { id: true },
-  })
+  const [assignment] = await db
+    .select({ id: positionAssignment.id })
+    .from(positionAssignment)
+    .where(
+      and(
+        eq(positionAssignment.userId, userId),
+        eq(positionAssignment.positionId, input.positionId),
+        lte(positionAssignment.startsAt, now),
+        or(isNull(positionAssignment.endsAt), gt(positionAssignment.endsAt, now)),
+      ),
+    )
+    .limit(1)
 
-  return assignment !== null
+  return assignment !== undefined
 }
 
 export async function requireCurrentUserHoldsPosition(input: { positionId: string }): Promise<void> {

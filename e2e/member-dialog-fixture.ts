@@ -1,6 +1,8 @@
 import 'dotenv/config'
+import { eq, inArray } from 'drizzle-orm'
 import { auth } from '@/core/auth/auth'
-import { database } from '@/core/db'
+import { db, sql } from '@/core/db'
+import { group, groupMembership, user } from '@/drizzle/schema'
 
 const email = 'member-dialog-e2e@example.invalid'
 const name = 'Member Dialog E2E'
@@ -10,18 +12,37 @@ const createdGroupFixture = { name: 'Created Group E2E', description: 'Created t
 const groupFixtures = [parentGroupFixture, childGroupFixture, createdGroupFixture]
 
 async function removeFixture() {
-  const existingGroups = await database.group.findMany({
-    where: { name: { in: groupFixtures.map((fixture) => fixture.name) } },
-  })
+  const existingGroups = await db
+    .select()
+    .from(group)
+    .where(
+      inArray(
+        group.name,
+        groupFixtures.map((fixture) => fixture.name),
+      ),
+    )
   const unexpectedGroup = existingGroups.find(
     (group) => groupFixtures.find((fixture) => fixture.name === group.name)?.description !== group.description,
   )
   if (unexpectedGroup) throw new Error(`Refusing to replace non-test Group ${unexpectedGroup.name}.`)
-  await database.group.deleteMany({ where: { id: { in: existingGroups.map((group) => group.id) } } })
-  const existing = await database.user.findUnique({ where: { email } })
+  if (existingGroups.length)
+    await db.delete(groupMembership).where(
+      inArray(
+        groupMembership.groupId,
+        existingGroups.map((item) => item.id),
+      ),
+    )
+  if (existingGroups.length)
+    await db.delete(group).where(
+      inArray(
+        group.id,
+        existingGroups.map((item) => item.id),
+      ),
+    )
+  const [existing] = await db.select().from(user).where(eq(user.email, email)).limit(1)
   if (!existing) return
   if (existing.name !== name) throw new Error(`Refusing to replace non-test account ${email}.`)
-  await database.user.delete({ where: { id: existing.id } })
+  await db.delete(user).where(eq(user.id, existing.id))
 }
 
 async function main() {
@@ -34,23 +55,25 @@ async function main() {
   const result = await auth.api.createUser({
     body: { email, name, password: 'member-dialog-e2e-password', role: 'admin' },
   })
-  const parentGroup = await database.group.create({
-    data: { ...parentGroupFixture, kind: 'CHOIR' },
-  })
-  const childGroup = await database.group.create({
-    data: {
+  const [parentGroup] = await db
+    .insert(group)
+    .values({ ...parentGroupFixture, kind: 'choir' })
+    .returning()
+  const [childGroup] = await db
+    .insert(group)
+    .values({
       ...childGroupFixture,
-      kind: 'SECTION',
+      kind: 'section',
       parentGroupId: parentGroup.id,
-    },
-  })
-  await database.groupMembership.create({
-    data: { groupId: childGroup.id, userId: result.user.id, startsAt: new Date('2025-01-01T00:00:00Z') },
-  })
+    })
+    .returning()
+  await db
+    .insert(groupMembership)
+    .values({ groupId: childGroup.id, userId: result.user.id, startsAt: new Date('2025-01-01T00:00:00Z') })
 }
 
 try {
   await main()
 } finally {
-  await database.$disconnect()
+  await sql.end()
 }

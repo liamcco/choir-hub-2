@@ -24,11 +24,11 @@ describe('admin bootstrap helpers', () => {
   test('creates a missing user with the configured values', async () => {
     const findUnique = mock(async () => null)
     const createUser = mock(async ({ body }: { body: { email: string } }) => ({ user: { email: body.email } }))
-    const database = { user: { findUnique, update: mock() }, $disconnect: mock(async () => {}) }
+    const database = { findUser: findUnique, updateUser: mock() }
 
     await expect(
       bootstrapAdmin(
-        { database, auth: { api: { createUser } } },
+        { ...database, auth: { api: { createUser } } },
         { email: 'admin@example.com', password: 'long-password', name: 'Choir Admin' },
       ),
     ).resolves.toMatchObject({ action: 'created', user: { email: 'admin@example.com' } })
@@ -39,23 +39,20 @@ describe('admin bootstrap helpers', () => {
 
   test('promotes an existing user, preserving roles and password', async () => {
     const findUnique = mock(async () => ({ id: 'user-1', email: 'admin@example.com', role: ' user, editor,admin ' }))
-    const update = mock(async ({ data }: { data: Record<string, unknown> }) => ({
+    const update = mock(async (_id: string, data: Record<string, unknown>) => ({
       email: 'admin@example.com',
       ...data,
     }))
     const createUser = mock()
-    const database = { user: { findUnique, update }, $disconnect: mock(async () => {}) }
+    const database = { findUser: findUnique, updateUser: update }
 
     await bootstrapAdmin(
-      { database, auth: { api: { createUser } } },
+      { ...database, auth: { api: { createUser } } },
       { email: 'admin@example.com', password: 'unused-password', name: 'New Name' },
     )
 
-    expect(findUnique).toHaveBeenCalledWith({ where: { email: 'admin@example.com' } })
-    expect(update).toHaveBeenCalledWith({
-      where: { id: 'user-1' },
-      data: { role: 'user,editor,admin', emailVerified: true },
-    })
+    expect(findUnique).toHaveBeenCalledWith('admin@example.com')
+    expect(update).toHaveBeenCalledWith('user-1', { role: 'user,editor,admin', emailVerified: true })
     expect(createUser).not.toHaveBeenCalled()
   })
 })

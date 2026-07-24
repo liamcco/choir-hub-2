@@ -1,4 +1,6 @@
-import type { Database } from '@/core/db/database'
+import type { InferSelectModel } from 'drizzle-orm'
+import type { db } from '@/core/db'
+import { group as groupTable, positionScope, position as positionTable } from '@/drizzle/schema'
 
 /**
  * Operational/domain seed data shared by environments.
@@ -6,7 +8,7 @@ import type { Database } from '@/core/db/database'
  * Add durable Groups, Positions, and Position Scopes here. Keep this seed free
  * of people, memberships, assignments, and authentication data.
  */
-export async function seedFoundation(database: Database): Promise<void> {
+export async function seedFoundation(database: typeof db): Promise<void> {
   const groups = [
     { id: 'kk', kind: 'CHOIR' as const, name: 'KK', parentGroupId: null },
     { id: 'dk', kind: 'CHOIR' as const, name: 'DK', parentGroupId: null },
@@ -41,7 +43,17 @@ export async function seedFoundation(database: Database): Promise<void> {
   ]
 
   for (const group of groups) {
-    await database.group.upsert({ where: { id: group.id }, create: group, update: group })
+    await database
+      .insert(groupTable)
+      .values({ ...group, kind: group.kind.toLowerCase() as InferSelectModel<typeof groupTable>['kind'] })
+      .onConflictDoUpdate({
+        target: groupTable.id,
+        set: {
+          kind: group.kind.toLowerCase() as InferSelectModel<typeof groupTable>['kind'],
+          name: group.name,
+          parentGroupId: group.parentGroupId,
+        },
+      })
   }
 
   const positions = [
@@ -56,7 +68,10 @@ export async function seedFoundation(database: Database): Promise<void> {
   ]
 
   for (const position of positions) {
-    await database.position.upsert({ where: { id: position.id }, create: position, update: position })
+    await database
+      .insert(positionTable)
+      .values(position)
+      .onConflictDoUpdate({ target: positionTable.id, set: { name: position.name } })
   }
 
   const scopes = [
@@ -71,10 +86,6 @@ export async function seedFoundation(database: Database): Promise<void> {
   ] as const
 
   for (const [positionId, groupId] of scopes) {
-    await database.positionScope.upsert({
-      where: { positionId_groupId: { positionId, groupId } },
-      create: { positionId, groupId },
-      update: {},
-    })
+    await database.insert(positionScope).values({ positionId, groupId }).onConflictDoNothing()
   }
 }

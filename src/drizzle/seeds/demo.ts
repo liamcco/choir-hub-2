@@ -1,6 +1,8 @@
+import { eq } from 'drizzle-orm'
 import { auth } from '@/core/auth/auth'
-import type { Database } from '@/core/db/database'
+import type { db } from '@/core/db'
 import type { MemberStatus } from '@/drizzle/schema'
+import { groupMembership, positionAssignment, user as userTable } from '@/drizzle/schema'
 import { seedFoundation } from './foundation'
 
 /**
@@ -9,7 +11,7 @@ import { seedFoundation } from './foundation'
  * Add realistic Users, Groups, Positions, Group Memberships, and Position
  * Assignments here. Prefer stable IDs so e2e fixtures can refer to records.
  */
-export async function seedDemo(database: Database): Promise<void> {
+export async function seedDemo(database: typeof db): Promise<void> {
   await seedFoundation(database)
 
   const voices = ['a1', 'a2', 'b1', 'b2', 's1', 's2', 't1', 't2'] as const
@@ -46,7 +48,7 @@ export async function seedDemo(database: Database): Promise<void> {
   }
 
   for (const user of users) {
-    const existing = await database.user.findUnique({ where: { email: user.email } })
+    const [existing] = await database.select().from(userTable).where(eq(userTable.email, user.email)).limit(1)
     if (!existing) {
       const result = await auth.api.createUser({
         body: {
@@ -57,10 +59,16 @@ export async function seedDemo(database: Database): Promise<void> {
         },
       })
       userIds.set(user.email, result.user.id)
-      await database.user.update({ where: { id: result.user.id }, data: { status: user.status } })
+      await database
+        .update(userTable)
+        .set({ status: user.status.toLowerCase() as typeof userTable.$inferInsert.status })
+        .where(eq(userTable.id, result.user.id))
     } else {
       userIds.set(user.email, existing.id)
-      await database.user.update({ where: { id: existing.id }, data: { name: user.name, status: user.status } })
+      await database
+        .update(userTable)
+        .set({ name: user.name, status: user.status.toLowerCase() as typeof userTable.$inferInsert.status })
+        .where(eq(userTable.id, existing.id))
     }
   }
 
@@ -72,22 +80,20 @@ export async function seedDemo(database: Database): Promise<void> {
   ])
 
   for (const membership of memberships) {
-    await database.groupMembership.upsert({
-      where: { id: `demo-membership-${membership.userId}-${membership.groupId}` },
-      create: { id: `demo-membership-${membership.userId}-${membership.groupId}`, ...membership, startsAt },
-      update: { endsAt: null, startsAt },
-    })
+    await database
+      .insert(groupMembership)
+      .values({ id: `demo-membership-${membership.userId}-${membership.groupId}`, ...membership, startsAt })
+      .onConflictDoUpdate({ target: groupMembership.id, set: { endsAt: null, startsAt } })
   }
 
   const boardUsers = users.slice(0, 8)
   for (const [index, user] of boardUsers.entries()) {
     const userId = userIdFor(user.email)
     const membershipId = `demo-membership-${userId}-board`
-    await database.groupMembership.upsert({
-      where: { id: membershipId },
-      create: { id: membershipId, userId, groupId: 'board', startsAt },
-      update: { endsAt: null, startsAt },
-    })
+    await database
+      .insert(groupMembership)
+      .values({ id: membershipId, userId, groupId: 'board', startsAt })
+      .onConflictDoUpdate({ target: groupMembership.id, set: { endsAt: null, startsAt } })
 
     const positionId = [
       'president',
@@ -99,11 +105,10 @@ export async function seedDemo(database: Database): Promise<void> {
       'master-of-concerts',
       'master-of-pr',
     ][index]
-    await database.positionAssignment.upsert({
-      where: { id: `demo-assignment-${positionId}` },
-      create: { id: `demo-assignment-${positionId}`, positionId, userId, startsAt },
-      update: { endsAt: null, startsAt, userId },
-    })
+    await database
+      .insert(positionAssignment)
+      .values({ id: `demo-assignment-${positionId}`, positionId, userId, startsAt })
+      .onConflictDoUpdate({ target: positionAssignment.id, set: { endsAt: null, startsAt, userId } })
   }
 
   const committeeIds = ['concertmastery', 'gigmastery', 'partymastery', 'webmastery', 'tourcommittee', 'reccommittee']
@@ -111,10 +116,9 @@ export async function seedDemo(database: Database): Promise<void> {
     const user = users[20 + index]
     const userId = userIdFor(user.email)
     const id = `demo-membership-${userId}-${committeeId}`
-    await database.groupMembership.upsert({
-      where: { id },
-      create: { id, userId, groupId: committeeId, startsAt },
-      update: { endsAt: null, startsAt },
-    })
+    await database
+      .insert(groupMembership)
+      .values({ id, userId, groupId: committeeId, startsAt })
+      .onConflictDoUpdate({ target: groupMembership.id, set: { endsAt: null, startsAt } })
   }
 }
