@@ -79,7 +79,7 @@ describe('Member detail', () => {
     expect(screen.getAllByText('Active').length).toBeGreaterThan(0)
     expect(screen.getByText('member-1')).toBeTruthy()
     expect(screen.getByText('Feb 1, 2025')).toBeTruthy()
-    expect(screen.getByRole('heading', { name: 'Group Memberships' })).toBeTruthy()
+    expect(screen.getByRole('heading', { name: 'Committee Memberships' })).toBeTruthy()
     expect(screen.getByText('Chamber Choir')).toBeTruthy()
     expect(screen.getByRole('heading', { name: 'Position Assignments' })).toBeTruthy()
     expect(screen.getByText('Chair')).toBeTruthy()
@@ -124,7 +124,7 @@ describe('Member detail', () => {
     )
 
     expect(screen.queryByText('History')).toBeNull()
-    expect(screen.getByText('No current Group Memberships')).toBeTruthy()
+    expect(screen.getByText('No current Committee Memberships')).toBeTruthy()
     expect(screen.getByText('No current Position Assignments')).toBeTruthy()
   })
 })
