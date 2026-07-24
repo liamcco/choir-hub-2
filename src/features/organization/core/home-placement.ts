@@ -34,10 +34,22 @@ export const homePlacement = {
       .returning()
       .then((r) => r[0])
   },
-  async startSectionPlacement(input: { userId: string; sectionId: string; startsAt?: Date; endsAt?: Date | null }) {
+  async startSectionPlacement(input: {
+    userId: string
+    sectionId: string
+    voiceType: 'S' | 'S1' | 'S2' | 'A' | 'A1' | 'A2' | 'T' | 'T1' | 'T2' | 'B' | 'B1' | 'B2'
+    startsAt?: Date
+    endsAt?: Date | null
+  }) {
     const period = normalizeDatedPeriodInput({ ...input, startsAt: input.startsAt ?? new Date() })
     const [target] = await db.select().from(section).where(eq(section.id, input.sectionId)).limit(1)
     if (!target) throw new EntityDoesNotExistError('Choose an existing Section.', { field: 'sectionId' })
+    if (
+      !/^(S|A|T|B)[12]$/.test(input.voiceType) ||
+      input.voiceType[0] !== target.voiceType[0] ||
+      (target.voiceType.length === 2 && input.voiceType !== target.voiceType)
+    )
+      throw new InvalidRelationshipError('Choose a Voice Type allowed by the Section.', { field: 'voiceType' })
     const memberships = await this.listChoirMemberships({ userId: input.userId })
     if (!memberships.some((m) => m.choirId === target.choirId && covers(m, period)))
       throw new InvalidRelationshipError('Section Placement must be covered by a matching Choir Membership.', {

@@ -1,6 +1,5 @@
 import { adminUserPath } from '@/core/navigation/site'
 import type { Group } from '@/drizzle/schema'
-import { formatGroupKind } from '@/features/organization/core/group-kind'
 import type { UserLabel } from '@/features/organization/core/labels'
 import { RelatedDetailLink } from '@/features/organization/management/components/related-detail-link'
 import { formatPeriod } from '@/shared/formatting'
@@ -42,7 +41,6 @@ export function GroupDetail({ group, actions }: { group: GroupDetailView; action
         <div className="space-y-2">
           <p className="text-sm font-medium text-muted-foreground">Group</p>
           <h1 className="text-3xl font-semibold tracking-tight">{group.name}</h1>
-          <Badge variant="secondary">{formatGroupKind(group.kind)}</Badge>
         </div>
       </header>
 
@@ -52,8 +50,6 @@ export function GroupDetail({ group, actions }: { group: GroupDetailView; action
         </h2>
         <dl className="grid gap-4 sm:grid-cols-2">
           <ReadField label="Name" value={group.name} />
-          <ReadField label="Group Kind" value={formatGroupKind(group.kind)} />
-          <ReadField label="Scope" value={group.scopeType === 'csk' ? 'CSK-wide' : group.scopeKey} />
         </dl>
       </section>
 
@@ -136,9 +132,16 @@ function MembershipList({
         <li className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between" key={membership.id}>
           <div>
             <RelatedDetailLink href={adminUserPath(membership.userId)}>{membership.userLabel}</RelatedDetailLink>
-            <p className="text-sm text-muted-foreground">
-              {membership.userDetail} · {formatPeriod(membership)} · {membership.sourceLabels.join(' + ')}
-            </p>
+            <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+              <span>{membership.userDetail}</span>
+              <span aria-hidden="true">·</span>
+              <span>{formatPeriod(membership)}</span>
+              {membership.sourceLabels.map((sourceLabel) => (
+                <Badge key={sourceLabel} variant="secondary">
+                  {sourceLabel}
+                </Badge>
+              ))}
+            </div>
           </div>
           {showEndControls && endAction ? (
             <EndGroupUserControl action={endAction} groupName={groupName} membership={membership} />

@@ -3,6 +3,7 @@ import 'server-only'
 import { organizationService } from '@/features/organization'
 import { isCurrentDatedPeriod, isHistoricalDatedPeriod } from '@/features/organization/core/dated-history'
 import { buildUserLabels, formatPositionScopeLabel } from '@/features/organization/core/labels'
+import { getPositionCollectionGroup } from './position-collection-group'
 
 async function loadReferences() {
   const [groups, choirs, sections] = await Promise.all([
@@ -32,6 +33,7 @@ async function listCollection(input?: { at?: Date }) {
       return {
         id: position.id,
         name: position.name,
+        group: getPositionCollectionGroup(positionScopes, groups, choirs, sections),
         scopeLabel: formatPositionScopeLabel(positionScopes as never, { choirs, sections, groups }),
         currentHolder: currentAssignment ? (labels.get(currentAssignment.userId) ?? 'Unknown User') : null,
         heldSince: currentAssignment?.startsAt ?? null,

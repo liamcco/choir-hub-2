@@ -13,11 +13,19 @@ describe('Position collection', () => {
           {
             id: 'position-1',
             name: 'Chair',
+            group: 'Board',
             scopeLabel: 'Choir Board',
             currentHolder: 'Ada Lovelace',
             heldSince: new Date('2025-01-15'),
           },
-          { id: 'position-2', name: 'Chair', scopeLabel: 'Festival Committee', currentHolder: null, heldSince: null },
+          {
+            id: 'position-2',
+            name: 'Chair',
+            group: 'Other',
+            scopeLabel: 'Festival Committee',
+            currentHolder: null,
+            heldSince: null,
+          },
         ]}
       />,
     )
@@ -47,6 +55,7 @@ describe('Position collection', () => {
           {
             id: 'position-1',
             name: 'Chair',
+            group: 'Board',
             scopeLabel: 'Choir Board',
             currentHolder: 'Ada Lovelace',
             heldSince: new Date('2025-01-15'),
@@ -54,6 +63,7 @@ describe('Position collection', () => {
           {
             id: 'position-2',
             name: 'Librarian',
+            group: 'Other',
             scopeLabel: 'Festival Committee',
             currentHolder: null,
             heldSince: null,
@@ -69,5 +79,40 @@ describe('Position collection', () => {
     await user.type(search, 'jan 15')
     expect(screen.getByRole('link', { name: 'Chair' })).toBeTruthy()
     expect(window.location.search).toBe('')
+  })
+
+  test('groups rows in Board, choir, and Other order', () => {
+    render(
+      <PositionCollection
+        positions={[
+          { id: 'dk', name: 'DK Position', group: 'DK', scopeLabel: 'DK', currentHolder: null, heldSince: null },
+          {
+            id: 'other',
+            name: 'Other Position',
+            group: 'Other',
+            scopeLabel: 'Committee',
+            currentHolder: null,
+            heldSince: null,
+          },
+          { id: 'mk', name: 'MK Position', group: 'MK', scopeLabel: 'MK', currentHolder: null, heldSince: null },
+          {
+            id: 'board',
+            name: 'Board Position',
+            group: 'Board',
+            scopeLabel: 'CSK',
+            currentHolder: null,
+            heldSince: null,
+          },
+          { id: 'kk', name: 'KK Position', group: 'KK', scopeLabel: 'KK', currentHolder: null, heldSince: null },
+        ]}
+      />,
+    )
+
+    const rows = screen.getAllByRole('row').slice(1)
+    expect(
+      rows
+        .filter((row) => ['Board', 'KK', 'MK', 'DK', 'Other'].includes(row.textContent ?? ''))
+        .map((row) => row.textContent),
+    ).toEqual(['Board', 'KK', 'MK', 'DK', 'Other'])
   })
 })

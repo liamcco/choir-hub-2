@@ -6,10 +6,10 @@
 
 **Status:** ready-for-agent
 
-- [x] The User collection displays exactly `Name | Home Choir | Section | Status`.
-- [x] Home Choir and Section are singular nullable values.
+- [x] The User collection displays exactly `Name | Home Choir | Voice | Status`.
+- [x] Home Choir and Voice are singular nullable values; Voice displays only the bare fine-grained Voice Type.
 - [ ] Multiple-value rendering, separators, and warning indicators are removed.
-- [x] Search matches the displayed Home Choir and Section labels and readable unassigned states.
+- [x] Search matches the displayed Home Choir and Voice labels and readable unassigned states.
 - [x] User detail presents current Home placement separately from Committee memberships and Position Assignments.
 - [ ] Admins can start, transfer, or end Home Choir through the Home Placement module.
 - [ ] Admins can start, change, or end Section Placement only within the matching Home Choir.

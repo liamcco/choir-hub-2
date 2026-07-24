@@ -53,15 +53,15 @@ A derived dated relationship held by a User during an assignment to a Board-scop
 _Avoid_: Group Membership, manually maintained board roster
 
 **Section**:
-A permanent, choir-specific body of singers who share one fine-grained Voice Type, such as MK T1 or KK T1. Sections with the same Voice Type in different Choirs are distinct; a Section never uses an undivided base type such as T or B.
+A permanent, choir-specific body of singers whose granularity follows that Choir's real organization. In KK, Sections are the four base voice families KKS, KKA, KKT, and KKB; MK and DK retain their existing fine-grained Sections such as MKT1 and DKS1.
 _Avoid_: Organization-wide voice category, musical part, singer capability
 
 **Section Placement**:
-A User's dated placement in a Section of their Home Choir. A User has at most one current Section Placement, may transfer without losing history, and does not gain another placement by singing a different part for a project.
+A User's dated placement in a Section and, where the Choir's model distinguishes them, its fine-grained Voice Type within their Home Choir. A User has at most one current Section Placement, may transfer without losing history, and does not gain another placement by singing a different part for a project or event. KK singers are always described by the fine-grained combination, such as KKB1; the underlying Section is KKB.
 _Avoid_: Group Membership, Voice, singing capability, project part assignment
 
 **Voice Type**:
-A fixed, organization-wide classification of choral voice, independent of any choir-specific Section. Numbered types are used for singer placement and selections; base types S, A, T, and B are matching categories for undivided musical Parts and Audiences.
+A fixed, organization-wide classification of choral voice, independent of any choir-specific Section. Base types S, A, T, and B are matching categories for undivided musical Parts and Audiences; numbered types such as S1 and B1 are fine-grained singer designations. In KK, each base-family Section permits only its matching numbered types, so KKB permits B1 and B2 but not T1.
 _Avoid_: Voice, Section, singer capability, musical part, gender
 
 **Voice Capability**:
@@ -113,7 +113,7 @@ The relationship between a Position and one standing target where it has relevan
 _Avoid_: Position ownership, Group-only scope
 
 **Voice Parent**:
-A fixed Position responsible for one or more Sections. The holder must have a current Section Placement in at least one scoped Section throughout the Assignment; KK Voice Parents each span both numbered Sections in one Voice family.
+A fixed Position responsible for one or more Sections. The holder must have a current Section Placement in at least one scoped Section throughout the Assignment; KK Voice Parents each own one of KK's four Sections: KKS, KKA, KKT, or KKB.
 _Avoid_: Section Leader, Voice Group leader
 
 **Position Assignment**:

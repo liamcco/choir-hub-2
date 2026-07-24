@@ -16,6 +16,7 @@ export const demoSeedData = {
       status: 'active',
       choirId: 'mk',
       sectionId: 'mk-t1',
+      voiceType: 'T1',
     },
     {
       key: 'mk-t2',
@@ -24,6 +25,7 @@ export const demoSeedData = {
       status: 'active',
       choirId: 'mk',
       sectionId: 'mk-t2',
+      voiceType: 'T2',
     },
     {
       key: 'mk-b1',
@@ -32,6 +34,7 @@ export const demoSeedData = {
       status: 'active',
       choirId: 'mk',
       sectionId: 'mk-b1',
+      voiceType: 'B1',
     },
     {
       key: 'mk-b2',
@@ -40,6 +43,7 @@ export const demoSeedData = {
       status: 'active',
       choirId: 'mk',
       sectionId: 'mk-b2',
+      voiceType: 'B2',
     },
     {
       key: 'kk-s1',
@@ -47,7 +51,8 @@ export const demoSeedData = {
       name: 'KK S1 Demo 5',
       status: 'active',
       choirId: 'kk',
-      sectionId: 'kk-s1',
+      sectionId: 'kk-s',
+      voiceType: 'S1',
     },
     {
       key: 'kk-s2',
@@ -55,7 +60,8 @@ export const demoSeedData = {
       name: 'KK S2 Demo 6',
       status: 'active',
       choirId: 'kk',
-      sectionId: 'kk-s2',
+      sectionId: 'kk-s',
+      voiceType: 'S2',
     },
     {
       key: 'kk-a1',
@@ -63,7 +69,8 @@ export const demoSeedData = {
       name: 'KK A1 Demo 7',
       status: 'active',
       choirId: 'kk',
-      sectionId: 'kk-a1',
+      sectionId: 'kk-a',
+      voiceType: 'A1',
     },
     {
       key: 'kk-a2',
@@ -71,7 +78,8 @@ export const demoSeedData = {
       name: 'KK A2 Demo 8',
       status: 'active',
       choirId: 'kk',
-      sectionId: 'kk-a2',
+      sectionId: 'kk-a',
+      voiceType: 'A2',
     },
     {
       key: 'kk-t1',
@@ -79,7 +87,8 @@ export const demoSeedData = {
       name: 'KK T1 Demo 9',
       status: 'active',
       choirId: 'kk',
-      sectionId: 'kk-t1',
+      sectionId: 'kk-t',
+      voiceType: 'T1',
     },
     {
       key: 'kk-t2',
@@ -87,7 +96,8 @@ export const demoSeedData = {
       name: 'KK T2 Demo 10',
       status: 'active',
       choirId: 'kk',
-      sectionId: 'kk-t2',
+      sectionId: 'kk-t',
+      voiceType: 'T2',
     },
     {
       key: 'kk-b1',
@@ -95,7 +105,8 @@ export const demoSeedData = {
       name: 'KK B1 Demo 11',
       status: 'active',
       choirId: 'kk',
-      sectionId: 'kk-b1',
+      sectionId: 'kk-b',
+      voiceType: 'B1',
     },
     {
       key: 'kk-b2',
@@ -103,7 +114,8 @@ export const demoSeedData = {
       name: 'KK B2 Demo 12',
       status: 'active',
       choirId: 'kk',
-      sectionId: 'kk-b2',
+      sectionId: 'kk-b',
+      voiceType: 'B2',
     },
     {
       key: 'dk-s1',
@@ -112,6 +124,7 @@ export const demoSeedData = {
       status: 'active',
       choirId: 'dk',
       sectionId: 'dk-s1',
+      voiceType: 'S1',
     },
     {
       key: 'dk-s2',
@@ -120,6 +133,7 @@ export const demoSeedData = {
       status: 'active',
       choirId: 'dk',
       sectionId: 'dk-s2',
+      voiceType: 'S2',
     },
     {
       key: 'dk-a1',
@@ -128,6 +142,7 @@ export const demoSeedData = {
       status: 'active',
       choirId: 'dk',
       sectionId: 'dk-a1',
+      voiceType: 'A1',
     },
     {
       key: 'dk-a2',

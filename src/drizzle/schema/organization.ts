@@ -3,7 +3,20 @@ import { check, index, pgEnum, pgTable, text, timestamp, unique } from 'drizzle-
 import { user } from './auth'
 
 export const voiceType = pgEnum('VoiceType', ['S', 'S1', 'S2', 'A', 'A1', 'A2', 'T', 'T1', 'T2', 'B', 'B1', 'B2'])
-export const sectionVoiceType = pgEnum('SectionVoiceType', ['S1', 'S2', 'A1', 'A2', 'T1', 'T2', 'B1', 'B2'])
+export const sectionVoiceType = pgEnum('SectionVoiceType', [
+  'S',
+  'S1',
+  'S2',
+  'A',
+  'A1',
+  'A2',
+  'T',
+  'T1',
+  'T2',
+  'B',
+  'B1',
+  'B2',
+])
 export const groupKind = pgEnum('GroupKind', ['committee', 'board'])
 export const groupScopeType = pgEnum('GroupScopeType', ['csk', 'choir'])
 export const positionScopeTargetType = pgEnum('PositionScopeTargetType', ['csk', 'choir', 'section', 'group'])
@@ -62,6 +75,7 @@ export const sectionPlacement = pgTable(
     sectionId: text('sectionId')
       .notNull()
       .references(() => section.id, { onDelete: 'restrict' }),
+    voiceType: voiceType('voiceType').notNull(),
     startsAt: timestamp('startsAt').notNull(),
     endsAt: timestamp('endsAt'),
   },

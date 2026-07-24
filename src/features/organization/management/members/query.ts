@@ -7,20 +7,23 @@ import { db } from '@/core/db'
 import { choir, section } from '@/drizzle/schema'
 import { organizationService } from '@/features/organization'
 import { isCurrentDatedPeriod, isHistoricalDatedPeriod } from '@/features/organization/core/dated-history'
-import { buildUserLabels, formatGroupPath, formatPositionScopeLabel } from '@/features/organization/core/labels'
+import {
+  buildUserLabels,
+  formatFineGrainedPlacementName,
+  formatGroupPath,
+  formatPositionScopeLabel,
+} from '@/features/organization/core/labels'
 
 async function listCollection(input?: { at?: Date }) {
   await connection()
   const at = input?.at ?? new Date()
-  const [users, choirMemberships, placements, choirs, sections] = await Promise.all([
+  const [users, choirMemberships, placements, choirs] = await Promise.all([
     organizationService.users.list(),
     organizationService.homePlacement.listChoirMemberships(),
     organizationService.homePlacement.listSectionPlacements(),
     db.select().from(choir),
-    db.select().from(section),
   ])
   const choirById = new Map(choirs.map((item) => [item.id, item]))
-  const sectionById = new Map(sections.map((item) => [item.id, item]))
 
   return buildUserLabels(users)
     .map(({ user, label }) => {
@@ -30,10 +33,8 @@ async function listCollection(input?: { at?: Date }) {
         homeChoir:
           choirById.get(
             choirMemberships.find((m) => m.userId === user.id && isCurrentDatedPeriod(m, at))?.choirId ?? '',
-          )?.name ?? null,
-        section:
-          sectionById.get(placements.find((p) => p.userId === user.id && isCurrentDatedPeriod(p, at))?.sectionId ?? '')
-            ?.name ?? null,
+          )?.shortName ?? null,
+        voice: formatPlacementVoice(placements.find((p) => p.userId === user.id && isCurrentDatedPeriod(p, at))),
         status: user.status,
       }
     })
@@ -129,7 +130,10 @@ async function getDetail(userId: string, input?: { at?: Date }) {
         ? { id: currentChoir.choirId, name: choirById.get(currentChoir.choirId)?.name ?? 'Unknown Choir' }
         : null,
       section: currentSection
-        ? { id: currentSection.sectionId, name: sectionById.get(currentSection.sectionId)?.name ?? 'Unknown Section' }
+        ? {
+            id: currentSection.sectionId,
+            name: formatPlacementLabel(currentSection, sectionById, choirById) ?? 'Unknown Section',
+          }
         : null,
     },
     choirMembershipHistory: choirMemberships.map((item) => ({
@@ -138,7 +142,7 @@ async function getDetail(userId: string, input?: { at?: Date }) {
     })),
     sectionPlacementHistory: placements.map((item) => ({
       ...item,
-      sectionName: sectionById.get(item.sectionId)?.name ?? 'Unknown Section',
+      sectionName: formatPlacementLabel(item, sectionById, choirById) ?? 'Unknown Section',
     })),
     accessState: account.banned ? ('disabled' as const) : ('enabled' as const),
     accessRole: account.role || 'user',
@@ -177,6 +181,22 @@ async function getDetail(userId: string, input?: { at?: Date }) {
 
 export const listMemberCollection = listCollection
 export const getMemberDetail = getDetail
+
+function formatPlacementLabel(
+  placement: { sectionId: string; voiceType: string } | undefined,
+  sections: Map<string, { name: string; choirId: string }>,
+  choirs: Map<string, { shortName: string }>,
+) {
+  if (!placement) return null
+  const section = sections.get(placement.sectionId)
+  const choir = section ? choirs.get(section.choirId) : undefined
+  return choir ? formatFineGrainedPlacementName(choir.shortName, placement.voiceType) : null
+}
+
+function formatPlacementVoice(placement: { voiceType: string } | undefined) {
+  if (!placement) return null
+  return placement.voiceType
+}
 
 function compareEndedPeriods(first: { id: string; endsAt?: Date }, second: { id: string; endsAt?: Date }) {
   return (second.endsAt?.getTime() ?? 0) - (first.endsAt?.getTime() ?? 0) || first.id.localeCompare(second.id)

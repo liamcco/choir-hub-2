@@ -109,9 +109,9 @@ The current admin UI may be replaced. Build the management experience from compo
 
 The collection columns are:
 
-`Name | Home Choir | Section | Status`
+`Name | Home Choir | Voice | Status`
 
-Home Choir and Section are singular nullable values. Remove multiple-value rendering and warnings.
+Home Choir and Voice are singular nullable values. Voice displays only the bare fine-grained Voice Type (for example, `T1` or `B2`); the Section remains a domain relationship but is not a collection column.
 
 User detail separates:
 

@@ -25,7 +25,7 @@ export async function seedDemo(database: typeof db): Promise<void> {
     userIds.set(person.key, userId)
     await database.update(user).set({ name: person.name, status: person.status }).where(eq(user.id, userId))
 
-    if ('choirId' in person && 'sectionId' in person) {
+    if ('choirId' in person && 'sectionId' in person && 'voiceType' in person) {
       await database
         .insert(choirMembership)
         .values({ id: `demo-choir-membership-${index}`, userId, choirId: person.choirId, startsAt })
@@ -35,10 +35,16 @@ export async function seedDemo(database: typeof db): Promise<void> {
         })
       await database
         .insert(sectionPlacement)
-        .values({ id: `demo-section-placement-${index}`, userId, sectionId: person.sectionId, startsAt })
+        .values({
+          id: `demo-section-placement-${index}`,
+          userId,
+          sectionId: person.sectionId,
+          voiceType: person.voiceType,
+          startsAt,
+        })
         .onConflictDoUpdate({
           target: sectionPlacement.id,
-          set: { userId, sectionId: person.sectionId, startsAt, endsAt: null },
+          set: { userId, sectionId: person.sectionId, voiceType: person.voiceType, startsAt, endsAt: null },
         })
     }
   }

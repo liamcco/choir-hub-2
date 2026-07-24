@@ -112,11 +112,11 @@ Use the validated Variant C visual direction: an airy collection canvas, quiet r
 - Interactive column sorting is deferred. Each resource query supplies a deliberate, stable default order, with names as the principal browse order and stable identity as a tie-breaker where necessary.
 - Table rows are browse affordances. Do not add edit, relationship, overflow-menu, or destructive action columns.
 - Member is the collection's primary entity. Auth User identity, access state, roles, and credentials remain subordinate information shown inside Member detail where relevant.
-- Member collection columns are Name, Choir, Voice, and Status.
+- Member collection columns are Name, Choir, Voice, and Status. Voice displays only the bare fine-grained Voice Type.
 - Choir values are derived from all current Group Memberships whose Group Kind is Choir.
-- Voice values are derived from all current Group Memberships whose Group Kind is Section. Multiple current Voices are valid domain data and must all render. Use a subtle warning indicator when more than one is present; do not reject or silently collapse the data.
+- Voice values are derived from the current Section Placement and display its bare fine-grained Voice Type.
 - Create member preserves existing behavior: create the Auth User and its linked skeletal Member together. Successful creation navigates to the new Member detail.
-- Group collection columns are Name, Kind, Parent, and Members. Members means current direct Group Memberships only.
+- Group collection columns are Name and Members. Groups are presented alphabetically within scope groups: CSK-wide Groups first without a heading, followed by `KK`, `MK`, and `DK` headings when those scopes contain Groups. Members means current direct Group Memberships only, and zero-member Groups remain visible.
 - The Groups header includes View hierarchy as a secondary action. The hierarchy is a dedicated route, not a modal.
 - The hierarchy read model contains every Group in stable tree order plus its depth and one accumulated member count for the active filter state.
 - Hierarchy counts are descendant-inclusive and deduplicated by Member. A Member appearing in several descendants contributes once to an ancestor's count.
@@ -124,7 +124,7 @@ Use the validated Variant C visual direction: an airy collection canvas, quiet r
 - The hierarchy defaults to All with Include former unchecked.
 - Hierarchy filtering changes counts only. It never removes Groups, including Groups whose count becomes zero.
 - Group selection from the hierarchy uses the same route-backed Group detail as selection from the collection, rendered over the hierarchy during in-app navigation. Closing returns to the hierarchy.
-- Group detail shows and manages direct Group Memberships only. Descendant-inclusive hierarchy totals do not appear as editable relationship totals.
+- Group detail shows and manages direct Group Memberships only. It does not display Group Kind or Group Scope; the Group name and collection scope grouping provide the relevant context.
 - Position collection columns are Name, Group scope, Current holder, and Held since.
 - Position names remain non-unique display text. Group scope supplies necessary context for duplicate names.
 - Current holder and Held since are derived from the current Position Assignment. Both are empty-state values when the Position is vacant.

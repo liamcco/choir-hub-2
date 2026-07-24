@@ -6,15 +6,25 @@ import { referenceCatalogData } from './reference-catalog-data'
 
 export const choirCatalog = referenceCatalogData.choirs.map(({ sections: _sections, ...choir }) => choir)
 
-export type SectionVoiceType = (typeof referenceCatalogData.choirs)[number]['sections'][number]
+export type SectionVoiceType = Extract<
+  (typeof referenceCatalogData.choirs)[number]['sections'][number],
+  { voiceType: string }
+>['voiceType']
 
 export const sectionCatalog = referenceCatalogData.choirs.flatMap((choir) =>
-  choir.sections.map((voiceType) => ({
-    id: `${choir.id}-${voiceType.toLowerCase()}`,
-    choirId: choir.id,
-    name: voiceType,
-    voiceType,
-  })),
+  choir.sections.map((sectionDefinition) => {
+    const name = typeof sectionDefinition === 'string' ? sectionDefinition : sectionDefinition.name
+    const voiceType = typeof sectionDefinition === 'string' ? sectionDefinition : sectionDefinition.voiceType
+    const allowedVoiceTypes =
+      typeof sectionDefinition === 'string' ? [sectionDefinition] : sectionDefinition.allowedVoiceTypes
+    return {
+      id: `${choir.id}-${name.toLowerCase()}`,
+      choirId: choir.id,
+      name,
+      voiceType,
+      allowedVoiceTypes,
+    }
+  }),
 )
 
 export type CatalogGroup = {
@@ -62,10 +72,13 @@ export const positionCatalog: readonly PositionDefinition[] = [
       ],
     })),
   ),
-  ...referenceCatalogData.positions.csk.map(({ id, name, groupIds }) => ({
-    id,
-    name,
-    scopes: groupIds.map((groupId) => ({ type: 'group' as const, groupId })),
+  ...referenceCatalogData.positions.csk.map((definition) => ({
+    id: definition.id,
+    name: definition.name,
+    scopes:
+      'scope' in definition
+        ? ([{ type: definition.scope }] as const)
+        : definition.groupIds.map((groupId) => ({ type: 'group' as const, groupId })),
   })),
   ...referenceCatalogData.positions.voiceParents.individualSections.flatMap(({ choirId, voiceTypes }) =>
     voiceTypes.map((voiceType) => ({
@@ -74,15 +87,10 @@ export const positionCatalog: readonly PositionDefinition[] = [
       scopes: [{ type: 'section' as const, sectionId: `${choirId}-${voiceType.toLowerCase()}` }],
     })),
   ),
-  ...referenceCatalogData.positions.voiceParents.kammarkorenFamilies.map(({ id, voiceTypes }) => ({
+  ...referenceCatalogData.positions.voiceParents.kammarkorenFamilies.map(({ id }) => ({
     id: `kk-${id}-voice-parent`,
     name: 'Voice Parent',
-    scopes: [
-      ...voiceTypes.map((voiceType) => ({
-        type: 'section' as const,
-        sectionId: `kk-${voiceType.toLowerCase()}`,
-      })),
-    ],
+    scopes: [{ type: 'section' as const, sectionId: `kk-${id}` }],
   })),
 ]
 
@@ -112,8 +120,15 @@ export function validateReferenceCatalog(catalog: ReferenceCatalog = referenceCa
     addId(section.id)
     if (!choirIds.has(section.choirId))
       throw new InvalidRelationshipError(`Section ${section.id} references an unknown Choir.`)
-    if (!/^(S|A|T|B)[12]$/.test(section.voiceType))
+    if (!/^(S|A|T|B)([12])?$/.test(section.voiceType))
       throw new InvalidRelationshipError(`Section ${section.id} uses an invalid Voice Type.`)
+    const allowedVoiceTypes = section.allowedVoiceTypes ?? [section.voiceType]
+    if (!allowedVoiceTypes.every((voiceType) => /^(S|A|T|B)[12]$/.test(voiceType)))
+      throw new InvalidRelationshipError(`Section ${section.id} uses an invalid Voice Type in its allowed types.`)
+    if (section.voiceType.length === 1 && allowedVoiceTypes.some((voiceType) => voiceType[0] !== section.voiceType))
+      throw new InvalidRelationshipError(`Section ${section.id} allows a mismatched Voice Type family.`)
+    if (section.voiceType.length === 2 && allowedVoiceTypes.length !== 1)
+      throw new InvalidRelationshipError(`Fine-grained Section ${section.id} must allow exactly one Voice Type.`)
   }
   const groupIds = new Set<string>()
   const groupNames = new Set<string>()
@@ -157,8 +172,11 @@ export async function synchronizeReferenceCatalog(
     for (const record of validated.sections)
       await transaction
         .insert(section)
-        .values({ ...record, voiceType: record.voiceType })
-        .onConflictDoUpdate({ target: section.id, set: record })
+        .values({ id: record.id, choirId: record.choirId, name: record.name, voiceType: record.voiceType })
+        .onConflictDoUpdate({
+          target: section.id,
+          set: { choirId: record.choirId, name: record.name, voiceType: record.voiceType },
+        })
     for (const record of validated.groups) {
       const scope =
         record.scope.type === 'csk'

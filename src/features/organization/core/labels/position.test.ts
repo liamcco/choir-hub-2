@@ -19,6 +19,28 @@ describe('Position scope labels', () => {
           ],
         },
       ),
-    ).toBe('CSK · Kammarkören · KK T1 · Party Mastery')
+    ).toBe('CSK · KK · KKT1 · Party Mastery')
+  })
+
+  test('renders every full choir Section name without a space', () => {
+    expect(
+      formatPositionScopeLabel(
+        [
+          { targetType: 'section', targetKey: 'dk-a1', sectionId: 'dk-a1' },
+          { targetType: 'section', targetKey: 'kk-b', sectionId: 'kk-b' },
+        ],
+        {
+          choirs: [
+            { id: 'dk', name: 'Damkören', shortName: 'DK' },
+            { id: 'kk', name: 'Kammarkören', shortName: 'KK' },
+          ],
+          sections: [
+            { id: 'dk-a1', choirId: 'dk', name: 'A1', voiceType: 'A1' },
+            { id: 'kk-b', choirId: 'kk', name: 'B', voiceType: 'B' },
+          ],
+          groups: [],
+        },
+      ),
+    ).toBe('DKA1 · KKB')
   })
 })

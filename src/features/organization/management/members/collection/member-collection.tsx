@@ -13,7 +13,7 @@ export type MemberCollectionRow = {
   id: string
   name: string
   homeChoir: string | null
-  section: string | null
+  voice: string | null
   status: MemberStatus
 }
 
@@ -39,8 +39,8 @@ export function MemberCollection({ users }: { users: MemberCollectionRow[] }) {
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
-              <TableHead>Home Choir</TableHead>
-              <TableHead>Section</TableHead>
+              <TableHead>Choir</TableHead>
+              <TableHead>Voice</TableHead>
               <TableHead>Status</TableHead>
             </TableRow>
           </TableHeader>
@@ -57,10 +57,10 @@ export function MemberCollection({ users }: { users: MemberCollectionRow[] }) {
                     </Link>
                   </TableCell>
                   <TableCell>
-                    <TextValue value={user.homeChoir} fallback="No Home Choir" />
+                    <TextValue value={user.homeChoir} fallback="No Choir" />
                   </TableCell>
                   <TableCell>
-                    <TextValue value={user.section} fallback="No Section" />
+                    <TextValue value={user.voice} fallback="No Voice" />
                   </TableCell>
                   <TableCell>
                     <Badge variant="secondary">{formatMemberStatus(user.status)}</Badge>
@@ -82,7 +82,7 @@ export function MemberCollection({ users }: { users: MemberCollectionRow[] }) {
 }
 
 function searchableUserText(user: MemberCollectionRow) {
-  return [user.name, user.homeChoir ?? 'No Home Choir', user.section ?? 'No Section', formatMemberStatus(user.status)]
+  return [user.name, user.homeChoir ?? 'No Choir', user.voice ?? 'No Voice', formatMemberStatus(user.status)]
     .join(' ')
     .toLocaleLowerCase()
 }

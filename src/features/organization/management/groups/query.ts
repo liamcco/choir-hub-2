@@ -15,9 +15,9 @@ async function listGroupStructure(input?: { at?: Date }) {
   const [groups, currentMemberships, choirs] = await Promise.all([
     organizationService.groups.list(),
     organizationService.effectiveGroupMembership.list({ at }),
-    db.select({ id: choir.id, name: choir.name }).from(choir),
+    db.select({ id: choir.id, shortName: choir.shortName }).from(choir),
   ])
-  const choirNames = new Map(choirs.map((choir) => [choir.id, choir.name]))
+  const choirNames = new Map(choirs.map((choir) => [choir.id, choir.shortName]))
   const memberIds = new Map<string, Set<string>>()
   for (const membership of currentMemberships) {
     let memberIdsForGroup = memberIds.get(membership.groupId)
@@ -32,19 +32,24 @@ async function listGroupStructure(input?: { at?: Date }) {
     .map((group) => ({
       id: group.id,
       name: group.name,
-      kind: group.kind,
-      scope: group.scopeType === 'csk' ? 'CSK-wide' : (choirNames.get(group.choirId ?? '') ?? group.scopeKey),
+      scope: group.scopeType === 'csk' ? 'CSK' : (choirNames.get(group.choirId ?? '') ?? group.scopeKey.toUpperCase()),
       memberCount: memberIds.get(group.id)?.size ?? 0,
     }))
-    .sort((first, second) => first.name.localeCompare(second.name) || first.id.localeCompare(second.id))
+    .sort(
+      (first, second) =>
+        ['CSK', 'KK', 'MK', 'DK'].indexOf(first.scope) - ['CSK', 'KK', 'MK', 'DK'].indexOf(second.scope) ||
+        first.name.localeCompare(second.name) ||
+        first.id.localeCompare(second.id),
+    )
 }
 
 async function getGroupDetail(groupId: string, input?: { at?: Date }) {
   const at = input?.at ?? new Date()
-  const [groups, memberships, users] = await Promise.all([
+  const [groups, memberships, users, positions] = await Promise.all([
     organizationService.groups.list(),
     organizationService.effectiveGroupMembership.list({ groupId }),
     organizationService.users.list(),
+    organizationService.positions.list(),
   ])
   const group = groups.find((candidate) => candidate.id === groupId)
   if (!group) return null
@@ -53,6 +58,7 @@ async function getGroupDetail(groupId: string, input?: { at?: Date }) {
     (first, second) => first.label.localeCompare(second.label) || first.user.id.localeCompare(second.user.id),
   )
   const memberOptionsById = new Map(memberOptions.map((option) => [option.user.id, option]))
+  const positionsById = new Map(positions.map((position) => [position.id, position.name]))
   const membershipViews = memberships.flatMap((membership) => {
     const option = memberOptionsById.get(membership.userId)
     return option
@@ -63,7 +69,9 @@ async function getGroupDetail(groupId: string, input?: { at?: Date }) {
             userLabel: option.label,
             userDetail: option.detail,
             sourceLabels: membership.sources.map((source) =>
-              source.type === 'explicit' ? 'Explicit membership' : 'Position-derived',
+              source.type === 'explicit'
+                ? 'Explicit membership'
+                : (positionsById.get(source.positionId ?? '') ?? 'Position assignment'),
             ),
           },
         ]

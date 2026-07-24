@@ -32,7 +32,7 @@ describe('flat Group detail', () => {
               userDetail: 'ada@example.com',
               startsAt: new Date('2025-01-01'),
               endsAt: null,
-              sourceLabels: ['Position-derived'],
+              sourceLabels: ['Master of Gigs'],
             },
           ],
         }}
@@ -40,8 +40,10 @@ describe('flat Group detail', () => {
       />,
     )
     expect(screen.getByRole('heading', { name: 'Board' })).toBeTruthy()
-    expect(screen.getByText('CSK-wide')).toBeTruthy()
-    expect(screen.getByText(/Position-derived/)).toBeTruthy()
+    expect(screen.queryByText('CSK-wide')).toBeNull()
+    expect(screen.queryByText('Group Kind')).toBeNull()
+    expect(screen.queryByText('Scope')).toBeNull()
+    expect(screen.getByText('Master of Gigs')).toBeTruthy()
     expect(screen.queryByRole('button', { name: /add user/i })).toBeNull()
     expect(screen.queryByRole('button', { name: /edit group/i })).toBeNull()
   })
@@ -62,14 +64,15 @@ describe('flat Group detail', () => {
               userDetail: 'ada@example.com',
               startsAt: new Date('2025-01-01'),
               endsAt: null,
-              sourceLabels: ['Explicit membership', 'Position-derived'],
+              sourceLabels: ['Explicit membership', 'Master of Gigs'],
             },
           ],
         }}
         actions={{ createMembership: async () => ({}), endMembership: async () => ({}) }}
       />,
     )
-    expect(screen.getByText(/Explicit membership \+ Position-derived/)).toBeTruthy()
+    expect(screen.getByText('Explicit membership')).toBeTruthy()
+    expect(screen.getByText('Master of Gigs')).toBeTruthy()
     expect(screen.getByText('Ada')).toBeTruthy()
   })
 })

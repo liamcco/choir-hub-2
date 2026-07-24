@@ -16,26 +16,40 @@ describe('reference catalog', () => {
       'mk-t2',
       'mk-b1',
       'mk-b2',
-      'kk-s1',
-      'kk-s2',
-      'kk-a1',
-      'kk-a2',
-      'kk-t1',
-      'kk-t2',
-      'kk-b1',
-      'kk-b2',
+      'kk-s',
+      'kk-a',
+      'kk-t',
+      'kk-b',
       'dk-s1',
       'dk-s2',
       'dk-a1',
       'dk-a2',
     ])
+    expect(sectionCatalog.find(({ id }) => id === 'kk-b')).toMatchObject({
+      name: 'B',
+      voiceType: 'B',
+      allowedVoiceTypes: ['B1', 'B2'],
+    })
   })
 
   test('validates the complete fixed catalog', () => {
     expect(validateReferenceCatalog()).toBe(referenceCatalog)
-    expect(groupCatalog).toHaveLength(16)
-    expect(positionCatalog).toHaveLength(31)
-    expect(positionCatalog.find((position) => position.id === 'kk-s-voice-parent')?.scopes).toHaveLength(2)
+    expect(groupCatalog).toHaveLength(17)
+    expect(positionCatalog).toHaveLength(37)
+    expect(
+      positionCatalog.filter((position) => ['inspector', 'accountant-1', 'accountant-2'].includes(position.id)),
+    ).toEqual(
+      expect.arrayContaining([
+        { id: 'inspector', name: 'Inspector', scopes: [{ type: 'csk' }] },
+        { id: 'accountant-1', name: 'Accountant 1', scopes: [{ type: 'csk' }] },
+        { id: 'accountant-2', name: 'Accountant 2', scopes: [{ type: 'csk' }] },
+      ]),
+    )
+    expect(positionCatalog.find((position) => position.id === 'kk-s-voice-parent')?.scopes).toHaveLength(1)
+    expect(positionCatalog.find((position) => position.id === 'kk-s-voice-parent')?.scopes[0]).toEqual({
+      type: 'section',
+      sectionId: 'kk-s',
+    })
   })
 
   test('rejects duplicate identifiers and invalid cross-references', () => {

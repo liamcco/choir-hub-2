@@ -10,4 +10,8 @@ export function buildGroupPathLabels(groups: Group[]) {
 }
 export type { UserLabel } from '@/features/organization/core/labels/member'
 export { buildUserLabels, formatUserFallbackLabel } from '@/features/organization/core/labels/member'
-export { formatPositionScopeLabel } from '@/features/organization/core/labels/position'
+export {
+  formatFineGrainedPlacementName,
+  formatPositionScopeLabel,
+  formatSectionName,
+} from '@/features/organization/core/labels/position'

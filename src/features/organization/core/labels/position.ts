@@ -24,14 +24,22 @@ export function formatPositionScopeLabel(
   return typedScopes
     .map((scope) => {
       if (scope.targetType === 'csk') return 'CSK'
-      if (scope.targetType === 'choir') return choirById.get(scope.choirId)?.name ?? scope.targetKey
+      if (scope.targetType === 'choir') return choirById.get(scope.choirId)?.shortName ?? scope.targetKey
       if (scope.targetType === 'section') {
         const section = sectionById.get(scope.sectionId)
         const choir = section ? choirById.get(section.choirId) : undefined
-        return section && choir ? `${choir.shortName} ${section.name}` : scope.targetKey
+        return section && choir ? formatSectionName(choir.shortName, section.name) : scope.targetKey
       }
       return groupById.get(scope.groupId)?.name ?? scope.targetKey
     })
     .sort((a, b) => a.localeCompare(b))
     .join(' · ')
+}
+
+export function formatSectionName(choirShortName: string, sectionName: string) {
+  return `${choirShortName}${sectionName}`
+}
+
+export function formatFineGrainedPlacementName(choirShortName: string, voiceType: string) {
+  return `${choirShortName}${voiceType}`
 }

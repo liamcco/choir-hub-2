@@ -16,7 +16,12 @@ export const referenceCatalogData = {
       id: 'kk',
       name: 'Kammarkören',
       shortName: 'KK',
-      sections: ['S1', 'S2', 'A1', 'A2', 'T1', 'T2', 'B1', 'B2'],
+      sections: [
+        { name: 'S', voiceType: 'S', allowedVoiceTypes: ['S1', 'S2'] },
+        { name: 'A', voiceType: 'A', allowedVoiceTypes: ['A1', 'A2'] },
+        { name: 'T', voiceType: 'T', allowedVoiceTypes: ['T1', 'T2'] },
+        { name: 'B', voiceType: 'B', allowedVoiceTypes: ['B1', 'B2'] },
+      ],
     },
     {
       id: 'dk',
@@ -35,6 +40,7 @@ export const referenceCatalogData = {
       { id: 'web-mastery', kind: 'committee', name: 'Web Mastery' },
       { id: 'tour-committee', kind: 'committee', name: 'Tour Committee' },
       { id: 'recruitment-committee', kind: 'committee', name: 'Recruitment Committee' },
+      { id: 'utantill-committee', kind: 'committee', name: 'Utantill Committee' },
     ],
     perChoir: [
       { id: 'concert', name: 'Concert Group' },
@@ -58,10 +64,14 @@ export const referenceCatalogData = {
       { id: 'conductor', name: 'Conductor', additionalGroupIds: [] },
       { id: 'master-of-concerts', name: 'Master of Concerts', additionalGroupIds: ['concert-mastery'] },
       { id: 'master-of-gigs', name: 'Master of Gigs', additionalGroupIds: ['gig-mastery'] },
+      { id: 'sheet-music-fish', name: 'Sheet Music Fish', additionalGroupIds: [] },
     ],
     csk: [
       { id: 'party-mistress', name: 'Party Mistress', groupIds: ['party-mastery'] },
       { id: 'tour-treasurer', name: 'Treasurer', groupIds: ['tour-committee'] },
+      { id: 'inspector', name: 'Inspector', scope: 'csk' },
+      { id: 'accountant-1', name: 'Accountant 1', scope: 'csk' },
+      { id: 'accountant-2', name: 'Accountant 2', scope: 'csk' },
     ],
     voiceParents: {
       individualSections: [
@@ -69,10 +79,10 @@ export const referenceCatalogData = {
         { choirId: 'dk', voiceTypes: ['S1', 'S2', 'A1', 'A2'] },
       ],
       kammarkorenFamilies: [
-        { id: 's', voiceTypes: ['S1', 'S2'] },
-        { id: 'a', voiceTypes: ['A1', 'A2'] },
-        { id: 't', voiceTypes: ['T1', 'T2'] },
-        { id: 'b', voiceTypes: ['B1', 'B2'] },
+        { id: 's', voiceType: 'S', voiceTypes: ['S1', 'S2'] },
+        { id: 'a', voiceType: 'A', voiceTypes: ['A1', 'A2'] },
+        { id: 't', voiceType: 'T', voiceTypes: ['T1', 'T2'] },
+        { id: 'b', voiceType: 'B', voiceTypes: ['B1', 'B2'] },
       ],
     },
   },
