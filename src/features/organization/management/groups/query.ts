@@ -1,5 +1,6 @@
 import 'server-only'
 
+import { connection } from 'next/server'
 import { db } from '@/core/db'
 import { choir } from '@/drizzle/schema'
 import { organizationService } from '@/features/organization'
@@ -44,6 +45,7 @@ async function listGroupStructure(input?: { at?: Date }) {
 }
 
 async function getGroupDetail(groupId: string, input?: { at?: Date }) {
+  await connection()
   const at = input?.at ?? new Date()
   const [groups, memberships, users, positions] = await Promise.all([
     organizationService.groups.list(),

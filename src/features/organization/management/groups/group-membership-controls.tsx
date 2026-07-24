@@ -2,7 +2,6 @@
 
 import { SaveIcon, UserPlusIcon } from 'lucide-react'
 import { useActionState, useState } from 'react'
-import type { UserLabel } from '@/features/organization/core/labels'
 import type {
   CreateGroupMembershipFormState,
   EndGroupMembershipFormState,
@@ -25,64 +24,6 @@ export type EndMembershipAction = (
   previousState: EndGroupMembershipFormState,
   formData: FormData,
 ) => Promise<EndGroupMembershipFormState>
-
-export function AddGroupUserControl({
-  groupId,
-  users,
-  action,
-}: {
-  groupId: string
-  users: UserLabel[]
-  action: CreateMembershipAction
-}) {
-  const [isOpen, setIsOpen] = useState(false)
-  const [state, formAction, isPending] = useActionState(action, createInitialState)
-
-  if (!isOpen) {
-    return (
-      <Button onClick={() => setIsOpen(true)} type="button" variant="outline">
-        <UserPlusIcon data-icon="inline-start" />
-        Add User
-      </Button>
-    )
-  }
-
-  return (
-    <form action={formAction} className="space-y-4 rounded-lg border bg-muted/20 p-4">
-      <input name="groupId" type="hidden" value={groupId} />
-      <div className="flex items-center justify-between gap-4">
-        <h3 className="font-medium">Add Group Membership</h3>
-        <Button onClick={() => setIsOpen(false)} size="sm" type="button" variant="ghost">
-          Cancel
-        </Button>
-      </div>
-      <FieldGroup className="sm:grid sm:grid-cols-2">
-        <Field>
-          <FieldLabel htmlFor={`group-${groupId}-user`}>User</FieldLabel>
-          <NativeSelect
-            aria-invalid={!!state.fieldErrors?.userId}
-            className="w-full"
-            id={`group-${groupId}-user`}
-            name="userId"
-            required
-          >
-            <NativeSelectOption value="">Choose User</NativeSelectOption>
-            {users.map((option) => (
-              <NativeSelectOption key={option.user.id} value={option.user.id}>
-                {option.label} ({option.detail})
-              </NativeSelectOption>
-            ))}
-          </NativeSelect>
-          <FieldError>{state.fieldErrors?.userId}</FieldError>
-        </Field>
-      </FieldGroup>
-      <Button disabled={isPending} type="submit">
-        {isPending ? 'Adding' : 'Add Membership'}
-      </Button>
-      <FormMessage state={state} />
-    </form>
-  )
-}
 
 export function AddUserGroupControl({
   userId,

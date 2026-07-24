@@ -1,4 +1,4 @@
-import type { Group, Position, PositionScope } from '@/drizzle/schema'
+import type { Choir, Group, Position, PositionScope, Section } from '@/drizzle/schema'
 import { organizationService } from '@/features/organization'
 import { formatGroupPath, formatPositionScopeLabel } from '@/features/organization/core/labels'
 
@@ -11,22 +11,28 @@ export type PositionManagementPosition = {
 }
 
 export async function listPositionManagement() {
-  const [groups, positions, scopes] = await Promise.all([
+  const [groups, choirs, sections, positions, scopes] = await Promise.all([
     organizationService.groups.list(),
+    organizationService.positions.listChoirs(),
+    organizationService.positions.listSections(),
     organizationService.positions.list(),
     organizationService.positions.listScopes(),
   ])
-  return buildPositionManagementState({ groups, positions, scopes })
+  return buildPositionManagementState({ groups, choirs, sections, positions, scopes })
 }
 
 export type PositionManagementState = Awaited<ReturnType<typeof listPositionManagement>>
 
 export function buildPositionManagementState({
   groups,
+  choirs,
+  sections,
   positions,
   scopes,
 }: {
   groups: Group[]
+  choirs: Choir[]
+  sections: Section[]
   positions: Position[]
   scopes: PositionScope[]
 }) {
@@ -52,7 +58,11 @@ export function buildPositionManagementState({
       return {
         position,
         scopeGroups,
-        scopeLabel: formatPositionScopeLabel(groups, scopeGroups),
+        scopeLabel: formatPositionScopeLabel(scopes.filter((scope) => scope.positionId === position.id) as never, {
+          choirs,
+          sections,
+          groups,
+        }),
         scopeKind: scopeGroups.length > 1 ? 'shared' : scopeGroups.length === 1 ? 'single' : 'unscoped',
         duplicateNameCount: duplicateNameCounts.get(normalizeName(position.name)) ?? 1,
       }

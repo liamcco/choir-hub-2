@@ -16,7 +16,7 @@ export function formatPositionScopeLabel(
           .map((group) => group.name)
           .sort()
           .join(' · ')
-      : 'No scopes'
+      : ''
   const typedScopes = scopes as PositionScopeView[]
   const choirById = new Map(references.choirs.map((choir) => [choir.id, choir]))
   const sectionById = new Map(references.sections.map((section) => [section.id, section]))
@@ -34,6 +34,10 @@ export function formatPositionScopeLabel(
     })
     .sort((a, b) => a.localeCompare(b))
     .join(' · ')
+}
+
+export function formatPositionLabel(positionName: string, scopeLabel: string) {
+  return scopeLabel ? `${positionName} · ${scopeLabel}` : positionName
 }
 
 export function formatSectionName(choirShortName: string, sectionName: string) {

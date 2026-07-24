@@ -11,6 +11,7 @@ import {
   buildUserLabels,
   formatFineGrainedPlacementName,
   formatGroupPath,
+  formatPositionLabel,
   formatPositionScopeLabel,
 } from '@/features/organization/core/labels'
 
@@ -42,6 +43,7 @@ async function listCollection(input?: { at?: Date }) {
 }
 
 async function getDetail(userId: string, input?: { at?: Date }) {
+  await connection()
   const at = input?.at ?? new Date()
   const requestHeaders = await headers()
   const [
@@ -78,15 +80,6 @@ async function getDetail(userId: string, input?: { at?: Date }) {
 
   const groupsById = new Map(groups.map((group) => [group.id, group]))
   const positionsById = new Map(positions.map((position) => [position.id, position]))
-  const scopeGroupsByPositionId = new Map<string, typeof groups>()
-  for (const scope of scopes) {
-    const group = scope.groupId ? groupsById.get(scope.groupId) : undefined
-    if (!group) continue
-    const scopeGroups = scopeGroupsByPositionId.get(scope.positionId) ?? []
-    scopeGroups.push(group)
-    scopeGroupsByPositionId.set(scope.positionId, scopeGroups)
-  }
-
   const membershipViews = memberships.flatMap((membership) => {
     const group = groupsById.get(membership.groupId)
     return group
@@ -105,15 +98,13 @@ async function getDetail(userId: string, input?: { at?: Date }) {
   const assignmentViews = assignments.flatMap((assignment) => {
     const position = positionsById.get(assignment.positionId)
     if (!position) return []
-    const scopeGroups = (scopeGroupsByPositionId.get(position.id) ?? []).sort((first, second) =>
-      formatGroupPath(groups, first).localeCompare(formatGroupPath(groups, second)),
-    )
+    const positionScopes = scopes.filter((scope) => scope.positionId === position.id)
     return [
       {
         id: assignment.id,
         positionId: position.id,
         positionName: position.name,
-        scopeLabel: formatPositionScopeLabel(groups, scopeGroups),
+        scopeLabel: formatPositionScopeLabel(positionScopes as never, { choirs, sections, groups }),
         startsAt: assignment.startsAt,
         endsAt: assignment.endsAt ?? undefined,
       },
@@ -153,10 +144,11 @@ async function getDetail(userId: string, input?: { at?: Date }) {
       .sort((first, second) => first.name.localeCompare(second.name) || first.id.localeCompare(second.id)),
     positions: positions
       .map((position) => {
-        const scopeGroups = (scopeGroupsByPositionId.get(position.id) ?? []).sort((first, second) =>
-          formatGroupPath(groups, first).localeCompare(formatGroupPath(groups, second)),
+        const scopeLabel = formatPositionScopeLabel(
+          scopes.filter((scope) => scope.positionId === position.id) as never,
+          { choirs, sections, groups },
         )
-        return { id: position.id, label: `${position.name} · ${formatPositionScopeLabel(groups, scopeGroups)}` }
+        return { id: position.id, label: formatPositionLabel(position.name, scopeLabel) }
       })
       .sort((first, second) => first.label.localeCompare(second.label) || first.id.localeCompare(second.id)),
     currentMemberships: membershipViews

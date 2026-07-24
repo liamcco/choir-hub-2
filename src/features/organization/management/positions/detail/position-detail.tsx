@@ -21,46 +21,40 @@ export type PositionDetailView = {
   historicalAssignments: PositionAssignmentView[]
 }
 export function PositionDetail({ position }: { position: PositionDetailView }) {
-  const hasHistory = position.historicalAssignments.length > 0
+  const currentAssignment = position.currentAssignments[0]
   return (
-    <article className="mx-auto flex w-full max-w-4xl flex-col gap-6">
-      <header className="flex flex-col gap-3 border-b pb-6 sm:flex-row sm:items-start sm:justify-between">
-        <div className="space-y-2">
-          <p className="text-sm font-medium text-muted-foreground">Position</p>
-          <h1 className="text-3xl font-semibold tracking-tight">{position.position.name}</h1>
-        </div>
-      </header>
+    <article className="mx-auto flex w-full max-w-3xl flex-col gap-6">
       <section aria-labelledby="position-information-heading">
         <h2 className="sr-only" id="position-information-heading">
           Position information
         </h2>
-        <dl className="grid gap-4 sm:grid-cols-2">
-          <ReadField label="Name" value={position.position.name} />
+        <dl className="grid gap-4">
           <ReadField label="Scopes" value={position.scopeLabel} />
         </dl>
       </section>
       <section aria-labelledby="position-assignments-heading" className="space-y-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-lg font-semibold" id="position-assignments-heading">
-            Current assignment
-          </h2>
-          <AssignPositionHolderControl users={position.users} positionId={position.position.id} />
-        </div>
-        {position.currentAssignments.length ? (
-          <AssignmentList assignments={position.currentAssignments} showEndControls />
+        <h2 className="text-lg font-semibold" id="position-assignments-heading">
+          Current assignment
+        </h2>
+        {currentAssignment ? (
+          <AssignmentList assignments={[currentAssignment]} showEndControls />
         ) : (
-          <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">Vacant Position</p>
+          <div className="flex flex-col gap-3 rounded-lg border border-dashed p-4 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-muted-foreground">Vacant Position</p>
+            <AssignPositionHolderControl users={position.users} positionId={position.position.id} />
+          </div>
         )}
       </section>
-      {hasHistory ? (
-        <details className="rounded-lg border bg-muted/20">
-          <summary className="cursor-pointer px-4 py-3 font-medium">History</summary>
-          <div className="border-t p-4">
-            <h2 className="mb-3 font-medium">Ended Position Assignments</h2>
-            <AssignmentList assignments={position.historicalAssignments} />
-          </div>
-        </details>
-      ) : null}
+      <section aria-labelledby="previous-holders-heading" className="space-y-4">
+        <h2 className="text-lg font-semibold" id="previous-holders-heading">
+          Previous holders
+        </h2>
+        {position.historicalAssignments.length ? (
+          <AssignmentList assignments={position.historicalAssignments} />
+        ) : (
+          <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">No previous holders</p>
+        )}
+      </section>
     </article>
   )
 }
@@ -85,9 +79,7 @@ function AssignmentList({
         <li className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between" key={assignment.id}>
           <div>
             <RelatedDetailLink href={adminUserPath(assignment.userId)}>{assignment.userLabel}</RelatedDetailLink>
-            <p className="text-sm text-muted-foreground">
-              {assignment.userDetail} · Since {formatDate(assignment.startsAt)}
-            </p>
+            <p className="text-sm text-muted-foreground">Since {formatDate(assignment.startsAt)}</p>
           </div>
           {showEndControls ? (
             <EndPositionAssignmentForm
@@ -98,6 +90,7 @@ function AssignmentList({
                 userLabel: assignment.userLabel,
                 position: { name: 'this Position' },
               }}
+              immediate
             />
           ) : null}
         </li>

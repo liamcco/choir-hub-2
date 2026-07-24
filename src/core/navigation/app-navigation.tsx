@@ -1,11 +1,3 @@
-import {
-  BriefcaseBusinessIcon,
-  Building2Icon,
-  KeyRoundIcon,
-  LogInIcon,
-  type LucideIcon,
-  UserRoundCogIcon,
-} from 'lucide-react'
 import Link from 'next/link'
 import { connection } from 'next/server'
 import { Suspense } from 'react'
@@ -13,6 +5,7 @@ import { type NavigationRouteId, ROUTES } from '@/core/navigation/site'
 import { buttonVariants } from '@/shared/ui/button'
 import { cn } from '@/shared/utils'
 import { userIsAdmin } from '../auth/permissions.server'
+import { LogoutButton } from './logout-button'
 
 export type NavigationRoute = {
   id: NavigationRouteId
@@ -22,22 +15,17 @@ export type NavigationRoute = {
 
 export type NavigationItem = NavigationRoute & {
   label: string
-  Icon: LucideIcon
 }
 
 const NAVIGATION_PRESENTATION = {
-  login: { label: 'Login', Icon: LogInIcon },
-  account: { label: 'Account', Icon: KeyRoundIcon },
-  adminUsers: { label: 'Users', Icon: UserRoundCogIcon },
-  adminGroups: { label: 'Groups', Icon: Building2Icon },
-  adminPositions: { label: 'Positions', Icon: BriefcaseBusinessIcon },
-} satisfies Record<NavigationRouteId, { label: string; Icon: LucideIcon }>
+  login: { label: 'Login' },
+  account: { label: 'Account' },
+  adminUsers: { label: 'Admin' },
+} satisfies Partial<Record<NavigationRouteId, { label: string }>>
 
 const AUTHENTICATED_NAVIGATION_ROUTES = [
   { id: 'account', href: ROUTES.account, section: 'member' },
   { id: 'adminUsers', href: ROUTES.adminUsers, section: 'admin' },
-  { id: 'adminGroups', href: ROUTES.adminGroups, section: 'admin' },
-  { id: 'adminPositions', href: ROUTES.adminPositions, section: 'admin' },
 ] as const satisfies readonly NavigationRoute[]
 
 const LOGIN_NAVIGATION_ROUTE = {
@@ -77,10 +65,10 @@ export function AppNavigationTemplate({ config }: AppNavigationTemplateProps) {
                 href={item.href}
                 className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'max-w-full')}
               >
-                <item.Icon data-icon="inline-start" />
                 {item.label}
               </Link>
             ))}
+            {config ? <LogoutButton /> : null}
           </nav>
         </div>
       </div>

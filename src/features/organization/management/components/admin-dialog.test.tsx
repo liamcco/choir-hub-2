@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test'
 
 const routerBack = mock(() => {})
-const { cleanup, render, screen } = await import('@testing-library/react')
+const { cleanup, render, screen, waitFor } = await import('@testing-library/react')
 const userEvent = (await import('@testing-library/user-event')).default
 const { AdminDialog: ResponsiveRouteDialog } = await import('./admin-dialog')
 
@@ -24,7 +24,7 @@ describe('responsive route dialog', () => {
       </ResponsiveRouteDialog>,
     )
 
-    expect(screen.getByRole('dialog', { name: 'Ada Lovelace' })).toBeTruthy()
+    await waitFor(() => expect(screen.getByRole('dialog', { name: 'Ada Lovelace' })).toBeTruthy())
     expect(screen.getAllByRole('region', { name: 'Member detail content' })).toHaveLength(1)
 
     const closeButton = screen.getByRole('button', { name: 'Close' })

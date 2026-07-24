@@ -1,7 +1,22 @@
 import { describe, expect, test } from 'bun:test'
-import { formatPositionScopeLabel } from './position'
+import type { Group } from '@/drizzle/schema'
+import { formatPositionLabel, formatPositionScopeLabel } from './position'
 
 describe('Position scope labels', () => {
+  test('renders only the supplied Group scopes', () => {
+    const groups: Group[] = [
+      { id: 'board', name: 'Board', kind: 'board', scopeType: 'csk', scopeKey: 'csk', choirId: null },
+      { id: 'party', name: 'Party Mastery', kind: 'committee', scopeType: 'csk', scopeKey: 'csk', choirId: null },
+      { id: 'web', name: 'Web Mastery', kind: 'committee', scopeType: 'csk', scopeKey: 'csk', choirId: null },
+    ]
+
+    expect(formatPositionScopeLabel([groups[1]], groups)).toBe('Party Mastery')
+  })
+
+  test('omits the scope suffix when a Position has no scopes', () => {
+    expect(formatPositionLabel('Treasurer', '')).toBe('Treasurer')
+  })
+
   test('renders typed scopes in deterministic order', () => {
     expect(
       formatPositionScopeLabel(

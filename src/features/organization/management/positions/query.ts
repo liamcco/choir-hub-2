@@ -1,5 +1,6 @@
 import 'server-only'
 
+import { connection } from 'next/server'
 import { organizationService } from '@/features/organization'
 import { isCurrentDatedPeriod, isHistoricalDatedPeriod } from '@/features/organization/core/dated-history'
 import { buildUserLabels, formatPositionScopeLabel } from '@/features/organization/core/labels'
@@ -45,6 +46,7 @@ async function listCollection(input?: { at?: Date }) {
 }
 
 async function getDetail(positionId: string, input?: { at?: Date }) {
+  await connection()
   const at = input?.at ?? new Date()
   const [{ groups, choirs, sections }, positions, scopes, assignments, users, memberships, placements] =
     await Promise.all([

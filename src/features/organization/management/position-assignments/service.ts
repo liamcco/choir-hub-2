@@ -1,7 +1,7 @@
-import type { Group, Position, PositionAssignment, PositionScope, User } from '@/drizzle/schema'
+import type { Choir, Group, Position, PositionAssignment, PositionScope, Section, User } from '@/drizzle/schema'
 import { organizationService } from '@/features/organization'
 import { isCurrentDatedPeriod, isHistoricalDatedPeriod } from '@/features/organization/core/dated-history'
-import { buildUserLabels, formatGroupPath, formatPositionScopeLabel } from '@/features/organization/core/labels'
+import { buildUserLabels, formatPositionLabel, formatPositionScopeLabel } from '@/features/organization/core/labels'
 
 export type PositionAssignmentPeriod = PositionAssignment & {
   position: Position
@@ -29,8 +29,10 @@ export type PositionAssignmentUserView = {
 }
 
 export async function listPositionAssignmentManagement(input?: { at?: Date }) {
-  const [groups, users, positions, scopes, assignments] = await Promise.all([
+  const [groups, choirs, sections, users, positions, scopes, assignments] = await Promise.all([
     organizationService.groups.list(),
+    organizationService.positions.listChoirs(),
+    organizationService.positions.listSections(),
     organizationService.users.list(),
     organizationService.positions.list(),
     organizationService.positions.listScopes(),
@@ -38,6 +40,8 @@ export async function listPositionAssignmentManagement(input?: { at?: Date }) {
   ])
   return buildPositionAssignmentManagementState({
     groups,
+    choirs,
+    sections,
     positions,
     scopes,
     assignments,
@@ -50,6 +54,8 @@ export type PositionAssignmentManagementState = Awaited<ReturnType<typeof listPo
 
 export function buildPositionAssignmentManagementState({
   groups,
+  choirs,
+  sections,
   positions,
   scopes,
   assignments,
@@ -57,6 +63,8 @@ export function buildPositionAssignmentManagementState({
   at,
 }: {
   groups: Group[]
+  choirs: Choir[]
+  sections: Section[]
   positions: Position[]
   scopes: PositionScope[]
   assignments: PositionAssignment[]
@@ -65,7 +73,7 @@ export function buildPositionAssignmentManagementState({
 }) {
   const positionsById = new Map(positions.map((position) => [position.id, position]))
   const usersById = new Map(users.map((user) => [user.id, user]))
-  const positionOptions = buildPositionOptions(groups, positions, scopes)
+  const positionOptions = buildPositionOptions(groups, choirs, sections, positions, scopes)
   const positionOptionsById = new Map(positionOptions.map((option) => [option.position.id, option]))
   const userOptions = buildUserLabels(users)
   const userOptionsById = new Map(userOptions.map((option) => [option.user.id, option]))
@@ -125,18 +133,20 @@ export function buildPositionAssignmentManagementState({
   }
 }
 
-function buildPositionOptions(groups: Group[], positions: Position[], scopes: PositionScope[]) {
-  const groupsById = new Map(groups.map((group) => [group.id, group]))
+function buildPositionOptions(
+  groups: Group[],
+  choirs: Choir[],
+  sections: Section[],
+  positions: Position[],
+  scopes: PositionScope[],
+) {
   return positions.map((position) => {
-    const scopeGroups = scopes
-      .filter((scope) => scope.positionId === position.id)
-      .flatMap((scope) => {
-        const group = scope.groupId ? groupsById.get(scope.groupId) : undefined
-        return group ? [group] : []
-      })
-      .sort((first, second) => formatGroupPath(groups, first).localeCompare(formatGroupPath(groups, second)))
-    const scopeLabel = formatPositionScopeLabel(groups, scopeGroups)
-    return { position, label: `${position.name} (${scopeLabel})`, scopeLabel }
+    const scopeLabel = formatPositionScopeLabel(scopes.filter((scope) => scope.positionId === position.id) as never, {
+      choirs,
+      sections,
+      groups,
+    })
+    return { position, label: formatPositionLabel(position.name, scopeLabel), scopeLabel }
   })
 }
 

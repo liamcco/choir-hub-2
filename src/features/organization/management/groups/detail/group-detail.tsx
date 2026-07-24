@@ -1,15 +1,16 @@
 import { adminUserPath } from '@/core/navigation/site'
 import type { Group } from '@/drizzle/schema'
+import { formatGroupKind } from '@/features/organization/core/group-kind'
 import type { UserLabel } from '@/features/organization/core/labels'
 import { RelatedDetailLink } from '@/features/organization/management/components/related-detail-link'
 import { formatPeriod } from '@/shared/formatting'
 import { Badge } from '@/shared/ui/badge'
 import {
-  AddGroupUserControl,
   type CreateMembershipAction,
   EndGroupUserControl,
   type EndMembershipAction,
 } from '../group-membership-controls'
+import { GroupMembersSection } from './group-members-section'
 
 export type GroupMembershipView = {
   id: string
@@ -36,38 +37,34 @@ export type GroupDetailActions = {
 
 export function GroupDetail({ group, actions }: { group: GroupDetailView; actions: GroupDetailActions }) {
   return (
-    <article className="mx-auto flex w-full max-w-4xl flex-col gap-6">
-      <header className="flex flex-col gap-3 border-b pb-6 sm:flex-row sm:items-start sm:justify-between">
-        <div className="space-y-2">
-          <p className="text-sm font-medium text-muted-foreground">Group</p>
-          <h1 className="text-3xl font-semibold tracking-tight">{group.name}</h1>
-        </div>
-      </header>
-
+    <article className="mx-auto flex w-full max-w-xl flex-col gap-6">
       <section aria-labelledby="group-information-heading">
         <h2 className="sr-only" id="group-information-heading">
           Group information
         </h2>
-        <dl className="grid gap-4 sm:grid-cols-2">
-          <ReadField label="Name" value={group.name} />
+        <dl className="grid gap-4">
+          <ReadField label="Kind" value={formatGroupKind(group.kind)} />
         </dl>
       </section>
 
-      <section aria-labelledby="group-memberships-heading" className="space-y-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-lg font-semibold" id="group-memberships-heading">
-            Effective members
-          </h2>
-          {group.kind === 'committee' ? (
-            <AddGroupUserControl action={actions.createMembership} groupId={group.id} users={group.users} />
-          ) : null}
-        </div>
+      <GroupMembersSection
+        action={actions.createMembership}
+        endAction={actions.endMembership}
+        groupId={group.id}
+        groupKind={group.kind}
+        groupName={group.name}
+        memberships={group.currentMemberships}
+        users={group.users}
+      />
+
+      <section aria-labelledby="previous-group-members-heading" className="space-y-3">
+        <h2 className="text-lg font-semibold" id="previous-group-members-heading">
+          Previous members
+        </h2>
         <MembershipList
-          emptyText="No current effective members"
+          emptyText="No previous members"
           groupName={group.name}
-          memberships={group.currentMemberships}
-          showEndControls={group.kind === 'committee'}
-          endAction={actions.endMembership}
+          memberships={group.historicalMemberships}
         />
       </section>
 
@@ -83,16 +80,6 @@ export function GroupDetail({ group, actions }: { group: GroupDetailView; action
             showEndControls
           />
         </section>
-      ) : null}
-
-      {group.historicalMemberships.length ? (
-        <details className="rounded-lg border bg-muted/20">
-          <summary className="cursor-pointer px-4 py-3 font-medium">History</summary>
-          <div className="border-t p-4">
-            <h2 className="mb-3 font-medium">Ended Group Memberships</h2>
-            <MembershipList groupName={group.name} memberships={group.historicalMemberships} />
-          </div>
-        </details>
       ) : null}
     </article>
   )
@@ -133,8 +120,6 @@ function MembershipList({
           <div>
             <RelatedDetailLink href={adminUserPath(membership.userId)}>{membership.userLabel}</RelatedDetailLink>
             <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-              <span>{membership.userDetail}</span>
-              <span aria-hidden="true">·</span>
               <span>{formatPeriod(membership)}</span>
               {membership.sourceLabels.map((sourceLabel) => (
                 <Badge key={sourceLabel} variant="secondary">

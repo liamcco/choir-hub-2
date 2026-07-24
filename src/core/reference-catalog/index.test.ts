@@ -39,6 +39,14 @@ describe('reference catalog', () => {
         { id: 'accountant-2', name: 'Accountant 2', scopes: [{ type: 'csk' }] },
       ]),
     )
+    expect(positionCatalog.find((position) => position.id === 'vice-president')).toEqual({
+      id: 'vice-president',
+      name: 'Vice President',
+      scopes: [
+        { type: 'group', groupId: 'board' },
+        { type: 'group', groupId: 'recruitment-committee' },
+      ],
+    })
     expect(positionCatalog.find((position) => position.id === 'kk-s-voice-parent')?.scopes).toHaveLength(1)
     expect(positionCatalog.find((position) => position.id === 'kk-s-voice-parent')?.scopes[0]).toEqual({
       type: 'section',

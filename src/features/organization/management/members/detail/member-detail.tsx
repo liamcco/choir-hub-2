@@ -1,26 +1,19 @@
-import { adminGroupPath, adminPositionPath } from '@/core/navigation/site'
 import type { GroupKind, MemberStatus } from '@/drizzle/schema'
-import { formatGroupKind } from '@/features/organization/core/group-kind'
 import { formatMemberStatus } from '@/features/organization/core/member-status'
-import { RelatedDetailLink } from '@/features/organization/management/components/related-detail-link'
 import type {
   CreateMembershipAction,
   EndMembershipAction,
 } from '@/features/organization/management/groups/relationships'
-import { AddUserGroupControl, EndGroupUserControl } from '@/features/organization/management/groups/relationships'
 import type {
   CreatePositionAssignmentFormState,
   EndPositionAssignmentFormState,
-} from '@/features/organization/management/position-assignments/relationships'
-import {
-  AssignUserPositionControl,
-  EndPositionAssignmentForm,
 } from '@/features/organization/management/position-assignments/relationships'
 import { formatDate, formatPeriod } from '@/shared/formatting'
 import { Badge } from '@/shared/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader } from '@/shared/ui/card'
 import type { AccountAccessState } from '../service'
 import { AccountAccessEditor, MemberStatusEditor } from './member-editors'
+import { MemberGroupMembershipSection, MemberPositionAssignmentSection } from './member-relationship-sections'
 
 export type MemberRelationshipPeriod = {
   id: string
@@ -82,15 +75,14 @@ export function MemberDetail({ member, actions }: { member: MemberDetailView; ac
     (member.sectionPlacementHistory?.length ?? 0) > 0
 
   return (
-    <article className="mx-auto flex w-full max-w-4xl flex-col gap-6">
-      <header className="flex flex-col gap-3 border-b pb-6 sm:flex-row sm:items-start sm:justify-between">
-        <div className="space-y-2">
-          <p className="text-sm font-medium text-muted-foreground">User</p>
-          <h1 className="text-3xl font-semibold tracking-tight">{member.name}</h1>
+    <article className="mx-auto flex w-full max-w-5xl flex-col gap-6">
+      <section className="flex flex-col gap-3 border-b pb-6 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <p className="text-sm font-medium text-muted-foreground">Member Status</p>
           <Badge variant="secondary">{formatMemberStatus(member.status)}</Badge>
         </div>
         <MemberStatusEditor userId={member.id} status={member.status} />
-      </header>
+      </section>
 
       <section aria-labelledby="member-information-heading">
         <h2 className="sr-only" id="member-information-heading">
@@ -117,33 +109,21 @@ export function MemberDetail({ member, actions }: { member: MemberDetailView; ac
         </p>
       </section>
 
-      <section aria-labelledby="group-memberships-heading" className="space-y-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-lg font-semibold" id="group-memberships-heading">
-            Committee Memberships
-          </h2>
-          {actions ? (
-            <AddUserGroupControl action={actions.createMembership} groups={member.groups} userId={member.id} />
-          ) : null}
-        </div>
-        <MembershipList endAction={actions?.endMembership} memberships={member.currentMemberships} userId={member.id} />
-      </section>
+      <MemberGroupMembershipSection
+        action={actions?.createMembership}
+        endAction={actions?.endMembership}
+        groups={member.groups}
+        memberships={member.currentMemberships}
+        userId={member.id}
+      />
 
-      <section aria-labelledby="position-assignments-heading" className="space-y-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-lg font-semibold" id="position-assignments-heading">
-            Position Assignments
-          </h2>
-          {actions ? (
-            <AssignUserPositionControl
-              action={actions.createAssignment}
-              userId={member.id}
-              positions={member.positions}
-            />
-          ) : null}
-        </div>
-        <AssignmentList assignments={member.currentAssignments} endAction={actions?.endAssignment} userId={member.id} />
-      </section>
+      <MemberPositionAssignmentSection
+        action={actions?.createAssignment}
+        assignments={member.currentAssignments}
+        endAction={actions?.endAssignment}
+        positions={member.positions}
+        userId={member.id}
+      />
 
       <AccountAccess member={member} />
 
@@ -212,82 +192,6 @@ function ReadField({ label, value }: { label: string; value: string }) {
       <dt className="text-sm text-muted-foreground">{label}</dt>
       <dd className="mt-1 font-medium">{value}</dd>
     </div>
-  )
-}
-
-function MembershipList({
-  memberships,
-  userId,
-  endAction,
-}: {
-  memberships: MemberMembershipView[]
-  userId: string
-  endAction?: EndMembershipAction
-}) {
-  return memberships.length ? (
-    <ul className="divide-y rounded-lg border">
-      {memberships.map((membership) => (
-        <li className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between" key={membership.id}>
-          <div>
-            <RelatedDetailLink href={adminGroupPath(membership.groupId)}>{membership.groupName}</RelatedDetailLink>
-            <p className="text-sm text-muted-foreground">
-              {formatGroupKind(membership.groupKind)} · Since {formatDate(membership.startsAt)}
-            </p>
-          </div>
-          {endAction ? (
-            <EndGroupUserControl
-              action={endAction}
-              groupName={membership.groupName}
-              membership={{ ...membership, userId, userLabel: 'this User' }}
-            />
-          ) : null}
-        </li>
-      ))}
-    </ul>
-  ) : (
-    <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
-      No current Committee Memberships
-    </p>
-  )
-}
-
-function AssignmentList({
-  assignments,
-  userId,
-  endAction,
-}: {
-  assignments: MemberAssignmentView[]
-  userId: string
-  endAction?: MemberDetailActions['endAssignment']
-}) {
-  return assignments.length ? (
-    <ul className="divide-y rounded-lg border">
-      {assignments.map((assignment) => (
-        <li className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between" key={assignment.id}>
-          <div>
-            <RelatedDetailLink href={adminPositionPath(assignment.positionId)}>
-              {assignment.positionName}
-            </RelatedDetailLink>
-            <p className="text-sm text-muted-foreground">
-              {assignment.scopeLabel} · Since {formatDate(assignment.startsAt)}
-            </p>
-          </div>
-          {endAction ? (
-            <EndPositionAssignmentForm
-              action={endAction}
-              assignment={{
-                ...assignment,
-                userId,
-                userLabel: 'this User',
-                position: { name: assignment.positionName },
-              }}
-            />
-          ) : null}
-        </li>
-      ))}
-    </ul>
-  ) : (
-    <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">No current Position Assignments</p>
   )
 }
 

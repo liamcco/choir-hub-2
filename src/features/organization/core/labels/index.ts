@@ -12,6 +12,7 @@ export type { UserLabel } from '@/features/organization/core/labels/member'
 export { buildUserLabels, formatUserFallbackLabel } from '@/features/organization/core/labels/member'
 export {
   formatFineGrainedPlacementName,
+  formatPositionLabel,
   formatPositionScopeLabel,
   formatSectionName,
 } from '@/features/organization/core/labels/position'

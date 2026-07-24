@@ -28,16 +28,16 @@ describe('app navigation', () => {
     })
   })
 
-  test('shows only resource-first admin navigation to authenticated users', () => {
+  test('shows Account, Admin, and Logout to authenticated admins', () => {
     const items = getNavigationItems({ showAdmin: true })
     const markup = renderToStaticMarkup(<AppNavigationTemplate config={{ showAdmin: true }} />)
 
-    expect(items.map((item) => item.href)).toEqual(['/account', '/admin/users', '/admin/groups', '/admin/positions'])
-    expect(markup).toContain('Users')
-    expect(markup).toContain('Groups')
-    expect(markup).toContain('Positions')
-    expect(markup).not.toContain('Group Memberships')
-    expect(markup).not.toContain('Position Assignments')
+    expect(items.map((item) => item.href)).toEqual(['/account', '/admin/users'])
+    expect(markup).toContain('Account')
+    expect(markup).toContain('Admin')
+    expect(markup).toContain('Logout')
+    expect(markup).not.toContain('/admin/groups')
+    expect(markup).not.toContain('/admin/positions')
   })
 
   test('shows only login navigation to anonymous visitors', () => {

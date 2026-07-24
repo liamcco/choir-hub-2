@@ -75,7 +75,7 @@ describe('Member detail', () => {
       />,
     )
 
-    expect(screen.getByRole('heading', { level: 1, name: 'Ada Lovelace' })).toBeTruthy()
+    expect(screen.queryByRole('heading', { level: 1, name: 'Ada Lovelace' })).toBeNull()
     expect(screen.getAllByText('Active').length).toBeGreaterThan(0)
     expect(screen.getByText('member-1')).toBeTruthy()
     expect(screen.getByText('Feb 1, 2025')).toBeTruthy()
@@ -93,17 +93,32 @@ describe('Member detail', () => {
     await user.click(screen.getByRole('button', { name: 'Edit account access' }))
     expect(screen.getByRole('button', { name: 'Disable access' })).toBeTruthy()
     await user.click(screen.getByRole('button', { name: 'Add Group' }))
-    expect(screen.getByRole('heading', { name: 'Add Group Membership' })).toBeTruthy()
     expect(screen.getByLabelText('Group')).toBeTruthy()
+    expect(screen.getAllByRole('button', { name: 'Cancel' }).length).toBeGreaterThan(0)
+    expect(screen.getAllByRole('button', { name: 'Confirm' }).length).toBeGreaterThan(0)
+    expect(screen.queryByRole('heading', { name: 'Add Group Membership' })).toBeNull()
+
+    await user.click(screen.getAllByRole('button', { name: 'Cancel' })[0])
+    await user.click(screen.getByRole('button', { name: 'Assign Position' }))
+    expect(screen.getByLabelText('Position')).toBeTruthy()
+    expect(screen.getAllByRole('button', { name: 'Cancel' }).length).toBeGreaterThan(0)
+    expect(screen.getAllByRole('button', { name: 'Confirm' }).length).toBeGreaterThan(0)
 
     const history = screen.getByText('History').closest('details')
     expect(history?.hasAttribute('open')).toBe(false)
     expect(screen.getByText('Festival Choir')).toBeTruthy()
   })
 
-  test('omits History when the Member has no ended relationships', () => {
+  test('omits History when the Member has no ended relationships', async () => {
+    const actions = {
+      createMembership: async () => ({}),
+      endMembership: async () => ({}),
+      createAssignment: async () => ({}),
+      endAssignment: async () => ({}),
+    }
     render(
       <MemberDetail
+        actions={actions}
         member={{
           id: 'member-2',
           name: 'Grace Hopper',
@@ -126,5 +141,16 @@ describe('Member detail', () => {
     expect(screen.queryByText('History')).toBeNull()
     expect(screen.getByText('No current Committee Memberships')).toBeTruthy()
     expect(screen.getByText('No current Position Assignments')).toBeTruthy()
+
+    const userEvent = (await import('@testing-library/user-event')).default
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: 'Add Group' }))
+    expect(screen.queryByText('No current Committee Memberships')).toBeNull()
+    expect(screen.getByLabelText('Group')).toBeTruthy()
+
+    await user.click(screen.getByRole('button', { name: 'Cancel' }))
+    await user.click(screen.getByRole('button', { name: 'Assign Position' }))
+    expect(screen.queryByText('No current Position Assignments')).toBeNull()
+    expect(screen.getByLabelText('Position')).toBeTruthy()
   })
 })

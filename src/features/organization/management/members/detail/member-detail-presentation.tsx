@@ -1,14 +1,32 @@
-import type { ReactNode } from 'react'
-import { ObjectDetailDialog } from '@/features/organization/management/components/admin-dialog'
+'use client'
 
-export function MemberDetailDialog({ name, children }: { name: string; children: ReactNode }) {
+import { usePathname, useRouter } from 'next/navigation'
+import type { ReactNode } from 'react'
+import { AdminDialog } from '@/features/organization/management/components/admin-dialog'
+
+export function MemberDetailDialog({ title = 'User', children }: { title?: ReactNode; children: ReactNode }) {
+  const router = useRouter()
+  const pathname = usePathname()
+
   return (
-    <ObjectDetailDialog title={name} description="Member detail" contentLabel={`${name} detail content`}>
+    <AdminDialog
+      className="sm:max-w-6xl"
+      contentLabel="User detail content"
+      description="User detail"
+      onClose={() => router.replace(pathname, { scroll: false })}
+      title={title}
+    >
       {children}
-    </ObjectDetailDialog>
+    </AdminDialog>
   )
 }
 
-export function MemberDetailRoutePresentation({ name = 'Member', children }: { name?: string; children: ReactNode }) {
-  return <MemberDetailDialog name={name}>{children}</MemberDetailDialog>
+export function MemberDetailRoutePresentation({
+  title = 'User',
+  children,
+}: {
+  title?: ReactNode
+  children: ReactNode
+}) {
+  return <MemberDetailDialog title={title}>{children}</MemberDetailDialog>
 }

@@ -1,4 +1,5 @@
 'use server'
+import { APIError } from 'better-auth'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { requireAdmin, requireCurrentUserPermission } from '@/core/auth/permissions.server'
@@ -29,6 +30,9 @@ export async function createUserAction(_previousState: UserFormState, formData: 
     revalidatePath(ROUTES.adminUsers)
     return { success: true, message: 'User successfully created.', createdId: user.id }
   } catch (error) {
+    if (error instanceof APIError && error.body?.code === 'USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL') {
+      return { success: false, fieldErrors: { email: 'Email already taken' } }
+    }
     return handleFormError(error)
   }
 }

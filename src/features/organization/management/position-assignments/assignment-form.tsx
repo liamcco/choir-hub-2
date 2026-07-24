@@ -3,6 +3,7 @@
 import { SaveIcon, UserRoundCheckIcon } from 'lucide-react'
 import { useActionState, useState } from 'react'
 import type { UserLabel } from '@/features/organization/core/labels'
+import { UserCombobox } from '@/features/organization/management/components/user-combobox'
 import type {
   CreatePositionAssignmentFormState,
   EndPositionAssignmentFormState,
@@ -96,7 +97,7 @@ export function AssignPositionHolderControl({ users, positionId }: { users: User
   if (!isAssigning) {
     return (
       <Button onClick={() => setIsAssigning(true)} type="button" variant="outline">
-        Assign holder
+        Assign Holder
       </Button>
     )
   }
@@ -176,19 +177,12 @@ function AssignPositionHolderForm({
       <input name="positionId" type="hidden" value={positionId} />
       <Field>
         <FieldLabel htmlFor={`assignment-user-${positionId}`}>User</FieldLabel>
-        <NativeSelect
+        <UserCombobox
           id={`assignment-user-${positionId}`}
+          invalid={!!state.fieldErrors?.userId}
           name="userId"
-          required
-          aria-invalid={!!state.fieldErrors?.userId}
-        >
-          <NativeSelectOption value="">Choose User</NativeSelectOption>
-          {users.map((option) => (
-            <NativeSelectOption key={option.user.id} value={option.user.id}>
-              {option.label} ({option.detail})
-            </NativeSelectOption>
-          ))}
-        </NativeSelect>
+          users={users}
+        />
         <FieldError>{state.fieldErrors?.userId}</FieldError>
       </Field>
       <div className="flex gap-2">
@@ -207,13 +201,28 @@ function AssignPositionHolderForm({
 export function EndPositionAssignmentForm({
   assignment,
   action = endPositionAssignmentAction,
+  immediate = false,
 }: {
   assignment: AssignmentForEnd & {
     position: { name: string }
   }
   action?: EndAssignmentAction
+  immediate?: boolean
 }) {
   const [state, formAction, isPending] = useActionState(action.bind(null, assignment.id), endInitialState)
+
+  if (immediate) {
+    return (
+      <form action={formAction} className="flex flex-col items-end gap-1">
+        <input name="endsAt" type="hidden" value={formatDateInput(new Date())} />
+        <input name="userId" type="hidden" value={assignment.userId} />
+        <Button type="submit" variant="outline" disabled={isPending}>
+          {isPending ? 'Ending' : 'End'}
+        </Button>
+        <FormMessage state={state} />
+      </form>
+    )
+  }
 
   return (
     <form action={formAction} className="flex min-w-44 items-start justify-end gap-2">

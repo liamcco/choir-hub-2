@@ -52,7 +52,7 @@ export const referenceCatalogData = {
   positions: {
     board: [
       { id: 'president', name: 'President', additionalGroupIds: [] },
-      { id: 'vice-president', name: 'Vice President', additionalGroupIds: [] },
+      { id: 'vice-president', name: 'Vice President', additionalGroupIds: ['recruitment-committee'] },
       { id: 'treasurer', name: 'Treasurer', additionalGroupIds: [] },
       { id: 'secretary', name: 'Secretary', additionalGroupIds: [] },
       { id: 'master-of-parties', name: 'Master of Parties', additionalGroupIds: ['party-mastery'] },

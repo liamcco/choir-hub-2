@@ -86,4 +86,54 @@ describe('Member collection', () => {
     expect(screen.getByRole('link', { name: 'Grace Hopper' })).toBeTruthy()
     expect(window.location.search).toBe('')
   })
+
+  test('groups filtered users by the selected column and keeps names sorted within each group', async () => {
+    const user = userEvent.setup()
+    render(
+      <MemberCollection
+        users={[
+          { id: 'former', name: 'Ada Lovelace', homeChoir: 'KK', voice: 'A1', status: MemberStatus.FORMER },
+          { id: 'active-2', name: 'Grace Hopper', homeChoir: 'KK', voice: 'S1', status: MemberStatus.ACTIVE },
+          { id: 'active-1', name: 'Zoe Quinn', homeChoir: 'MK', voice: 'B2', status: MemberStatus.ACTIVE },
+          { id: 'passive', name: 'Bob Stone', homeChoir: 'DK', voice: 'S2', status: MemberStatus.PASSIVE },
+          { id: 'unplaced', name: 'No Placement', homeChoir: null, voice: null, status: MemberStatus.PASSIVE },
+        ]}
+      />,
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Status' }))
+    expect(
+      screen
+        .getAllByRole('cell')
+        .filter((cell) => cell.getAttribute('colspan') === '4')
+        .map((cell) => cell.textContent),
+    ).toEqual(['Active', 'Passive', 'Former'])
+    expect(screen.getByRole('button', { name: 'Status' }).getAttribute('aria-pressed')).toBe('true')
+
+    await user.click(screen.getByRole('button', { name: 'Voice' }))
+    expect(
+      screen
+        .getAllByRole('cell')
+        .filter((cell) => cell.getAttribute('colspan') === '4')
+        .map((cell) => cell.textContent),
+    ).toEqual(['S1', 'S2', 'A1', 'B2', 'No Voice'])
+
+    await user.click(screen.getByRole('button', { name: 'Choir' }))
+    expect(
+      screen
+        .getAllByRole('cell')
+        .filter((cell) => cell.getAttribute('colspan') === '4')
+        .map((cell) => cell.textContent),
+    ).toEqual(['MK', 'B2', 'KK', 'S1', 'A1', 'DK', 'S2', 'No Choir', 'No Voice'])
+
+    await user.click(screen.getByRole('button', { name: 'Name' }))
+    expect(screen.getAllByRole('cell').filter((cell) => cell.getAttribute('colspan') === '4')).toHaveLength(0)
+    expect(screen.getAllByRole('link').map((link) => link.textContent)).toEqual([
+      'Ada Lovelace',
+      'Bob Stone',
+      'Grace Hopper',
+      'No Placement',
+      'Zoe Quinn',
+    ])
+  })
 })

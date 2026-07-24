@@ -1,7 +1,8 @@
 'use client'
 
 import { UserPlusIcon } from 'lucide-react'
-import { useActionState } from 'react'
+import { useActionState, useEffect, useState } from 'react'
+import type { MemberStatus } from '@/drizzle/schema'
 import { createUserAction, type UserFormState } from '@/features/organization/management/members/actions'
 import { FormMessage } from '@/shared/forms/error-handling'
 import { Button } from '@/shared/ui/button'
@@ -10,6 +11,19 @@ import { Input } from '@/shared/ui/input'
 import { NativeSelect, NativeSelectOption } from '@/shared/ui/native-select'
 
 const initialState: UserFormState = {}
+const initialValues: MemberAccountFormValues = {
+  name: '',
+  email: '',
+  password: '',
+  status: 'ACTIVE',
+}
+
+type MemberAccountFormValues = {
+  name: string
+  email: string
+  password: string
+  status: MemberStatus
+}
 
 export function MemberAccountForm({
   onCreated,
@@ -19,13 +33,26 @@ export function MemberAccountForm({
   onSuccess?: () => void
 }) {
   const [state, formAction, isPending] = useActionState(createUserAction, initialState)
+  const [values, setValues] = useState(initialValues)
+
+  useEffect(() => {
+    if (state.success) setValues(initialValues)
+  }, [state.success])
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
       <FieldGroup>
         <Field>
           <FieldLabel htmlFor="name">Name</FieldLabel>
-          <Input id="name" name="name" autoComplete="name" required aria-invalid={!!state.fieldErrors?.name} />
+          <Input
+            id="name"
+            name="name"
+            autoComplete="name"
+            required
+            value={values.name}
+            onChange={(event) => setValues((current) => ({ ...current, name: event.target.value }))}
+            aria-invalid={!!state.fieldErrors?.name}
+          />
           <FieldError>{state.fieldErrors?.name}</FieldError>
         </Field>
         <Field>
@@ -36,6 +63,8 @@ export function MemberAccountForm({
             type="email"
             autoComplete="email"
             required
+            value={values.email}
+            onChange={(event) => setValues((current) => ({ ...current, email: event.target.value }))}
             aria-invalid={!!state.fieldErrors?.email}
           />
           <FieldError>{state.fieldErrors?.email}</FieldError>
@@ -48,13 +77,21 @@ export function MemberAccountForm({
             type="password"
             minLength={8}
             required
+            value={values.password}
+            onChange={(event) => setValues((current) => ({ ...current, password: event.target.value }))}
             aria-invalid={!!state.fieldErrors?.password}
           />
           <FieldError>{state.fieldErrors?.password}</FieldError>
         </Field>
         <Field>
           <FieldLabel htmlFor="status">Member Status</FieldLabel>
-          <NativeSelect id="status" name="status" className="w-full" defaultValue="ACTIVE">
+          <NativeSelect
+            id="status"
+            name="status"
+            className="w-full"
+            value={values.status}
+            onChange={(event) => setValues((current) => ({ ...current, status: event.target.value as MemberStatus }))}
+          >
             <NativeSelectOption value="ACTIVE">Active</NativeSelectOption>
             <NativeSelectOption value="PASSIVE">Passive</NativeSelectOption>
             <NativeSelectOption value="FORMER">Former</NativeSelectOption>
