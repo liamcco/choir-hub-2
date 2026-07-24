@@ -4,12 +4,16 @@ import { and, asc, desc, eq, gt, gte, inArray, isNull, lt, lte, or } from 'drizz
 import { db } from '@/drizzle/db'
 import {
   account,
+  choir,
+  choirMembership,
   group,
   groupMembership,
   passkey,
   position,
   positionAssignment,
   positionScope,
+  section,
+  sectionPlacement,
   session,
   twoFactor,
   user,
@@ -18,6 +22,10 @@ import {
 
 const tables = {
   user,
+  choir,
+  section,
+  choirMembership,
+  sectionPlacement,
   group,
   groupMembership,
   position,
