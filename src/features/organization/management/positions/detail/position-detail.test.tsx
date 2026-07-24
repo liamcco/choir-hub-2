@@ -81,9 +81,8 @@ describe('Position detail', () => {
       />,
     )
     expect(screen.getByRole('heading', { level: 1, name: 'Chair' })).toBeTruthy()
-    expect(screen.getByText('Leads the board.')).toBeTruthy()
     expect(screen.getByText('Choir Board')).toBeTruthy()
-    expect(screen.getByRole('button', { name: 'Edit Position' })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'Edit Position' })).toBeNull()
     expect(screen.getByRole('button', { name: 'Assign holder' })).toBeTruthy()
     expect(screen.getByLabelText('End Ada Lovelace assignment to this Position')).toBeTruthy()
     const history = screen.getByText('History').closest('details')
