@@ -1,5 +1,5 @@
+import type { Group } from '@/drizzle/schema'
 import { formatGroupPath } from '@/features/organization/core/group-tree'
-import type { Group } from '@/prisma/generated/client'
 
 export const noGroupScopesLabel = 'No Group scopes'
 

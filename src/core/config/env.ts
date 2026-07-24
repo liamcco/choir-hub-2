@@ -15,7 +15,7 @@ const envSchema = z.object({
   EMAIL_MODE: z.enum(['log', 'smtp']).default('log'),
   GMAIL_SMTP_USER: z.email().default('your.name@gmail.com'),
   GMAIL_SMTP_APP_PASSWORD: z.string().default('your-16-character-google-app-password'),
-  LOG_PRISMA: z.enum(['true', 'false']).default('false'),
+  LOG_DATABASE: z.enum(['true', 'false']).default('false'),
 })
 const parsed = envSchema.safeParse({ ...process.env, ENVIRONMENT: environment })
 if (!parsed.success) {

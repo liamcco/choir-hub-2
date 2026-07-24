@@ -1,5 +1,5 @@
 import { describe, expect, mock, test } from 'bun:test'
-import { type Group, GroupKind, type GroupMembership, MemberStatus, type User } from '@/prisma/generated/client'
+import { type Group, GroupKind, type GroupMembership, MemberStatus, type User } from '@/drizzle/schema'
 
 mock.module('server-only', () => ({}))
 mock.module('@/features/organization', () => ({ organizationService: {} }))

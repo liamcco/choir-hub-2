@@ -1,15 +1,15 @@
 import 'dotenv/config'
 
-import { prisma } from '@/core/db'
+import { database } from '@/core/db'
 
-import { seedDemo } from '@/prisma/seeds/demo'
+import { seedDemo } from '@/drizzle/seeds/demo'
 
 async function main(): Promise<void> {
   try {
-    await seedDemo(prisma)
+    await seedDemo(database)
     console.log('Completed demo seed.')
   } finally {
-    await prisma.$disconnect()
+    await database.$disconnect()
   }
 }
 

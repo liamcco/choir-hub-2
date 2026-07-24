@@ -36,7 +36,7 @@ export function readAdminConfig(environment: { ADMIN_EMAIL?: string; ADMIN_PASSW
 }
 
 type BootstrapDependencies = {
-  prisma: {
+  database: {
     user: {
       findUnique: (args: {
         where: { email: string }
@@ -58,10 +58,10 @@ export async function bootstrapAdmin(
   dependencies: BootstrapDependencies,
   config: { email: string; password: string; name: string },
 ) {
-  const existingUser = await dependencies.prisma.user.findUnique({ where: { email: config.email } })
+  const existingUser = await dependencies.database.user.findUnique({ where: { email: config.email } })
 
   if (existingUser) {
-    const user = await dependencies.prisma.user.update({
+    const user = await dependencies.database.user.update({
       where: { id: existingUser.id },
       data: {
         role: normalizeRoles(existingUser.role),
@@ -86,13 +86,14 @@ if (import.meta.main) {
       ADMIN_PASSWORD: process.env.ADMIN_PASSWORD,
       ADMIN_NAME: process.env.ADMIN_NAME,
     })
-    const [{ prisma }, { auth }] = await Promise.all([import('@/core/db'), import('@/core/auth/auth')])
-    const result = await bootstrapAdmin({ prisma, auth }, config)
+    const [{ database }, { auth }] = await Promise.all([import('@/core/db'), import('@/core/auth/auth')])
+    const result = await bootstrapAdmin({ database, auth }, config)
     console.log(`${result.action === 'created' ? 'Created' : 'Promoted existing'} admin user: ${result.user.email}`)
     if (result.action === 'promoted') console.log('Existing user password was not changed.')
-    await prisma.$disconnect()
+    await database.$disconnect()
+    process.exit(0)
   } catch (error) {
     console.error(error instanceof Error ? error.message : error)
-    process.exitCode = 1
+    process.exit(1)
   }
 }

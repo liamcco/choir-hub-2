@@ -1,3 +1,4 @@
+import type { Group, GroupMembership, User } from '@/drizzle/schema'
 import { organizationService } from '@/features/organization'
 import {
   isCurrentDatedPeriod,
@@ -5,7 +6,6 @@ import {
   isScheduledDatedPeriod,
 } from '@/features/organization/core/dated-history'
 import { buildUserLabels, formatGroupPath } from '@/features/organization/core/labels'
-import type { Group, GroupMembership, User } from '@/prisma/generated/client'
 
 export type GroupMembershipPeriod = GroupMembership & {
   group: Group

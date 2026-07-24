@@ -1,4 +1,4 @@
-import type { PrismaClient } from '@/prisma/generated/client'
+import type { Database } from '@/core/db/database'
 
 /**
  * Operational/domain seed data shared by environments.
@@ -6,7 +6,7 @@ import type { PrismaClient } from '@/prisma/generated/client'
  * Add durable Groups, Positions, and Position Scopes here. Keep this seed free
  * of people, memberships, assignments, and authentication data.
  */
-export async function seedFoundation(prisma: PrismaClient): Promise<void> {
+export async function seedFoundation(database: Database): Promise<void> {
   const groups = [
     { id: 'kk', kind: 'CHOIR' as const, name: 'KK', parentGroupId: null },
     { id: 'dk', kind: 'CHOIR' as const, name: 'DK', parentGroupId: null },
@@ -41,7 +41,7 @@ export async function seedFoundation(prisma: PrismaClient): Promise<void> {
   ]
 
   for (const group of groups) {
-    await prisma.group.upsert({ where: { id: group.id }, create: group, update: group })
+    await database.group.upsert({ where: { id: group.id }, create: group, update: group })
   }
 
   const positions = [
@@ -56,7 +56,7 @@ export async function seedFoundation(prisma: PrismaClient): Promise<void> {
   ]
 
   for (const position of positions) {
-    await prisma.position.upsert({ where: { id: position.id }, create: position, update: position })
+    await database.position.upsert({ where: { id: position.id }, create: position, update: position })
   }
 
   const scopes = [
@@ -71,7 +71,7 @@ export async function seedFoundation(prisma: PrismaClient): Promise<void> {
   ] as const
 
   for (const [positionId, groupId] of scopes) {
-    await prisma.positionScope.upsert({
+    await database.positionScope.upsert({
       where: { positionId_groupId: { positionId, groupId } },
       create: { positionId, groupId },
       update: {},

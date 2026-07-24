@@ -1,7 +1,7 @@
+import type { Group, Position, PositionAssignment, PositionScope, User } from '@/drizzle/schema'
 import { organizationService } from '@/features/organization'
 import { isCurrentDatedPeriod, isHistoricalDatedPeriod } from '@/features/organization/core/dated-history'
 import { buildUserLabels, formatGroupPath, formatPositionScopeLabel } from '@/features/organization/core/labels'
-import type { Group, Position, PositionAssignment, PositionScope, User } from '@/prisma/generated/client'
 
 export type PositionAssignmentPeriod = PositionAssignment & {
   position: Position

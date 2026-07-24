@@ -25,7 +25,7 @@ The source tree uses three architectural buckets plus Next.js and tooling-owned 
 - `src/shared`: cross-feature presentation primitives and generic helpers.
 - `src/core`: app infrastructure, app shell wiring, and external adapters.
 - `src/app`: Next.js route topology and framework route files.
-- `src/prisma`: Prisma schema files and generated Prisma client output.
+- `src/drizzle`: Drizzle schema files and generated Drizzle client output.
 - `src/proxy.ts`: Next.js proxy convention file.
 
 Use `src/features` for durable product capabilities, not route groups or user roles. For example, `admin` is a surface, not a feature. Organization management workflows belong inside the organization feature because they manage organization-domain behavior:
@@ -80,22 +80,22 @@ Dependencies should point inward toward stable infrastructure and generic helper
 - A feature may import another feature only through that feature's public entrypoint.
 - `src/shared` may import other `src/shared` modules, but not `src/core` or `src/features`.
 - `src/core` may import other `src/core` modules and `src/shared`, but not `src/features`.
-- Prisma generated client modules may be imported by `src/core/db` and feature persistence modules when needed.
+- Drizzle generated client modules may be imported by `src/core/db` and feature persistence modules when needed.
 - Framework convention files, such as `src/proxy.ts`, stay where Next.js expects them and delegate inward when their logic grows.
 
 Prefer public entrypoints at feature and subfeature boundaries. Route files should import screens from entries such as `@/features/organization/management/members`, not from deep implementation files like `@/features/organization/management/members/screen`. Inside a feature or subfeature, local imports may target sibling implementation files directly.
 
 Avoid compatibility shims for retired paths such as `@/lib/utils`, `@/components/ui`, `@/hooks`, `@/common`, `@/db`, or `@/navigation`. Update imports and generator aliases instead.
 
-## Prisma Schema
+## Drizzle Schema
 
-Keep Prisma schema files split by ownership under `src/prisma/schema`.
+Keep Drizzle schema files split by ownership under `src/drizzle/schema`.
 
-- Auth-owned models stay in `auth.prisma`.
+- Auth-owned models stay in `auth.ts`.
 - Choir organization models stay in their own schema file.
-- Future modules should add their own schema files, for example `events.prisma`, `attendance.prisma`, or `content.prisma`.
-- Do not mix unrelated future module models into an existing schema file just because Prisma allows it.
-- Generated Prisma client output in `src/prisma/generated` must not be hand-edited.
+- Future modules should add their own schema files, for example `events.drizzle`, `attendance.drizzle`, or `content.drizzle`.
+- Do not mix unrelated future module models into an existing schema file just because Drizzle allows it.
+- Generated Drizzle client output in `src/drizzle/schema` must not be hand-edited.
 
 When a model decision is hard to reverse or surprising, record the decision in `docs/adr/`.
 
@@ -125,7 +125,7 @@ Server Components are the default. Use Client Components only for interaction, b
 
 ## Reuse And Duplication
 
-Avoid duplicate business rules, validation rules, Prisma query shapes, and UI interaction patterns. Extract a module when reuse creates a stable interface and reduces future edits.
+Avoid duplicate business rules, validation rules, Drizzle query shapes, and UI interaction patterns. Extract a module when reuse creates a stable interface and reduces future edits.
 
 Do not extract too early:
 

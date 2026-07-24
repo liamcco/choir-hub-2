@@ -1,4 +1,4 @@
-import type { User } from '@/prisma/generated/client'
+import type { User } from '@/drizzle/schema'
 
 export type UserLabel = { user: User; label: string; detail: string }
 

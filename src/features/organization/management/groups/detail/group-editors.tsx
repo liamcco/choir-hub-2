@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import type { Group } from '@/prisma/generated/client'
+import type { Group } from '@/drizzle/schema'
 import { Button } from '@/shared/ui/button'
 import { type GroupFormAction, UpdateGroupForm } from './group-form'
 

@@ -1,7 +1,7 @@
 import { headers } from 'next/headers'
 import { auth } from '@/core/auth/auth'
 import { type AccessRole, accessRoles, type GlobalPermissionRequest } from '@/core/auth/permissions'
-import { prisma } from '@/core/db'
+import { database } from '@/core/db'
 import { audit } from '@/core/logging'
 
 type RequestActor = {
@@ -74,7 +74,7 @@ export async function canCurrentUserInGroup(input: { groupId: string }): Promise
   }
 
   const now = new Date()
-  const membership = await prisma.groupMembership.findFirst({
+  const membership = await database.groupMembership.findFirst({
     where: {
       userId,
       groupId: input.groupId,
@@ -104,7 +104,7 @@ export async function canCurrentUserHoldPosition(input: { positionId: string }):
   }
 
   const now = new Date()
-  const assignment = await prisma.positionAssignment.findFirst({
+  const assignment = await database.positionAssignment.findFirst({
     where: {
       userId,
       positionId: input.positionId,

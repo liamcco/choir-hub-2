@@ -1,8 +1,8 @@
 import 'server-only'
 import { headers } from 'next/headers'
 import { auth } from '@/core/auth/auth'
-import { prisma } from '@/core/db'
-import type { MemberStatus } from '@/prisma/generated/client'
+import { database } from '@/core/db'
+import type { MemberStatus } from '@/drizzle/schema'
 export type AccountAccessState = 'enabled' | 'disabled'
 async function createUser(input: { name: string; email: string; password: string; status: MemberStatus }) {
   const requestHeaders = await headers()
@@ -16,10 +16,10 @@ async function createUser(input: { name: string; email: string; password: string
       data: { emailVerified: true },
     },
   })
-  return prisma.user.update({ where: { id: result.user.id }, data: { status: input.status } })
+  return database.user.update({ where: { id: result.user.id }, data: { status: input.status } })
 }
 async function updateMemberStatus(userId: string, status: MemberStatus) {
-  return prisma.user.update({ where: { id: userId }, data: { status } })
+  return database.user.update({ where: { id: userId }, data: { status } })
 }
 async function updateAccountAccess(userId: string, accessState: AccountAccessState) {
   const requestHeaders = await headers()

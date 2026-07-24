@@ -3,10 +3,10 @@ import 'server-only'
 import { headers } from 'next/headers'
 import { connection } from 'next/server'
 import { auth } from '@/core/auth/auth'
+import { GroupKind } from '@/drizzle/schema'
 import { organizationService } from '@/features/organization'
 import { isCurrentDatedPeriod, isHistoricalDatedPeriod } from '@/features/organization/core/dated-history'
 import { buildUserLabels, formatGroupPath, formatPositionScopeLabel } from '@/features/organization/core/labels'
-import { GroupKind } from '@/prisma/generated/client'
 
 async function listCollection(input?: { at?: Date }) {
   await connection()

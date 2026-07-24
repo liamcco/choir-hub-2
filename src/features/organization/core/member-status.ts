@@ -1,4 +1,4 @@
-import type { MemberStatus } from '@/prisma/generated/client'
+import type { MemberStatus } from '@/drizzle/schema'
 
 export function formatMemberStatus(status: MemberStatus) {
   switch (status) {

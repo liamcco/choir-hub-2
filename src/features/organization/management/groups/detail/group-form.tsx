@@ -1,9 +1,9 @@
 'use client'
 
 import { useActionState } from 'react'
+import type { Group } from '@/drizzle/schema'
 import { defaultGroupKind, formatGroupKind, groupKindOptions } from '@/features/organization/core/group-kind'
 import { formatGroupPath } from '@/features/organization/core/labels'
-import type { Group } from '@/prisma/generated/client'
 import { FormMessage } from '@/shared/forms/error-handling'
 import { Button } from '@/shared/ui/button'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/shared/ui/field'

@@ -1,6 +1,6 @@
+import type { Group, Position, PositionScope } from '@/drizzle/schema'
 import { organizationService } from '@/features/organization'
 import { formatGroupPath, formatPositionScopeLabel } from '@/features/organization/core/labels'
-import type { Group, Position, PositionScope } from '@/prisma/generated/client'
 
 export type PositionManagementPosition = {
   position: Position

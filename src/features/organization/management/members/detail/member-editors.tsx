@@ -3,7 +3,7 @@
 import { LockIcon, SaveIcon, UnlockIcon } from 'lucide-react'
 import { useState } from 'react'
 import { useFormStatus } from 'react-dom'
-import type { MemberStatus } from '@/prisma/generated/client'
+import type { MemberStatus } from '@/drizzle/schema'
 import { Button } from '@/shared/ui/button'
 import { NativeSelect, NativeSelectOption } from '@/shared/ui/native-select'
 import { updateAccountAccessAction, updateMemberStatusAction } from '../actions'

@@ -1,4 +1,4 @@
-import type { Group } from '@/prisma/generated/client'
+import type { Group } from '@/drizzle/schema'
 import { CreatePositionForm } from './position-form'
 export function PositionCreate({ groups, showHeading = true }: { groups: Group[]; showHeading?: boolean }) {
   return (

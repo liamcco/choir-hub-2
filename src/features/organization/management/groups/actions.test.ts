@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test'
+import { GroupKind } from '@/drizzle/schema'
 import { OrganizationOperationError } from '@/features/organization/core/errors'
-import { GroupKind } from '@/prisma/generated/client'
 
 const revalidatePath = mock(() => {})
 const redirect = mock(() => {})

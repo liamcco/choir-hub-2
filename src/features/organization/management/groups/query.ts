@@ -1,5 +1,6 @@
 import 'server-only'
 
+import type { Group, GroupMembership, MemberStatus, User } from '@/drizzle/schema'
 import { organizationService } from '@/features/organization'
 import {
   isCurrentDatedPeriod,
@@ -8,7 +9,6 @@ import {
 } from '@/features/organization/core/dated-history'
 import { buildGroupTree, type GroupTreeNode } from '@/features/organization/core/group-tree'
 import { buildUserLabels } from '@/features/organization/core/labels'
-import type { Group, GroupMembership, MemberStatus, User } from '@/prisma/generated/client'
 
 async function listGroupStructure(input?: { at?: Date }) {
   const at = input?.at ?? new Date()

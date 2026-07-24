@@ -24,11 +24,11 @@ describe('admin bootstrap helpers', () => {
   test('creates a missing user with the configured values', async () => {
     const findUnique = mock(async () => null)
     const createUser = mock(async ({ body }: { body: { email: string } }) => ({ user: { email: body.email } }))
-    const prisma = { user: { findUnique, update: mock() }, $disconnect: mock(async () => {}) }
+    const database = { user: { findUnique, update: mock() }, $disconnect: mock(async () => {}) }
 
     await expect(
       bootstrapAdmin(
-        { prisma, auth: { api: { createUser } } },
+        { database, auth: { api: { createUser } } },
         { email: 'admin@example.com', password: 'long-password', name: 'Choir Admin' },
       ),
     ).resolves.toMatchObject({ action: 'created', user: { email: 'admin@example.com' } })
@@ -44,10 +44,10 @@ describe('admin bootstrap helpers', () => {
       ...data,
     }))
     const createUser = mock()
-    const prisma = { user: { findUnique, update }, $disconnect: mock(async () => {}) }
+    const database = { user: { findUnique, update }, $disconnect: mock(async () => {}) }
 
     await bootstrapAdmin(
-      { prisma, auth: { api: { createUser } } },
+      { database, auth: { api: { createUser } } },
       { email: 'admin@example.com', password: 'unused-password', name: 'New Name' },
     )
 

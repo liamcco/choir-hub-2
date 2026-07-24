@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test } from 'bun:test'
 import { AppRouterContext } from 'next/dist/shared/lib/app-router-context.shared-runtime'
-import { GroupKind } from '@/prisma/generated/client'
+import { GroupKind } from '@/drizzle/schema'
 
 const { cleanup, render, screen } = await import('@testing-library/react')
 const { GroupCollectionScreen } = await import('./group-collection-screen')

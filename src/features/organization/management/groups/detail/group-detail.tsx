@@ -1,8 +1,8 @@
 import { adminUserPath } from '@/core/navigation/site'
+import type { Group } from '@/drizzle/schema'
 import { formatGroupKind } from '@/features/organization/core/group-kind'
 import type { UserLabel } from '@/features/organization/core/labels'
 import { RelatedDetailLink } from '@/features/organization/management/components/related-detail-link'
-import type { Group } from '@/prisma/generated/client'
 import { formatPeriod } from '@/shared/formatting'
 import { Badge } from '@/shared/ui/badge'
 import {

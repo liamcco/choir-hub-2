@@ -1,4 +1,5 @@
 import { adminGroupPath, adminPositionPath } from '@/core/navigation/site'
+import type { GroupKind, MemberStatus } from '@/drizzle/schema'
 import { formatGroupKind } from '@/features/organization/core/group-kind'
 import { formatMemberStatus } from '@/features/organization/core/member-status'
 import { RelatedDetailLink } from '@/features/organization/management/components/related-detail-link'
@@ -15,7 +16,6 @@ import {
   AssignUserPositionControl,
   EndPositionAssignmentForm,
 } from '@/features/organization/management/position-assignments/relationships'
-import type { GroupKind, MemberStatus } from '@/prisma/generated/client'
 import { formatDate, formatPeriod } from '@/shared/formatting'
 import { Badge } from '@/shared/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader } from '@/shared/ui/card'

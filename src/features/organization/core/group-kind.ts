@@ -1,4 +1,4 @@
-import type { GroupKind } from '@/prisma/generated/client'
+import type { GroupKind } from '@/drizzle/schema'
 
 export const groupKindOptions = [
   'CHOIR',

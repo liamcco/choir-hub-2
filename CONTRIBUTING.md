@@ -1,6 +1,6 @@
 # Contributing to CSK Choir Hub
 
-This repository uses Bun, Next.js App Router, Better Auth, Prisma/PostgreSQL, Biome, Tailwind CSS, and shadcn/ui-style primitives. Keep changes feature-oriented, protect every server boundary, and preserve the domain vocabulary in `CONTEXT.md`.
+This repository uses Bun, Next.js App Router, Better Auth, Drizzle/PostgreSQL, Biome, Tailwind CSS, and shadcn/ui-style primitives. Keep changes feature-oriented, protect every server boundary, and preserve the domain vocabulary in `CONTEXT.md`.
 
 ## Project setup
 
@@ -10,17 +10,17 @@ Install the pinned Bun dependencies, copy the committed environment template, an
 bun i
 cp .example.env .env
 docker compose up -d db
-bun x prisma db push
-bun run prisma:generate
+bun run db:push
+bun run db:push
 ```
 
-`prisma db push` is temporarily required to bootstrap a fresh local database because the repository has no committed migration history. Do not use it to submit a schema change or update production. See [Prisma schema and migrations](#prisma-schema-and-migrations).
+`drizzle-kit push` is temporarily required to bootstrap a fresh local database because the repository has no committed migration history. Do not use it to submit a schema change or update production. See [Drizzle schema and migrations](#drizzle-schema-and-migrations).
 
-Use `bun run cli` to run foundation/demo seeds or bootstrap a local admin. Never commit `.env`, credentials, generated Prisma files, `.next`, or local database artifacts.
+Use `bun run cli` to run foundation/demo seeds or bootstrap a local admin. Never commit `.env`, credentials, generated Drizzle files, `.next`, or local database artifacts.
 
 ## Local development
 
-Run `bun run dev` and use the URL printed by Next.js. Keep `EMAIL_MODE=log` locally; email content is written to the terminal rather than sent. `LOG_PRISMA=true` enables query logs when diagnosing database behavior.
+Run `bun run dev` and use the URL printed by Next.js. Keep `EMAIL_MODE=log` locally; email content is written to the terminal rather than sent. `LOG_DATABASE=true` enables query logs when diagnosing database behavior.
 
 Use the `@/` aliases from `tsconfig.json` for source imports.
 
@@ -34,13 +34,13 @@ bun test path/to/module.test.ts  # focused test file
 bun run lint                     # Biome check
 bun run lint:fix                 # apply Biome fixes
 bun run format                   # format supported files
-bun run build                    # Prisma generation + production build
+bun run build                    # production build
 bun run pr                       # run before PR submission
 ```
 
 Test through public module interfaces. Prefer focused coverage for domain invariants, validation, authorization, write behavior, and meaningful UI workflows. Avoid snapshots of incidental markup and tests coupled to private implementation details.
 
-Run `bun run pr` before handing off a change. For Prisma changes, also run `bun x prisma validate` and test the generated migration against a disposable local database.
+Run `bun run pr` before handing off a change. For Drizzle changes, also run `bun x drizzle-kit check` and test the generated migration against a disposable local database.
 
 ## Adding a feature
 
@@ -93,7 +93,7 @@ Use these top-level ownership boundaries:
 - `src/shared`: stable, genuinely cross-feature UI and generic helpers.
 - `src/core`: infrastructure, adapters, configuration, auth, database, logging, and app-shell wiring.
 - `src/app`: framework route topology.
-- `src/prisma`: split schema files, seeds, and generated client output.
+- `src/drizzle`: split schema files, seeds, and generated client output.
 
 Within a substantial feature, use only the seams the feature needs. Existing organization modules illustrate the preferred vocabulary:
 
@@ -126,7 +126,7 @@ Treat Server Actions as untrusted request boundaries even when their forms rende
 4. revalidate affected route constants and navigate when needed.
 5. Navigate (optional)
 
-Keep `actions.ts` concerned with that request workflow. Do not put reusable domain rules, raw Prisma query logic, or large read models there.
+Keep `actions.ts` concerned with that request workflow. Do not put reusable domain rules, raw Drizzle query logic, or large read models there.
 
 Use `service.ts` for server-only screen-shaped reads or a feature operation interface. Put durable organization invariants in `src/features/organization/core` and expose them through `organizationService`. Mark server-only modules with `import 'server-only'` when importing them into client code would be unsafe.
 
@@ -150,16 +150,16 @@ Let `AuthorizationDeniedError` interrupt the operation. Do not turn authorizatio
 
 When changing permissions, update the shared definitions and server/client wiring described in `src/core/auth/README.md`, then run its focused verification commands.
 
-## Prisma schema and migrations
+## Drizzle schema and migrations
 
-Prisma owns a multi-file schema under `src/prisma/schema`:
+Drizzle owns a multi-file schema under `src/drizzle/schema`:
 
-- `schema.prisma` owns the generator and PostgreSQL datasource.
-- `auth.prisma` is generated/auth-owned model structure.
-- `organization.prisma` owns choir organization models.
+- `drizzle.config.ts` owns the Drizzle Kit configuration and PostgreSQL connection.
+- `auth.ts` owns Better Auth tables and reviewed custom User fields.
+- `organization.ts` owns choir organization models.
 - Future capabilities should get their own schema file rather than accumulating unrelated models in an existing file.
 
-Never hand-edit `src/prisma/generated`; run `bun run prisma:generate`. Regenerate after schema or Prisma dependency changes.
+Schema files under `src/drizzle/schema` are checked in and reviewed. Use `bun run db:push` for disposable development databases.
 
 For a schema contribution:
 
@@ -168,23 +168,23 @@ For a schema contribution:
 3. Create a named development migration against a disposable local database:
 
    ```bash
-   bun x prisma migrate dev --name concise_change_name
+   bun x drizzle-kit generate --name concise_change_name
    ```
 
-4. Inspect the generated SQL. Add deliberate SQL for constraints Prisma cannot express, such as partial indexes.
-5. Commit the schema files and the complete `src/prisma/migrations/<timestamp>_<name>/migration.sql` directory together.
+4. Inspect the generated SQL. Add deliberate SQL for constraints Drizzle cannot express, such as partial indexes.
+5. Commit the schema files and the complete `src/drizzle/migrations/<timestamp>_<name>/migration.sql` directory together.
 6. Run:
 
    ```bash
-   bun x prisma validate
-   bun run prisma:generate
+   bun x drizzle-kit check
+   bun run db:push
    bun test
    bun run build
    ```
 
 The repository currently has no committed migration history. The first migration-bearing change must establish a reviewed baseline or an agreed migration path for existing databases; do not casually generate an “initial” migration and assume it is safe for production.
 
-Never use `prisma db push` as a production migration or as the submitted record of a schema change. Do not edit an already-deployed migration; add a new migration. Production deployment must run `bun x prisma migrate deploy` separately because build/start do not apply migrations.
+Never use `drizzle-kit push` as a production migration or as the submitted record of a schema change. Do not edit an already-deployed migration; add a new migration. Production deployment must run `bun x drizzle-kit migrate` separately because build/start do not apply migrations.
 
 Keep foundation seeds idempotent and limited to durable operational/domain records. Put realistic people and relationship fixtures in the demo seed. Use stable IDs for data referenced by tests or fixtures. Destructive reset tooling must remain guarded by `DB_MODE=local`.
 
@@ -218,4 +218,4 @@ Use stable, dot-separated event names and structured context values that operato
 
 Use the `audit` facade for security-relevant events it already models: authorization denial, completed admin actions, and account-access changes. Extend the facade when a new recurring security event needs a consistent shape. Audit after a mutation succeeds unless the event specifically records an attempted/denied action.
 
-The logger emits one JSON object per line and is intentionally best-effort: logging failures must not break requests. CLI scripts may use `console` for interactive/operator output; application runtime events should use the structured logger. Enable Prisma query logging only for deliberate diagnosis and avoid it in normal production operation.
+The logger emits one JSON object per line and is intentionally best-effort: logging failures must not break requests. CLI scripts may use `console` for interactive/operator output; application runtime events should use the structured logger. Enable Drizzle query logging only for deliberate diagnosis and avoid it in normal production operation.

@@ -1,11 +1,11 @@
 import { adminUserPath } from '@/core/navigation/site'
+import type { Group, Position, PositionAssignment } from '@/drizzle/schema'
 import type { UserLabel } from '@/features/organization/core/labels'
 import { RelatedDetailLink } from '@/features/organization/management/components/related-detail-link'
 import {
   AssignPositionHolderControl,
   EndPositionAssignmentForm,
 } from '@/features/organization/management/position-assignments/assignment-form'
-import type { Group, Position, PositionAssignment } from '@/prisma/generated/client'
 import { formatDate } from '@/shared/formatting'
 import { PositionFieldEditor } from './position-editors'
 

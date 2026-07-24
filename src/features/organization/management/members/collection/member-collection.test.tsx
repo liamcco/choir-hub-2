@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test } from 'bun:test'
-import { MemberStatus } from '@/prisma/generated/client'
+import { MemberStatus } from '@/drizzle/schema'
 import { MemberCollection } from './member-collection'
 
 const { cleanup, render, screen } = await import('@testing-library/react')

@@ -1,6 +1,6 @@
 # CSK Choir Hub
 
-CSK Choir Hub is an internal choir administration app built with Next.js 16, React 19, Better Auth, Prisma 7, PostgreSQL, Bun, Tailwind CSS, and shadcn/ui-style components.
+CSK Choir Hub is an internal choir administration app built with Next.js 16, React 19, Better Auth, Drizzle ORM, PostgreSQL, Bun, Tailwind CSS, and shadcn/ui-style components.
 
 The current app includes email/password authentication, account password self-service, global admin access control, organization overview screens, and admin workflows for Members, Groups, Group Memberships, Positions, and Position Assignments.
 
@@ -31,14 +31,13 @@ The current app includes email/password authentication, account password self-se
 
    Alternatively, use any PostgreSQL instance you control and set `DATABASE_URL` in `.env` to its connection string. The `POSTGRES_*` variables in `.env` configure only the bundled Docker container; you can reuse those credentials for your own local database or replace them as needed.
 
-4. Create the database schema and generate the Prisma client:
+4. Create the database schema and generate the Drizzle client:
 
    ```bash
-   bun x prisma db push
-   bun run prisma:generate
+   bun run db:push
    ```
 
-   Until the repository does not yet contain a committed `src/prisma/migrations` history, `db push` is the current fresh-database bootstrap. It is for local setup only; contributed schema changes must use migrations as described in [CONTRIBUTING.md](./CONTRIBUTING.md#prisma-schema-and-migrations).
+   Until the repository does not yet contain a committed `src/drizzle/migrations` history, `db push` is the current fresh-database bootstrap. It is for local setup only; contributed schema changes must use migrations as described in [CONTRIBUTING.md](./CONTRIBUTING.md#drizzle-schema-and-migrations).
 
 5. Optionally load development data and create an admin account:
 
@@ -46,7 +45,7 @@ The current app includes email/password authentication, account password self-se
    bun run cli
    ```
 
-   The interactive CLI can run the foundation seed, demo seed, admin bootstrap, or local database reset. The default bootstrap account is `admin@example.com` / `password` with the name `Local Admin`; use custom values for anything other than a disposable local database. The reset command refuses to run unless `DB_MODE=local` and relies on Prisma migration history.
+   The interactive CLI can run the foundation seed, demo seed, admin bootstrap, or local database reset. The default bootstrap account is `admin@example.com` / `password` with the name `Local Admin`; use custom values for anything other than a disposable local database. The reset command refuses to run unless `DB_MODE=local` and relies on Drizzle migration history.
 
 ## Local development
 
@@ -62,17 +61,17 @@ Start the app:
 bun run dev
 ```
 
-Next.js prints the local URL, normally `http://localhost:3000`. Email is written to the terminal while `EMAIL_MODE=log`. Set `LOG_PRISMA=true` when query logging is useful during local diagnosis.
+Next.js prints the local URL, normally `http://localhost:3000`. Email is written to the terminal while `EMAIL_MODE=log`. Set `LOG_DATABASE=true` when query logging is useful during local diagnosis.
 
 Useful database commands:
 
 ```bash
-bun x prisma studio
-bun x prisma validate
-bun run prisma:generate
+bun x drizzle-kit studio
+bun x drizzle-kit check
+bun run db:push
 ```
 
-Prisma generates the client into the ignored `src/prisma/generated` directory. Generation also runs automatically before `bun run build`.
+Drizzle schema definitions are checked in under `src/drizzle/schema`; the build does not generate or mutate database artifacts.
 
 ## Tests and code quality
 
@@ -95,7 +94,7 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for project structure, authorization, d
 
 | Variable | Purpose |
 | --- | --- |
-| `DATABASE_URL` | PostgreSQL connection used by the app and Prisma |
+| `DATABASE_URL` | PostgreSQL connection used by the app and Drizzle |
 | `DATABASE_URL_PROD` | Connection selected by runtime and CLI code when `DB_MODE=prod` |
 | `DB_MODE` | `local` or `prod`; protects destructive/reset and production CLI workflows |
 | `BETTER_AUTH_URL` | Canonical Better Auth base URL |
@@ -105,13 +104,13 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for project structure, authorization, d
 | `VERCEL_ENV` | Vercel environment; `production` forces production behavior |
 | `EMAIL_MODE` | `log` locally/previews or `smtp` in production |
 | `GMAIL_SMTP_USER` / `GMAIL_SMTP_APP_PASSWORD` | Gmail SMTP credentials used only in production SMTP mode |
-| `LOG_PRISMA` | Set to `true` to include Prisma query logs |
+| `LOG_DATABASE` | Set to `true` to include Drizzle query logs |
 
 The Docker-only `POSTGRES_*` variables configure the local container. Keep `.env` uncommitted.
 
 ## Deployment
 
-The application currently assumes a Vercel-style deployment with a reachable PostgreSQL database, but the repository has no `vercel.json`, CI deployment workflow, Docker production image, or application health endpoint. Configure the platform's install/build/start behavior from the scripts in `package.json`; `bun run build` generates Prisma Client through `prebuild`.
+The application currently assumes a Vercel-style deployment with a reachable PostgreSQL database, but the repository has no `vercel.json`, CI deployment workflow, Docker production image, or application health endpoint. Configure the platform's install/build/start behavior from the scripts in `package.json`; `bun run build` generates Drizzle Client through `prebuild`.
 
 Production requires at least:
 
@@ -126,10 +125,10 @@ SMTP is rejected outside production. Production SMTP credentials are validated a
 Database migrations are not applied by `build` or `start`. Once migration files exist, the deployment pipeline must run this separately before serving the new version:
 
 ```bash
-bun x prisma migrate deploy
+bun x drizzle-kit migrate
 ```
 
-At present there is no committed migration history, so an existing production database must already match the Prisma schema or be provisioned through an explicitly reviewed operational process. Do not run `prisma db push` against production as an implicit deployment step.
+At present there is no committed migration history, so an existing production database must already match the Drizzle schema or be provisioned through an explicitly reviewed operational process. Do not run `drizzle-kit push` against production as an implicit deployment step.
 
 Before deployment, run the repository's full verification command:
 

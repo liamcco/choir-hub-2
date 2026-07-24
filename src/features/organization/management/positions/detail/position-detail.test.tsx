@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test'
-import { GroupKind, MemberStatus } from '@/prisma/generated/client'
+import { GroupKind, MemberStatus } from '@/drizzle/schema'
 
 mock.module('./position-editors', () => ({
   PositionFieldEditor: () => <button type="button">Edit Position</button>,

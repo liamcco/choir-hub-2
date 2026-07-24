@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test } from 'bun:test'
-import { GroupKind } from '@/prisma/generated/client'
+import { GroupKind } from '@/drizzle/schema'
 import { GroupHierarchy } from './group-hierarchy'
 
 const { cleanup, render, screen } = await import('@testing-library/react')

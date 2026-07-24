@@ -1,10 +1,10 @@
 import { passkey } from '@better-auth/passkey'
 import { type BetterAuthOptions, betterAuth } from 'better-auth'
-import { prismaAdapter } from 'better-auth/adapters/prisma'
+import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { nextCookies } from 'better-auth/next-js'
 import { admin, emailOTP, openAPI, twoFactor, username } from 'better-auth/plugins'
 import { env } from '@/core/config/env'
-import { prisma } from '@/core/db'
+import { db } from '@/core/db'
 import { EmailClient } from '@/core/email/smtp-email'
 import { isProduction } from '@/core/environment/environment'
 import { audit, logger } from '@/core/logging'
@@ -68,7 +68,7 @@ export const authOptions = {
     additionalFields: {
       status: {
         type: 'string',
-        defaultValue: 'ACTIVE',
+        defaultValue: 'active',
         input: false,
       },
     },
@@ -138,8 +138,8 @@ export const authOptions = {
     autoSignInAfterVerification: true,
     expiresIn: 3600, // 1 hour
   },
-  database: prismaAdapter(prisma, {
-    provider: 'postgresql',
+  database: drizzleAdapter(db, {
+    provider: 'pg',
   }),
   experimental: {
     joins: true, // Enable database joins for better performance

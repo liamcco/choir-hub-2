@@ -28,4 +28,4 @@ This is a single-context repo: use root `CONTEXT.md` and `docs/adr/` for domain 
 
 ### Codebase structure
 
-Follow the structural preferences in `docs/codebase-structure.md` when adding modules, Prisma schema files, React screens, shared UI, and health checks.
+Follow the structural preferences in `docs/codebase-structure.md` when adding modules, Drizzle schema files, React screens, shared UI, and health checks.

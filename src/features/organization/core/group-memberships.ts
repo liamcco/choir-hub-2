@@ -1,5 +1,5 @@
 import 'server-only'
-import { prisma } from '@/core/db'
+import { database } from '@/core/db'
 import {
   assertValidDatedPeriod,
   findOverlappingDatedPeriod,
@@ -8,7 +8,7 @@ import {
 import { DateOverlapError, EntityDoesNotExistError } from '@/features/organization/core/errors'
 export const groupMemberships = {
   list(input?: { userId?: string; groupId?: string; at?: Date }) {
-    return prisma.groupMembership.findMany({
+    return database.groupMembership.findMany({
       where: {
         userId: input?.userId,
         groupId: input?.groupId,
@@ -22,23 +22,23 @@ export const groupMemberships = {
     await assertUserExists(membership.userId)
     await assertGroupExists(membership.groupId)
     await assertNoOverlap(membership)
-    return prisma.groupMembership.create({ data: membership })
+    return database.groupMembership.create({ data: membership })
   },
   async end(membershipId: string, endsAt: Date) {
-    const current = await prisma.groupMembership.findUnique({ where: { id: membershipId } })
+    const current = await database.groupMembership.findUnique({ where: { id: membershipId } })
     if (!current) throw new EntityDoesNotExistError('Choose an existing Group Membership.')
     const period = { startsAt: current.startsAt, endsAt }
     assertValidDatedPeriod(period)
     await assertNoOverlap({ ...current, ...period }, membershipId)
-    return prisma.groupMembership.update({ where: { id: membershipId }, data: { endsAt } })
+    return database.groupMembership.update({ where: { id: membershipId }, data: { endsAt } })
   },
 }
 async function assertUserExists(userId: string) {
-  if (!(await prisma.user.findUnique({ where: { id: userId }, select: { id: true } })))
+  if (!(await database.user.findUnique({ where: { id: userId }, select: { id: true } })))
     throw new EntityDoesNotExistError('Choose an existing User.', { field: 'userId' })
 }
 async function assertGroupExists(groupId: string) {
-  if (!(await prisma.group.findUnique({ where: { id: groupId }, select: { id: true } })))
+  if (!(await database.group.findUnique({ where: { id: groupId }, select: { id: true } })))
     throw new EntityDoesNotExistError('Choose an existing Group.', { field: 'groupId' })
 }
 async function assertNoOverlap(

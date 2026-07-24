@@ -25,7 +25,8 @@ const logger = {
 mock.module('next/headers', () => ({ headers }))
 mock.module('@/core/auth/auth', () => ({ auth: { api: { getSession, userHasPermission } } }))
 mock.module('@/core/db', () => ({
-  prisma: {
+  db: {},
+  database: {
     groupMembership: { findFirst: findMembership },
     positionAssignment: { findFirst: findAssignment },
   },

@@ -1,5 +1,5 @@
 import z from 'zod'
-import { MemberStatus } from '@/prisma/generated/client'
+import { MemberStatus } from '@/drizzle/schema'
 
 export const CreateMemberAccountFormSchema = z.object({
   name: z.string().refine((value) => value.trim().length > 0),

@@ -1,4 +1,4 @@
-import type { Group } from '@/prisma/generated/client'
+import type { Group } from '@/drizzle/schema'
 
 export type GroupTreeGroup = Pick<Group, 'id' | 'name' | 'parentGroupId'>
 

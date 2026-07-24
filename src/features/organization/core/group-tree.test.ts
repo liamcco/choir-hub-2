@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { type Group, GroupKind } from '@/prisma/generated/client'
+import { type Group, GroupKind } from '@/drizzle/schema'
 import {
   buildGroupPathLabels,
   buildGroupTree,
