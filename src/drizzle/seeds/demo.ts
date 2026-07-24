@@ -1,124 +1,81 @@
 import { eq } from 'drizzle-orm'
 import { auth } from '@/core/auth/auth'
 import type { db } from '@/core/db'
-import type { MemberStatus } from '@/drizzle/schema'
-import { groupMembership, positionAssignment, user as userTable } from '@/drizzle/schema'
+import { choirMembership, groupMembership, positionAssignment, sectionPlacement, user } from '@/drizzle/schema'
 import { seedFoundation } from './foundation'
 
-/**
- * Demo/development/e2e seed data.
- *
- * Add realistic Users, Groups, Positions, Group Memberships, and Position
- * Assignments here. Prefer stable IDs so e2e fixtures can refer to records.
- */
+/** Demo/development/e2e people and dated relationships for the fixed catalog. */
 export async function seedDemo(database: typeof db): Promise<void> {
   await seedFoundation(database)
 
-  const voices = ['a1', 'a2', 'b1', 'b2', 's1', 's2', 't1', 't2'] as const
-  const statuses: MemberStatus[] = [
-    'ACTIVE',
-    'ACTIVE',
-    'ACTIVE',
-    'ACTIVE',
-    'ACTIVE',
-    'PASSIVE',
-    'ACTIVE',
-    'FORMER',
-    'ACTIVE',
-    'ACTIVE',
-  ]
-  const users = voices.flatMap((voice) =>
-    Array.from({ length: 10 }, (_, index) => {
-      const number = index + 1
-      return {
-        id: `demo-user-${voice}-${number}`,
-        name: `${voice.toUpperCase()} Demo ${number}`,
-        email: `demo-${voice}-${number}@example.com`,
-        status: statuses[index],
-        voice,
-      }
-    }),
-  )
+  const fixtures = [
+    ['mk', 't1'],
+    ['mk', 't2'],
+    ['mk', 'b1'],
+    ['mk', 'b2'],
+    ['kk', 's1'],
+    ['kk', 's2'],
+    ['kk', 'a1'],
+    ['kk', 'a2'],
+    ['kk', 't1'],
+    ['kk', 't2'],
+    ['kk', 'b1'],
+    ['kk', 'b2'],
+    ['dk', 's1'],
+    ['dk', 's2'],
+    ['dk', 'a1'],
+    ['dk', 'a2'],
+  ] as const
+  const startsAt = new Date('2026-01-01T00:00:00.000Z')
+  const userIds: string[] = []
 
-  const userIds = new Map<string, string>()
-  const userIdFor = (email: string) => {
-    const id = userIds.get(email)
-    if (!id) throw new Error(`Demo seed could not resolve User ${email}.`)
-    return id
-  }
+  for (const [index, [choirId, voiceType]] of fixtures.entries()) {
+    const email = `demo-${choirId}-${voiceType}-${index + 1}@example.com`
+    const name = `${choirId.toUpperCase()} ${voiceType} Demo ${index + 1}`
+    const [existing] = await database.select().from(user).where(eq(user.email, email)).limit(1)
+    const userId = existing?.id ?? (await auth.api.createUser({ body: { email, password: 'password', name } })).user.id
+    userIds.push(userId)
+    await database
+      .update(user)
+      .set({ name, status: index === fixtures.length - 1 ? 'former' : 'active' })
+      .where(eq(user.id, userId))
 
-  for (const user of users) {
-    const [existing] = await database.select().from(userTable).where(eq(userTable.email, user.email)).limit(1)
-    if (!existing) {
-      const result = await auth.api.createUser({
-        body: {
-          email: user.email,
-          password: 'password',
-          name: user.name,
-          data: { status: user.status.toLowerCase() },
-        },
-      })
-      userIds.set(user.email, result.user.id)
+    if (index < fixtures.length - 1) {
       await database
-        .update(userTable)
-        .set({ status: user.status.toLowerCase() as typeof userTable.$inferInsert.status })
-        .where(eq(userTable.id, result.user.id))
-    } else {
-      userIds.set(user.email, existing.id)
+        .insert(choirMembership)
+        .values({ id: `demo-choir-membership-${index}`, userId, choirId, startsAt })
+        .onConflictDoUpdate({ target: choirMembership.id, set: { userId, choirId, startsAt, endsAt: null } })
       await database
-        .update(userTable)
-        .set({ name: user.name, status: user.status.toLowerCase() as typeof userTable.$inferInsert.status })
-        .where(eq(userTable.id, existing.id))
+        .insert(sectionPlacement)
+        .values({
+          id: `demo-section-placement-${index}`,
+          userId,
+          sectionId: `${choirId}-${voiceType.toLowerCase()}`,
+          startsAt,
+        })
+        .onConflictDoUpdate({
+          target: sectionPlacement.id,
+          set: { userId, sectionId: `${choirId}-${voiceType.toLowerCase()}`, startsAt, endsAt: null },
+        })
     }
   }
 
-  const startsAt = new Date('2026-01-01T00:00:00.000Z')
-  const choirIds = ['mk', 'dk', 'kk'] as const
-  const memberships = users.flatMap((user, index) => [
-    { userId: userIdFor(user.email), groupId: user.voice },
-    { userId: userIdFor(user.email), groupId: choirIds[index % choirIds.length] },
-  ])
-
-  for (const membership of memberships) {
-    await database
-      .insert(groupMembership)
-      .values({ id: `demo-membership-${membership.userId}-${membership.groupId}`, ...membership, startsAt })
-      .onConflictDoUpdate({ target: groupMembership.id, set: { endsAt: null, startsAt } })
-  }
-
-  const boardUsers = users.slice(0, 8)
-  for (const [index, user] of boardUsers.entries()) {
-    const userId = userIdFor(user.email)
-    const membershipId = `demo-membership-${userId}-board`
-    await database
-      .insert(groupMembership)
-      .values({ id: membershipId, userId, groupId: 'board', startsAt })
-      .onConflictDoUpdate({ target: groupMembership.id, set: { endsAt: null, startsAt } })
-
-    const positionId = [
-      'president',
-      'vice-president',
-      'treasurer',
-      'secretary',
-      'master-of-parties',
-      'master-of-gigs',
-      'master-of-concerts',
-      'master-of-pr',
-    ][index]
+  const assignmentExamples = [
+    ['president', userIds[0]],
+    ['master-of-parties', userIds[1]],
+    ['mk-conductor', userIds[2]],
+    ['kk-s-voice-parent', userIds[4]],
+    ['tour-treasurer', userIds[5]],
+  ] as const
+  for (const [positionId, userId] of assignmentExamples) {
     await database
       .insert(positionAssignment)
       .values({ id: `demo-assignment-${positionId}`, positionId, userId, startsAt })
-      .onConflictDoUpdate({ target: positionAssignment.id, set: { endsAt: null, startsAt, userId } })
+      .onConflictDoUpdate({ target: positionAssignment.id, set: { userId, startsAt, endsAt: null } })
   }
 
-  const committeeIds = ['concertmastery', 'gigmastery', 'partymastery', 'webmastery', 'tourcommittee', 'reccommittee']
-  for (const [index, committeeId] of committeeIds.entries()) {
-    const user = users[20 + index]
-    const userId = userIdFor(user.email)
-    const id = `demo-membership-${userId}-${committeeId}`
-    await database
-      .insert(groupMembership)
-      .values({ id, userId, groupId: committeeId, startsAt })
-      .onConflictDoUpdate({ target: groupMembership.id, set: { endsAt: null, startsAt } })
-  }
+  await database
+    .insert(groupMembership)
+    .values({ id: 'demo-committee-membership', userId: userIds[6], groupId: 'recruitment-committee', startsAt })
+    .onConflictDoUpdate({ target: groupMembership.id, set: { userId: userIds[6], startsAt, endsAt: null } })
 }
