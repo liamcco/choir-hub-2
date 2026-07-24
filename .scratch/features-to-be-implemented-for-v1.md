@@ -75,17 +75,17 @@ The goal is production-usable, polished, and ready to grow. Do not expand v1 int
   - [x] feature module structure
   - [x] service/action boundaries
   - [x] authorization expectations
-  - [x] Prisma schema and migration discipline
+  - [x] Drizzle schema and migration discipline
   - [x] UI conventions
   - [x] documentation and ADR expectations
   - [x] logging usage
-- [x] Update `README.md` so it matches the actual repo state, including existing tests, environment setup, Prisma generation, deployment assumptions, and production verification commands.
+- [x] Update `README.md` so it matches the actual repo state, including existing tests, environment setup, deployment assumptions, and production verification commands.
 - [] Document the launch-time production checklist: env vars, database, first admin bootstrap, email mode, build/test gate, and deployment/migration order.
 
 ## Data, Seeds, And Migrations
 
-- Do not commit partial Prisma migrations while v1 schema is still moving.
-- [] Once v1 is verified and finished, record the first committed Prisma migration as the v1 baseline.
+- Do not commit partial Drizzle migrations while v1 schema is still moving.
+- [] Once v1 is verified and finished, record the first committed Drizzle migration as the v1 baseline.
 - [x] Add separated seed paths:
   - [x] operational/bootstrap seed data for production needs only
   - [x] demo/dev/e2e seed data with realistic choir Members, Groups, Positions, Group Memberships, and Position Assignments
