@@ -1,6 +1,6 @@
 import type { Group } from '@/drizzle/schema'
 
-export type GroupTreeGroup = Pick<Group, 'id' | 'name' | 'parentGroupId'>
+export type GroupTreeGroup = Pick<Group, 'id' | 'name'> & { parentGroupId?: string | null }
 
 export type GroupTreeNode<TGroup extends GroupTreeGroup = Group> = {
   group: TGroup

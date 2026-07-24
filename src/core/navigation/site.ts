@@ -5,12 +5,11 @@ export const ROUTES = {
   adminRoot: '/admin',
   adminUsers: '/admin/users',
   adminGroups: '/admin/groups',
-  adminGroupHierarchy: '/admin/groups/hierarchy',
   adminPositions: '/admin/positions',
 } as const
 
 export type RouteId = keyof typeof ROUTES
-export type NavigationRouteId = Exclude<RouteId, 'adminRoot' | 'adminGroupHierarchy' | 'home'>
+export type NavigationRouteId = Exclude<RouteId, 'adminRoot' | 'home'>
 
 export function adminUserPath(userId: string) {
   return adminDetailPath(ROUTES.adminUsers, userId)
