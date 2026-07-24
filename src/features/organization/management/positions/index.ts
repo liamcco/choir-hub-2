@@ -1,4 +1,1 @@
-export {
-  PositionCreateScreen,
-  PositionManagementScreen,
-} from './screen'
+export { PositionManagementScreen } from './screen'

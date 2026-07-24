@@ -16,7 +16,6 @@ async function listGroupStructure(input?: { at?: Date }) {
     organizationService.groups.list(),
     organizationService.groupMemberships.list({ at }),
   ])
-  const groupsById = new Map(groups.map((group) => [group.id, group]))
   const directMemberCountByGroupId = new Map<string, number>()
 
   for (const membership of currentMemberships) {
@@ -28,8 +27,8 @@ async function listGroupStructure(input?: { at?: Date }) {
       id: group.id,
       name: group.name,
       kind: group.kind,
-      parentName: group.parentGroupId ? (groupsById.get(group.parentGroupId)?.name ?? null) : null,
-      directMemberCount: directMemberCountByGroupId.get(group.id) ?? 0,
+      scope: group.scopeType === 'csk' ? 'CSK-wide' : (group.choirId ?? group.scopeKey),
+      memberCount: directMemberCountByGroupId.get(group.id) ?? 0,
     }))
     .sort((first, second) => first.name.localeCompare(second.name) || first.id.localeCompare(second.id))
 }

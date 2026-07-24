@@ -3,7 +3,6 @@ import 'server-only'
 import { headers } from 'next/headers'
 import { connection } from 'next/server'
 import { auth } from '@/core/auth/auth'
-import { GroupKind } from '@/drizzle/schema'
 import { organizationService } from '@/features/organization'
 import { isCurrentDatedPeriod, isHistoricalDatedPeriod } from '@/features/organization/core/dated-history'
 import { buildUserLabels, formatGroupPath, formatPositionScopeLabel } from '@/features/organization/core/labels'
@@ -32,14 +31,8 @@ async function listCollection(input?: { at?: Date }) {
       return {
         id: user.id,
         name: label,
-        choirs: userGroups
-          .filter((group) => group.kind === GroupKind.CHOIR)
-          .sort(compareNamedEntities)
-          .map((group) => group.name),
-        voices: userGroups
-          .filter((group) => group.kind === GroupKind.SECTION)
-          .sort(compareNamedEntities)
-          .map((group) => group.name),
+        homeChoir: userGroups.find((group) => group.scopeType === 'choir')?.name ?? null,
+        section: null,
         status: user.status,
       }
     })
@@ -64,7 +57,7 @@ async function getDetail(userId: string, input?: { at?: Date }) {
   const positionsById = new Map(positions.map((position) => [position.id, position]))
   const scopeGroupsByPositionId = new Map<string, typeof groups>()
   for (const scope of scopes) {
-    const group = groupsById.get(scope.groupId)
+    const group = scope.groupId ? groupsById.get(scope.groupId) : undefined
     if (!group) continue
     const scopeGroups = scopeGroupsByPositionId.get(scope.positionId) ?? []
     scopeGroups.push(group)
@@ -146,10 +139,6 @@ async function getDetail(userId: string, input?: { at?: Date }) {
 
 export const listMemberCollection = listCollection
 export const getMemberDetail = getDetail
-
-function compareNamedEntities(first: { id: string; name: string }, second: { id: string; name: string }) {
-  return first.name.localeCompare(second.name) || first.id.localeCompare(second.id)
-}
 
 function compareEndedPeriods(first: { id: string; endsAt?: Date }, second: { id: string; endsAt?: Date }) {
   return (second.endsAt?.getTime() ?? 0) - (first.endsAt?.getTime() ?? 0) || first.id.localeCompare(second.id)

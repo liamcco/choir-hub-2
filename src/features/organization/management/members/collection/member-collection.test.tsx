@@ -8,22 +8,22 @@ const userEvent = (await import('@testing-library/user-event')).default
 beforeEach(cleanup)
 
 describe('Member collection', () => {
-  test('shows each Member with every current Choir and Voice in the four-column collection', () => {
+  test('shows singular Home Choir and Section values in the four-column collection', () => {
     render(
       <MemberCollection
         users={[
           {
             id: 'member-1',
             name: 'Ada Lovelace',
-            choirs: ['Chamber Choir', 'Festival Choir'],
-            voices: ['Alto I', 'Alto II'],
+            homeChoir: 'Chamber Choir',
+            section: 'Alto I',
             status: MemberStatus.ACTIVE,
           },
           {
             id: 'member-2',
             name: 'Grace Hopper',
-            choirs: [],
-            voices: [],
+            homeChoir: null,
+            section: null,
             status: MemberStatus.PASSIVE,
           },
         ]}
@@ -32,15 +32,14 @@ describe('Member collection', () => {
 
     expect(screen.getAllByRole('columnheader').map((heading) => heading.textContent)).toEqual([
       'Name',
-      'Choir',
-      'Voice',
+      'Home Choir',
+      'Section',
       'Status',
     ])
     expect(screen.getByRole('link', { name: 'Ada Lovelace' }).getAttribute('href')).toBe('/admin/users?detail=member-1')
-    expect(screen.getByText('Chamber Choir, Festival Choir')).toBeTruthy()
-    expect(screen.getByText('Alto I, Alto II')).toBeTruthy()
-    expect(screen.getByLabelText('Multiple current Voices')).toBeTruthy()
-    expect(screen.getAllByText('Not assigned')).toHaveLength(2)
+    expect(screen.getByText('Chamber Choir')).toBeTruthy()
+    expect(screen.getByText('Alto I')).toBeTruthy()
+    expect(screen.getAllByText(/No (Home Choir|Section)/)).toHaveLength(2)
     expect(screen.queryByRole('columnheader', { name: /actions/i })).toBeNull()
   })
 
@@ -52,22 +51,22 @@ describe('Member collection', () => {
           {
             id: 'member-1',
             name: 'Ada Lovelace',
-            choirs: ['Chamber Choir'],
-            voices: ['Alto I'],
+            homeChoir: 'Chamber Choir',
+            section: 'Alto I',
             status: MemberStatus.ACTIVE,
           },
           {
             id: 'member-2',
             name: 'Grace Hopper',
-            choirs: ['Festival Choir'],
-            voices: ['Soprano'],
+            homeChoir: 'Festival Choir',
+            section: 'Soprano',
             status: MemberStatus.PASSIVE,
           },
           {
             id: 'member-3',
             name: 'Katherine Johnson',
-            choirs: [],
-            voices: [],
+            homeChoir: null,
+            section: null,
             status: MemberStatus.FORMER,
           },
         ]}

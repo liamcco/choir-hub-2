@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, test } from 'bun:test'
-import { GroupKind } from '@/drizzle/schema'
 import { GroupCollection } from './group-collection'
 
 const { cleanup, render, screen } = await import('@testing-library/react')
@@ -16,16 +15,16 @@ describe('Group collection', () => {
           {
             id: 'choir-1',
             name: 'Chamber Choir',
-            kind: GroupKind.CHOIR,
-            parentName: null,
-            directMemberCount: 1,
+            kind: 'COMMITTEE',
+            scope: 'CSK-wide',
+            memberCount: 1,
           },
           {
             id: 'section-1',
             name: 'Altos',
-            kind: GroupKind.SECTION,
-            parentName: 'Chamber Choir',
-            directMemberCount: 7,
+            kind: 'COMMITTEE',
+            scope: 'Manskören',
+            memberCount: 7,
           },
         ]}
       />,
@@ -34,7 +33,7 @@ describe('Group collection', () => {
     expect(screen.getAllByRole('columnheader').map((heading) => heading.textContent)).toEqual([
       'Name',
       'Kind',
-      'Parent',
+      'Scope',
       'Members',
     ])
     expect(screen.getByRole('link', { name: 'Chamber Choir' }).getAttribute('href')).toBe(
@@ -42,11 +41,11 @@ describe('Group collection', () => {
     )
     expect(screen.getByRole('cell', { name: '1' })).toBeTruthy()
     expect(screen.getByRole('cell', { name: '7' })).toBeTruthy()
-    expect(screen.getByText('No parent Group')).toBeTruthy()
+    expect(screen.getByText('CSK-wide')).toBeTruthy()
     expect(screen.queryByRole('columnheader', { name: /actions/i })).toBeNull()
 
     const search = screen.getByRole('searchbox', { name: 'Search Groups' })
-    await user.type(search, 'section')
+    await user.type(search, 'manskören')
     expect(screen.getByRole('status').textContent).toBe('1 of 2 Groups displayed')
     expect(screen.getByRole('link', { name: 'Altos' })).toBeTruthy()
     expect(screen.queryByRole('link', { name: 'Chamber Choir' })).toBeNull()

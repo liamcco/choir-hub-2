@@ -13,8 +13,8 @@ export type GroupCollectionRow = {
   id: string
   name: string
   kind: GroupKind
-  parentName: string | null
-  directMemberCount: number
+  scope: string
+  memberCount: number
 }
 
 export function GroupCollection({ groups }: { groups: GroupCollectionRow[] }) {
@@ -40,7 +40,7 @@ export function GroupCollection({ groups }: { groups: GroupCollectionRow[] }) {
             <TableRow>
               <TableHead>Name</TableHead>
               <TableHead>Kind</TableHead>
-              <TableHead>Parent</TableHead>
+              <TableHead>Scope</TableHead>
               <TableHead>Members</TableHead>
             </TableRow>
           </TableHeader>
@@ -59,10 +59,8 @@ export function GroupCollection({ groups }: { groups: GroupCollectionRow[] }) {
                   <TableCell>
                     <Badge variant="secondary">{formatGroupKind(group.kind)}</Badge>
                   </TableCell>
-                  <TableCell>
-                    {group.parentName ?? <span className="text-muted-foreground">No parent Group</span>}
-                  </TableCell>
-                  <TableCell>{group.directMemberCount}</TableCell>
+                  <TableCell>{group.scope}</TableCell>
+                  <TableCell>{group.memberCount}</TableCell>
                 </TableRow>
               ))
             ) : (
@@ -80,12 +78,5 @@ export function GroupCollection({ groups }: { groups: GroupCollectionRow[] }) {
 }
 
 function searchableGroupText(group: GroupCollectionRow) {
-  return [
-    group.name,
-    formatGroupKind(group.kind),
-    group.parentName ?? 'No parent Group',
-    String(group.directMemberCount),
-  ]
-    .join(' ')
-    .toLocaleLowerCase()
+  return [group.name, formatGroupKind(group.kind), group.scope, String(group.memberCount)].join(' ').toLocaleLowerCase()
 }
