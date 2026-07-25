@@ -3,12 +3,9 @@ import { auth } from '@/core/auth/auth'
 import type { db } from '@/core/db'
 import { choirMembership, groupMembership, positionAssignment, sectionPlacement, user } from '@/drizzle/schema'
 import { demoSeedData } from './demo-data'
-import { seedFoundation } from './foundation'
 
 /** Seed the demo data defined in demo-data.ts. */
 export async function seedDemo(database: typeof db): Promise<void> {
-  await seedFoundation(database)
-
   const startsAt = new Date(demoSeedData.startsAt)
   const userIds = new Map<string, string>()
 

@@ -1,5 +1,6 @@
 import { db } from '@/core/db'
-import { groupMembership, positionAssignment, positionScope } from '@/drizzle/schema'
+import { topology } from '@/core/topology'
+import { groupMembership, positionAssignment } from '@/drizzle/schema'
 import { isCurrentDatedPeriod } from './dated-history'
 
 export type EffectiveMembershipSource = { type: 'explicit' | 'position'; id: string; positionId?: string }
@@ -30,15 +31,10 @@ export function mergeEffectiveGroupMemberships(rows: EffectiveGroupMembership[])
 export const effectiveGroupMembership = {
   async list(input: { at?: Date; groupId?: string; userId?: string } = {}): Promise<EffectiveGroupMembership[]> {
     const at = input.at
-    const [explicit, assignments, scopes] = await Promise.all([
+    const [explicit, assignments] = await Promise.all([
       db.select().from(groupMembership),
       db.select().from(positionAssignment),
-      db.select().from(positionScope),
     ])
-    const positionGroups = new Map<string, string[]>()
-    for (const scope of scopes)
-      if (scope.targetType === 'group' && scope.groupId)
-        positionGroups.set(scope.positionId, [...(positionGroups.get(scope.positionId) ?? []), scope.groupId])
     const rows: EffectiveGroupMembership[] = []
     for (const m of explicit)
       rows.push({
@@ -48,15 +44,17 @@ export const effectiveGroupMembership = {
         endsAt: m.endsAt,
         sources: [{ type: 'explicit', id: m.id }],
       })
-    for (const a of assignments)
-      for (const groupId of positionGroups.get(a.positionId) ?? [])
+    for (const a of assignments) {
+      const position = topology.positions.find((candidate) => candidate.id === a.positionId)
+      for (const scope of position?.scopes.filter((candidate) => candidate.type === 'group') ?? [])
         rows.push({
           userId: a.userId,
-          groupId,
+          groupId: scope.groupId,
           startsAt: a.startsAt,
           endsAt: a.endsAt,
           sources: [{ type: 'position', id: a.id, positionId: a.positionId }],
         })
+    }
     const filtered = rows.filter(
       (r) =>
         (!input.groupId || r.groupId === input.groupId) &&

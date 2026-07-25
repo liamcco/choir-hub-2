@@ -1,4 +1,4 @@
-import { positionCatalog, referenceCatalogData } from '@/core/reference-catalog'
+import { listPositions, topology } from '@/core/topology'
 
 /**
  * Generated people and relationships for the demo/development/e2e database.
@@ -17,22 +17,15 @@ type ChoirSection = {
   passiveCount: number
 }
 
-const choirSections: ChoirSection[] = referenceCatalogData.choirs.flatMap((choir) =>
-  choir.sections.map((definition, index) => {
-    const name = typeof definition === 'string' ? definition : definition.name
-    const voiceTypes = typeof definition === 'string' ? [definition] : definition.allowedVoiceTypes
-
-    return {
-      choirId: choir.id,
-      sectionId: `${choir.id}-${name.toLowerCase()}`,
-      name,
-      voiceTypes,
-      // Two passive members in the first six sections and three in the last
-      // six gives exactly 30 passive members across all 12 sections.
-      passiveCount: index < 2 ? 2 : 3,
-    }
-  }),
-)
+const choirSections: ChoirSection[] = topology.sections.map((section, index) => ({
+  choirId: section.choirId,
+  sectionId: section.id,
+  name: section.name,
+  voiceTypes: section.allowedVoiceTypes,
+  // Two passive members in the first six sections and three in the last
+  // six gives exactly 30 passive members across all 12 sections.
+  passiveCount: index < 2 ? 2 : 3,
+}))
 
 function generateSingers() {
   return choirSections.flatMap((section) =>
@@ -104,12 +97,12 @@ const boardPositionIds = [
 const conductorPositionIds = new Set(['mk-conductor', 'kk-conductor', 'dk-conductor'])
 
 const committeeDefinitions = [
-  ...referenceCatalogData.groups.csk
-    .filter((group) => group.id !== 'board')
-    .map((group) => ({ groupId: group.id, choirId: undefined })),
-  ...referenceCatalogData.choirs.flatMap((choir) =>
-    referenceCatalogData.groups.perChoir.map((group) => ({ groupId: `${choir.id}-${group.id}`, choirId: choir.id })),
-  ),
+  ...topology.groups
+    .filter((group) => group.kind === 'committee')
+    .map((group) => ({
+      groupId: group.id,
+      choirId: group.scope.type === 'choir' ? group.scope.choirId : undefined,
+    })),
 ]
 
 // Ensure a few passive members are visible in committee views, while all
@@ -135,12 +128,10 @@ const groupMemberships = committeeDefinitions.flatMap(({ groupId, choirId }) => 
 
 const activeSingers = singers.filter((person) => person.status === 'active')
 const groupScopes: Map<string, string> = new Map(
-  referenceCatalogData.choirs.flatMap((choir) =>
-    referenceCatalogData.groups.perChoir.map((group) => [`${choir.id}-${group.id}`, choir.id] as const),
-  ),
+  topology.groups.flatMap((group) => (group.scope.type === 'choir' ? [[group.id, group.scope.choirId] as const] : [])),
 )
 
-function eligiblePeopleForPosition(position: (typeof positionCatalog)[number]) {
+function eligiblePeopleForPosition(position: (typeof topology.positions)[number]) {
   const sectionScope = position.scopes.find((scope) => scope.type === 'section')
   if (sectionScope?.type === 'section')
     return activeSingers.filter((person) => person.sectionId === sectionScope.sectionId)
@@ -158,7 +149,7 @@ function eligiblePeopleForPosition(position: (typeof positionCatalog)[number]) {
 }
 
 const alreadyAssignedPositionIds = new Set([...boardPositionIds, ...conductorPositionIds])
-const remainingPositions = positionCatalog.filter((position) => !alreadyAssignedPositionIds.has(position.id))
+const remainingPositions = listPositions().filter((position) => !alreadyAssignedPositionIds.has(position.id))
 const positionsToAssign = shuffle(remainingPositions, 20260725).slice(0, Math.round(remainingPositions.length * 0.9))
 const additionalPositionAssignments = positionsToAssign.map((position, index) => {
   const eligiblePeople = eligiblePeopleForPosition(position)

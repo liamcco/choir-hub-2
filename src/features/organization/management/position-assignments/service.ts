@@ -1,4 +1,5 @@
-import type { Choir, Group, Position, PositionAssignment, PositionScope, Section, User } from '@/drizzle/schema'
+import { listChoirs, listGroups, listPositions, listSections, type Position } from '@/core/topology'
+import type { PositionAssignment, User } from '@/drizzle/schema'
 import { organizationService } from '@/features/organization'
 import { isCurrentDatedPeriod, isHistoricalDatedPeriod } from '@/features/organization/core/dated-history'
 import { buildUserLabels, formatPositionLabel, formatPositionScopeLabel } from '@/features/organization/core/labels'
@@ -29,21 +30,15 @@ export type PositionAssignmentUserView = {
 }
 
 export async function listPositionAssignmentManagement(input?: { at?: Date }) {
-  const [groups, choirs, sections, users, positions, scopes, assignments] = await Promise.all([
-    organizationService.groups.list(),
-    organizationService.positions.listChoirs(),
-    organizationService.positions.listSections(),
+  const [users, assignments] = await Promise.all([
     organizationService.users.list(),
-    organizationService.positions.list(),
-    organizationService.positions.listScopes(),
     organizationService.positionAssignments.list(),
   ])
   return buildPositionAssignmentManagementState({
-    groups,
-    choirs,
-    sections,
-    positions,
-    scopes,
+    groups: listGroups(),
+    choirs: listChoirs(),
+    sections: listSections(),
+    positions: listPositions(),
     assignments,
     users,
     at: input?.at ?? new Date(),
@@ -57,24 +52,27 @@ export function buildPositionAssignmentManagementState({
   choirs,
   sections,
   positions,
-  scopes,
   assignments,
   users,
   at,
 }: {
-  groups: Group[]
-  choirs: Choir[]
-  sections: Section[]
-  positions: Position[]
-  scopes: PositionScope[]
+  groups: ReturnType<typeof listGroups>
+  choirs: ReturnType<typeof listChoirs>
+  sections: ReturnType<typeof listSections>
+  positions: readonly Position[]
   assignments: PositionAssignment[]
   users: User[]
   at: Date
 }) {
-  const positionsById = new Map(positions.map((position) => [position.id, position]))
-  const usersById = new Map(users.map((user) => [user.id, user]))
-  const positionOptions = buildPositionOptions(groups, choirs, sections, positions, scopes)
-  const positionOptionsById = new Map(positionOptions.map((option) => [option.position.id, option]))
+  const positionsById = new Map<string, Position>(positions.map((position) => [position.id, position]))
+  const usersById = new Map<string, User>(users.map((user) => [user.id, user]))
+  const positionOptions = positions.map((position) => {
+    const scopeLabel = formatPositionScopeLabel(position.scopes, { choirs, sections, groups })
+    return { position, label: formatPositionLabel(position.name, scopeLabel), scopeLabel }
+  })
+  const positionOptionsById = new Map<string, (typeof positionOptions)[number]>(
+    positionOptions.map((option) => [option.position.id, option]),
+  )
   const userOptions = buildUserLabels(users)
   const userOptionsById = new Map(userOptions.map((option) => [option.user.id, option]))
   const periods = assignments
@@ -131,23 +129,6 @@ export function buildPositionAssignmentManagementState({
       }),
     ),
   }
-}
-
-function buildPositionOptions(
-  groups: Group[],
-  choirs: Choir[],
-  sections: Section[],
-  positions: Position[],
-  scopes: PositionScope[],
-) {
-  return positions.map((position) => {
-    const scopeLabel = formatPositionScopeLabel(scopes.filter((scope) => scope.positionId === position.id) as never, {
-      choirs,
-      sections,
-      groups,
-    })
-    return { position, label: formatPositionLabel(position.name, scopeLabel), scopeLabel }
-  })
 }
 
 function partitionAssignments(periods: PositionAssignmentPeriod[], at: Date) {

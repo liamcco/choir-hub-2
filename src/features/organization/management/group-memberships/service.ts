@@ -1,4 +1,5 @@
-import type { Group, GroupMembership, User } from '@/drizzle/schema'
+import { type Group, listGroups } from '@/core/topology'
+import type { GroupMembership, User } from '@/drizzle/schema'
 import { organizationService } from '@/features/organization'
 import {
   isCurrentDatedPeriod,
@@ -32,7 +33,7 @@ export type GroupMembershipUserView = {
 
 export async function listGroupMembershipManagement(input?: { at?: Date }) {
   const [groups, users, memberships] = await Promise.all([
-    organizationService.groups.list(),
+    Promise.resolve(listGroups()),
     organizationService.users.list(),
     organizationService.groupMemberships.list(),
   ])
@@ -52,12 +53,12 @@ export function buildGroupMembershipManagementState({
   users,
   at,
 }: {
-  groups: Group[]
+  groups: readonly Group[]
   memberships: GroupMembership[]
   users: User[]
   at: Date
 }) {
-  const groupsById = new Map(groups.map((group) => [group.id, group]))
+  const groupsById = new Map<string, Group>(groups.map((group) => [group.id, group]))
   const usersById = new Map(users.map((user) => [user.id, user]))
   const userOptions = buildUserLabels(users)
   const userOptionsById = new Map(userOptions.map((option) => [option.user.id, option]))

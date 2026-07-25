@@ -3,8 +3,7 @@ import 'server-only'
 import { headers } from 'next/headers'
 import { connection } from 'next/server'
 import { auth } from '@/core/auth/auth'
-import { db } from '@/core/db'
-import { choir, section } from '@/drizzle/schema'
+import { listGroups, listPositions, topology } from '@/core/topology'
 import { organizationService } from '@/features/organization'
 import { isCurrentDatedPeriod, isHistoricalDatedPeriod } from '@/features/organization/core/dated-history'
 import {
@@ -18,13 +17,12 @@ import {
 async function listCollection(input?: { at?: Date }) {
   await connection()
   const at = input?.at ?? new Date()
-  const [users, choirMemberships, placements, choirs] = await Promise.all([
+  const [users, choirMemberships, placements] = await Promise.all([
     organizationService.users.list(),
     organizationService.homePlacement.listChoirMemberships(),
     organizationService.homePlacement.listSectionPlacements(),
-    db.select().from(choir),
   ])
-  const choirById = new Map(choirs.map((item) => [item.id, item]))
+  const choirById = new Map<string, (typeof topology.choirs)[number]>(topology.choirs.map((item) => [item.id, item]))
 
   return buildUserLabels(users)
     .map(({ user, label }) => {
@@ -46,40 +44,29 @@ async function getDetail(userId: string, input?: { at?: Date }) {
   await connection()
   const at = input?.at ?? new Date()
   const requestHeaders = await headers()
-  const [
-    account,
-    user,
-    groups,
-    memberships,
-    positions,
-    scopes,
-    assignments,
-    choirMemberships,
-    placements,
-    choirs,
-    sections,
-  ] = await Promise.all([
+  const [account, user, memberships, assignments, choirMemberships, placements] = await Promise.all([
     auth.api.getUser({ headers: requestHeaders, query: { id: userId } }),
     organizationService.users.find({ userId }),
-    organizationService.groups.list(),
     organizationService.committeeMembership.list({ userId }),
-    organizationService.positions.list(),
-    organizationService.positions.listScopes(),
     organizationService.positionAssignments.list({ userId }),
     organizationService.homePlacement.listChoirMemberships({ userId }),
     organizationService.homePlacement.listSectionPlacements({ userId }),
-    db.select().from(choir),
-    db.select().from(section),
   ])
   if (!account || !user) return null
 
-  const choirById = new Map(choirs.map((item) => [item.id, item]))
-  const sectionById = new Map(sections.map((item) => [item.id, item]))
+  const choirs = topology.choirs
+  const sections = topology.sections
+  const groups = topology.groups
+  const positions = topology.positions
+  const choirById = new Map<string, (typeof topology.choirs)[number]>(choirs.map((item) => [item.id, item]))
+  const sectionById = new Map<string, (typeof topology.sections)[number]>(sections.map((item) => [item.id, item]))
   const currentChoir = choirMemberships.find((item) => isCurrentDatedPeriod(item, at))
   const currentSection = placements.find((item) => isCurrentDatedPeriod(item, at))
 
-  const groupsById = new Map(groups.map((group) => [group.id, group]))
-  const positionsById = new Map(positions.map((position) => [position.id, position]))
+  const groupsById = new Map<string, (typeof topology.groups)[number]>(groups.map((group) => [group.id, group]))
+  const positionsById = new Map<string, (typeof topology.positions)[number]>(
+    positions.map((position) => [position.id, position]),
+  )
   const membershipViews = memberships.flatMap((membership) => {
     const group = groupsById.get(membership.groupId)
     return group
@@ -98,13 +85,12 @@ async function getDetail(userId: string, input?: { at?: Date }) {
   const assignmentViews = assignments.flatMap((assignment) => {
     const position = positionsById.get(assignment.positionId)
     if (!position) return []
-    const positionScopes = scopes.filter((scope) => scope.positionId === position.id)
     return [
       {
         id: assignment.id,
         positionId: position.id,
         positionName: position.name,
-        scopeLabel: formatPositionScopeLabel(positionScopes as never, { choirs, sections, groups }),
+        scopeLabel: formatPositionScopeLabel(position.scopes, { choirs, sections, groups }),
         startsAt: assignment.startsAt,
         endsAt: assignment.endsAt ?? undefined,
       },
@@ -139,17 +125,17 @@ async function getDetail(userId: string, input?: { at?: Date }) {
     accessRole: account.role || 'user',
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
-    groups: groups
+    groups: listGroups()
       .map((group) => ({ id: group.id, name: formatGroupPath(groups, group) }))
       .sort((first, second) => first.name.localeCompare(second.name) || first.id.localeCompare(second.id)),
-    positions: positions
-      .map((position) => {
-        const scopeLabel = formatPositionScopeLabel(
-          scopes.filter((scope) => scope.positionId === position.id) as never,
-          { choirs, sections, groups },
-        )
-        return { id: position.id, label: formatPositionLabel(position.name, scopeLabel) }
-      })
+    positions: listPositions()
+      .map((position) => ({
+        id: position.id,
+        label: formatPositionLabel(
+          position.name,
+          formatPositionScopeLabel(position.scopes, { choirs, sections, groups }),
+        ),
+      }))
       .sort((first, second) => first.label.localeCompare(second.label) || first.id.localeCompare(second.id)),
     currentMemberships: membershipViews
       .filter((membership) => isCurrentDatedPeriod({ ...membership, endsAt: membership.endsAt ?? null }, at))
@@ -176,8 +162,8 @@ export const getMemberDetail = getDetail
 
 function formatPlacementLabel(
   placement: { sectionId: string; voiceType: string } | undefined,
-  sections: Map<string, { name: string; choirId: string }>,
-  choirs: Map<string, { shortName: string }>,
+  sections: ReadonlyMap<string, { name: string; choirId: string }>,
+  choirs: ReadonlyMap<string, { shortName: string }>,
 ) {
   if (!placement) return null
   const section = sections.get(placement.sectionId)

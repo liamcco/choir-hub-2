@@ -13,9 +13,10 @@ if (process.env.DB_MODE !== 'local' && process.env.DB_MODE !== 'prod') {
 async function main(): Promise<void> {
   try {
     await reset(db, schema)
-    const push = spawnSync('bun', ['run', 'db:push'], { stdio: 'inherit', env: process.env })
-    if (push.error) throw push.error
-    if (push.status !== 0) throw new Error(`bun run db:push exited with code ${push.status ?? 'unknown'}.`)
+    const migrate = spawnSync('bun', ['x', 'drizzle-kit', 'migrate'], { stdio: 'inherit', env: process.env })
+    if (migrate.error) throw migrate.error
+    if (migrate.status !== 0)
+      throw new Error(`bun x drizzle-kit migrate exited with code ${migrate.status ?? 'unknown'}.`)
     console.log(`${process.env.DB_MODE === 'prod' ? 'Production' : 'Local'} database reset.`)
   } finally {
     await sql.end()

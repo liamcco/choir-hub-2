@@ -21,7 +21,7 @@ This document tracks product and data-model concepts during the CSK Choir Hub do
 - The fixed CSK-wide Group catalog contains the Board, Concert Mastery, Gig Mastery, Party Mastery, Web Mastery, Tour Committee, and Recruitment Committee.
 - Each of MK, KK, and DK has a choir-scoped Concert Group, Party Group, and Rodd Group.
 - All non-Board bodies in the fixed Group catalog have Group Kind Committee regardless of their displayed naming convention.
-- Choirs, Sections, Groups, Positions, and their scopes are fixed reference data with no structural or metadata editing in v1.
+- Choirs, Sections, Groups, Positions, and their scopes form the Permanent Organization Topology; ordinary administration does not edit that topology.
 - Administrators manage Choir Memberships, Section Placements, Committee memberships, and Position Assignments rather than the reference definitions.
 - Each spring's Turnekören is a distinct dated historical Project Ensemble instance, such as Turnekören 2026. Its participants retain their Home Choir and Section Placement.
 
@@ -101,7 +101,7 @@ The current implementation and admin-management specification conflict with this
 - Conductor Assignments do not require Choir Membership; a Conductor may serve a Choir without singing in it.
 - The Tour Committee has its own Treasurer Position.
 - `PositionAssignment` tracks historical holders of a Position. A Position can only be held by one User at a time.
-- Permanent Choirs, Sections, Groups, and Positions are database-backed reference records with stable identifiers, but their structural topology is defined and synchronized from code rather than edited by ordinary administrators.
+- Permanent Choirs, Sections, Groups, and Positions are code-controlled members of the Permanent Organization Topology with stable identifiers; they are not ordinary database data.
 - Top-level units do not need a CSK parent record. Whole-organization audiences derive from qualifying Users, and collective appearances derive their singer roster from event participation.
 - Membership and assignment writes prevent overlaps. Membership periods must not overlap for the same User and Group, and assignment periods must not overlap for the same Position.
 - The current Prisma schema conflicts with this accepted model by representing Choir and Section as `GroupKind` values and both relationships as `GroupMembership`.

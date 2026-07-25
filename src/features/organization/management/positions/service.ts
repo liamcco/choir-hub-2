@@ -1,5 +1,12 @@
-import type { Choir, Group, Position, PositionScope, Section } from '@/drizzle/schema'
-import { organizationService } from '@/features/organization'
+import {
+  type Group,
+  getGroup,
+  listChoirs,
+  listGroups,
+  listPositions,
+  listSections,
+  type Position,
+} from '@/core/topology'
 import { formatGroupPath, formatPositionScopeLabel } from '@/features/organization/core/labels'
 
 export type PositionManagementPosition = {
@@ -11,14 +18,12 @@ export type PositionManagementPosition = {
 }
 
 export async function listPositionManagement() {
-  const [groups, choirs, sections, positions, scopes] = await Promise.all([
-    organizationService.groups.list(),
-    organizationService.positions.listChoirs(),
-    organizationService.positions.listSections(),
-    organizationService.positions.list(),
-    organizationService.positions.listScopes(),
-  ])
-  return buildPositionManagementState({ groups, choirs, sections, positions, scopes })
+  return buildPositionManagementState({
+    groups: listGroups(),
+    choirs: listChoirs(),
+    sections: listSections(),
+    positions: listPositions(),
+  })
 }
 
 export type PositionManagementState = Awaited<ReturnType<typeof listPositionManagement>>
@@ -28,16 +33,12 @@ export function buildPositionManagementState({
   choirs,
   sections,
   positions,
-  scopes,
 }: {
-  groups: Group[]
-  choirs: Choir[]
-  sections: Section[]
-  positions: Position[]
-  scopes: PositionScope[]
+  groups: readonly Group[]
+  choirs: ReturnType<typeof listChoirs>
+  sections: ReturnType<typeof listSections>
+  positions: readonly Position[]
 }) {
-  const groupsById = new Map(groups.map((group) => [group.id, group]))
-
   const duplicateNameCounts = new Map<string, number>()
   for (const position of positions) {
     const key = normalizeName(position.name)
@@ -47,22 +48,19 @@ export function buildPositionManagementState({
   return {
     groups,
     positions: positions.map((position): PositionManagementPosition => {
-      const scopeGroups = scopes
-        .filter((scope) => scope.positionId === position.id)
+      const scopeGroups = position.scopes
+        .filter((scope) => scope.type === 'group')
         .flatMap((scope) => {
-          const group = scope.groupId ? groupsById.get(scope.groupId) : undefined
+          const group = getGroup(scope.groupId)
           return group ? [group] : []
         })
         .sort((first, second) => formatGroupPath(groups, first).localeCompare(formatGroupPath(groups, second)))
+      const scopeLabel = formatPositionScopeLabel(position.scopes, { choirs, sections, groups })
 
       return {
         position,
         scopeGroups,
-        scopeLabel: formatPositionScopeLabel(scopes.filter((scope) => scope.positionId === position.id) as never, {
-          choirs,
-          sections,
-          groups,
-        }),
+        scopeLabel,
         scopeKind: scopeGroups.length > 1 ? 'shared' : scopeGroups.length === 1 ? 'single' : 'unscoped',
         duplicateNameCount: duplicateNameCounts.get(normalizeName(position.name)) ?? 1,
       }

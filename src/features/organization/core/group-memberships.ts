@@ -1,7 +1,8 @@
 import 'server-only'
 import { and, asc, eq, gt, isNull, lte, or } from 'drizzle-orm'
 import { db } from '@/core/db'
-import { group, groupMembership, user } from '@/drizzle/schema'
+import { getGroup } from '@/core/topology'
+import { groupMembership, user } from '@/drizzle/schema'
 import {
   assertValidDatedPeriod,
   findOverlappingDatedPeriod,
@@ -57,8 +58,8 @@ async function assertUserExists(userId: string) {
     throw new EntityDoesNotExistError('Choose an existing User.', { field: 'userId' })
 }
 async function assertGroupExists(groupId: string) {
-  if (!(await db.select({ id: group.id }).from(group).where(eq(group.id, groupId)).limit(1)).length)
-    throw new EntityDoesNotExistError('Choose an existing Group.', { field: 'groupId' })
+  const group = getGroup(groupId)
+  if (group?.status !== 'active') throw new EntityDoesNotExistError('Choose an existing Group.', { field: 'groupId' })
 }
 async function assertNoOverlap(
   input: { userId: string; groupId: string; startsAt: Date; endsAt: Date | null },

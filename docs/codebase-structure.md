@@ -52,7 +52,7 @@ Use `src/core` for infrastructure and app shell modules:
 - `src/core/email`: email delivery adapters.
 - `src/core/environment`: runtime environment configuration.
 - `src/core/navigation`: route IDs, URL paths, access decisions, and app navigation composition.
-- `src/core/reference-catalog`: the code-controlled permanent organization topology, its validation, and database synchronization.
+- `src/core/topology`: the code-controlled permanent organization topology, its validation, and lookup helpers.
 
 Do not promote code to shared space just because two files currently look similar. Promote only when the interface is stable and the shared module improves locality.
 

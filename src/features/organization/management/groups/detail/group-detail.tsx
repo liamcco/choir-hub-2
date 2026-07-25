@@ -1,5 +1,5 @@
 import { adminUserPath } from '@/core/navigation/site'
-import type { Group } from '@/drizzle/schema'
+import type { GroupKind } from '@/core/topology'
 import { formatGroupKind } from '@/features/organization/core/group-kind'
 import type { UserLabel } from '@/features/organization/core/labels'
 import { RelatedDetailLink } from '@/features/organization/management/components/related-detail-link'
@@ -23,7 +23,10 @@ export type GroupMembershipView = {
   sourceLabels: string[]
 }
 
-export type GroupDetailView = Group & {
+export type GroupDetailView = {
+  id: string
+  name: string
+  kind: GroupKind
   users: UserLabel[]
   currentMemberships: GroupMembershipView[]
   scheduledMemberships: GroupMembershipView[]

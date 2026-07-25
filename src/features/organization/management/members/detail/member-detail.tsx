@@ -1,4 +1,5 @@
-import type { GroupKind, MemberStatus } from '@/drizzle/schema'
+import type { GroupKind } from '@/core/topology'
+import type { MemberStatus } from '@/drizzle/schema'
 import { formatMemberStatus } from '@/features/organization/core/member-status'
 import type {
   CreateMembershipAction,

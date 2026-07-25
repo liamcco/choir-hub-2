@@ -1,11 +1,11 @@
-import type { Group } from '@/drizzle/schema'
+import type { Group } from '@/core/topology'
 
 /** Groups are flat in V1; a label is therefore just the group's display name. */
-export function formatGroupPath(_groups: Group[], group: Pick<Group, 'name'>) {
+export function formatGroupPath(_groups: readonly Group[], group: Pick<Group, 'name'>) {
   return group.name
 }
 
-export function buildGroupPathLabels(groups: Group[]) {
+export function buildGroupPathLabels(groups: readonly Group[]) {
   return new Map(groups.map((group) => [group.id, group.name]))
 }
 export type { UserLabel } from '@/features/organization/core/labels/member'

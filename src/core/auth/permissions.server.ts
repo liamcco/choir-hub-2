@@ -70,26 +70,86 @@ async function getCurrentUserId(): Promise<string | null> {
   return actor?.userId ?? null
 }
 
-export async function canCurrentUserInGroup(input: { groupId: string }): Promise<boolean> {
-  const userId = await getCurrentUserId()
-  if (!userId) {
+function getActorFromSession(session?: { user: { id: string; role?: string | null } } | null): RequestActor | null {
+  if (!session) {
+    return null
+  }
+
+  return {
+    userId: session.user.id,
+    roles: parseAccessRoles(session.user.role),
+  }
+}
+
+function actorContext(actor: RequestActor | null): AuthorizationActorContext {
+  return actor ? { state: 'authenticated', userId: actor.userId } : { state: 'unauthenticated' }
+}
+
+/* PERMISSIONS */
+async function actorHasPermission(actor: RequestActor | null, permission: GlobalPermissionRequest): Promise<boolean> {
+  if (!actor) {
     return false
   }
 
-  return effectiveGroupMembership.isMember({ userId, groupId: input.groupId, at: new Date() })
+  const result = await auth.api.userHasPermission({
+    body: {
+      userId: actor.userId,
+      permissions: {
+        [permission.resource]: [permission.action],
+      },
+    },
+  })
+
+  return result.success
 }
 
-export async function requireCurrentUserInGroup(input: { groupId: string }): Promise<void> {
-  if (!(await canCurrentUserInGroup(input))) {
-    const actor = await getCurrentActor()
+export async function canCurrentUser<const Request extends GlobalPermissionRequest>(
+  permission: ExactGlobalPermissionRequest<Request>,
+): Promise<boolean> {
+  return actorHasPermission(await getCurrentActor(), permission)
+}
+
+export async function requireCurrentUserPermission<const Request extends GlobalPermissionRequest>(
+  permission: ExactGlobalPermissionRequest<Request>,
+): Promise<AuthenticatedAuthorizationActorContext> {
+  const actor = await getCurrentActor()
+
+  if (!actor || !(await actorHasPermission(actor, permission))) {
     denyAuthorization({
       actor: actorContext(actor),
-      requirement: { kind: 'currentGroupMembership', groupId: input.groupId },
+      requirement: { kind: 'permission', permission },
     })
   }
+
+  return { state: 'authenticated', userId: actor.userId }
 }
 
-export async function canCurrentUserHoldPosition(input: { positionId: string }): Promise<boolean> {
+/* ADMIN */
+function actorIsAdmin(actor: RequestActor | null): boolean {
+  return actor?.roles.includes('admin') ?? false
+}
+
+export async function isUserAdmin(): Promise<boolean> {
+  return actorIsAdmin(await getCurrentActor())
+}
+
+export async function requireAdmin(
+  session?: { user: { id: string; role?: string | null } } | null,
+): Promise<AuthenticatedAuthorizationActorContext> {
+  const actor = getActorFromSession(session) ?? (await getCurrentActor())
+
+  if (!actor || !actorIsAdmin(actor)) {
+    denyAuthorization({
+      actor: actorContext(actor),
+      requirement: { kind: 'accessRole', role: 'admin' },
+    })
+  }
+
+  return { state: 'authenticated', userId: actor.userId }
+}
+
+/* POSITION ASSIGNMENT */
+export async function doesCurrentUserHoldPosition(input: { positionId: string }): Promise<boolean> {
   const userId = await getCurrentUserId()
   if (!userId) {
     return false
@@ -113,7 +173,7 @@ export async function canCurrentUserHoldPosition(input: { positionId: string }):
 }
 
 export async function requireCurrentUserHoldsPosition(input: { positionId: string }): Promise<void> {
-  if (!(await canCurrentUserHoldPosition(input))) {
+  if (!(await doesCurrentUserHoldPosition(input))) {
     const actor = await getCurrentActor()
     denyAuthorization({
       actor: actorContext(actor),
@@ -122,78 +182,22 @@ export async function requireCurrentUserHoldsPosition(input: { positionId: strin
   }
 }
 
-function getActorFromSession(session?: { user: { id: string; role?: string | null } } | null): RequestActor | null {
-  if (!session) {
-    return null
-  }
-
-  return {
-    userId: session.user.id,
-    roles: parseAccessRoles(session.user.role),
-  }
-}
-
-function actorContext(actor: RequestActor | null): AuthorizationActorContext {
-  return actor ? { state: 'authenticated', userId: actor.userId } : { state: 'unauthenticated' }
-}
-
-async function actorHasPermission(actor: RequestActor | null, permission: GlobalPermissionRequest): Promise<boolean> {
-  if (!actor) {
+/* GROUP MEMBERSHIP */
+export async function isCurrentUserInGroup(input: { groupId: string }): Promise<boolean> {
+  const userId = await getCurrentUserId()
+  if (!userId) {
     return false
   }
 
-  const result = await auth.api.userHasPermission({
-    body: {
-      userId: actor.userId,
-      permissions: {
-        [permission.resource]: [permission.action],
-      },
-    },
-  })
-
-  return result.success
+  return effectiveGroupMembership.isMember({ userId, groupId: input.groupId, at: new Date() })
 }
 
-function actorIsAdmin(actor: RequestActor | null): boolean {
-  return actor?.roles.includes('admin') ?? false
-}
-
-export async function canCurrentUser<const Request extends GlobalPermissionRequest>(
-  permission: ExactGlobalPermissionRequest<Request>,
-): Promise<boolean> {
-  return actorHasPermission(await getCurrentActor(), permission)
-}
-
-export async function userIsAdmin(): Promise<boolean> {
-  return actorIsAdmin(await getCurrentActor())
-}
-
-export async function requireCurrentUserPermission<const Request extends GlobalPermissionRequest>(
-  permission: ExactGlobalPermissionRequest<Request>,
-): Promise<AuthenticatedAuthorizationActorContext> {
-  const actor = await getCurrentActor()
-
-  if (!actor || !(await actorHasPermission(actor, permission))) {
+export async function requireCurrentUserInGroup(input: { groupId: string }): Promise<void> {
+  if (!(await isCurrentUserInGroup(input))) {
+    const actor = await getCurrentActor()
     denyAuthorization({
       actor: actorContext(actor),
-      requirement: { kind: 'permission', permission },
+      requirement: { kind: 'currentGroupMembership', groupId: input.groupId },
     })
   }
-
-  return { state: 'authenticated', userId: actor.userId }
-}
-
-export async function requireAdmin(
-  session?: { user: { id: string; role?: string | null } } | null,
-): Promise<AuthenticatedAuthorizationActorContext> {
-  const actor = getActorFromSession(session) ?? (await getCurrentActor())
-
-  if (!actor || !actorIsAdmin(actor)) {
-    denyAuthorization({
-      actor: actorContext(actor),
-      requirement: { kind: 'accessRole', role: 'admin' },
-    })
-  }
-
-  return { state: 'authenticated', userId: actor.userId }
 }

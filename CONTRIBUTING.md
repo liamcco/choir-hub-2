@@ -10,13 +10,12 @@ Install the pinned Bun dependencies, copy the committed environment template, an
 bun i
 cp .example.env .env
 docker compose up -d db
-bun run db:push
-bun run db:push
+bun x drizzle-kit migrate
 ```
 
 Use the committed initial migration to bootstrap a fresh disposable database. Do not use `drizzle-kit push` to submit a schema change or update production. See [Drizzle schema and migrations](#drizzle-schema-and-migrations).
 
-Use `bun run cli` to run foundation/demo seeds or bootstrap a local admin. Never commit `.env`, credentials, generated Drizzle files, `.next`, or local database artifacts.
+Use `bun run cli` to run the demo seed or bootstrap a local admin. Permanent organization topology is imported from `src/core/topology`; it has no foundation seed. Never commit `.env`, credentials, generated Drizzle files, `.next`, or local database artifacts.
 
 ## Local development
 
@@ -156,7 +155,7 @@ Drizzle owns a multi-file schema under `src/drizzle/schema`:
 
 - `drizzle.config.ts` owns the Drizzle Kit configuration and PostgreSQL connection.
 - `auth.ts` owns Better Auth tables and reviewed custom User fields.
-- `organization.ts` owns choir organization models.
+- `organization.ts` owns dated relationship models; permanent topology definitions live in `src/core/topology`.
 - Future capabilities should get their own schema file rather than accumulating unrelated models in an existing file.
 
 Schema files and migrations under `src/drizzle` are checked in and reviewed. Apply the initial migration to a disposable development database with `bun x drizzle-kit migrate`; do not run it from this task.
@@ -186,7 +185,7 @@ The committed initial migration is the complete V1 schema. Existing databases ar
 
 Never use `drizzle-kit push` as a production migration or as the submitted record of a schema change. Do not edit an already-deployed migration; add a new migration. Production deployment must run `bun x drizzle-kit migrate` separately because build/start do not apply migrations.
 
-Keep foundation seeds idempotent and limited to durable operational/domain records. Put realistic people and relationship fixtures in the demo seed. Use stable IDs for data referenced by tests or fixtures. Destructive reset tooling must remain guarded by `DB_MODE=local`.
+Keep permanent topology in reviewed TypeScript rather than the database. Put realistic people and relationship fixtures in the demo seed. Use stable IDs for data referenced by tests or fixtures. Destructive reset tooling must remain guarded by `DB_MODE=local`.
 
 ## UI conventions
 

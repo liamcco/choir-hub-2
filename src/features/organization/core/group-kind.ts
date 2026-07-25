@@ -1,4 +1,4 @@
-import type { GroupKind } from '@/drizzle/schema'
+import type { GroupKind } from '@/core/topology'
 
 export const groupKindOptions = ['committee', 'board'] as const satisfies readonly GroupKind[]
 

@@ -1,8 +1,7 @@
 import 'server-only'
 
 import { connection } from 'next/server'
-import { db } from '@/core/db'
-import { choir } from '@/drizzle/schema'
+import { getChoir, getGroup, listGroups, topology } from '@/core/topology'
 import { organizationService } from '@/features/organization'
 import {
   isCurrentDatedPeriod,
@@ -13,12 +12,7 @@ import { buildUserLabels } from '@/features/organization/core/labels'
 
 async function listGroupStructure(input?: { at?: Date }) {
   const at = input?.at ?? new Date()
-  const [groups, currentMemberships, choirs] = await Promise.all([
-    organizationService.groups.list(),
-    organizationService.effectiveGroupMembership.list({ at }),
-    db.select({ id: choir.id, shortName: choir.shortName }).from(choir),
-  ])
-  const choirNames = new Map(choirs.map((choir) => [choir.id, choir.shortName]))
+  const [currentMemberships] = await Promise.all([organizationService.effectiveGroupMembership.list({ at })])
   const memberIds = new Map<string, Set<string>>()
   for (const membership of currentMemberships) {
     let memberIdsForGroup = memberIds.get(membership.groupId)
@@ -29,11 +23,14 @@ async function listGroupStructure(input?: { at?: Date }) {
     memberIdsForGroup.add(membership.userId)
   }
 
-  return groups
+  return listGroups()
     .map((group) => ({
       id: group.id,
       name: group.name,
-      scope: group.scopeType === 'csk' ? 'CSK' : (choirNames.get(group.choirId ?? '') ?? group.scopeKey.toUpperCase()),
+      scope:
+        group.scope.type === 'csk'
+          ? 'CSK'
+          : (getChoir(group.scope.choirId)?.shortName ?? group.scope.choirId.toUpperCase()),
       memberCount: memberIds.get(group.id)?.size ?? 0,
     }))
     .sort(
@@ -47,20 +44,19 @@ async function listGroupStructure(input?: { at?: Date }) {
 async function getGroupDetail(groupId: string, input?: { at?: Date }) {
   await connection()
   const at = input?.at ?? new Date()
-  const [groups, memberships, users, positions] = await Promise.all([
-    organizationService.groups.list(),
+  const [memberships, users, positions] = await Promise.all([
     organizationService.effectiveGroupMembership.list({ groupId }),
     organizationService.users.list(),
-    organizationService.positions.list(),
+    Promise.resolve(topology.positions),
   ])
-  const group = groups.find((candidate) => candidate.id === groupId)
+  const group = getGroup(groupId)
   if (!group) return null
 
   const memberOptions = buildUserLabels(users).sort(
     (first, second) => first.label.localeCompare(second.label) || first.user.id.localeCompare(second.user.id),
   )
   const memberOptionsById = new Map(memberOptions.map((option) => [option.user.id, option]))
-  const positionsById = new Map(positions.map((position) => [position.id, position.name]))
+  const positionsById = new Map<string, string>(positions.map((position) => [position.id, position.name]))
   const membershipViews = memberships.flatMap((membership) => {
     const option = memberOptionsById.get(membership.userId)
     return option

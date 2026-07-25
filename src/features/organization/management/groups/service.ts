@@ -1,12 +1,9 @@
-import type { Group } from '@/drizzle/schema'
-import { organizationService } from '@/features/organization'
+import { type Group, getGroup as getTopologyGroup, listGroups as listTopologyGroups } from '@/core/topology'
 
-export async function listGroups(): Promise<Group[]> {
-  const groups = await organizationService.groups.list()
-  return groups
+export function listGroups(): readonly Group[] {
+  return listTopologyGroups()
 }
 
-export async function getGroup(groupId: string): Promise<Group | null> {
-  const group = await organizationService.groups.get(groupId)
-  return group
+export function getGroup(groupId: string): Group | null {
+  return getTopologyGroup(groupId) ?? null
 }

@@ -4,7 +4,7 @@ import { Suspense } from 'react'
 import { type NavigationRouteId, ROUTES } from '@/core/navigation/site'
 import { buttonVariants } from '@/shared/ui/button'
 import { cn } from '@/shared/utils'
-import { userIsAdmin } from '../auth/permissions.server'
+import { isUserAdmin } from '../auth/permissions.server'
 import { LogoutButton } from './logout-button'
 
 export type NavigationRoute = {
@@ -86,6 +86,6 @@ export function AppNavigation() {
 
 export async function RuntimeAppNavigation() {
   await connection()
-  const isAdmin = await userIsAdmin()
+  const isAdmin = await isUserAdmin()
   return <AppNavigationTemplate config={{ showAdmin: isAdmin }} />
 }

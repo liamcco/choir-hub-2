@@ -1,38 +1,32 @@
 import 'server-only'
 import { and, eq } from 'drizzle-orm'
 import { db } from '@/core/db'
-import {
-  choirMembership,
-  position,
-  positionAssignment as positionAssignmentTable,
-  positionScope,
-  sectionPlacement,
-} from '@/drizzle/schema'
+import { getPosition } from '@/core/topology'
+import { choirMembership, positionAssignment as positionAssignmentTable, sectionPlacement } from '@/drizzle/schema'
 import { datedPeriodsOverlap, normalizeDatedPeriodInput } from './dated-history'
 import { DateOverlapError, EntityDoesNotExistError, InvalidRelationshipError } from './errors'
 
 export const positionAssignment = {
   async start(input: { positionId: string; userId: string; startsAt?: Date; endsAt?: Date | null }) {
     const period = normalizeDatedPeriodInput({ ...input, startsAt: input.startsAt ?? new Date() })
-    const [target] = await db.select().from(position).where(eq(position.id, input.positionId)).limit(1)
-    if (!target) throw new EntityDoesNotExistError('Choose an existing Position.')
+    const target = getPosition(input.positionId)
+    if (target?.status !== 'active') throw new EntityDoesNotExistError('Choose an existing Position.')
     const existing = await db
       .select()
       .from(positionAssignmentTable)
       .where(eq(positionAssignmentTable.positionId, input.positionId))
     if (existing.some((a) => datedPeriodsOverlap(a, period)))
       throw new DateOverlapError('This Position already has a holder during that period.', { field: 'startsAt' })
-    const scopes = await db.select().from(positionScope).where(eq(positionScope.positionId, input.positionId))
-    const sectionScopes = scopes.filter((s) => s.targetType === 'section' && s.sectionId)
+    const sectionScopes = target.scopes.filter((scope) => scope.type === 'section')
     if (sectionScopes.length) {
       const placements = await db.select().from(sectionPlacement).where(eq(sectionPlacement.userId, input.userId))
-      if (!sectionScopes.some((s) => placements.some((p) => p.sectionId === s.sectionId && covers(p, period))))
+      if (!sectionScopes.some((scope) => placements.some((p) => p.sectionId === scope.sectionId && covers(p, period))))
         throw new InvalidRelationshipError('A Voice Parent must have a covering Section Placement.')
     }
-    const choirScopes = scopes.filter((s) => s.targetType === 'choir' && s.choirId)
+    const choirScopes = target.scopes.filter((scope) => scope.type === 'choir')
     if (target.name !== 'Conductor' && choirScopes.length) {
       const memberships = await db.select().from(choirMembership).where(eq(choirMembership.userId, input.userId))
-      if (!choirScopes.every((s) => memberships.some((m) => m.choirId === s.choirId && covers(m, period))))
+      if (!choirScopes.every((scope) => memberships.some((m) => m.choirId === scope.choirId && covers(m, period))))
         throw new InvalidRelationshipError('This choir-scoped Position requires matching Choir Membership.')
     }
     return db

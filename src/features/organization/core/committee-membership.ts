@@ -1,7 +1,8 @@
 import 'server-only'
 import { and, asc, eq } from 'drizzle-orm'
 import { db } from '@/core/db'
-import { group, groupMembership } from '@/drizzle/schema'
+import { getGroup } from '@/core/topology'
+import { groupMembership } from '@/drizzle/schema'
 import { datedPeriodsOverlap, normalizeDatedPeriodInput } from './dated-history'
 import { DateOverlapError, EntityDoesNotExistError, InvalidRelationshipError } from './errors'
 
@@ -19,8 +20,8 @@ export const committeeMembership = {
       .orderBy(asc(groupMembership.startsAt))
   },
   async start(input: { userId: string; groupId: string; startsAt?: Date; endsAt?: Date | null }) {
-    const [target] = await db.select().from(group).where(eq(group.id, input.groupId)).limit(1)
-    if (!target) throw new EntityDoesNotExistError('Choose an existing Group.')
+    const target = getGroup(input.groupId)
+    if (target?.status !== 'active') throw new EntityDoesNotExistError('Choose an existing Group.')
     if (target.kind !== 'committee')
       throw new InvalidRelationshipError('Explicit membership is only valid for Committee Groups.', {
         field: 'groupId',

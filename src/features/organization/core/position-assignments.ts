@@ -1,7 +1,8 @@
 import 'server-only'
 import { and, asc, eq, gt, isNull, lte, or } from 'drizzle-orm'
 import { db } from '@/core/db'
-import { position, positionAssignment, user } from '@/drizzle/schema'
+import { getPosition } from '@/core/topology'
+import { positionAssignment, user } from '@/drizzle/schema'
 import {
   assertValidDatedPeriod,
   findOverlappingDatedPeriod,
@@ -53,7 +54,8 @@ export const positionAssignments = {
   },
 }
 async function assertPositionExists(positionId: string) {
-  if (!(await db.select({ id: position.id }).from(position).where(eq(position.id, positionId)).limit(1)).length)
+  const position = getPosition(positionId)
+  if (position?.status !== 'active')
     throw new EntityDoesNotExistError('Choose an existing Position.', { field: 'positionId' })
 }
 async function assertUserExists(userId: string) {

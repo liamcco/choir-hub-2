@@ -1,36 +1,28 @@
-import type { Choir, Group, Section } from '@/drizzle/schema'
+import type { Choir, Group, Section } from '@/core/topology'
 
 export type PositionScopeView =
-  | { targetType: 'csk'; targetKey: 'csk' }
-  | { targetType: 'choir'; targetKey: string; choirId: string }
-  | { targetType: 'section'; targetKey: string; sectionId: string }
-  | { targetType: 'group'; targetKey: string; groupId: string }
+  | { type: 'csk' }
+  | { type: 'choir'; choirId: string }
+  | { type: 'section'; sectionId: string }
+  | { type: 'group'; groupId: string }
 
 export function formatPositionScopeLabel(
-  scopes: PositionScopeView[] | Group[],
-  references: { choirs: Choir[]; sections: Section[]; groups: Group[] } | Group[],
+  scopes: readonly PositionScopeView[],
+  references: { choirs: readonly Choir[]; sections: readonly Section[]; groups: readonly Group[] },
 ) {
-  if (Array.isArray(references))
-    return scopes.length
-      ? (scopes as Group[])
-          .map((group) => group.name)
-          .sort()
-          .join(' · ')
-      : ''
-  const typedScopes = scopes as PositionScopeView[]
-  const choirById = new Map(references.choirs.map((choir) => [choir.id, choir]))
-  const sectionById = new Map(references.sections.map((section) => [section.id, section]))
-  const groupById = new Map(references.groups.map((group) => [group.id, group]))
-  return typedScopes
+  const choirById = new Map<string, Choir>(references.choirs.map((choir) => [choir.id, choir]))
+  const sectionById = new Map<string, Section>(references.sections.map((section) => [section.id, section]))
+  const groupById = new Map<string, Group>(references.groups.map((group) => [group.id, group]))
+  return scopes
     .map((scope) => {
-      if (scope.targetType === 'csk') return 'CSK'
-      if (scope.targetType === 'choir') return choirById.get(scope.choirId)?.shortName ?? scope.targetKey
-      if (scope.targetType === 'section') {
+      if (scope.type === 'csk') return 'CSK'
+      if (scope.type === 'choir') return choirById.get(scope.choirId)?.shortName ?? scope.choirId
+      if (scope.type === 'section') {
         const section = sectionById.get(scope.sectionId)
         const choir = section ? choirById.get(section.choirId) : undefined
-        return section && choir ? formatSectionName(choir.shortName, section.name) : scope.targetKey
+        return section && choir ? formatSectionName(choir.shortName, section.name) : scope.sectionId
       }
-      return groupById.get(scope.groupId)?.name ?? scope.targetKey
+      return groupById.get(scope.groupId)?.name ?? scope.groupId
     })
     .sort((a, b) => a.localeCompare(b))
     .join(' · ')

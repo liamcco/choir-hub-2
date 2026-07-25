@@ -32,6 +32,10 @@ _Avoid_: User-defined group type, tag
 The standing organizational reach of a Group: either all of CSK or exactly one Choir. Groups do not contain other Groups, and Sections do not participate in Group Scope.
 _Avoid_: Parent Group, Group hierarchy, Section
 
+**Permanent Organization Topology**:
+The fixed set of Choirs, Sections, Groups, Positions, and Position Scopes that describes CSK's standing organization. It changes when CSK's real organization changes, not as part of ordinary member administration.
+_Avoid_: Configurable organization, tenant configuration, reference records
+
 **User**:
 A person represented in the choir domain and their login identity, managed by Better Auth. Every User is a choir person from creation and has one overall status, regardless of how many Groups they belong to.
 _Avoid_: Auth User, Member, account

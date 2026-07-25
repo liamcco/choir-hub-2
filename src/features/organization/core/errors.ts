@@ -1,6 +1,6 @@
 import { FormError } from '@/shared/forms/errors'
 
-export { DuplicateEntityError, InvalidRelationshipError } from '@/core/reference-catalog/errors'
+export { DuplicateEntityError, InvalidRelationshipError } from '@/core/topology/errors'
 
 export class OrganizationOperationError extends FormError {
   readonly field?: string

@@ -10,7 +10,6 @@ const DEFAULTS = {
 const MENU = [
   ['admin-bootstrap', 'Bootstrap admin account'],
   ['demo-seed', 'Run demo seed'],
-  ['foundation-seed', 'Run foundation seed'],
   ['reset-db', `Reset ${process.env.DB_MODE === 'prod' ? 'production' : 'local'} database`],
 ] as const
 
@@ -111,9 +110,6 @@ async function mainCommand(command: string): Promise<void> {
     case 'demo-seed':
       await run('bun', ['scripts/demo-seed.ts'])
       return
-    case 'foundation-seed':
-      await run('bun', ['run', 'tsx', 'src/drizzle/seed.ts'], databaseEnvironment())
-      return
     case 'reset-db': {
       if (process.env.DB_MODE === 'prod') {
         const confirmed = await p.confirm({ message: 'ARE YOU SURE?' })
@@ -122,7 +118,7 @@ async function mainCommand(command: string): Promise<void> {
       await run('bun', ['scripts/reset-db.ts'], databaseEnvironment())
       const seed = await p.confirm({ message: 'would you like to run the seed script as well?' })
       if (p.isCancel(seed)) return
-      if (seed) await run('bun', ['run', 'tsx', 'src/drizzle/seed.ts'], databaseEnvironment())
+      if (seed) await run('bun', ['scripts/demo-seed.ts'], databaseEnvironment())
       return
     }
     default:

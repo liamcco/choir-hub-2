@@ -2,7 +2,8 @@ import 'server-only'
 
 import { and, asc, eq, gt, isNull, lte, or } from 'drizzle-orm'
 import { db } from '@/core/db'
-import { choir, choirMembership, section, sectionPlacement, user } from '@/drizzle/schema'
+import { getChoir, getSection, type VoiceType } from '@/core/topology'
+import { choirMembership, sectionPlacement, user } from '@/drizzle/schema'
 import { assertValidDatedPeriod, datedPeriodsOverlap, normalizeDatedPeriodInput } from './dated-history'
 import { DateOverlapError, EntityDoesNotExistError, InvalidRelationshipError } from './errors'
 
@@ -25,8 +26,9 @@ export const homePlacement = {
   },
   async startChoirMembership(input: { userId: string; choirId: string; startsAt?: Date; endsAt?: Date | null }) {
     const period = normalizeDatedPeriodInput({ ...input, startsAt: input.startsAt ?? new Date() })
-    await assertExists(user, input.userId, 'User')
-    await assertExists(choir, input.choirId, 'Choir')
+    await assertUserExists(input.userId)
+    const target = getChoir(input.choirId)
+    if (target?.status !== 'active') throw new EntityDoesNotExistError('Choose an existing Choir.')
     await assertNoOverlap(await this.listChoirMemberships({ userId: input.userId }), period, 'Choir Membership')
     return db
       .insert(choirMembership)
@@ -37,18 +39,15 @@ export const homePlacement = {
   async startSectionPlacement(input: {
     userId: string
     sectionId: string
-    voiceType: 'S' | 'S1' | 'S2' | 'A' | 'A1' | 'A2' | 'T' | 'T1' | 'T2' | 'B' | 'B1' | 'B2'
+    voiceType: VoiceType
     startsAt?: Date
     endsAt?: Date | null
   }) {
     const period = normalizeDatedPeriodInput({ ...input, startsAt: input.startsAt ?? new Date() })
-    const [target] = await db.select().from(section).where(eq(section.id, input.sectionId)).limit(1)
-    if (!target) throw new EntityDoesNotExistError('Choose an existing Section.', { field: 'sectionId' })
-    if (
-      !/^(S|A|T|B)[12]$/.test(input.voiceType) ||
-      input.voiceType[0] !== target.voiceType[0] ||
-      (target.voiceType.length === 2 && input.voiceType !== target.voiceType)
-    )
+    const target = getSection(input.sectionId)
+    if (target?.status !== 'active')
+      throw new EntityDoesNotExistError('Choose an existing Section.', { field: 'sectionId' })
+    if (!target.allowedVoiceTypes.includes(input.voiceType as never))
       throw new InvalidRelationshipError('Choose a Voice Type allowed by the Section.', { field: 'voiceType' })
     const memberships = await this.listChoirMemberships({ userId: input.userId })
     if (!memberships.some((m) => m.choirId === target.choirId && covers(m, period)))
@@ -81,9 +80,9 @@ export const homePlacement = {
 function covers(outer: Period, inner: Period) {
   return outer.startsAt <= inner.startsAt && (!outer.endsAt || (inner.endsAt ? outer.endsAt >= inner.endsAt : false))
 }
-async function assertExists(table: typeof user | typeof choir, id: string, label: string) {
-  if (!(await db.select({ id: table.id }).from(table).where(eq(table.id, id)).limit(1)).length)
-    throw new EntityDoesNotExistError(`Choose an existing ${label}.`)
+async function assertUserExists(id: string) {
+  if (!(await db.select({ id: user.id }).from(user).where(eq(user.id, id)).limit(1)).length)
+    throw new EntityDoesNotExistError('Choose an existing User.')
 }
 async function assertNoOverlap(periods: Period[], period: Period, label: string) {
   if (periods.some((candidate) => datedPeriodsOverlap(candidate, period)))

@@ -31,13 +31,13 @@ The current app includes email/password authentication, account password self-se
 
    Alternatively, use any PostgreSQL instance you control and set `DATABASE_URL` in `.env` to its connection string. The `POSTGRES_*` variables in `.env` configure only the bundled Docker container; you can reuse those credentials for your own local database or replace them as needed.
 
-4. Create the database schema and generate the Drizzle client:
+4. Apply the committed database migration:
 
    ```bash
-   bun run db:push
+   bun x drizzle-kit migrate
    ```
 
-   Until the repository does not yet contain a committed `src/drizzle/migrations` history, `db push` is the current fresh-database bootstrap. It is for local setup only; contributed schema changes must use migrations as described in [CONTRIBUTING.md](./CONTRIBUTING.md#drizzle-schema-and-migrations).
+   If your disposable local database was created by an older `db:push`, recreate it before migrating. For the bundled Docker database, use `docker compose down -v` followed by `docker compose up -d db`.
 
 5. Optionally load development data and create an admin account:
 
@@ -45,7 +45,7 @@ The current app includes email/password authentication, account password self-se
    bun run cli
    ```
 
-   The interactive CLI can run the foundation seed, demo seed, admin bootstrap, or local database reset. The default bootstrap account is `admin@example.com` / `password` with the name `Local Admin`; use custom values for anything other than a disposable local database. The reset command refuses to run unless `DB_MODE=local` and relies on Drizzle migration history.
+   The interactive CLI can run the demo seed, admin bootstrap, or local database reset. The default bootstrap account is `admin@example.com` / `password` with the name `Local Admin`; use custom values for anything other than a disposable local database. The reset command refuses to run unless `DB_MODE=local` and relies on Drizzle migration history.
 
 ## Local development
 
@@ -68,7 +68,7 @@ Useful database commands:
 ```bash
 bun x drizzle-kit studio
 bun x drizzle-kit check
-bun run db:push
+bun x drizzle-kit migrate
 ```
 
 Drizzle schema definitions are checked in under `src/drizzle/schema`; the build does not generate or mutate database artifacts.
@@ -128,7 +128,7 @@ Database migrations are not applied by `build` or `start`. Once migration files 
 bun x drizzle-kit migrate
 ```
 
-At present there is no committed migration history, so an existing production database must already match the Drizzle schema or be provisioned through an explicitly reviewed operational process. Do not run `drizzle-kit push` against production as an implicit deployment step.
+The repository includes a committed initial migration. Existing production databases from before this migration history must be provisioned or recreated through an explicitly reviewed operational process. Do not run `drizzle-kit push` against production as an implicit deployment step.
 
 Before deployment, run the repository's full verification command:
 

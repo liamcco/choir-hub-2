@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test'
-import { GroupKind, MemberStatus } from '@/drizzle/schema'
+import { GroupKind } from '@/core/topology'
+import { MemberStatus } from '@/drizzle/schema'
 
 const { cleanup, render, screen } = await import('@testing-library/react')
 mock.module('../actions', () => ({

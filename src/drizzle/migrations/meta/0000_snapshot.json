@@ -1,5 +1,5 @@
 {
-  "id": "d4c82b44-a5fb-4d71-9113-d6f6aab74d03",
+  "id": "6986c428-7c77-4eee-b36f-f683166d3d3d",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -630,48 +630,6 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.Choir": {
-      "name": "Choir",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "shortName": {
-          "name": "shortName",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "Choir_name_unique": {
-          "name": "Choir_name_unique",
-          "nullsNotDistinct": false,
-          "columns": ["name"]
-        },
-        "Choir_shortName_unique": {
-          "name": "Choir_shortName_unique",
-          "nullsNotDistinct": false,
-          "columns": ["shortName"]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "public.ChoirMembership": {
       "name": "ChoirMembership",
       "schema": "",
@@ -761,15 +719,6 @@
           "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
-        },
-        "ChoirMembership_choirId_Choir_id_fk": {
-          "name": "ChoirMembership_choirId_Choir_id_fk",
-          "tableFrom": "ChoirMembership",
-          "tableTo": "Choir",
-          "columnsFrom": ["choirId"],
-          "columnsTo": ["id"],
-          "onDelete": "restrict",
-          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -785,94 +734,6 @@
         "ChoirMembership_valid_period_check": {
           "name": "ChoirMembership_valid_period_check",
           "value": "\"endsAt\" IS NULL OR \"endsAt\" > \"startsAt\""
-        }
-      },
-      "isRLSEnabled": false
-    },
-    "public.Group": {
-      "name": "Group",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "kind": {
-          "name": "kind",
-          "type": "GroupKind",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "scopeType": {
-          "name": "scopeType",
-          "type": "GroupScopeType",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "scopeKey": {
-          "name": "scopeKey",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "choirId": {
-          "name": "choirId",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {
-        "Group_choir_id_idx": {
-          "name": "Group_choir_id_idx",
-          "columns": [
-            {
-              "expression": "choirId",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "Group_choirId_Choir_id_fk": {
-          "name": "Group_choirId_Choir_id_fk",
-          "tableFrom": "Group",
-          "tableTo": "Choir",
-          "columnsFrom": ["choirId"],
-          "columnsTo": ["id"],
-          "onDelete": "restrict",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "Group_scope_key_name_key": {
-          "name": "Group_scope_key_name_key",
-          "nullsNotDistinct": false,
-          "columns": ["scopeKey", "name"]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {
-        "Group_valid_scope_check": {
-          "name": "Group_valid_scope_check",
-          "value": "(\"scopeType\" = 'csk' AND \"scopeKey\" = 'csk' AND \"choirId\" IS NULL) OR (\"scopeType\" = 'choir' AND \"scopeKey\" = \"choirId\" AND \"choirId\" IS NOT NULL)"
         }
       },
       "isRLSEnabled": false
@@ -966,15 +827,6 @@
           "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
-        },
-        "GroupMembership_groupId_Group_id_fk": {
-          "name": "GroupMembership_groupId_Group_id_fk",
-          "tableFrom": "GroupMembership",
-          "tableTo": "Group",
-          "columnsFrom": ["groupId"],
-          "columnsTo": ["id"],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -992,31 +844,6 @@
           "value": "\"endsAt\" IS NULL OR \"endsAt\" > \"startsAt\""
         }
       },
-      "isRLSEnabled": false
-    },
-    "public.Position": {
-      "name": "Position",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
       "isRLSEnabled": false
     },
     "public.PositionAssignment": {
@@ -1100,15 +927,6 @@
         }
       },
       "foreignKeys": {
-        "PositionAssignment_positionId_Position_id_fk": {
-          "name": "PositionAssignment_positionId_Position_id_fk",
-          "tableFrom": "PositionAssignment",
-          "tableTo": "Position",
-          "columnsFrom": ["positionId"],
-          "columnsTo": ["id"],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
         "PositionAssignment_userId_user_id_fk": {
           "name": "PositionAssignment_userId_user_id_fk",
           "tableFrom": "PositionAssignment",
@@ -1136,208 +954,6 @@
       },
       "isRLSEnabled": false
     },
-    "public.PositionScope": {
-      "name": "PositionScope",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()::text"
-        },
-        "positionId": {
-          "name": "positionId",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "targetType": {
-          "name": "targetType",
-          "type": "PositionScopeTargetType",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "targetKey": {
-          "name": "targetKey",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "choirId": {
-          "name": "choirId",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "sectionId": {
-          "name": "sectionId",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "groupId": {
-          "name": "groupId",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {
-        "PositionScope_target_key_idx": {
-          "name": "PositionScope_target_key_idx",
-          "columns": [
-            {
-              "expression": "targetType",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "targetKey",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "PositionScope_positionId_Position_id_fk": {
-          "name": "PositionScope_positionId_Position_id_fk",
-          "tableFrom": "PositionScope",
-          "tableTo": "Position",
-          "columnsFrom": ["positionId"],
-          "columnsTo": ["id"],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "PositionScope_choirId_Choir_id_fk": {
-          "name": "PositionScope_choirId_Choir_id_fk",
-          "tableFrom": "PositionScope",
-          "tableTo": "Choir",
-          "columnsFrom": ["choirId"],
-          "columnsTo": ["id"],
-          "onDelete": "restrict",
-          "onUpdate": "no action"
-        },
-        "PositionScope_sectionId_Section_id_fk": {
-          "name": "PositionScope_sectionId_Section_id_fk",
-          "tableFrom": "PositionScope",
-          "tableTo": "Section",
-          "columnsFrom": ["sectionId"],
-          "columnsTo": ["id"],
-          "onDelete": "restrict",
-          "onUpdate": "no action"
-        },
-        "PositionScope_groupId_Group_id_fk": {
-          "name": "PositionScope_groupId_Group_id_fk",
-          "tableFrom": "PositionScope",
-          "tableTo": "Group",
-          "columnsFrom": ["groupId"],
-          "columnsTo": ["id"],
-          "onDelete": "restrict",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "PositionScope_position_id_target_key_key": {
-          "name": "PositionScope_position_id_target_key_key",
-          "nullsNotDistinct": false,
-          "columns": ["positionId", "targetType", "targetKey"]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {
-        "PositionScope_valid_target_check": {
-          "name": "PositionScope_valid_target_check",
-          "value": "(\"targetType\" = 'csk' AND \"targetKey\" = 'csk' AND \"choirId\" IS NULL AND \"sectionId\" IS NULL AND \"groupId\" IS NULL) OR (\"targetType\" = 'choir' AND \"targetKey\" = \"choirId\" AND \"choirId\" IS NOT NULL AND \"sectionId\" IS NULL AND \"groupId\" IS NULL) OR (\"targetType\" = 'section' AND \"targetKey\" = \"sectionId\" AND \"sectionId\" IS NOT NULL AND \"choirId\" IS NULL AND \"groupId\" IS NULL) OR (\"targetType\" = 'group' AND \"targetKey\" = \"groupId\" AND \"groupId\" IS NOT NULL AND \"choirId\" IS NULL AND \"sectionId\" IS NULL)"
-        }
-      },
-      "isRLSEnabled": false
-    },
-    "public.Section": {
-      "name": "Section",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "choirId": {
-          "name": "choirId",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "voiceType": {
-          "name": "voiceType",
-          "type": "SectionVoiceType",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {
-        "Section_choir_id_idx": {
-          "name": "Section_choir_id_idx",
-          "columns": [
-            {
-              "expression": "choirId",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "Section_choirId_Choir_id_fk": {
-          "name": "Section_choirId_Choir_id_fk",
-          "tableFrom": "Section",
-          "tableTo": "Choir",
-          "columnsFrom": ["choirId"],
-          "columnsTo": ["id"],
-          "onDelete": "restrict",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "Section_choir_id_name_key": {
-          "name": "Section_choir_id_name_key",
-          "nullsNotDistinct": false,
-          "columns": ["choirId", "name"]
-        },
-        "Section_choir_id_voice_type_key": {
-          "name": "Section_choir_id_voice_type_key",
-          "nullsNotDistinct": false,
-          "columns": ["choirId", "voiceType"]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "public.SectionPlacement": {
       "name": "SectionPlacement",
       "schema": "",
@@ -1358,6 +974,13 @@
         "sectionId": {
           "name": "sectionId",
           "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "voiceType": {
+          "name": "voiceType",
+          "type": "VoiceType",
+          "typeSchema": "public",
           "primaryKey": false,
           "notNull": true
         },
@@ -1427,15 +1050,6 @@
           "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
-        },
-        "SectionPlacement_sectionId_Section_id_fk": {
-          "name": "SectionPlacement_sectionId_Section_id_fk",
-          "tableFrom": "SectionPlacement",
-          "tableTo": "Section",
-          "columnsFrom": ["sectionId"],
-          "columnsTo": ["id"],
-          "onDelete": "restrict",
-          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -1461,26 +1075,6 @@
       "name": "MemberStatus",
       "schema": "public",
       "values": ["active", "passive", "former"]
-    },
-    "public.GroupKind": {
-      "name": "GroupKind",
-      "schema": "public",
-      "values": ["committee", "board"]
-    },
-    "public.GroupScopeType": {
-      "name": "GroupScopeType",
-      "schema": "public",
-      "values": ["csk", "choir"]
-    },
-    "public.PositionScopeTargetType": {
-      "name": "PositionScopeTargetType",
-      "schema": "public",
-      "values": ["csk", "choir", "section", "group"]
-    },
-    "public.SectionVoiceType": {
-      "name": "SectionVoiceType",
-      "schema": "public",
-      "values": ["S1", "S2", "A1", "A2", "T1", "T2", "B1", "B2"]
     },
     "public.VoiceType": {
       "name": "VoiceType",

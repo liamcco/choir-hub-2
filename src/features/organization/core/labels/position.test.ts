@@ -1,16 +1,16 @@
 import { describe, expect, test } from 'bun:test'
-import type { Group } from '@/drizzle/schema'
+import { topology } from '@/core/topology'
 import { formatPositionLabel, formatPositionScopeLabel } from './position'
 
 describe('Position scope labels', () => {
   test('renders only the supplied Group scopes', () => {
-    const groups: Group[] = [
-      { id: 'board', name: 'Board', kind: 'board', scopeType: 'csk', scopeKey: 'csk', choirId: null },
-      { id: 'party', name: 'Party Mastery', kind: 'committee', scopeType: 'csk', scopeKey: 'csk', choirId: null },
-      { id: 'web', name: 'Web Mastery', kind: 'committee', scopeType: 'csk', scopeKey: 'csk', choirId: null },
-    ]
-
-    expect(formatPositionScopeLabel([groups[1]], groups)).toBe('Party Mastery')
+    expect(
+      formatPositionScopeLabel([{ type: 'group', groupId: 'party-mastery' }], {
+        choirs: topology.choirs,
+        sections: topology.sections,
+        groups: topology.groups,
+      }),
+    ).toBe('Party Mastery')
   })
 
   test('omits the scope suffix when a Position has no scopes', () => {
@@ -21,40 +21,24 @@ describe('Position scope labels', () => {
     expect(
       formatPositionScopeLabel(
         [
-          { targetType: 'group', targetKey: 'party', groupId: 'party' },
-          { targetType: 'csk', targetKey: 'csk' },
-          { targetType: 'choir', targetKey: 'kk', choirId: 'kk' },
-          { targetType: 'section', targetKey: 'kk-t1', sectionId: 'kk-t1' },
+          { type: 'group', groupId: 'party-mastery' },
+          { type: 'csk' },
+          { type: 'choir', choirId: 'kk' },
+          { type: 'section', sectionId: 'kk-t' },
         ],
-        {
-          choirs: [{ id: 'kk', name: 'Kammarkören', shortName: 'KK' }],
-          sections: [{ id: 'kk-t1', choirId: 'kk', name: 'T1', voiceType: 'T1' }],
-          groups: [
-            { id: 'party', name: 'Party Mastery', kind: 'committee', scopeType: 'csk', scopeKey: 'csk', choirId: null },
-          ],
-        },
+        { choirs: topology.choirs, sections: topology.sections, groups: topology.groups },
       ),
-    ).toBe('CSK · KK · KKT1 · Party Mastery')
+    ).toBe('CSK · KK · KKT · Party Mastery')
   })
 
   test('renders every full choir Section name without a space', () => {
     expect(
       formatPositionScopeLabel(
         [
-          { targetType: 'section', targetKey: 'dk-a1', sectionId: 'dk-a1' },
-          { targetType: 'section', targetKey: 'kk-b', sectionId: 'kk-b' },
+          { type: 'section', sectionId: 'dk-a1' },
+          { type: 'section', sectionId: 'kk-b' },
         ],
-        {
-          choirs: [
-            { id: 'dk', name: 'Damkören', shortName: 'DK' },
-            { id: 'kk', name: 'Kammarkören', shortName: 'KK' },
-          ],
-          sections: [
-            { id: 'dk-a1', choirId: 'dk', name: 'A1', voiceType: 'A1' },
-            { id: 'kk-b', choirId: 'kk', name: 'B', voiceType: 'B' },
-          ],
-          groups: [],
-        },
+        { choirs: topology.choirs, sections: topology.sections, groups: topology.groups },
       ),
     ).toBe('DKA1 · KKB')
   })
