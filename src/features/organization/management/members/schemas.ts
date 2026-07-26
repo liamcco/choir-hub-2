@@ -9,5 +9,3 @@ export const CreateMemberAccountFormSchema = z.object({
 })
 
 export const MemberStatusSchema = z.enum(MemberStatus)
-
-export const AccountAccessStateSchema = z.enum(['enabled', 'disabled'])

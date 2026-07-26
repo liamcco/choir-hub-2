@@ -6,7 +6,7 @@ import { auth } from '@/core/auth/auth'
 import { listGroups, listPositions, topology } from '@/core/topology'
 import { type FineVoice, isFineVoice, type Voice } from '@/core/types'
 import { organizationService } from '@/features/organization'
-import { isCurrentDatedPeriod, isHistoricalDatedPeriod } from '@/features/organization/core/dated-history'
+import { isCurrentDatedPeriod } from '@/features/organization/core/dated-history'
 import {
   buildUserLabels,
   formatFineGrainedPlacementName,
@@ -48,10 +48,10 @@ async function getDetail(userId: string, input?: { at?: Date }) {
   const [account, user, memberships, assignments, choirMemberships, placements] = await Promise.all([
     auth.api.getUser({ headers: requestHeaders, query: { id: userId } }),
     organizationService.users.find({ userId }),
-    organizationService.committeeMembership.list({ userId }),
-    organizationService.positionAssignments.list({ userId }),
-    organizationService.homePlacement.listChoirMemberships({ userId }),
-    organizationService.homePlacement.listSectionPlacements({ userId }),
+    organizationService.committeeMembership.list({ userId, at }),
+    organizationService.positionAssignments.list({ userId, at }),
+    organizationService.homePlacement.listChoirMemberships({ userId, at }),
+    organizationService.homePlacement.listSectionPlacements({ userId, at }),
   ])
   if (!account || !user) return null
 
@@ -114,18 +114,6 @@ async function getDetail(userId: string, input?: { at?: Date }) {
           }
         : null,
     },
-    choirMembershipHistory: choirMemberships.map((item) => ({
-      ...item,
-      choirName: choirById.get(item.choirId)?.name ?? 'Unknown Choir',
-    })),
-    sectionPlacementHistory: placements.map((item) => ({
-      ...item,
-      sectionName: formatPlacementLabel(item, sectionById, choirById) ?? 'Unknown Section',
-    })),
-    accessState: account.banned ? ('disabled' as const) : ('enabled' as const),
-    accessRole: account.role || 'user',
-    createdAt: user.createdAt,
-    updatedAt: user.updatedAt,
     groups: listGroups()
       .map((group) => ({ id: group.id, name: formatGroupPath(groups, group) }))
       .sort((first, second) => first.name.localeCompare(second.name) || first.id.localeCompare(second.id)),
@@ -138,9 +126,6 @@ async function getDetail(userId: string, input?: { at?: Date }) {
     currentMemberships: membershipViews
       .filter((membership) => isCurrentDatedPeriod({ ...membership, endsAt: membership.endsAt ?? null }, at))
       .sort((first, second) => first.groupName.localeCompare(second.groupName) || first.id.localeCompare(second.id)),
-    historicalMemberships: membershipViews
-      .filter((membership) => isHistoricalDatedPeriod({ ...membership, endsAt: membership.endsAt ?? null }, at))
-      .sort(compareEndedPeriods),
     currentAssignments: assignmentViews
       .filter((assignment) => isCurrentDatedPeriod({ ...assignment, endsAt: assignment.endsAt ?? null }, at))
       .sort(
@@ -149,9 +134,6 @@ async function getDetail(userId: string, input?: { at?: Date }) {
           first.scopeLabel.localeCompare(second.scopeLabel) ||
           first.id.localeCompare(second.id),
       ),
-    historicalAssignments: assignmentViews
-      .filter((assignment) => isHistoricalDatedPeriod({ ...assignment, endsAt: assignment.endsAt ?? null }, at))
-      .sort(compareEndedPeriods),
   }
 }
 
@@ -173,8 +155,4 @@ function formatPlacementLabel(
 function formatPlacementVoice(placement: { voice: Voice } | undefined): FineVoice | null {
   if (!placement) return null
   return isFineVoice(placement.voice) ? placement.voice : null
-}
-
-function compareEndedPeriods(first: { id: string; endsAt?: Date }, second: { id: string; endsAt?: Date }) {
-  return (second.endsAt?.getTime() ?? 0) - (first.endsAt?.getTime() ?? 0) || first.id.localeCompare(second.id)
 }

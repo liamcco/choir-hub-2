@@ -4,7 +4,7 @@ import { headers } from 'next/headers'
 import { auth } from '@/core/auth/auth'
 import { db } from '@/core/db'
 import { type MemberStatus, user } from '@/drizzle/schema'
-export type AccountAccessState = 'enabled' | 'disabled'
+
 async function createUser(input: { name: string; email: string; password: string; status: MemberStatus }) {
   const requestHeaders = await headers()
   const result = await auth.api.createUser({
@@ -32,10 +32,4 @@ async function updateMemberStatus(userId: string, status: MemberStatus) {
     .returning()
     .then((rows) => rows[0])
 }
-async function updateAccountAccess(userId: string, accessState: AccountAccessState) {
-  const requestHeaders = await headers()
-  return accessState === 'disabled'
-    ? auth.api.banUser({ headers: requestHeaders, body: { userId, banReason: 'Access disabled by an admin.' } })
-    : auth.api.unbanUser({ headers: requestHeaders, body: { userId } })
-}
-export const userService = { createUser, updateMemberStatus, updateAccountAccess }
+export const userService = { createUser, updateMemberStatus }

@@ -35,7 +35,7 @@ export function AdminDialog({
     <Dialog open={isHydrated} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
         className={cn(
-          'inset-0 top-0 left-0 h-dvh max-h-none max-w-none translate-x-0 translate-y-0 grid-rows-[auto_minmax(0,1fr)] gap-0 rounded-none p-0 sm:top-1/2 sm:left-1/2 sm:h-[min(52rem,calc(100dvh-3rem))] sm:max-w-5xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-xl',
+          'inset-0 top-0 left-0 flex h-dvh max-h-none max-w-none translate-x-0 translate-y-0 flex-col gap-0 rounded-none p-0 sm:top-1/2 sm:left-1/2 sm:h-auto sm:max-h-[calc(100dvh-3rem)] sm:max-w-xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-xl',
           className,
         )}
         showCloseButton={false}

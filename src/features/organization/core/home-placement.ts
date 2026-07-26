@@ -11,18 +11,38 @@ import { DateOverlapError, EntityDoesNotExistError, InvalidRelationshipError } f
 type Period = { startsAt: Date; endsAt: Date | null }
 
 export const homePlacement = {
-  listChoirMemberships(input?: { userId?: string }) {
+  listChoirMemberships(input?: { userId?: string; at?: Date }) {
     return db
       .select()
       .from(choirMembership)
-      .where(input?.userId ? eq(choirMembership.userId, input.userId) : undefined)
+      .where(
+        and(
+          input?.userId ? eq(choirMembership.userId, input.userId) : undefined,
+          input?.at
+            ? and(
+                lte(choirMembership.startsAt, input.at),
+                or(isNull(choirMembership.endsAt), gt(choirMembership.endsAt, input.at)),
+              )
+            : undefined,
+        ),
+      )
       .orderBy(asc(choirMembership.startsAt))
   },
-  listSectionPlacements(input?: { userId?: string }) {
+  listSectionPlacements(input?: { userId?: string; at?: Date }) {
     return db
       .select()
       .from(sectionPlacement)
-      .where(input?.userId ? eq(sectionPlacement.userId, input.userId) : undefined)
+      .where(
+        and(
+          input?.userId ? eq(sectionPlacement.userId, input.userId) : undefined,
+          input?.at
+            ? and(
+                lte(sectionPlacement.startsAt, input.at),
+                or(isNull(sectionPlacement.endsAt), gt(sectionPlacement.endsAt, input.at)),
+              )
+            : undefined,
+        ),
+      )
       .orderBy(asc(sectionPlacement.startsAt))
   },
   async startChoirMembership(input: { userId: string; choirId: string; startsAt?: Date; endsAt?: Date | null }) {

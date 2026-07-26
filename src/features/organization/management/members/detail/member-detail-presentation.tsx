@@ -10,7 +10,7 @@ export function MemberDetailDialog({ title = 'User', children }: { title?: React
 
   return (
     <AdminDialog
-      className="sm:max-w-6xl"
+      className="sm:max-w-xl"
       contentLabel="User detail content"
       description="User detail"
       onClose={() => router.replace(pathname, { scroll: false })}

@@ -8,7 +8,7 @@ import { ROUTES } from '@/core/navigation/site'
 import { userService } from '@/features/organization/management/members/service'
 import { handleFormError } from '@/shared/forms/errors'
 import type { FormState } from '@/shared/forms/types'
-import { AccountAccessStateSchema, CreateMemberAccountFormSchema, MemberStatusSchema } from './schemas'
+import { CreateMemberAccountFormSchema, MemberStatusSchema } from './schemas'
 export type UserFormState = FormState<typeof CreateMemberAccountFormSchema> & { createdId?: string }
 export async function createUserAction(_previousState: UserFormState, formData: FormData): Promise<UserFormState> {
   const actor = await requireAdmin()
@@ -47,18 +47,5 @@ export async function updateMemberStatusAction(userId: string, formData: FormDat
     action: 'user.updateMemberStatus',
     subject: { type: 'user', id: userId },
   })
-  revalidatePath(ROUTES.adminUsers)
-}
-export async function updateAccountAccessAction(userId: string, formData: FormData) {
-  const actor = await requireAdmin()
-  const input = AccountAccessStateSchema.safeParse(String(formData.get('accessState')))
-  if (!input.success) throw new Error(z.prettifyError(input.error))
-  await userService.updateAccountAccess(userId, input.data)
-  audit.adminActionCompleted({
-    actorUserId: actor.userId,
-    action: `account.${input.data}`,
-    subject: { type: 'user', id: userId },
-  })
-  audit.accountAccessChanged({ actorUserId: actor.userId, action: `account.${input.data}`, subjectUserId: userId })
   revalidatePath(ROUTES.adminUsers)
 }
