@@ -31,29 +31,29 @@ The goal is production-usable, polished, and ready to grow. Do not expand v1 int
   - [x] current-actor Group Membership and Position Assignment predicates
   - [x] rollout verification
 - [x] Hide admin navigation from authenticated non-admin users and return a forbidden result for authenticated non-admin access to `/admin` routes.
-- [] Run a scoped security hardening pass for the current surface:
-  - [] auth/session configuration
-  - [] public route exposure
-  - [] admin route and mutation enforcement
-  - [] CSRF/server-action assumptions
-  - [] sensitive data in logs and errors
-  - [] production headers or hosting-provided equivalents
-  - [] dependency and config review for launch-critical risk
+- [x] Run a scoped security hardening pass for the current surface:
+  - [x] auth/session configuration
+  - [x] public route exposure
+  - [x] admin route and mutation enforcement
+  - [x] CSRF/server-action assumptions
+  - [x] sensitive data in logs and errors
+  - [x] production headers or hosting-provided equivalents
+  - [x] dependency and config review for launch-critical risk
 
 ## Product Surface Polish
 
-- [] Greatly revise the admin UI. It should be easy to use for repeated management work, not merely functionally complete.
-- [] Add a logout button to the authenticated navbar.
-- [] Add a product-quality pass for empty, loading, error, and forbidden states across login, account, organization overview, and admin screens.
-- [] Add polished pending states and mutation feedback for admin workflows.
-- [] Ensure responsive behavior works on practical mobile and desktop widths, especially admin tables, forms, dialogs, and navigation.
-- [] Include accessibility QA for the current surface:
-  - [] keyboard navigation
-  - [] visible focus states
-  - [] form labels and errors
-  - [] dialog/menu usability
-  - [] readable contrast
-  - [] layouts that do not overflow or overlap
+- [x] Greatly revise the admin UI. It should be easy to use for repeated management work, not merely functionally complete.
+- [x] Add a logout button to the authenticated navbar.
+- [x] Add a product-quality pass for empty, loading, error, and forbidden states across login, account, organization overview, and admin screens.
+- [x] Add polished pending states and mutation feedback for admin workflows.
+- [x] Ensure responsive behavior works on practical mobile and desktop widths, especially admin tables, forms, dialogs, and navigation.
+- [x] Include accessibility QA for the current surface:
+  - [x] keyboard navigation
+  - [x] visible focus states
+  - [x] form labels and errors
+  - [x] dialog/menu usability
+  - [x] readable contrast
+  - [x] layouts that do not overflow or overlap
 
 ## Next.js Instant Navigation
 
