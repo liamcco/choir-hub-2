@@ -18,12 +18,18 @@ import {
   type EndGroupMembershipFormState,
   endGroupMembershipAction,
 } from './actions'
-import type { GroupMembershipManagementState, GroupMembershipPeriod } from './service'
+import type { GroupMembershipPeriod, listGroupMembershipGroups, listGroupMembershipUsers } from './service'
 
 const createInitialState: CreateGroupMembershipFormState = {}
 const endInitialState: EndGroupMembershipFormState = {}
 
-export function CreateGroupMembershipForm({ groups, users }: Pick<GroupMembershipManagementState, 'groups' | 'users'>) {
+export function CreateGroupMembershipForm({
+  groups,
+  users,
+}: {
+  groups: ReturnType<typeof listGroupMembershipGroups>
+  users: Awaited<ReturnType<typeof listGroupMembershipUsers>>
+}) {
   const [state, formAction, isPending] = useActionState(createGroupMembershipAction, createInitialState)
 
   return (

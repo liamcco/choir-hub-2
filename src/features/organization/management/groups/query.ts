@@ -1,7 +1,14 @@
 import 'server-only'
 
 import { connection } from 'next/server'
-import { getChoir, getGroup, listGroups, topology } from '@/core/topology'
+import {
+  getChoir,
+  listChoirsInDisplayOrder,
+  listGroups,
+  resolveGroup,
+  TopologyScopeType,
+  topology,
+} from '@/core/topology'
 import { organizationService } from '@/features/organization'
 import {
   isCurrentDatedPeriod,
@@ -23,19 +30,20 @@ async function listGroupStructure(input?: { at?: Date }) {
     memberIdsForGroup.add(membership.userId)
   }
 
+  const scopeOrder = ['CSK', ...listChoirsInDisplayOrder().map((choir) => choir.shortName)]
   return listGroups()
     .map((group) => ({
       id: group.id,
       name: group.name,
       scope:
-        group.scope.type === 'csk'
+        group.scope.type === TopologyScopeType.CSK
           ? 'CSK'
           : (getChoir(group.scope.choirId)?.shortName ?? group.scope.choirId.toUpperCase()),
       memberCount: memberIds.get(group.id)?.size ?? 0,
     }))
     .sort(
       (first, second) =>
-        ['CSK', 'KK', 'MK', 'DK'].indexOf(first.scope) - ['CSK', 'KK', 'MK', 'DK'].indexOf(second.scope) ||
+        scopeOrder.indexOf(first.scope) - scopeOrder.indexOf(second.scope) ||
         first.name.localeCompare(second.name) ||
         first.id.localeCompare(second.id),
     )
@@ -49,7 +57,7 @@ async function getGroupDetail(groupId: string, input?: { at?: Date }) {
     organizationService.users.list(),
     Promise.resolve(topology.positions),
   ])
-  const group = getGroup(groupId)
+  const group = resolveGroup(groupId)
   if (!group) return null
 
   const memberOptions = buildUserLabels(users).sort(

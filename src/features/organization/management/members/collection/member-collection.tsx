@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { Fragment, useMemo, useState } from 'react'
 import { adminUserPath } from '@/core/navigation/site'
+import { ChoirId, getChoir } from '@/core/topology'
 import type { MemberStatus } from '@/drizzle/schema'
 import { formatMemberStatus } from '@/features/organization/core/member-status'
 import { SearchControl } from '@/features/organization/management/components/search-control'
@@ -29,7 +30,10 @@ const GROUPING_LABELS: Record<MemberGrouping, string> = {
 
 const STATUS_ORDER: MemberStatus[] = ['ACTIVE', 'PASSIVE', 'FORMER']
 const VOICE_ORDER = ['S1', 'S2', 'A1', 'A2', 'T1', 'T2', 'B1', 'B2']
-const CHOIR_ORDER = ['MK', 'KK', 'DK']
+const CHOIR_ORDER = [ChoirId.MK, ChoirId.KK, ChoirId.DK].flatMap((id) => {
+  const choir = getChoir(id)
+  return choir ? [choir.shortName] : []
+})
 
 export function MemberCollection({ users }: { users: MemberCollectionRow[] }) {
   const [query, setQuery] = useState('')

@@ -2,7 +2,7 @@ import type { User } from '@/drizzle/schema'
 
 export type UserLabel = { user: User; label: string; detail: string }
 
-export function buildUserLabels(users: User[]): UserLabel[] {
+export function buildUserLabels(users: readonly User[]): UserLabel[] {
   return users.map((user) => ({
     user,
     label: user.name || formatUserFallbackLabel(user),

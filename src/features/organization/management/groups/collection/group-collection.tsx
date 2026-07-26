@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useState } from 'react'
 import { adminGroupPath } from '@/core/navigation/site'
+import { listChoirsInDisplayOrder } from '@/core/topology'
 import { SearchControl } from '@/features/organization/management/components/search-control'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 
@@ -13,7 +14,7 @@ export type GroupCollectionRow = {
   memberCount: number
 }
 
-const scopeOrder = ['CSK', 'KK', 'MK', 'DK']
+const scopeOrder = ['CSK', ...listChoirsInDisplayOrder().map((choir) => choir.shortName)]
 
 export function GroupCollection({ groups }: { groups: GroupCollectionRow[] }) {
   const [searchQuery, setSearchQuery] = useState('')

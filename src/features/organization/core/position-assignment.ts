@@ -1,7 +1,7 @@
 import 'server-only'
 import { and, eq } from 'drizzle-orm'
 import { db } from '@/core/db'
-import { getPosition } from '@/core/topology'
+import { resolvePosition, TopologyScopeType } from '@/core/topology'
 import { choirMembership, positionAssignment as positionAssignmentTable, sectionPlacement } from '@/drizzle/schema'
 import { datedPeriodsOverlap, normalizeDatedPeriodInput } from './dated-history'
 import { DateOverlapError, EntityDoesNotExistError, InvalidRelationshipError } from './errors'
@@ -9,7 +9,7 @@ import { DateOverlapError, EntityDoesNotExistError, InvalidRelationshipError } f
 export const positionAssignment = {
   async start(input: { positionId: string; userId: string; startsAt?: Date; endsAt?: Date | null }) {
     const period = normalizeDatedPeriodInput({ ...input, startsAt: input.startsAt ?? new Date() })
-    const target = getPosition(input.positionId)
+    const target = resolvePosition(input.positionId)
     if (target?.status !== 'active') throw new EntityDoesNotExistError('Choose an existing Position.')
     const existing = await db
       .select()
@@ -17,13 +17,13 @@ export const positionAssignment = {
       .where(eq(positionAssignmentTable.positionId, input.positionId))
     if (existing.some((a) => datedPeriodsOverlap(a, period)))
       throw new DateOverlapError('This Position already has a holder during that period.', { field: 'startsAt' })
-    const sectionScopes = target.scopes.filter((scope) => scope.type === 'section')
+    const sectionScopes = target.scopes.filter((scope) => scope.type === TopologyScopeType.SECTION)
     if (sectionScopes.length) {
       const placements = await db.select().from(sectionPlacement).where(eq(sectionPlacement.userId, input.userId))
       if (!sectionScopes.some((scope) => placements.some((p) => p.sectionId === scope.sectionId && covers(p, period))))
         throw new InvalidRelationshipError('A Voice Parent must have a covering Section Placement.')
     }
-    const choirScopes = target.scopes.filter((scope) => scope.type === 'choir')
+    const choirScopes = target.scopes.filter((scope) => scope.type === TopologyScopeType.CHOIR)
     if (target.name !== 'Conductor' && choirScopes.length) {
       const memberships = await db.select().from(choirMembership).where(eq(choirMembership.userId, input.userId))
       if (!choirScopes.every((scope) => memberships.some((m) => m.choirId === scope.choirId && covers(m, period))))

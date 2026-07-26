@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 import { topologyData } from './data'
 import type { Topology } from './index'
-import { getPosition, listGroups, listPositions, topology, validateTopology } from './index'
+import { listGroups, listPositions, resolvePosition, topology, validateTopology } from './index'
 
 describe('topology', () => {
   test('contains the fixed choir and section topology', () => {
@@ -47,7 +47,7 @@ describe('topology', () => {
         { id: 'accountant-2', name: 'Accountant 2', scopes: [{ type: 'csk' }], status: 'active' },
       ]),
     )
-    expect(getPosition('vice-president')).toEqual({
+    expect(resolvePosition('vice-president')).toEqual({
       id: 'vice-president',
       name: 'Vice President',
       scopes: [
@@ -56,7 +56,7 @@ describe('topology', () => {
       ],
       status: 'active',
     })
-    expect(getPosition('kk-s-voice-parent')?.scopes).toEqual([{ type: 'section', sectionId: 'kk-s' }])
+    expect(resolvePosition('kk-s-voice-parent')?.scopes).toEqual([{ type: 'section', sectionId: 'kk-s' }])
   })
 
   test('rejects duplicate identifiers and invalid cross-references', () => {

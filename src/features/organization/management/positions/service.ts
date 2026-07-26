@@ -1,15 +1,8 @@
-import {
-  type Group,
-  getGroup,
-  listChoirs,
-  listGroups,
-  listPositions,
-  listSections,
-  type Position,
-} from '@/core/topology'
+/** Focused Position collection reads and pure collection descriptions. */
+import { type Group, getGroup, listGroups, listPositions, type Position, TopologyScopeType } from '@/core/topology'
 import { formatGroupPath, formatPositionScopeLabel } from '@/features/organization/core/labels'
 
-export type PositionManagementPosition = {
+export type PositionDescription = {
   position: Position
   scopeGroups: Group[]
   scopeLabel: string
@@ -17,55 +10,38 @@ export type PositionManagementPosition = {
   duplicateNameCount: number
 }
 
-export async function listPositionManagement() {
-  return buildPositionManagementState({
-    groups: listGroups(),
-    choirs: listChoirs(),
-    sections: listSections(),
-    positions: listPositions(),
-  })
+/** Reads active Positions with the metadata required by the Position collection. */
+export function listPositionDescriptions(): PositionDescription[] {
+  return describePositions(listPositions(), listGroups())
 }
 
-export type PositionManagementState = Awaited<ReturnType<typeof listPositionManagement>>
-
-export function buildPositionManagementState({
-  groups,
-  choirs,
-  sections,
-  positions,
-}: {
-  groups: readonly Group[]
-  choirs: ReturnType<typeof listChoirs>
-  sections: ReturnType<typeof listSections>
-  positions: readonly Position[]
-}) {
+/** Describes Positions for presentation without mutating the canonical topology. */
+export function describePositions(positions: readonly Position[], groups: readonly Group[]): PositionDescription[] {
   const duplicateNameCounts = new Map<string, number>()
   for (const position of positions) {
     const key = normalizeName(position.name)
     duplicateNameCounts.set(key, (duplicateNameCounts.get(key) ?? 0) + 1)
   }
 
-  return {
-    groups,
-    positions: positions.map((position): PositionManagementPosition => {
-      const scopeGroups = position.scopes
-        .filter((scope) => scope.type === 'group')
-        .flatMap((scope) => {
-          const group = getGroup(scope.groupId)
-          return group ? [group] : []
-        })
-        .sort((first, second) => formatGroupPath(groups, first).localeCompare(formatGroupPath(groups, second)))
-      const scopeLabel = formatPositionScopeLabel(position.scopes, { choirs, sections, groups })
+  return positions.map((position) => {
+    const scopeGroups = position.scopes
+      .filter((scope) => scope.type === TopologyScopeType.GROUP)
+      .flatMap((scope) => {
+        const group = getGroup(scope.groupId)
+        if (!group) throw new Error(`Invalid Position ${position.id}: unknown Group ${scope.groupId}.`)
+        return [group]
+      })
+      .sort((first, second) => formatGroupPath(groups, first).localeCompare(formatGroupPath(groups, second)))
+    const scopeLabel = formatPositionScopeLabel(position.scopes)
 
-      return {
-        position,
-        scopeGroups,
-        scopeLabel,
-        scopeKind: scopeGroups.length > 1 ? 'shared' : scopeGroups.length === 1 ? 'single' : 'unscoped',
-        duplicateNameCount: duplicateNameCounts.get(normalizeName(position.name)) ?? 1,
-      }
-    }),
-  }
+    return {
+      position,
+      scopeGroups,
+      scopeLabel,
+      scopeKind: scopeGroups.length > 1 ? 'shared' : scopeGroups.length === 1 ? 'single' : 'unscoped',
+      duplicateNameCount: duplicateNameCounts.get(normalizeName(position.name)) ?? 1,
+    }
+  })
 }
 
 function normalizeName(value: string) {

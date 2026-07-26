@@ -90,7 +90,7 @@ async function getDetail(userId: string, input?: { at?: Date }) {
         id: assignment.id,
         positionId: position.id,
         positionName: position.name,
-        scopeLabel: formatPositionScopeLabel(position.scopes, { choirs, sections, groups }),
+        scopeLabel: formatPositionScopeLabel(position.scopes),
         startsAt: assignment.startsAt,
         endsAt: assignment.endsAt ?? undefined,
       },
@@ -131,10 +131,7 @@ async function getDetail(userId: string, input?: { at?: Date }) {
     positions: listPositions()
       .map((position) => ({
         id: position.id,
-        label: formatPositionLabel(
-          position.name,
-          formatPositionScopeLabel(position.scopes, { choirs, sections, groups }),
-        ),
+        label: formatPositionLabel(position.name, formatPositionScopeLabel(position.scopes)),
       }))
       .sort((first, second) => first.label.localeCompare(second.label) || first.id.localeCompare(second.id)),
     currentMemberships: membershipViews

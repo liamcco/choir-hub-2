@@ -2,18 +2,19 @@ import 'server-only'
 
 import { connection } from 'next/server'
 import {
-  getPosition,
   listChoirs,
   listGroups,
   listPositions,
   listSections,
   type Position,
+  type PositionScope,
+  resolvePosition,
+  TopologyScopeType,
   topology,
 } from '@/core/topology'
 import { organizationService } from '@/features/organization'
 import { isCurrentDatedPeriod, isHistoricalDatedPeriod } from '@/features/organization/core/dated-history'
 import { buildUserLabels, formatPositionScopeLabel } from '@/features/organization/core/labels'
-import type { PositionScopeView } from '@/features/organization/core/labels/position'
 import { getPositionCollectionGroup } from './position-collection-group'
 
 async function listCollection(input?: { at?: Date }) {
@@ -35,7 +36,7 @@ async function listCollection(input?: { at?: Date }) {
         id: position.id,
         name: position.name,
         group: getPositionCollectionGroup(position.scopes, groups, choirs, sections),
-        scopeLabel: formatPositionScopeLabel(position.scopes, { choirs, sections, groups }),
+        scopeLabel: formatPositionScopeLabel(position.scopes),
         currentHolder: currentAssignment ? (labels.get(currentAssignment.userId) ?? 'Unknown User') : null,
         heldSince: currentAssignment?.startsAt ?? null,
       }
@@ -54,7 +55,7 @@ async function getDetail(positionId: string, input?: { at?: Date }) {
     organizationService.homePlacement.listChoirMemberships(),
     organizationService.homePlacement.listSectionPlacements(),
   ])
-  const position = getPosition(positionId)
+  const position = resolvePosition(positionId)
   if (!position) return null
   const groups = topology.groups
   const choirs = topology.choirs
@@ -72,7 +73,7 @@ async function getDetail(positionId: string, input?: { at?: Date }) {
     choirs,
     sections,
     positionScopes: position.scopes,
-    scopeLabel: formatPositionScopeLabel(position.scopes, { choirs, sections, groups }),
+    scopeLabel: formatPositionScopeLabel(position.scopes),
     users: [...membersById.values()]
       .filter((member) => isEligible(member.user.id, position, position.scopes, memberships, placements, at))
       .sort((a, b) => a.label.localeCompare(b.label)),
@@ -86,7 +87,7 @@ async function getDetail(positionId: string, input?: { at?: Date }) {
 function isEligible(
   userId: string,
   position: Pick<Position, 'name'>,
-  scopes: readonly PositionScopeView[],
+  scopes: readonly PositionScope[],
   memberships: Array<{ userId: string; choirId: string; startsAt: Date; endsAt: Date | null }>,
   placements: Array<{ userId: string; sectionId: string; startsAt: Date; endsAt: Date | null }>,
   at: Date,
@@ -94,7 +95,7 @@ function isEligible(
   const current = (period: { startsAt: Date; endsAt: Date | null }) =>
     period.startsAt <= at && (!period.endsAt || period.endsAt > at)
   if (position.name === 'Conductor') return true
-  const sectionScopes = scopes.filter((scope) => scope.type === 'section')
+  const sectionScopes = scopes.filter((scope) => scope.type === TopologyScopeType.SECTION)
   if (sectionScopes.length)
     return placements.some(
       (placement) =>
@@ -102,7 +103,7 @@ function isEligible(
         current(placement) &&
         sectionScopes.some((scope) => scope.sectionId === placement.sectionId),
     )
-  const choirScopes = scopes.filter((scope) => scope.type === 'choir')
+  const choirScopes = scopes.filter((scope) => scope.type === TopologyScopeType.CHOIR)
   if (choirScopes.length && (position.name === 'Master of Concerts' || position.name === 'Master of Gigs'))
     return memberships.some(
       (membership) =>

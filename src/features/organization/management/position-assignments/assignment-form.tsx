@@ -12,7 +12,7 @@ import {
   createPositionAssignmentAction,
   endPositionAssignmentAction,
 } from '@/features/organization/management/position-assignments/actions'
-import type { PositionAssignmentManagementState } from '@/features/organization/management/position-assignments/service'
+import type { listPositionAssignmentOptions } from '@/features/organization/management/position-assignments/service'
 import { formatDateInput } from '@/shared/formatting'
 import { FormMessage } from '@/shared/forms/error-handling'
 import { Button } from '@/shared/ui/button'
@@ -39,7 +39,7 @@ export function CreatePositionAssignmentForm({
   positions,
 }: {
   users: UserOptions
-  positions: PositionAssignmentManagementState['positions']
+  positions: ReturnType<typeof listPositionAssignmentOptions>
 }) {
   const [state, formAction, isPending] = useActionState(createPositionAssignmentAction, createInitialState)
 

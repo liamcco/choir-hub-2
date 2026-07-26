@@ -1,5 +1,5 @@
 import { db } from '@/core/db'
-import { topology } from '@/core/topology'
+import { TopologyScopeType, topology } from '@/core/topology'
 import { groupMembership, positionAssignment } from '@/drizzle/schema'
 import { isCurrentDatedPeriod } from './dated-history'
 
@@ -46,7 +46,7 @@ export const effectiveGroupMembership = {
       })
     for (const a of assignments) {
       const position = topology.positions.find((candidate) => candidate.id === a.positionId)
-      for (const scope of position?.scopes.filter((candidate) => candidate.type === 'group') ?? [])
+      for (const scope of position?.scopes.filter((candidate) => candidate.type === TopologyScopeType.GROUP) ?? [])
         rows.push({
           userId: a.userId,
           groupId: scope.groupId,

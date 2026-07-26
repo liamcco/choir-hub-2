@@ -1,28 +1,23 @@
-import type { Choir, Group, Section } from '@/core/topology'
+import { getChoir, getGroup, getSection, type PositionScope, TopologyScopeType } from '@/core/topology'
 
-export type PositionScopeView =
-  | { type: 'csk' }
-  | { type: 'choir'; choirId: string }
-  | { type: 'section'; sectionId: string }
-  | { type: 'group'; groupId: string }
-
-export function formatPositionScopeLabel(
-  scopes: readonly PositionScopeView[],
-  references: { choirs: readonly Choir[]; sections: readonly Section[]; groups: readonly Group[] },
-) {
-  const choirById = new Map<string, Choir>(references.choirs.map((choir) => [choir.id, choir]))
-  const sectionById = new Map<string, Section>(references.sections.map((section) => [section.id, section]))
-  const groupById = new Map<string, Group>(references.groups.map((group) => [group.id, group]))
+/**
+ * Formats permanent Position Scopes using the canonical topology definitions.
+ * Unknown references are shown as explicit invalid-reference labels rather than omitted.
+ */
+export function formatPositionScopeLabel(scopes: readonly PositionScope[]) {
   return scopes
     .map((scope) => {
-      if (scope.type === 'csk') return 'CSK'
-      if (scope.type === 'choir') return choirById.get(scope.choirId)?.shortName ?? scope.choirId
-      if (scope.type === 'section') {
-        const section = sectionById.get(scope.sectionId)
-        const choir = section ? choirById.get(section.choirId) : undefined
-        return section && choir ? formatSectionName(choir.shortName, section.name) : scope.sectionId
+      if (scope.type === TopologyScopeType.CSK) return 'CSK'
+      if (scope.type === TopologyScopeType.CHOIR)
+        return getChoir(scope.choirId)?.shortName ?? `[Invalid Choir: ${scope.choirId}]`
+      if (scope.type === TopologyScopeType.SECTION) {
+        const section = getSection(scope.sectionId)
+        const choir = section ? getChoir(section.choirId) : undefined
+        return section && choir
+          ? formatSectionName(choir.shortName, section.name)
+          : `[Invalid Section: ${scope.sectionId}]`
       }
-      return groupById.get(scope.groupId)?.name ?? scope.groupId
+      return getGroup(scope.groupId)?.name ?? `[Invalid Group: ${scope.groupId}]`
     })
     .sort((a, b) => a.localeCompare(b))
     .join(' · ')

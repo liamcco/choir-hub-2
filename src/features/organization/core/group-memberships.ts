@@ -1,7 +1,7 @@
 import 'server-only'
 import { and, asc, eq, gt, isNull, lte, or } from 'drizzle-orm'
 import { db } from '@/core/db'
-import { getGroup } from '@/core/topology'
+import { resolveGroup } from '@/core/topology'
 import { groupMembership, user } from '@/drizzle/schema'
 import {
   assertValidDatedPeriod,
@@ -58,7 +58,7 @@ async function assertUserExists(userId: string) {
     throw new EntityDoesNotExistError('Choose an existing User.', { field: 'userId' })
 }
 async function assertGroupExists(groupId: string) {
-  const group = getGroup(groupId)
+  const group = resolveGroup(groupId)
   if (group?.status !== 'active') throw new EntityDoesNotExistError('Choose an existing Group.', { field: 'groupId' })
 }
 async function assertNoOverlap(

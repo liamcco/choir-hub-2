@@ -1,8 +1,7 @@
 import { adminUserPath } from '@/core/navigation/site'
-import type { Choir, Group, Section } from '@/core/topology'
+import type { Choir, Group, PositionScope, Section } from '@/core/topology'
 import type { PositionAssignment } from '@/drizzle/schema'
 import type { UserLabel } from '@/features/organization/core/labels'
-import type { PositionScopeView } from '@/features/organization/core/labels/position'
 import { RelatedDetailLink } from '@/features/organization/management/components/related-detail-link'
 import {
   AssignPositionHolderControl,
@@ -16,7 +15,7 @@ export type PositionDetailView = {
   groups: readonly Group[]
   choirs: readonly Choir[]
   sections: readonly Section[]
-  positionScopes: readonly PositionScopeView[]
+  positionScopes: readonly PositionScope[]
   scopeLabel: string
   users: UserLabel[]
   currentAssignments: PositionAssignmentView[]

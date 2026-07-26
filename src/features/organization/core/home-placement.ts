@@ -2,7 +2,7 @@ import 'server-only'
 
 import { and, asc, eq, gt, isNull, lte, or } from 'drizzle-orm'
 import { db } from '@/core/db'
-import { getChoir, getSection, type VoiceType } from '@/core/topology'
+import { resolveChoir, resolveSection, type VoiceType } from '@/core/topology'
 import { choirMembership, sectionPlacement, user } from '@/drizzle/schema'
 import { assertValidDatedPeriod, datedPeriodsOverlap, normalizeDatedPeriodInput } from './dated-history'
 import { DateOverlapError, EntityDoesNotExistError, InvalidRelationshipError } from './errors'
@@ -27,7 +27,7 @@ export const homePlacement = {
   async startChoirMembership(input: { userId: string; choirId: string; startsAt?: Date; endsAt?: Date | null }) {
     const period = normalizeDatedPeriodInput({ ...input, startsAt: input.startsAt ?? new Date() })
     await assertUserExists(input.userId)
-    const target = getChoir(input.choirId)
+    const target = resolveChoir(input.choirId)
     if (target?.status !== 'active') throw new EntityDoesNotExistError('Choose an existing Choir.')
     await assertNoOverlap(await this.listChoirMemberships({ userId: input.userId }), period, 'Choir Membership')
     return db
@@ -44,7 +44,7 @@ export const homePlacement = {
     endsAt?: Date | null
   }) {
     const period = normalizeDatedPeriodInput({ ...input, startsAt: input.startsAt ?? new Date() })
-    const target = getSection(input.sectionId)
+    const target = resolveSection(input.sectionId)
     if (target?.status !== 'active')
       throw new EntityDoesNotExistError('Choose an existing Section.', { field: 'sectionId' })
     if (!target.allowedVoiceTypes.includes(input.voiceType as never))

@@ -1,7 +1,7 @@
 import 'server-only'
 import { and, asc, eq, gt, isNull, lte, or } from 'drizzle-orm'
 import { db } from '@/core/db'
-import { getPosition } from '@/core/topology'
+import { resolvePosition } from '@/core/topology'
 import { positionAssignment, user } from '@/drizzle/schema'
 import {
   assertValidDatedPeriod,
@@ -54,7 +54,7 @@ export const positionAssignments = {
   },
 }
 async function assertPositionExists(positionId: string) {
-  const position = getPosition(positionId)
+  const position = resolvePosition(positionId)
   if (position?.status !== 'active')
     throw new EntityDoesNotExistError('Choose an existing Position.', { field: 'positionId' })
 }
