@@ -5,8 +5,6 @@ const environment = process.env.VERCEL_ENV === 'production' ? 'production' : pro
 const envSchema = z.object({
   ENVIRONMENT: z.enum(['development', 'production', 'test']).default('production'),
   VERCEL_ENV: z.enum(['development', 'preview', 'production']).default('development'),
-  API_BASE_URL: z.url().default('http://localhost:3000'),
-  SITE_URL: z.url().default('http://localhost:3000'),
   DATABASE_URL: z.string().default('postgresql://postgres:mysecretpassword@localhost:5432/csk_db'),
   DATABASE_URL_PROD: z.string().optional().nullable(),
   DATABASE_URL_E2E: z.string().default('postgresql://postgres:mysecretpassword@localhost:5432/csk_e2e'),

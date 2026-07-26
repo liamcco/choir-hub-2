@@ -185,7 +185,7 @@ The committed initial migration is the complete V1 schema. Existing databases ar
 
 Never use `drizzle-kit push` as a production migration or as the submitted record of a schema change. Do not edit an already-deployed migration; add a new migration. Production deployment must run `bun x drizzle-kit migrate` separately because build/start do not apply migrations.
 
-Keep permanent topology in reviewed TypeScript rather than the database. Put realistic people and relationship fixtures in the demo seed. Use stable IDs for data referenced by tests or fixtures. Destructive reset tooling must remain guarded by `DB_MODE=local`.
+Keep permanent topology in reviewed TypeScript rather than the database. Put realistic people and relationship fixtures in the demo seed. Use stable IDs for data referenced by tests or fixtures. Destructive reset tooling must remain guarded by `DB_MODE=local` for local work and `DB_MODE=e2e` for the isolated E2E database; it must refuse production and non-local database hosts.
 
 ## UI conventions
 

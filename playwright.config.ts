@@ -15,11 +15,9 @@ export default defineConfig({
   webServer: {
     command: 'bun run dev --hostname 127.0.0.1 --port 4173',
     env: {
-      API_BASE_URL: 'http://127.0.0.1:4173',
       BETTER_AUTH_URL: 'http://127.0.0.1:4173',
       DB_MODE: 'e2e',
       ENVIRONMENT: 'test',
-      SITE_URL: 'http://127.0.0.1:4173',
     },
     url: 'http://127.0.0.1:4173/login',
     reuseExistingServer: false,

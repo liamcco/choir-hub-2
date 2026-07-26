@@ -12,7 +12,8 @@
     "lint:fix": "biome check --write",
     "format": "biome format --write",
     "cli": "bun scripts/cli.ts",
-    "db:push": "bun x drizzle-kit push",
+    "db:reset": "bun scripts/reset-db.ts",
+    "db:push": "bun scripts/push-db.ts",
     "auth:generate": "bun x auth@latest generate --adapter drizzle --dialect postgresql --output src/drizzle/schema/auth.ts",
     "pr": "bun run test && bun run test:e2e && bun run lint && bun run build"
   },

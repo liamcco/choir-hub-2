@@ -1,25 +1,25 @@
 import 'dotenv/config'
 
 import { spawnSync } from 'node:child_process'
-import { reset } from 'drizzle-seed'
-import { db, sql } from '@/core/db'
-import * as schema from '@/drizzle/schema'
+import postgres from 'postgres'
+import { assertLocalDatabaseTarget } from './database-guards'
 
-if (process.env.DB_MODE !== 'local' && process.env.DB_MODE !== 'e2e' && process.env.DB_MODE !== 'prod') {
-  console.error('Database reset requires DB_MODE=local, e2e, or prod.')
-  process.exit(1)
-}
+const databaseUrl = assertLocalDatabaseTarget({ allowE2E: true })
+const sql = postgres(databaseUrl)
 
 async function main(): Promise<void> {
   try {
-    await reset(db, schema)
+    await sql.unsafe('DROP SCHEMA IF EXISTS public CASCADE')
+    await sql.unsafe('CREATE SCHEMA public')
+    await sql.unsafe('GRANT ALL ON SCHEMA public TO public')
+
     const migrate = spawnSync('bun', ['x', 'drizzle-kit', 'migrate'], { stdio: 'inherit', env: process.env })
     if (migrate.error) throw migrate.error
-    if (migrate.status !== 0)
+    if (migrate.status !== 0) {
       throw new Error(`bun x drizzle-kit migrate exited with code ${migrate.status ?? 'unknown'}.`)
-    console.log(
-      `${process.env.DB_MODE === 'prod' ? 'Production' : process.env.DB_MODE === 'e2e' ? 'E2E' : 'Local'} database reset.`,
-    )
+    }
+
+    console.log(`${process.env.DB_MODE === 'e2e' ? 'E2E' : 'Local'} database reset.`)
   } finally {
     await sql.end()
   }

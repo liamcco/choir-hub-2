@@ -9,8 +9,6 @@ Set these values in the production runtime. Do not use the development defaults 
 - `DATABASE_URL`: the production PostgreSQL connection used by the running application and Drizzle commands.
 - `BETTER_AUTH_SECRET`: a newly generated, long random secret. Replacing it later invalidates existing sessions.
 - `BETTER_AUTH_URL`: the deployed HTTPS origin.
-- `SITE_URL`: the deployed HTTPS origin.
-- `API_BASE_URL`: the deployed HTTPS origin.
 - `ENVIRONMENT=production`.
 - `EMAIL_MODE=smtp`.
 - `GMAIL_SMTP_USER`: the Gmail account used for application email.

@@ -69,7 +69,11 @@ Useful database commands:
 bun x drizzle-kit studio
 bun x drizzle-kit check
 bun x drizzle-kit migrate
+bun run db:reset   # destructive: drop and recreate the local schema, then migrate
+bun run db:push    # local only: push the current schema directly
 ```
+
+`bun run db:reset` requires `DB_MODE=local` and a PostgreSQL host at `localhost`, `127.0.0.1`, or `::1`. It drops the `public` schema and reapplies the committed migrations; run `bun run cli` afterward if you need demo data or a local admin. The E2E setup may use the same reset implementation with `DB_MODE=e2e`. Both reset and push refuse production and non-local database hosts.
 
 Drizzle schema definitions are checked in under `src/drizzle/schema`; the build does not generate or mutate database artifacts.
 
@@ -100,7 +104,6 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for project structure, authorization, d
 | `DB_MODE` | `local`, `e2e`, or `prod`; protects destructive/reset and production CLI workflows |
 | `BETTER_AUTH_URL` | Canonical Better Auth base URL |
 | `BETTER_AUTH_SECRET` | Better Auth signing secret |
-| `SITE_URL` / `API_BASE_URL` | Public site and API base URLs |
 | `ENVIRONMENT` | `development`, `test`, or `production` |
 | `VERCEL_ENV` | Vercel environment; `production` forces production behavior |
 | `EMAIL_MODE` | `log` locally/previews or `smtp` in production |
@@ -121,7 +124,7 @@ Production requires at least:
 
 - `DATABASE_URL`
 - `BETTER_AUTH_SECRET`
-- `BETTER_AUTH_URL`, `SITE_URL`, and `API_BASE_URL` set to the deployed HTTPS origin
+- `BETTER_AUTH_URL` set to the deployed HTTPS origin
 - `ENVIRONMENT=production` (Vercel production also supplies `VERCEL_ENV=production`)
 - `EMAIL_MODE=smtp`, `GMAIL_SMTP_USER`, and `GMAIL_SMTP_APP_PASSWORD` for real email delivery
 
