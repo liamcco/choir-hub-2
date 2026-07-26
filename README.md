@@ -69,11 +69,11 @@ Useful database commands:
 bun x drizzle-kit studio
 bun x drizzle-kit check
 bun x drizzle-kit migrate
-bun run db:reset   # destructive: drop and recreate the local schema, then migrate
+bun run db:reset   # destructive: drop and recreate the local schema, then push
 bun run db:push    # local only: push the current schema directly
 ```
 
-`bun run db:reset` requires `DB_MODE=local` and a PostgreSQL host at `localhost`, `127.0.0.1`, or `::1`. It drops the `public` schema and reapplies the committed migrations; run `bun run cli` afterward if you need demo data or a local admin. The E2E setup may use the same reset implementation with `DB_MODE=e2e`. Direct reset and push commands refuse production and non-local database hosts. Production reset or push is available only from `bun run cli`, after two confirmations in the menu; production reset does not run the demo seed.
+`bun run db:reset` requires `DB_MODE=local` and a PostgreSQL host at `localhost`, `127.0.0.1`, or `::1`. It drops the `public` schema and pushes the current schema; run `bun run cli` afterward if you need demo data or a local admin. The E2E setup may use the same reset implementation with `DB_MODE=e2e`. Direct reset and push commands refuse production and non-local database hosts. Production reset or push is available only from `bun run cli`, after two confirmations in the menu; production reset does not run the demo seed.
 
 Drizzle schema definitions are checked in under `src/drizzle/schema`; the build does not generate or mutate database artifacts.
 

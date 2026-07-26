@@ -13,10 +13,10 @@ async function main(): Promise<void> {
     await sql.unsafe('CREATE SCHEMA public')
     await sql.unsafe('GRANT ALL ON SCHEMA public TO public')
 
-    const migrate = spawnSync('bun', ['x', 'drizzle-kit', 'migrate'], { stdio: 'inherit', env: process.env })
-    if (migrate.error) throw migrate.error
-    if (migrate.status !== 0) {
-      throw new Error(`bun x drizzle-kit migrate exited with code ${migrate.status ?? 'unknown'}.`)
+    const push = spawnSync('bun', ['x', 'drizzle-kit', 'push'], { stdio: 'inherit', env: process.env })
+    if (push.error) throw push.error
+    if (push.status !== 0) {
+      throw new Error(`bun x drizzle-kit push exited with code ${push.status ?? 'unknown'}.`)
     }
 
     const databaseName = process.env.DB_MODE === 'prod' ? 'Production' : process.env.DB_MODE === 'e2e' ? 'E2E' : 'Local'

@@ -39,7 +39,7 @@ export const sectionPlacement = pgTable(
     unique('SectionPlacement_user_id_starts_at_key').on(table.userId, table.startsAt),
     index('SectionPlacement_user_id_ends_at_idx').on(table.userId, table.endsAt),
     index('SectionPlacement_section_id_ends_at_idx').on(table.sectionId, table.endsAt),
-    check('SectionPlacement_fine_voice_check', sql`"voice" ~ '^(S|A|T|B)[12]$'`),
+    check('SectionPlacement_fine_voice_check', sql`"voice"::text ~ '^(S|A|T|B)[12]$'`),
     check('SectionPlacement_valid_period_check', sql`"endsAt" IS NULL OR "endsAt" > "startsAt"`),
   ],
 )
