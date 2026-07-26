@@ -61,7 +61,6 @@ The goal is production-usable, polished, and ready to grow. Do not expand v1 int
 - [x] Decide route by route whether data should be cached with explicit `cacheLife`, streamed behind `Suspense`, or intentionally opted out of instant validation.
 - [x] Replace broad `export const instant = false` usage with deliberate route-level decisions.
 - [x] Add meaningful `Suspense` fallbacks where uncached data, runtime APIs, or dynamic route work should stream.
-- [] Verify app navigation with Next DevTools Navigation Inspector during development.
 
 ## Documentation
 
@@ -79,7 +78,7 @@ The goal is production-usable, polished, and ready to grow. Do not expand v1 int
   - [x] documentation and ADR expectations
   - [x] logging usage
 - [x] Update `README.md` so it matches the actual repo state, including existing tests, environment setup, deployment assumptions, and production verification commands.
-- [] Document the launch-time production checklist: env vars, database, first admin bootstrap, email mode, build/test gate, and deployment/migration order.
+- [x] Document the launch-time production checklist: env vars, database, first admin bootstrap, email mode, build/test gate, and deployment/migration order.
 
 ## Data, Seeds, And Migrations
 
@@ -92,13 +91,13 @@ The goal is production-usable, polished, and ready to grow. Do not expand v1 int
 
 ## Verification And Release Gate
 
-- [] Add a minimal end-to-end smoke suite for production-critical flows:
-  - [] login with a known test user
-  - [] authenticated access to organization/account routes
-  - [] non-admin denial for admin routes
-  - [] admin access to admin routes
-  - [] one representative admin CRUD workflow
-- [] Provide predictable test database setup for the smoke suite using the separated demo/dev/e2e seed path.
+- [x] Add a minimal end-to-end smoke suite for production-critical flows:
+  - [x] login with a known test user
+  - [x] authenticated access to organization/account routes
+  - [x] non-admin denial for admin routes
+  - [x] admin access to admin routes
+  - [x] one representative admin CRUD workflow
+- [x] Provide predictable test database setup for the smoke suite using the separated demo/dev/e2e seed path.
 - [x] Add or document a release gate that runs the core checks before deploy:
   - `bun run pr`
 - Treat v1 as complete only after the current surface passes automated checks plus the manual product-quality, responsive, accessibility, and security hardening passes above.

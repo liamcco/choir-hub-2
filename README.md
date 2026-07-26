@@ -113,6 +113,8 @@ The E2E suite expects the database named by `DATABASE_URL_E2E` to exist separate
 
 ## Deployment
 
+See the complete [production launch checklist](./docs/launch-checklist.md) for environment setup, database preparation, admin bootstrap, release gating, and migration order.
+
 The application currently assumes a Vercel-style deployment with a reachable PostgreSQL database, but the repository has no `vercel.json`, CI deployment workflow, Docker production image, or application health endpoint. Configure the platform's install/build/start behavior from the scripts in `package.json`; `bun run build` generates Drizzle Client through `prebuild`.
 
 Production requires at least:
