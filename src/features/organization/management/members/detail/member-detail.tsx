@@ -11,6 +11,7 @@ import type {
 } from '@/features/organization/management/position-assignments/relationships'
 import { Badge } from '@/shared/ui/badge'
 import { MemberGroupMembershipSection, MemberPositionAssignmentSection } from './member-relationship-sections'
+import { ResendInvitationControl } from './resend-invitation-control'
 
 export type MemberRelationshipPeriod = {
   id: string
@@ -34,6 +35,7 @@ export type MemberDetailView = {
   id: string
   name: string
   email: string
+  emailVerified?: boolean
   status: MemberStatus
   homePlacement?: { choir: { id: string; name: string } | null; section: { id: string; name: string } | null }
   groups: { id: string; name: string }[]
@@ -43,6 +45,7 @@ export type MemberDetailView = {
 }
 
 type MemberDetailActions = {
+  resendInvitation?: (userId: string) => Promise<{ success: boolean; message: string }>
   createMembership: CreateMembershipAction
   endMembership: EndMembershipAction
   createAssignment: (
@@ -79,6 +82,9 @@ export function MemberDetail({ member, actions }: { member: MemberDetailView; ac
             </dl>
           </div>
         </div>
+        {!member.emailVerified && actions?.resendInvitation && (
+          <ResendInvitationControl action={actions.resendInvitation} userId={member.id} />
+        )}
       </section>
 
       <MemberGroupMembershipSection

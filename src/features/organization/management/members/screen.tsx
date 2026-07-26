@@ -14,6 +14,8 @@ import { MemberCreateDialog as UserCreateDialog } from '@/features/organization/
 import { MemberDetail as UserDetail } from '@/features/organization/management/members/detail/member-detail'
 import { MemberDetailRoutePresentation as UserDetailRoutePresentation } from '@/features/organization/management/members/detail/member-detail-presentation'
 import { MemberDetailSkeleton as UserDetailSkeleton } from '@/features/organization/management/members/detail/member-detail-skeleton'
+import { resendInvitationAction } from '@/features/organization/management/members/import/actions'
+import { MemberImportDialog as UserImportDialog } from '@/features/organization/management/members/import/import-dialog'
 import { getMemberDetail, listMemberCollection } from '@/features/organization/management/members/query'
 import {
   createPositionAssignmentAction,
@@ -30,6 +32,7 @@ export function UserManagementScreen({ searchParams }: { searchParams: DetailSea
         description="Browse Users and their current organizational place."
         actions={
           <PageHeaderActions>
+            <UserImportDialog />
             <UserCreateDialog />
           </PageHeaderActions>
         }
@@ -89,6 +92,7 @@ async function UserDetailContent({ detailPromise }: { detailPromise: ReturnType<
 
 // TODO what da hell
 const userDetailActions = {
+  resendInvitation: resendInvitationAction,
   createMembership: createGroupMembershipAction,
   endMembership: endGroupMembershipAction,
   createAssignment: createPositionAssignmentAction,

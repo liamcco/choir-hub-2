@@ -102,6 +102,7 @@ async function getDetail(userId: string, input?: { at?: Date }) {
     id: account.id,
     name: account.name,
     email: account.email,
+    emailVerified: account.emailVerified,
     status: user.status,
     homePlacement: {
       choir: currentChoir

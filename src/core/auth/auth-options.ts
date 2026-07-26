@@ -2,7 +2,7 @@ import { passkey } from '@better-auth/passkey'
 import { type BetterAuthOptions, betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { nextCookies } from 'better-auth/next-js'
-import { admin, emailOTP, openAPI, twoFactor, username } from 'better-auth/plugins'
+import { admin, emailOTP, magicLink, openAPI, twoFactor, username } from 'better-auth/plugins'
 import { env } from '@/core/config/env'
 import { db } from '@/core/db'
 import { EmailClient } from '@/core/email/smtp-email'
@@ -38,8 +38,8 @@ export const authOptions = {
 
       logger.info('auth.password.reset.email.dispatched', { subjectUserId: user.id })
     },
-    onPasswordReset: async ({ user }) => {
-      audit.accountAccessChanged({ actorUserId: user.id, action: 'password.reset', subjectUserId: user.id })
+    onPasswordReset: async ({ user: authUser }) => {
+      audit.accountAccessChanged({ actorUserId: authUser.id, action: 'password.reset', subjectUserId: authUser.id })
     },
     revokeSessionsOnPasswordReset: true,
     onExistingUserSignUp: async () => {
@@ -120,6 +120,18 @@ export const authOptions = {
 
           logger.info('auth.otp.dispatched', { type })
         }
+      },
+    }),
+    magicLink({
+      disableSignUp: true,
+      expiresIn: 3600,
+      async sendMagicLink({ email, url }) {
+        await emailClient.send({
+          to: email,
+          subject: 'Activate your CSK account',
+          text: `Click the link below to activate your CSK account and set your password:\n\n${url}\n\nIf you did not expect this email, please ignore it.`,
+        })
+        logger.info('auth.magic-link.dispatched', { email })
       },
     }),
     nextCookies(),
