@@ -13,6 +13,7 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
   experimental: {
+    authInterrupts: true,
     useTypeScriptCli: true,
   },
 }

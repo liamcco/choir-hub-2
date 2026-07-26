@@ -9,7 +9,8 @@ const envSchema = z.object({
   SITE_URL: z.url().default('http://localhost:3000'),
   DATABASE_URL: z.string().default('postgresql://postgres:mysecretpassword@localhost:5432/csk_db'),
   DATABASE_URL_PROD: z.string().optional().nullable(),
-  DB_MODE: z.enum(['local', 'prod']).default('local'),
+  DATABASE_URL_E2E: z.string().default('postgresql://postgres:mysecretpassword@localhost:5432/csk_e2e'),
+  DB_MODE: z.enum(['local', 'e2e', 'prod']).default('local'),
   BETTER_AUTH_URL: z.url().default('http://localhost:3000'),
   BETTER_AUTH_SECRET: z.string().default('78e45b6b57971eaf0cc7d08ead133ba7'),
   EMAIL_MODE: z.enum(['log', 'smtp']).default('log'),
@@ -32,5 +33,7 @@ if (env.DB_MODE === 'prod') {
 
   env.DATABASE_URL = env.DATABASE_URL_PROD
 }
+
+if (env.DB_MODE === 'e2e') env.DATABASE_URL = env.DATABASE_URL_E2E
 
 export { env }

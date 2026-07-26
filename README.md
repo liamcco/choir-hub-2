@@ -96,7 +96,8 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for project structure, authorization, d
 | --- | --- |
 | `DATABASE_URL` | PostgreSQL connection used by the app and Drizzle |
 | `DATABASE_URL_PROD` | Connection selected by runtime and CLI code when `DB_MODE=prod` |
-| `DB_MODE` | `local` or `prod`; protects destructive/reset and production CLI workflows |
+| `DATABASE_URL_E2E` | Isolated PostgreSQL connection used by the E2E smoke suite |
+| `DB_MODE` | `local`, `e2e`, or `prod`; protects destructive/reset and production CLI workflows |
 | `BETTER_AUTH_URL` | Canonical Better Auth base URL |
 | `BETTER_AUTH_SECRET` | Better Auth signing secret |
 | `SITE_URL` / `API_BASE_URL` | Public site and API base URLs |
@@ -107,6 +108,8 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for project structure, authorization, d
 | `LOG_DATABASE` | Set to `true` to include Drizzle query logs |
 
 The Docker-only `POSTGRES_*` variables configure the local container. Keep `.env` uncommitted.
+
+The E2E suite expects the database named by `DATABASE_URL_E2E` to exist separately from the development database. Apply migrations and deterministic fixtures automatically with `bun run test:e2e`; it resets only when `DB_MODE=e2e`, then runs the demo fixtures plus fixed smoke users (`demo-conductor-mk@example.com` / `password` and `e2e-admin@example.com` / `e2e-password`).
 
 ## Deployment
 

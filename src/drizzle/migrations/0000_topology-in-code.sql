@@ -120,7 +120,7 @@ CREATE TABLE "SectionPlacement" (
 	"startsAt" timestamp NOT NULL,
 	"endsAt" timestamp,
 	CONSTRAINT "SectionPlacement_user_id_starts_at_key" UNIQUE("userId","startsAt"),
-	CONSTRAINT "SectionPlacement_fine_voice_check" CHECK ("voice" ~ '^(S|A|T|B)[12]$'),
+	CONSTRAINT "SectionPlacement_fine_voice_check" CHECK ("voice"::text ~ '^(S|A|T|B)[12]$'),
 	CONSTRAINT "SectionPlacement_valid_period_check" CHECK ("endsAt" IS NULL OR "endsAt" > "startsAt")
 );
 --> statement-breakpoint
