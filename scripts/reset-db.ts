@@ -2,9 +2,9 @@ import 'dotenv/config'
 
 import { spawnSync } from 'node:child_process'
 import postgres from 'postgres'
-import { assertLocalDatabaseTarget } from './database-guards'
+import { assertDatabaseTarget } from './database-guards'
 
-const databaseUrl = assertLocalDatabaseTarget({ allowE2E: true })
+const databaseUrl = assertDatabaseTarget({ allowE2E: true, allowProduction: true })
 const sql = postgres(databaseUrl)
 
 async function main(): Promise<void> {
@@ -19,7 +19,8 @@ async function main(): Promise<void> {
       throw new Error(`bun x drizzle-kit migrate exited with code ${migrate.status ?? 'unknown'}.`)
     }
 
-    console.log(`${process.env.DB_MODE === 'e2e' ? 'E2E' : 'Local'} database reset.`)
+    const databaseName = process.env.DB_MODE === 'prod' ? 'Production' : process.env.DB_MODE === 'e2e' ? 'E2E' : 'Local'
+    console.log(`${databaseName} database reset.`)
   } finally {
     await sql.end()
   }

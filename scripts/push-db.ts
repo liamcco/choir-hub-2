@@ -1,9 +1,9 @@
 import 'dotenv/config'
 
 import { spawnSync } from 'node:child_process'
-import { assertLocalDatabaseTarget } from './database-guards'
+import { assertDatabaseTarget } from './database-guards'
 
-assertLocalDatabaseTarget()
+assertDatabaseTarget({ allowProduction: true })
 
 const push = spawnSync('bun', ['x', 'drizzle-kit', 'push'], { stdio: 'inherit', env: process.env })
 if (push.error) throw push.error

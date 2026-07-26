@@ -1,5 +1,6 @@
 import { spawn } from 'node:child_process'
 import * as p from '@clack/prompts'
+import { PRODUCTION_DATABASE_CONFIRMATION } from './database-guards'
 
 const DEFAULTS = {
   email: 'admin@example.com',
@@ -10,7 +11,8 @@ const DEFAULTS = {
 const MENU = [
   ['admin-bootstrap', 'Bootstrap admin account'],
   ['demo-seed', 'Run demo seed'],
-  ['reset-db', `Reset ${process.env.DB_MODE === 'prod' ? 'production' : 'local'} database`],
+  ['db-push', 'Push current schema'],
+  ['reset-db', 'Reset database'],
 ] as const
 
 function printUsage(): void {
@@ -51,7 +53,11 @@ function databaseEnvironment(): Record<string, string> | undefined {
   const productionUrl = process.env.DATABASE_URL_PROD
   if (!productionUrl) throw new Error('DATABASE_URL_PROD must be set when DB_MODE=prod.')
 
-  return { DATABASE_URL: productionUrl, DB_MODE: 'prod' }
+  return {
+    DATABASE_URL: productionUrl,
+    DB_MODE: 'prod',
+    PRODUCTION_DATABASE_CONFIRMATION,
+  }
 }
 
 async function confirmProductionDatabase(): Promise<void> {
@@ -67,6 +73,22 @@ async function confirmProductionDatabase(): Promise<void> {
   if (!confirmed) throw new Error('Cancelled.')
 }
 
+async function confirmDestructiveProductionDatabase(command: 'db-push' | 'reset-db'): Promise<void> {
+  if (process.env.DB_MODE !== 'prod') return
+
+  const action =
+    command === 'reset-db' ? 'drop the production schema and migrate it again' : 'push schema changes to production'
+  const confirmed = await p.confirm({ message: `Second confirmation: permanently ${action}?` })
+  if (p.isCancel(confirmed) || !confirmed) throw new Error('Cancelled.')
+}
+
+async function confirmProductionDemoSeed(): Promise<void> {
+  if (process.env.DB_MODE !== 'prod') return
+
+  const confirmed = await p.confirm({ message: 'Run the demo seed against the production database anyway?' })
+  if (p.isCancel(confirmed) || !confirmed) throw new Error('Cancelled.')
+}
+
 async function main(): Promise<void> {
   if (!process.stdin.isTTY || !process.stdout.isTTY) {
     printUsage()
@@ -74,9 +96,9 @@ async function main(): Promise<void> {
   }
 
   try {
-    await confirmProductionDatabase()
     const selected = await selectCommand()
     if (!selected) return
+    await confirmProductionDatabase()
     await mainCommand(selected)
   } finally {
     process.stdin.setRawMode?.(false)
@@ -90,6 +112,12 @@ async function mainCommand(command: string): Promise<void> {
       {
         const useDefault = await p.confirm({ message: 'Use default creds?' })
         if (p.isCancel(useDefault)) return
+        if (useDefault && process.env.DB_MODE === 'prod') {
+          const confirmed = await p.confirm({
+            message: 'These default credentials are unsafe for production. Continue anyway?',
+          })
+          if (p.isCancel(confirmed) || !confirmed) throw new Error('Cancelled.')
+        }
         const adminArgs = !useDefault
           ? [
               '--email',
@@ -108,14 +136,17 @@ async function mainCommand(command: string): Promise<void> {
       }
       return
     case 'demo-seed':
+      await confirmProductionDemoSeed()
       await run('bun', ['scripts/demo-seed.ts'])
       return
+    case 'db-push':
+      await confirmDestructiveProductionDatabase('db-push')
+      await run('bun', ['scripts/push-db.ts'], databaseEnvironment())
+      return
     case 'reset-db': {
-      if (process.env.DB_MODE === 'prod') {
-        const confirmed = await p.confirm({ message: 'ARE YOU SURE?' })
-        if (p.isCancel(confirmed) || !confirmed) throw new Error('Cancelled.')
-      }
+      await confirmDestructiveProductionDatabase('reset-db')
       await run('bun', ['scripts/reset-db.ts'], databaseEnvironment())
+      if (process.env.DB_MODE === 'prod') return
       const seed = await p.confirm({ message: 'would you like to run the seed script as well?' })
       if (p.isCancel(seed)) return
       if (seed) await run('bun', ['scripts/demo-seed.ts'], databaseEnvironment())
