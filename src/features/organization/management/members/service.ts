@@ -14,7 +14,6 @@ async function createUser(input: { name: string; email: string; password: string
       email: input.email.trim().toLowerCase(),
       password: input.password,
       role: 'user',
-      data: { emailVerified: true },
     },
   })
   return db
