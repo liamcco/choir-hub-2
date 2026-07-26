@@ -3,7 +3,7 @@ import { ThemeProvider } from '@wrksz/themes/next'
 import type { Metadata } from 'next'
 import './globals.css'
 
-import { Toaster } from '@/shared/ui/sonner'
+import { Toaster } from '@/shared/ui/toast'
 import { cn } from '@/shared/utils'
 
 export const metadata: Metadata = {

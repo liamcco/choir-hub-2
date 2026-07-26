@@ -1,9 +1,9 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { toast } from 'sonner'
 import type { z } from 'zod'
 import type { FormState } from '@/shared/forms/types'
+import { toast } from '@/shared/ui/toast'
 
 export function FormMessage<T extends FormState<K>, K extends z.ZodType>({
   state,
@@ -21,12 +21,21 @@ export function FormMessage<T extends FormState<K>, K extends z.ZodType>({
 
     handledState.current = state
     if (state.success) {
-      toast.success(state.message, successAction ? { action: successAction } : undefined)
+      toast.add({
+        title: state.message,
+        type: 'success',
+        actionProps: successAction
+          ? {
+              children: successAction.label,
+              onClick: successAction.onClick,
+            }
+          : undefined,
+      })
       onSuccess?.()
       return
     }
 
-    toast.error(state.message)
+    toast.add({ title: state.message, type: 'error' })
   }, [onSuccess, state, successAction])
 
   return null

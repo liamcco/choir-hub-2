@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
-import { toast } from 'sonner'
+import { toast } from '@/shared/ui/toast'
 
 export function InvalidDetailLookup({
   collectionPath,
@@ -14,7 +14,7 @@ export function InvalidDetailLookup({
   const router = useRouter()
 
   useEffect(() => {
-    toast.error(`${resourceName} not found.`)
+    toast.add({ title: `${resourceName} not found.`, type: 'error' })
     router.replace(collectionPath, { scroll: false })
   }, [collectionPath, resourceName, router])
 
