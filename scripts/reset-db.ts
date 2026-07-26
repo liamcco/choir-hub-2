@@ -2,7 +2,7 @@ import 'dotenv/config'
 
 import { spawnSync } from 'node:child_process'
 import { reset } from 'drizzle-seed'
-import { db, sql } from '@/drizzle/db'
+import { db, sql } from '@/core/db'
 import * as schema from '@/drizzle/schema'
 
 if (process.env.DB_MODE !== 'local' && process.env.DB_MODE !== 'prod') {
