@@ -3,15 +3,23 @@
  * External identifiers must be resolved with a `resolve*` helper before entering domain logic;
  * strict `get*` helpers are reserved for already validated topology IDs.
  */
+import type {
+  Choir as CoreChoir,
+  Group as CoreGroup,
+  GroupKind as CoreGroupKind,
+  Position as CorePosition,
+  Section as CoreSection,
+  TopologyScopeType as CoreTopologyScopeType,
+  TopologyStatus,
+} from '@/core/types'
+import { baseVoice, isFineVoice } from '@/core/types'
 import { topologyData } from './data'
 import { DuplicateEntityError, InvalidRelationshipError } from './errors'
+import type { Topology as CoreTopology } from './types'
 
 export { topologyData } from './data'
 export { DuplicateEntityError, InvalidRelationshipError } from './errors'
-
-export type TopologyStatus = 'active' | 'retired'
-export type VoiceType = 'S' | 'S1' | 'S2' | 'A' | 'A1' | 'A2' | 'T' | 'T1' | 'T2' | 'B' | 'B1' | 'B2'
-export type FineVoiceType = Exclude<VoiceType, 'S' | 'A' | 'T' | 'B'>
+export type { Topology, TopologyData } from './types'
 
 /** Runtime discriminators used by every topology scope. */
 export const TopologyScopeType = {
@@ -20,37 +28,27 @@ export const TopologyScopeType = {
   SECTION: 'section',
   GROUP: 'group',
 } as const
-export type TopologyScopeType = (typeof TopologyScopeType)[keyof typeof TopologyScopeType]
+export type TopologyScopeType = CoreTopologyScopeType
 
 export type ChoirId = (typeof topologyData.choirs)[number]['id']
 export type SectionId = (typeof topologyData.sections)[number]['id']
 export type GroupId = (typeof topologyData.groups)[number]['id']
 export type PositionId = (typeof topologyData.positions)[number]['id']
-export type GroupKind = 'committee' | 'board'
-
+export type GroupKind = CoreGroupKind
 /** Stable display order for Choirs in administrative collections. */
 export const ChoirId = { KK: 'kk', MK: 'mk', DK: 'dk' } as const satisfies Record<string, ChoirId>
 
-export type Choir = {
-  readonly id: ChoirId
-  readonly name: string
-  readonly shortName: string
-  readonly status: TopologyStatus
-}
-export type Section = {
+export type Choir = Omit<CoreChoir, 'id' | 'status'> & { readonly id: ChoirId; readonly status: TopologyStatus }
+export type Section = Omit<CoreSection, 'id' | 'choirId' | 'status'> & {
   readonly id: SectionId
   readonly choirId: ChoirId
-  readonly name: string
-  readonly allowedVoiceTypes: readonly FineVoiceType[]
   readonly status: TopologyStatus
 }
 export type GroupScope =
   | { readonly type: typeof TopologyScopeType.CSK }
   | { readonly type: typeof TopologyScopeType.CHOIR; readonly choirId: ChoirId }
-export type Group = {
+export type Group = Omit<CoreGroup, 'id' | 'scope' | 'status'> & {
   readonly id: GroupId
-  readonly kind: GroupKind
-  readonly name: string
   readonly scope: GroupScope
   readonly status: TopologyStatus
 }
@@ -59,33 +57,25 @@ export type PositionScope =
   | { readonly type: typeof TopologyScopeType.CHOIR; readonly choirId: ChoirId }
   | { readonly type: typeof TopologyScopeType.SECTION; readonly sectionId: SectionId }
   | { readonly type: typeof TopologyScopeType.GROUP; readonly groupId: GroupId }
-export type Position = {
+export type Position = Omit<CorePosition, 'id' | 'scopes' | 'status'> & {
   readonly id: PositionId
-  readonly name: string
   readonly scopes: readonly PositionScope[]
   readonly status: TopologyStatus
 }
-export type Topology = {
-  readonly choirs: readonly Choir[]
-  readonly sections: readonly Section[]
-  readonly groups: readonly Group[]
-  readonly positions: readonly Position[]
-}
-
 function withDefaultStatus<T extends { readonly id: string }>(
   entity: T & { readonly status?: TopologyStatus },
 ): Omit<T, 'status'> & { readonly status: TopologyStatus } {
   return { ...entity, status: entity.status ?? 'active' }
 }
 
-export const topology: Topology = {
+export const topology: CoreTopology<Choir, Section, Group, Position> = {
   choirs: topologyData.choirs.map((choir) => withDefaultStatus(choir)),
   sections: topologyData.sections.map((section) => withDefaultStatus(section)),
   groups: topologyData.groups.map((group) => withDefaultStatus(group)),
   positions: topologyData.positions.map((position) => withDefaultStatus(position)),
 }
 
-export const GroupKind = { COMMITTEE: 'committee', BOARD: 'board' } as const
+export const GroupKind = { COMMITTEE: 'committee', BOARD: 'board' } as const satisfies Record<string, CoreGroupKind>
 
 const choirsById = new Map<string, Choir>(topology.choirs.map((choir) => [choir.id, choir]))
 const sectionsById = new Map<string, Section>(topology.sections.map((section) => [section.id, section]))
@@ -169,7 +159,7 @@ export function isActiveTopologyEntity(entity: { status: TopologyStatus }): bool
   return entity.status === 'active'
 }
 
-export function validateTopology(candidate: Topology = topology): Topology {
+export function validateTopology(candidate: CoreTopology = topology): CoreTopology {
   const ids = new Set<string>()
   const addId = (id: string) => {
     if (ids.has(id)) throw new DuplicateEntityError(`Topology identifier is duplicated: ${id}.`)
@@ -186,12 +176,12 @@ export function validateTopology(candidate: Topology = topology): Topology {
     assertStatus(section.status, `Section ${section.id}`)
     if (!choirIds.has(section.choirId))
       throw new InvalidRelationshipError(`Section ${section.id} references an unknown Choir.`)
-    if (section.allowedVoiceTypes.length === 0)
-      throw new InvalidRelationshipError(`Section ${section.id} must allow at least one Voice Type.`)
-    if (!section.allowedVoiceTypes.every((voiceType) => /^(S|A|T|B)[12]$/.test(voiceType)))
-      throw new InvalidRelationshipError(`Section ${section.id} uses an invalid Voice Type in its allowed types.`)
-    if (new Set(section.allowedVoiceTypes.map((voiceType) => voiceType[0])).size !== 1)
-      throw new InvalidRelationshipError(`Section ${section.id} allows a mismatched Voice Type family.`)
+    if (section.allowedVoices.length === 0)
+      throw new InvalidRelationshipError(`Section ${section.id} must allow at least one Voice.`)
+    if (!section.allowedVoices.every(isFineVoice))
+      throw new InvalidRelationshipError(`Section ${section.id} uses an invalid Voice in its allowed voices.`)
+    if (new Set(section.allowedVoices.map(baseVoice)).size !== 1)
+      throw new InvalidRelationshipError(`Section ${section.id} allows a mismatched Voice family.`)
   }
 
   const groupIds = new Set<string>()
@@ -228,7 +218,7 @@ export function validateTopology(candidate: Topology = topology): Topology {
   return candidate
 }
 
-function assertStatus(status: string, label: string): asserts status is TopologyStatus {
+function assertStatus(status: string | undefined, label: string): asserts status is TopologyStatus {
   if (status !== 'active' && status !== 'retired') throw new InvalidRelationshipError(`${label} has an invalid status.`)
 }
 

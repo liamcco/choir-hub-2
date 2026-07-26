@@ -18,7 +18,7 @@ After this effort:
 
 - CSK is the application boundary and has no database Group record.
 - MK, KK, and DK are fixed Choir records.
-- The twelve accepted choir-specific Sections reference shared fine-grained Voice Types.
+- The twelve accepted choir-specific Sections reference shared fine-grained Voices.
 - Choir Membership, Section Placement, explicit Committee membership, and Position Assignment have distinct persistence and write behavior.
 - Groups are fixed, flat Committee or Board records scoped either CSK-wide or to one Choir.
 - Positions and Position Scopes are fixed reference data; admins manage only Assignments.
@@ -55,7 +55,7 @@ Use stable, code-controlled identifiers and an idempotent foundation synchroniza
 The code-controlled catalog must validate itself before writing:
 
 - every identifier is unique;
-- every Section belongs to one known Choir and uses one fine-grained Voice Type;
+- every Section belongs to one known Choir and uses one fine-grained Voice;
 - every Group has exactly one valid Group Scope;
 - Group names are unique within Group Scope;
 - every Position Scope references a known target;
@@ -111,7 +111,7 @@ The collection columns are:
 
 `Name | Home Choir | Voice | Status`
 
-Home Choir and Voice are singular nullable values. Voice displays only the bare fine-grained Voice Type (for example, `T1` or `B2`); the Section remains a domain relationship but is not a collection column.
+Home Choir and Voice are singular nullable values. Voice displays only the bare fine-grained Voice (for example, `T1` or `B2`); the Section remains a domain relationship but is not a collection column.
 
 User detail separates:
 
@@ -256,7 +256,7 @@ The Prisma schema must make the accepted concepts visible rather than encoding t
 At minimum:
 
 - `Choir` owns Sections and Choir Memberships.
-- `Section` references its Choir and fine-grained Voice Type.
+- `Section` references its Choir and fine-grained Voice.
 - `ChoirMembership` references User and Choir.
 - `SectionPlacement` references User and Section.
 - `GroupKind` contains only Committee and Board.
@@ -267,7 +267,7 @@ At minimum:
 
 The implementation may use one typed Position Scope table or several target-specific join tables. Choose the shape that gives PostgreSQL real foreign keys and keeps the domain module interface small; do not use unchecked arbitrary target IDs.
 
-Base Voice Types and combined categories such as SA and TB remain code vocabulary for future matching. Section persistence accepts only the eight fine-grained numbered Voice Types.
+Base Voices and combined categories such as SA and TB remain code vocabulary for future matching. Section persistence accepts only the eight fine-grained numbered Voices.
 
 ## Database reset and migration strategy
 

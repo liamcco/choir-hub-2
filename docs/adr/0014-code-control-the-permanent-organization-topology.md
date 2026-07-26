@@ -10,7 +10,7 @@ The permanent Section topology is exactly:
 - KK: S1, S2, A1, A2, T1, T2, B1, B2
 - DK: S1, S2, A1, A2
 
-These are twelve distinct choir-specific Section records referencing the shared Voice Types.
+These are twelve distinct choir-specific Section records referencing the shared Voices.
 
 The fixed Group catalog contains one CSK-wide Board and the CSK-wide Concert Mastery, Gig Mastery, Party Mastery, Web Mastery, Tour Committee, and Recruitment Committee. Each of MK, KK, and DK also has its own choir-scoped Concert Group, Party Group, and Rodd Group; all non-Board bodies use Group Kind Committee regardless of whether their displayed name ends in “Mastery,” “Committee,” or “Group.”
 

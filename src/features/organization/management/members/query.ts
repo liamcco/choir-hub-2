@@ -4,6 +4,7 @@ import { headers } from 'next/headers'
 import { connection } from 'next/server'
 import { auth } from '@/core/auth/auth'
 import { listGroups, listPositions, topology } from '@/core/topology'
+import { type FineVoice, isFineVoice, type Voice } from '@/core/types'
 import { organizationService } from '@/features/organization'
 import { isCurrentDatedPeriod, isHistoricalDatedPeriod } from '@/features/organization/core/dated-history'
 import {
@@ -158,19 +159,20 @@ export const listMemberCollection = listCollection
 export const getMemberDetail = getDetail
 
 function formatPlacementLabel(
-  placement: { sectionId: string; voiceType: string } | undefined,
+  placement: { sectionId: string; voice: Voice } | undefined,
   sections: ReadonlyMap<string, { name: string; choirId: string }>,
   choirs: ReadonlyMap<string, { shortName: string }>,
 ) {
   if (!placement) return null
+  if (!isFineVoice(placement.voice)) return null
   const section = sections.get(placement.sectionId)
   const choir = section ? choirs.get(section.choirId) : undefined
-  return choir ? formatFineGrainedPlacementName(choir.shortName, placement.voiceType) : null
+  return choir ? formatFineGrainedPlacementName(choir.shortName, placement.voice) : null
 }
 
-function formatPlacementVoice(placement: { voiceType: string } | undefined) {
+function formatPlacementVoice(placement: { voice: Voice } | undefined): FineVoice | null {
   if (!placement) return null
-  return placement.voiceType
+  return isFineVoice(placement.voice) ? placement.voice : null
 }
 
 function compareEndedPeriods(first: { id: string; endsAt?: Date }, second: { id: string; endsAt?: Date }) {

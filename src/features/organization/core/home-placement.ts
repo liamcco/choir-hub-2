@@ -2,7 +2,8 @@ import 'server-only'
 
 import { and, asc, eq, gt, isNull, lte, or } from 'drizzle-orm'
 import { db } from '@/core/db'
-import { resolveChoir, resolveSection, type VoiceType } from '@/core/topology'
+import { resolveChoir, resolveSection } from '@/core/topology'
+import type { FineVoice } from '@/core/types'
 import { choirMembership, sectionPlacement, user } from '@/drizzle/schema'
 import { assertValidDatedPeriod, datedPeriodsOverlap, normalizeDatedPeriodInput } from './dated-history'
 import { DateOverlapError, EntityDoesNotExistError, InvalidRelationshipError } from './errors'
@@ -39,7 +40,7 @@ export const homePlacement = {
   async startSectionPlacement(input: {
     userId: string
     sectionId: string
-    voiceType: VoiceType
+    voice: FineVoice
     startsAt?: Date
     endsAt?: Date | null
   }) {
@@ -47,8 +48,8 @@ export const homePlacement = {
     const target = resolveSection(input.sectionId)
     if (target?.status !== 'active')
       throw new EntityDoesNotExistError('Choose an existing Section.', { field: 'sectionId' })
-    if (!target.allowedVoiceTypes.includes(input.voiceType as never))
-      throw new InvalidRelationshipError('Choose a Voice Type allowed by the Section.', { field: 'voiceType' })
+    if (!target.allowedVoices.includes(input.voice))
+      throw new InvalidRelationshipError('Choose a Voice allowed by the Section.', { field: 'voice' })
     const memberships = await this.listChoirMemberships({ userId: input.userId })
     if (!memberships.some((m) => m.choirId === target.choirId && covers(m, period)))
       throw new InvalidRelationshipError('Section Placement must be covered by a matching Choir Membership.', {

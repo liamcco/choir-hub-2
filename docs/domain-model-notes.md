@@ -33,11 +33,11 @@ The previous model treated a Voice as a current membership in a Group of kind Se
 - A Section Placement is a User's dated placement in a Section of their Home Choir.
 - A User has at most one current Section Placement, may transfer without losing history, and may have no current placement.
 - Singing a different part for a project does not create another Section Placement.
-- Voice Type is a fixed organization-wide taxonomy, independent of choir-specific Sections.
-- MK T1 and KK T1 are distinct Sections that reference the same T1 Voice Type.
+- Voice is a fixed organization-wide taxonomy, independent of choir-specific Sections.
+- MK T1 and KK T1 are distinct Sections that reference the same T1 Voice.
 - The taxonomy contains the undivided base types S, A, T, and B and numbered refinements such as B1 and B2.
-- Every Section references one fine-grained numbered Voice Type; a singer cannot belong to a generic S, A, T, or B Section.
-- Voice Capabilities and Voice Offers allow only fine-grained numbered types.
+- Every Section references one fine-grained numbered Voice; a singer cannot belong to a generic S, A, T, or B Section.
+- Voice Capabilities and Voice Offers allow only fine-grained numbered Voices.
 - A singer who can cover both B1 and B2 selects both explicitly rather than selecting B.
 - B1 qualifies a singer for an undivided B Part or B Audience but does not imply B2; the equivalent rule applies to the other voice families.
 - Treble Voices, also called SA voices, means S1, S2, A1, and A2 across all Choirs and is not derived from a User's gender.
@@ -47,10 +47,10 @@ The previous model treated a Voice as a current membership in a Group of kind Se
 - A Song is the identity of a musical work independently of scoring.
 - One Song may have multiple Arrangements, such as SATB and TTBB.
 - An Arrangement owns its musical parts and may contain one undivided bass harmony, B, or split it into B1 and B2.
-- An Arrangement contains explicit Parts, and each Part references one global Voice Type.
-- A singer's current Section Placement supplies their default Voice Type automatically.
-- Additional Voice Capabilities record the Voice Types a singer can generally cover outside their usual Section Placement.
-- A Voice Offer records which Voice Types a singer is willing to sing for one event; it is distinct from both capability and placement.
+- An Arrangement contains explicit Parts, and each Part references one global Voice.
+- A singer's current Section Placement supplies their default Voice automatically.
+- Additional Voice Capabilities record the Voices a singer can generally cover outside their usual Section Placement.
+- A Voice Offer records which Voices a singer is willing to sing for one event; it is distinct from both capability and placement.
 - A User's Event Voice defaults from their current Section Placement, is stored separately from their other Voice Offers, and may be reassigned by an event organizer.
 - Event Voice is event-level registration and reporting data, not a song-specific Part assignment.
 - Event reporting should eventually show the distribution of parts among participating singers.
@@ -58,9 +58,9 @@ The previous model treated a Voice as a current membership in a Group of kind Se
 - Resource Audience determines content visibility and is distinct from authorization to create, edit, or administer the resource.
 - Audience rules reference the relevant domain relationship directly rather than creating synthetic access Groups.
 - Current Effective Group Membership, whether explicit or Position-derived, can grant Audience access to a committee, webmaster body, or the Board.
-- In v1, Voice Type Audiences derive from current Section Placement; capability-based Audiences are distinct but deferred.
+- In v1, Voice Audiences derive from current Section Placement; capability-based Audiences are distinct but deferred.
 
-The overloaded uses of `Voice` have been separated into Section Placement, Voice Type, Voice Capability, Voice Offer, and arrangement-specific Part.
+The overloaded uses of `Voice` have been separated into Section Placement, Voice, Voice Capability, Voice Offer, and arrangement-specific Part.
 
 The current implementation and admin-management specification conflict with this accepted model: they derive Voice from any current Section membership and deliberately permit multiple simultaneous values. They must be revised after the domain-modeling session.
 
@@ -111,18 +111,18 @@ The current implementation and admin-management specification conflict with this
 
 - Repertoire details beyond the accepted Song → Arrangement → Part boundary are deferred until after v1 organizational modeling.
 - Far-future user-created chat or content collections are deferred without deciding whether they are Spaces or organizational Groups.
-- Capability-based resource Audiences are deferred; v1 Voice Type Audiences use current Section Placement.
+- Capability-based resource Audiences are deferred; v1 Voice Audiences use current Section Placement.
 - `Event`: needed later for rehearsals, concerts, meetings, services, and other dated choir activities; modeling beyond the accepted Voice Offer and Event Voice boundaries is deferred until after v1.
 - `Attendance`: needed later to record User participation or absence for Events.
 - `EventGroup` or equivalent targeting: needed later if Events are aimed at one or more Groups.
 - Internal information: needed later for User-facing pages, documents, notices, or knowledge-base content.
 - User profile/contact details: deferred until concrete directory, communication, or administration workflows define the fields.
-- Audience behavior beyond the accepted v1 Home Choir, Section, Voice Type, Committee, and Board targets is deferred.
+- Audience behavior beyond the accepted v1 Home Choir, Section, Voice, Committee, and Board targets is deferred.
 - Temporary or derived cohorts: needed later for attendance lists, filters, or operational subsets, but should not be modeled as `Group` unless they become durable organizational units.
 
 ## Unresolved Organizational Questions
 
-- How nonstandard, solo, or unison Arrangement Parts should relate to Voice Types.
+- How nonstandard, solo, or unison Arrangement Parts should relate to Voices.
 - Whether Position Assignment needs extra metadata, such as appointment source, notes, or handover date.
 - Whether non-overlap invariants should eventually be enforced in PostgreSQL exclusion constraints, service logic, or both.
 - Whether future choir-specific profile fields should live directly on User or in a separate supporting model.

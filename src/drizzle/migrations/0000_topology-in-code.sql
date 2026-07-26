@@ -1,5 +1,5 @@
 CREATE TYPE "public"."MemberStatus" AS ENUM('active', 'passive', 'former');--> statement-breakpoint
-CREATE TYPE "public"."VoiceType" AS ENUM('S', 'S1', 'S2', 'A', 'A1', 'A2', 'T', 'T1', 'T2', 'B', 'B1', 'B2');--> statement-breakpoint
+CREATE TYPE "public"."Voice" AS ENUM('S', 'S1', 'S2', 'A', 'A1', 'A2', 'T', 'T1', 'T2', 'B', 'B1', 'B2');--> statement-breakpoint
 CREATE TABLE "account" (
 	"id" text PRIMARY KEY NOT NULL,
 	"accountId" text NOT NULL,
@@ -116,10 +116,11 @@ CREATE TABLE "SectionPlacement" (
 	"id" text PRIMARY KEY DEFAULT gen_random_uuid()::text NOT NULL,
 	"userId" text NOT NULL,
 	"sectionId" text NOT NULL,
-	"voiceType" "VoiceType" NOT NULL,
+	"voice" "Voice" NOT NULL,
 	"startsAt" timestamp NOT NULL,
 	"endsAt" timestamp,
 	CONSTRAINT "SectionPlacement_user_id_starts_at_key" UNIQUE("userId","startsAt"),
+	CONSTRAINT "SectionPlacement_fine_voice_check" CHECK ("voice" ~ '^(S|A|T|B)[12]$'),
 	CONSTRAINT "SectionPlacement_valid_period_check" CHECK ("endsAt" IS NULL OR "endsAt" > "startsAt")
 );
 --> statement-breakpoint

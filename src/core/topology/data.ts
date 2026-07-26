@@ -5,6 +5,7 @@
  * identifiers, while runtime readers resolve their meaning from this module.
  * Omitted lifecycle status means active; retired entities must say so explicitly.
  */
+import type { TopologyData } from './types'
 
 const MK = { id: 'mk', name: 'Manskören', shortName: 'MK' } as const
 const KK = { id: 'kk', name: 'Kammarkören', shortName: 'KK' } as const
@@ -12,18 +13,18 @@ const DK = { id: 'dk', name: 'Damkören', shortName: 'DK' } as const
 
 const choirs = [MK, KK, DK] as const
 
-const MK_T1 = { id: 'mk-t1', choirId: MK.id, name: 'T1', allowedVoiceTypes: ['T1'] } as const
-const MK_T2 = { id: 'mk-t2', choirId: MK.id, name: 'T2', allowedVoiceTypes: ['T2'] } as const
-const MK_B1 = { id: 'mk-b1', choirId: MK.id, name: 'B1', allowedVoiceTypes: ['B1'] } as const
-const MK_B2 = { id: 'mk-b2', choirId: MK.id, name: 'B2', allowedVoiceTypes: ['B2'] } as const
-const KK_S = { id: 'kk-s', choirId: KK.id, name: 'S', allowedVoiceTypes: ['S1', 'S2'] } as const
-const KK_A = { id: 'kk-a', choirId: KK.id, name: 'A', allowedVoiceTypes: ['A1', 'A2'] } as const
-const KK_T = { id: 'kk-t', choirId: KK.id, name: 'T', allowedVoiceTypes: ['T1', 'T2'] } as const
-const KK_B = { id: 'kk-b', choirId: KK.id, name: 'B', allowedVoiceTypes: ['B1', 'B2'] } as const
-const DK_S1 = { id: 'dk-s1', choirId: DK.id, name: 'S1', allowedVoiceTypes: ['S1'] } as const
-const DK_S2 = { id: 'dk-s2', choirId: DK.id, name: 'S2', allowedVoiceTypes: ['S2'] } as const
-const DK_A1 = { id: 'dk-a1', choirId: DK.id, name: 'A1', allowedVoiceTypes: ['A1'] } as const
-const DK_A2 = { id: 'dk-a2', choirId: DK.id, name: 'A2', allowedVoiceTypes: ['A2'] } as const
+const MK_T1 = { id: 'mk-t1', choirId: MK.id, name: 'T1', allowedVoices: ['T1'] } as const
+const MK_T2 = { id: 'mk-t2', choirId: MK.id, name: 'T2', allowedVoices: ['T2'] } as const
+const MK_B1 = { id: 'mk-b1', choirId: MK.id, name: 'B1', allowedVoices: ['B1'] } as const
+const MK_B2 = { id: 'mk-b2', choirId: MK.id, name: 'B2', allowedVoices: ['B2'] } as const
+const KK_S = { id: 'kk-s', choirId: KK.id, name: 'S', allowedVoices: ['S1', 'S2'] } as const
+const KK_A = { id: 'kk-a', choirId: KK.id, name: 'A', allowedVoices: ['A1', 'A2'] } as const
+const KK_T = { id: 'kk-t', choirId: KK.id, name: 'T', allowedVoices: ['T1', 'T2'] } as const
+const KK_B = { id: 'kk-b', choirId: KK.id, name: 'B', allowedVoices: ['B1', 'B2'] } as const
+const DK_S1 = { id: 'dk-s1', choirId: DK.id, name: 'S1', allowedVoices: ['S1'] } as const
+const DK_S2 = { id: 'dk-s2', choirId: DK.id, name: 'S2', allowedVoices: ['S2'] } as const
+const DK_A1 = { id: 'dk-a1', choirId: DK.id, name: 'A1', allowedVoices: ['A1'] } as const
+const DK_A2 = { id: 'dk-a2', choirId: DK.id, name: 'A2', allowedVoices: ['A2'] } as const
 
 const sections = [MK_T1, MK_T2, MK_B1, MK_B2, KK_S, KK_A, KK_T, KK_B, DK_S1, DK_S2, DK_A1, DK_A2] as const
 
@@ -365,4 +366,4 @@ export const topologyData = {
   sections,
   groups,
   positions,
-} as const
+} as const satisfies TopologyData

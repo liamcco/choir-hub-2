@@ -32,4 +32,12 @@ describe('topology-in-code migration PostgreSQL guarantees', () => {
     expect(migration).not.toContain('REFERENCES "public"."Position"')
     expect(migration).not.toContain('REFERENCES "public"."Section"')
   })
+
+  test('stores placements with the shared Voice enum while restricting them to fine voices', () => {
+    expect(migration).toContain('CREATE TYPE "public"."Voice" AS ENUM')
+    expect(migration).toContain('"voice" "Voice" NOT NULL')
+    expect(migration).toContain('SectionPlacement_fine_voice_check')
+    expect(migration).not.toContain('VoiceType')
+    expect(migration).not.toContain('voiceType')
+  })
 })

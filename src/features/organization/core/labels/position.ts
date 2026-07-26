@@ -1,4 +1,5 @@
 import { getChoir, getGroup, getSection, type PositionScope, TopologyScopeType } from '@/core/topology'
+import type { FineVoice } from '@/core/types'
 
 /**
  * Formats permanent Position Scopes using the canonical topology definitions.
@@ -31,6 +32,6 @@ export function formatSectionName(choirShortName: string, sectionName: string) {
   return `${choirShortName}${sectionName}`
 }
 
-export function formatFineGrainedPlacementName(choirShortName: string, voiceType: string) {
-  return `${choirShortName}${voiceType}`
+export function formatFineGrainedPlacementName(choirShortName: string, voice: FineVoice) {
+  return `${choirShortName}${voice}`
 }

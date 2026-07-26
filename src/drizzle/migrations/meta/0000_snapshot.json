@@ -977,9 +977,9 @@
           "primaryKey": false,
           "notNull": true
         },
-        "voiceType": {
-          "name": "voiceType",
-          "type": "VoiceType",
+        "voice": {
+          "name": "voice",
+          "type": "Voice",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true
@@ -1062,6 +1062,10 @@
       },
       "policies": {},
       "checkConstraints": {
+        "SectionPlacement_fine_voice_check": {
+          "name": "SectionPlacement_fine_voice_check",
+          "value": "\"voice\" ~ '^(S|A|T|B)[12]$'"
+        },
         "SectionPlacement_valid_period_check": {
           "name": "SectionPlacement_valid_period_check",
           "value": "\"endsAt\" IS NULL OR \"endsAt\" > \"startsAt\""
@@ -1076,8 +1080,8 @@
       "schema": "public",
       "values": ["active", "passive", "former"]
     },
-    "public.VoiceType": {
-      "name": "VoiceType",
+    "public.Voice": {
+      "name": "Voice",
       "schema": "public",
       "values": ["S", "S1", "S2", "A", "A1", "A2", "T", "T1", "T2", "B", "B1", "B2"]
     }

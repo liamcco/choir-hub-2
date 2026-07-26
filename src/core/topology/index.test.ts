@@ -22,7 +22,7 @@ describe('topology', () => {
     ])
     expect(topology.sections.find(({ id }) => id === 'kk-b')).toMatchObject({
       name: 'B',
-      allowedVoiceTypes: ['B1', 'B2'],
+      allowedVoices: ['B1', 'B2'],
     })
   })
 
@@ -90,11 +90,11 @@ describe('topology', () => {
             id: 'invalid-section' as never,
             choirId: 'mk',
             name: 'T',
-            allowedVoiceTypes: ['X' as never],
+            allowedVoices: ['X' as never],
             status: 'active',
           },
         ],
       } as Topology),
-    ).toThrow('invalid Voice Type')
+    ).toThrow('invalid Voice')
   })
 })

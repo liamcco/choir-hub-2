@@ -2,7 +2,7 @@ import { sql } from 'drizzle-orm'
 import { check, index, pgEnum, pgTable, text, timestamp, unique } from 'drizzle-orm/pg-core'
 import { user } from './auth'
 
-export const voiceType = pgEnum('VoiceType', ['S', 'S1', 'S2', 'A', 'A1', 'A2', 'T', 'T1', 'T2', 'B', 'B1', 'B2'])
+export const voice = pgEnum('Voice', ['S', 'S1', 'S2', 'A', 'A1', 'A2', 'T', 'T1', 'T2', 'B', 'B1', 'B2'])
 
 export const choirMembership = pgTable(
   'ChoirMembership',
@@ -31,7 +31,7 @@ export const sectionPlacement = pgTable(
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
     sectionId: text('sectionId').notNull(),
-    voiceType: voiceType('voiceType').notNull(),
+    voice: voice('voice').notNull(),
     startsAt: timestamp('startsAt').notNull(),
     endsAt: timestamp('endsAt'),
   },
@@ -39,6 +39,7 @@ export const sectionPlacement = pgTable(
     unique('SectionPlacement_user_id_starts_at_key').on(table.userId, table.startsAt),
     index('SectionPlacement_user_id_ends_at_idx').on(table.userId, table.endsAt),
     index('SectionPlacement_section_id_ends_at_idx').on(table.sectionId, table.endsAt),
+    check('SectionPlacement_fine_voice_check', sql`"voice" ~ '^(S|A|T|B)[12]$'`),
     check('SectionPlacement_valid_period_check', sql`"endsAt" IS NULL OR "endsAt" > "startsAt"`),
   ],
 )

@@ -61,31 +61,31 @@ A permanent, choir-specific body of singers whose granularity follows that Choir
 _Avoid_: Organization-wide voice category, musical part, singer capability
 
 **Section Placement**:
-A User's dated placement in a Section and, where the Choir's model distinguishes them, its fine-grained Voice Type within their Home Choir. A User has at most one current Section Placement, may transfer without losing history, and does not gain another placement by singing a different part for a project or event. KK singers are always described by the fine-grained combination, such as KKB1; the underlying Section is KKB.
-_Avoid_: Group Membership, Voice, singing capability, project part assignment
+A User's dated placement in a Section and, where the Choir's model distinguishes them, its fine-grained Voice within their Home Choir. A User has at most one current Section Placement, may transfer without losing history, and does not gain another placement by singing a different part for a project or event. KK singers are always described by the fine-grained combination, such as KKB1; the underlying Section is KKB.
+_Avoid_: Group Membership, singing capability, project part assignment
 
-**Voice Type**:
-A fixed, organization-wide classification of choral voice, independent of any choir-specific Section. Base types S, A, T, and B are matching categories for undivided musical Parts and Audiences; numbered types such as S1 and B1 are fine-grained singer designations. In KK, each base-family Section permits only its matching numbered types, so KKB permits B1 and B2 but not T1.
-_Avoid_: Voice, Section, singer capability, musical part, gender
+**Voice**:
+A fixed, organization-wide classification of choral voice. `Voice` includes the base voices S, A, T, and B and the fine voices S1, S2, A1, A2, T1, T2, B1, and B2. Base voices are inclusive matching categories for undivided musical Parts and Audiences; fine voices are numbered singer designations. In KK, each base-family Section permits only its matching fine voices, so KKB permits B1 and B2 but not T1.
+_Avoid_: Section, singer capability, musical part, gender
 
 **Voice Capability**:
-A fine-grained Voice Type that a User can generally sing, independent of organizational placement or willingness for a particular event. Users select each capability explicitly: selecting B1 also covers an undivided B Part but does not imply B2.
+A fine-grained Voice that a User can generally sing, independent of organizational placement or willingness for a particular event. Users select each capability explicitly: selecting B1 also covers an undivided B Part but does not imply B2.
 _Avoid_: Section Placement, Voice Offer, event assignment
 
 **Treble Voices**:
-The collective musical category S1, S2, A1, and A2 across all Choirs, used for Audiences that span those Voice Types. It is a musical classification rather than a statement about a User's gender.
+The collective musical category S1, S2, A1, and A2 across all Choirs, used for Audiences that span those Voices. It is a musical classification rather than a statement about a User's gender.
 _Avoid_: Female voices, women
 
 **TB Voices**:
-The collective musical category T1, T2, B1, and B2 across all Choirs, used for Audiences that span those Voice Types. It is a musical classification rather than a statement about a User's gender.
+The collective musical category T1, T2, B1, and B2 across all Choirs, used for Audiences that span those Voices. It is a musical classification rather than a statement about a User's gender.
 _Avoid_: Male voices, men
 
 **Voice Offer**:
-A User's event-specific declaration of the fine-grained Voice Types they are willing to sing. Users offer each type explicitly; an offer expresses current willingness rather than standing capability or the part ultimately assigned.
+A User's event-specific declaration of the fine-grained Voices they are willing to sing. Users offer each voice explicitly; an offer expresses current willingness rather than standing capability or the part ultimately assigned.
 _Avoid_: Voice Capability, Section Placement, event assignment
 
 **Event Voice**:
-The fine-grained Voice Type under which a User is registered for a particular singing event. It defaults from the User's current Section Placement, may be reassigned by an event organizer, and remains distinct from the User's other Voice Offers.
+The fine-grained Voice under which a User is registered for a particular singing event. It defaults from the User's current Section Placement, may be reassigned by an event organizer, and remains distinct from the User's other Voice Offers.
 _Avoid_: Section Placement, Voice Capability, Voice Offer, song-specific Part
 
 **Project Ensemble**:
@@ -93,7 +93,7 @@ A temporary singing formation assembled for one defined project or period. Each 
 _Avoid_: Choir, Section, Group, Event
 
 **Audience**:
-The domain criteria determining which Users may view a resource. In v1, an Audience may follow Home Choir, current Section Placement or its Voice Type, or current Effective Group Membership rather than creating synthetic access Groups.
+The domain criteria determining which Users may view a resource. In v1, an Audience may follow Home Choir, current Section Placement or its Voice, or current Effective Group Membership rather than creating synthetic access Groups.
 _Avoid_: Access Role, Permission Scope, admin permission
 
 **Song**:
@@ -105,8 +105,8 @@ A specific scored version of a Song, such as SATB or TTBB. An Arrangement owns t
 _Avoid_: Song, event-specific singer assignment
 
 **Part**:
-An arrangement-specific singable line that references one Voice Type. Parts belong to an Arrangement rather than to a Section or singer.
-_Avoid_: Voice, Voice Type, Section, event-specific singer assignment
+An arrangement-specific singable line that references one Voice. Parts belong to an Arrangement rather than to a Section or singer.
+_Avoid_: Section, event-specific singer assignment
 
 **Position**:
 A fixed choir office or role that may be relevant to one or more organizational scopes and can be held by only one User at a time. Position names are not globally unique; administrators manage who holds a Position rather than the Position definition itself.

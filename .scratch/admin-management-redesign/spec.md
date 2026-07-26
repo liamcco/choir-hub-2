@@ -112,9 +112,9 @@ Use the validated Variant C visual direction: an airy collection canvas, quiet r
 - Interactive column sorting is deferred. Each resource query supplies a deliberate, stable default order, with names as the principal browse order and stable identity as a tie-breaker where necessary.
 - Table rows are browse affordances. Do not add edit, relationship, overflow-menu, or destructive action columns.
 - Member is the collection's primary entity. Auth User identity, access state, roles, and credentials remain subordinate information shown inside Member detail where relevant.
-- Member collection columns are Name, Choir, Voice, and Status. Voice displays only the bare fine-grained Voice Type.
+- Member collection columns are Name, Choir, Voice, and Status. Voice displays only the bare fine-grained Voice.
 - Choir values are derived from all current Group Memberships whose Group Kind is Choir.
-- Voice values are derived from the current Section Placement and display its bare fine-grained Voice Type.
+- Voice values are derived from the current Section Placement and display its bare fine-grained Voice.
 - Create member preserves existing behavior: create the Auth User and its linked skeletal Member together. Successful creation navigates to the new Member detail.
 - Group collection columns are Name and Members. Groups are presented alphabetically within scope groups: CSK-wide Groups first without a heading, followed by `KK`, `MK`, and `DK` headings when those scopes contain Groups. Members means current direct Group Memberships only, and zero-member Groups remain visible.
 - The Groups header includes View hierarchy as a secondary action. The hierarchy is a dedicated route, not a modal.

@@ -7,13 +7,13 @@ import { listPositions, topology } from '@/core/topology'
  * rosters every time while keeping this file independent of roster size.
  */
 
-type DemoVoiceType = 'S1' | 'S2' | 'A1' | 'A2' | 'T1' | 'T2' | 'B1' | 'B2'
+type DemoVoice = 'S1' | 'S2' | 'A1' | 'A2' | 'T1' | 'T2' | 'B1' | 'B2'
 
 type ChoirSection = {
   choirId: string
   sectionId: string
   name: string
-  voiceTypes: readonly DemoVoiceType[]
+  voices: readonly DemoVoice[]
   passiveCount: number
 }
 
@@ -21,7 +21,7 @@ const choirSections: ChoirSection[] = topology.sections.map((section, index) => 
   choirId: section.choirId,
   sectionId: section.id,
   name: section.name,
-  voiceTypes: section.allowedVoiceTypes,
+  voices: section.allowedVoices,
   // Two passive members in the first six sections and three in the last
   // six gives exactly 30 passive members across all 12 sections.
   passiveCount: index < 2 ? 2 : 3,
@@ -40,7 +40,7 @@ function generateSingers() {
         status: isActive ? ('active' as const) : ('passive' as const),
         choirId: section.choirId,
         sectionId: section.sectionId,
-        voiceType: section.voiceTypes[index % section.voiceTypes.length],
+        voice: section.voices[index % section.voices.length],
       }
     }),
   )

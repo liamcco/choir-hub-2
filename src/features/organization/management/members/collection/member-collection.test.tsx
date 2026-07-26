@@ -8,7 +8,7 @@ const userEvent = (await import('@testing-library/user-event')).default
 beforeEach(cleanup)
 
 describe('Member collection', () => {
-  test('shows shortened Choir and bare Voice Type values in the four-column collection', () => {
+  test('shows shortened Choir and bare Voice values in the four-column collection', () => {
     render(
       <MemberCollection
         users={[

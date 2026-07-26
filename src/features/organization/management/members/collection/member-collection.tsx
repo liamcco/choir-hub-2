@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { Fragment, useMemo, useState } from 'react'
 import { adminUserPath } from '@/core/navigation/site'
 import { ChoirId, getChoir } from '@/core/topology'
+import { type FineVoice, isFineVoice, voiceOrder } from '@/core/types'
 import type { MemberStatus } from '@/drizzle/schema'
 import { formatMemberStatus } from '@/features/organization/core/member-status'
 import { SearchControl } from '@/features/organization/management/components/search-control'
@@ -15,7 +16,7 @@ export type MemberCollectionRow = {
   id: string
   name: string
   homeChoir: string | null
-  voice: string | null
+  voice: FineVoice | null
   status: MemberStatus
 }
 
@@ -29,7 +30,6 @@ const GROUPING_LABELS: Record<MemberGrouping, string> = {
 }
 
 const STATUS_ORDER: MemberStatus[] = ['ACTIVE', 'PASSIVE', 'FORMER']
-const VOICE_ORDER = ['S1', 'S2', 'A1', 'A2', 'T1', 'T2', 'B1', 'B2']
 const CHOIR_ORDER = [ChoirId.MK, ChoirId.KK, ChoirId.DK].flatMap((id) => {
   const choir = getChoir(id)
   return choir ? [choir.shortName] : []
@@ -182,8 +182,7 @@ function statusIndex(label: string) {
 }
 
 function voiceIndex(label: string) {
-  const index = VOICE_ORDER.indexOf(label)
-  return index === -1 ? VOICE_ORDER.length : index
+  return isFineVoice(label) ? voiceOrder(label) : Number.POSITIVE_INFINITY
 }
 
 function choirIndex(label: string) {
