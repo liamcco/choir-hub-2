@@ -1,7 +1,7 @@
 import { connection } from 'next/server'
 import { Suspense } from 'react'
 import { ROUTES } from '@/core/navigation/site'
-import { AdminCollectionSkeleton } from '@/features/organization/management/components/admin-collection-skeleton'
+import { AdminCollectionTableSkeleton } from '@/features/organization/management/components/admin-collection-skeleton'
 import { CollectionFrame } from '@/features/organization/management/components/collection-frame'
 import { InvalidDetailLookup } from '@/features/organization/management/components/invalid-detail-lookup'
 import { PageHeaderActions } from '@/features/organization/management/components/page-header-action'
@@ -20,34 +20,41 @@ import {
   endPositionAssignmentAction,
 } from '@/features/organization/management/position-assignments'
 
-// TODO: Look at Suspense...
-export function UserManagementScreen({ detailId }: { detailId?: string }) {
+type DetailSearchParams = Promise<{ detail?: string | string[] }>
+
+export function UserManagementScreen({ searchParams }: { searchParams: DetailSearchParams }) {
   return (
     <>
-      <Suspense fallback={<AdminCollectionSkeleton columnCount={4} title="Users" />}>
-        <UserCollectionScreen />
+      <CollectionFrame
+        title="Users"
+        description="Browse Users and their current organizational place."
+        actions={
+          <PageHeaderActions>
+            <UserCreateDialog />
+          </PageHeaderActions>
+        }
+      >
+        <Suspense fallback={<AdminCollectionTableSkeleton columnCount={4} title="Users" />}>
+          <UserCollectionTable />
+        </Suspense>
+      </CollectionFrame>
+      <Suspense fallback={null}>
+        <UserDetailRoute searchParams={searchParams} />
       </Suspense>
-      {detailId ? <UserDetailOverlay userId={detailId} /> : null}
     </>
   )
 }
 
-async function UserCollectionScreen() {
+async function UserCollectionTable() {
   await connection()
   const users = await listMemberCollection()
-  return (
-    <CollectionFrame
-      title="Users"
-      description="Browse Users and their current organizational place."
-      actions={
-        <PageHeaderActions>
-          <UserCreateDialog />
-        </PageHeaderActions>
-      }
-    >
-      <UserCollection users={users} />
-    </CollectionFrame>
-  )
+  return <UserCollection users={users} />
+}
+
+async function UserDetailRoute({ searchParams }: { searchParams: DetailSearchParams }) {
+  const detail = (await searchParams).detail
+  const detailId = typeof detail === 'string' ? detail : undefined
+  return detailId ? <UserDetailOverlay userId={detailId} /> : null
 }
 
 function UserDetailOverlay({ userId }: { userId: string }) {

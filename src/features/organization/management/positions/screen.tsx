@@ -1,7 +1,7 @@
 import { connection } from 'next/server'
 import { Suspense } from 'react'
 import { ROUTES } from '@/core/navigation/site'
-import { AdminCollectionSkeleton } from '@/features/organization/management/components/admin-collection-skeleton'
+import { AdminCollectionTableSkeleton } from '@/features/organization/management/components/admin-collection-skeleton'
 import { CollectionFrame } from '@/features/organization/management/components/collection-frame'
 import { InvalidDetailLookup } from '@/features/organization/management/components/invalid-detail-lookup'
 import { PositionCollection } from './collection/position-collection'
@@ -10,30 +10,37 @@ import { PositionDetailRoutePresentation } from './detail/position-detail-presen
 import { PositionDetailSkeleton } from './detail/position-detail-skeleton'
 import { getPositionDetail, listPositionCollection } from './query'
 
-// TODO: Look at suspense...
-export function PositionManagementScreen({ detailId }: { detailId?: string }) {
+type DetailSearchParams = Promise<{ detail?: string | string[] }>
+
+export function PositionManagementScreen({ searchParams }: { searchParams: DetailSearchParams }) {
   return (
     <>
-      <Suspense fallback={<AdminCollectionSkeleton columnCount={4} title="Positions" />}>
-        <PositionCollectionScreen />
+      <CollectionFrame
+        title="Positions"
+        description="Browse choir Positions, their Group scopes, and current holders."
+        actions={null}
+      >
+        <Suspense fallback={<AdminCollectionTableSkeleton columnCount={4} title="Positions" />}>
+          <PositionCollectionTable />
+        </Suspense>
+      </CollectionFrame>
+      <Suspense fallback={null}>
+        <PositionDetailRoute searchParams={searchParams} />
       </Suspense>
-      {detailId ? <PositionDetailOverlay positionId={detailId} /> : null}
     </>
   )
 }
 
-async function PositionCollectionScreen() {
+async function PositionCollectionTable() {
   await connection()
   const positions = await listPositionCollection()
-  return (
-    <CollectionFrame
-      title="Positions"
-      description="Browse choir Positions, their Group scopes, and current holders."
-      actions={null}
-    >
-      <PositionCollection positions={positions} />
-    </CollectionFrame>
-  )
+  return <PositionCollection positions={positions} />
+}
+
+async function PositionDetailRoute({ searchParams }: { searchParams: DetailSearchParams }) {
+  const detail = (await searchParams).detail
+  const detailId = typeof detail === 'string' ? detail : undefined
+  return detailId ? <PositionDetailOverlay positionId={detailId} /> : null
 }
 
 function PositionDetailOverlay({ positionId }: { positionId: string }) {

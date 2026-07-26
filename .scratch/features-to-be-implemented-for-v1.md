@@ -57,12 +57,11 @@ The goal is production-usable, polished, and ready to grow. Do not expand v1 int
 
 ## Next.js Instant Navigation
 
-- [] Audit the current routes against Next's Cache Components and Instant Navigation guidance in `node_modules/next/dist/docs/01-app/02-guides/instant-navigation.md`.
-- [] Decide route by route whether data should be cached with explicit `cacheLife`, streamed behind `Suspense`, or intentionally opted out of instant validation.
-- [] Replace broad `export const instant = false` usage with deliberate route-level decisions.
-- [] Add meaningful `Suspense` fallbacks where uncached data, runtime APIs, or dynamic route work should stream.
+- [x] Audit the current routes against Next's Cache Components and Instant Navigation guidance in `node_modules/next/dist/docs/01-app/02-guides/instant-navigation.md`.
+- [x] Decide route by route whether data should be cached with explicit `cacheLife`, streamed behind `Suspense`, or intentionally opted out of instant validation.
+- [x] Replace broad `export const instant = false` usage with deliberate route-level decisions.
+- [x] Add meaningful `Suspense` fallbacks where uncached data, runtime APIs, or dynamic route work should stream.
 - [] Verify app navigation with Next DevTools Navigation Inspector during development.
-- [] Add automated coverage for the most important instant-navigation behavior where practical, using the Next/Playwright instant-navigation testing APIs if they fit this repo version.
 
 ## Documentation
 

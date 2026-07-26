@@ -1,13 +1,14 @@
 import { connection } from 'next/server'
 import { Suspense } from 'react'
 import { ROUTES } from '@/core/navigation/site'
-import { AdminCollectionSkeleton } from '@/features/organization/management/components/admin-collection-skeleton'
+import { AdminCollectionTableSkeleton } from '@/features/organization/management/components/admin-collection-skeleton'
+import { CollectionFrame } from '@/features/organization/management/components/collection-frame'
 import { InvalidDetailLookup } from '@/features/organization/management/components/invalid-detail-lookup'
 import {
   createGroupMembershipAction,
   endGroupMembershipAction,
 } from '@/features/organization/management/group-memberships/actions'
-import { GroupCollectionScreen as GroupCollection } from './collection/group-collection-screen'
+import { GroupCollection } from './collection/group-collection'
 import { GroupDetail } from './detail/group-detail'
 import { GroupDetailDialog } from './detail/group-detail-presentation'
 import { GroupDetailSkeleton } from './detail/group-detail-skeleton'
@@ -16,23 +17,37 @@ import { GroupDetailSkeleton } from './detail/group-detail-skeleton'
 // But the naming is inconsistent and confusing.
 import { getGroupDetail, listGroupCollection } from './query'
 
-// TODO: Look at the Suspenses...
-export function GroupManagementScreen({ detailId }: { detailId?: string }) {
+type DetailSearchParams = Promise<{ detail?: string | string[] }>
+
+export function GroupManagementScreen({ searchParams }: { searchParams: DetailSearchParams }) {
   return (
     <>
-      <Suspense fallback={<AdminCollectionSkeleton columnCount={2} title="Groups" />}>
-        <GroupCollectionScreen />
+      <CollectionFrame
+        title="Groups"
+        description="Browse organizational Groups and their current direct Members."
+        actions={null}
+      >
+        <Suspense fallback={<AdminCollectionTableSkeleton columnCount={2} title="Groups" />}>
+          <GroupCollectionTable />
+        </Suspense>
+      </CollectionFrame>
+      <Suspense fallback={null}>
+        <GroupDetailRoute searchParams={searchParams} />
       </Suspense>
-      {detailId ? <GroupDetailOverlay groupId={detailId} /> : null}
     </>
   )
 }
 
-// TODO: What da hell
-async function GroupCollectionScreen() {
+async function GroupCollectionTable() {
   await connection()
   const groups = await listGroupCollection()
   return <GroupCollection groups={groups} />
+}
+
+async function GroupDetailRoute({ searchParams }: { searchParams: DetailSearchParams }) {
+  const detail = (await searchParams).detail
+  const detailId = typeof detail === 'string' ? detail : undefined
+  return detailId ? <GroupDetailOverlay groupId={detailId} /> : null
 }
 
 function GroupDetailOverlay({ groupId }: { groupId: string }) {
