@@ -2,7 +2,7 @@
 
 import { SaveIcon, UserRoundCheckIcon } from 'lucide-react'
 import { useActionState, useState } from 'react'
-import type { UserLabel } from '@/features/organization/core/labels'
+import type { UserDisplayOption } from '@/features/organization/core/labels'
 import { UserCombobox } from '@/features/organization/management/components/user-combobox'
 import type {
   CreatePositionAssignmentAction,
@@ -25,8 +25,8 @@ import { NativeSelect, NativeSelectOption } from '@/shared/ui/native-select'
 
 const createInitialState: CreatePositionAssignmentFormState = {}
 const endInitialState: EndPositionAssignmentFormState = {}
-type UserOptions = UserLabel[]
-type AssignmentForEnd = { id: string; userId: string; startsAt: Date; userLabel: string }
+type UserOptions = UserDisplayOption[]
+type PositionAssignmentToEnd = { id: string; userId: string; startsAt: Date; userLabel: string }
 type CreateAssignmentAction = CreatePositionAssignmentAction
 type EndAssignmentAction = EndPositionAssignmentAction
 
@@ -199,7 +199,7 @@ export function EndPositionAssignmentForm({
   action = endPositionAssignmentAction,
   immediate = false,
 }: {
-  assignment: AssignmentForEnd & {
+  assignment: PositionAssignmentToEnd & {
     position: { name: string }
   }
   action?: EndAssignmentAction

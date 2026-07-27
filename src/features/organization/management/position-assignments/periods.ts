@@ -1,7 +1,7 @@
 /** Pure read-model transformations for dated Position Assignment relationships. */
 import type { Position } from '@/core/topology'
 import type { PositionAssignment, User } from '@/drizzle/schema'
-import { buildUserLabelMap } from '@/features/organization/core/labels'
+import { buildUserDisplayOptionMap } from '@/features/organization/core/labels'
 import { listPositionAssignmentOptions } from './service'
 
 export type PositionAssignmentPeriod = PositionAssignment & {
@@ -24,12 +24,12 @@ export function resolvePositionAssignmentDetails(
   const positionOptionsById = new Map<string, ReturnType<typeof listPositionAssignmentOptions>[number]>(
     listPositionAssignmentOptions().map((option) => [option.position.id, option]),
   )
-  const userOptionsById = buildUserLabelMap(users)
+  const userDisplayOptionsById = buildUserDisplayOptionMap(users)
   return assignments.map((assignment) => {
     const position = positionsById.get(assignment.positionId)
     const user = usersById.get(assignment.userId)
     const positionOption = positionOptionsById.get(assignment.positionId)
-    const userOption = userOptionsById.get(assignment.userId)
+    const userOption = userDisplayOptionsById.get(assignment.userId)
     if (!position || !user || !positionOption || !userOption) {
       throw new Error(
         `Invalid Position Assignment ${assignment.id}: ${!position ? `unknown Position ${assignment.positionId}` : `unknown User ${assignment.userId}`}.`,

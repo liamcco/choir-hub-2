@@ -5,12 +5,12 @@ import {
   listChoirsInDisplayOrder,
   listGroups,
   resolveGroup,
-  TopologyScopeType,
+  TOPOLOGY_SCOPE_TYPES,
   topology,
 } from '@/core/topology'
 import { organizationService } from '@/features/organization'
 import type { EffectiveGroupMembership } from '@/features/organization/core/effective-group-membership'
-import { buildUserLabels, type UserLabel } from '@/features/organization/core/labels'
+import { buildUserDisplayOptions, type UserDisplayOption } from '@/features/organization/core/labels'
 
 async function listGroupStructure() {
   const currentMemberships = await organizationService.effectiveGroupMembership.list()
@@ -30,7 +30,7 @@ async function listGroupStructure() {
       id: group.id,
       name: group.name,
       scope:
-        group.scope.type === TopologyScopeType.CSK
+        group.scope.type === TOPOLOGY_SCOPE_TYPES.CSK
           ? 'CSK'
           : (getChoir(group.scope.choirId)?.shortName ?? group.scope.choirId.toUpperCase()),
       memberCount: memberIds.get(group.id)?.size ?? 0,
@@ -53,21 +53,21 @@ async function getGroupDetail(groupId: string) {
   const group = resolveGroup(groupId)
   if (!group) return null
 
-  const memberOptions = buildUserLabels(users).sort(
+  const userDisplayOptions = buildUserDisplayOptions(users).sort(
     (first, second) => first.label.localeCompare(second.label) || first.user.id.localeCompare(second.user.id),
   )
-  const memberOptionsById = new Map(memberOptions.map((option) => [option.user.id, option]))
+  const userDisplayOptionsById = new Map(userDisplayOptions.map((option) => [option.user.id, option]))
   const positionsById = new Map<string, string>(positions.map((position) => [position.id, position.name]))
   const membershipViews = memberships.flatMap((membership) =>
-    mapMembershipView(membership, memberOptionsById, positionsById),
+    mapMembershipView(membership, userDisplayOptionsById, positionsById),
   )
 
   return {
     ...group,
-    users: memberOptions,
+    users: userDisplayOptions,
     currentMemberships: membershipViews.sort(compareMemberships),
     historicalMemberships: previousMemberships
-      .flatMap((membership) => mapMembershipView(membership, memberOptionsById, positionsById))
+      .flatMap((membership) => mapMembershipView(membership, userDisplayOptionsById, positionsById))
       .sort(
         (first, second) =>
           (second.endsAt?.getTime() ?? 0) - (first.endsAt?.getTime() ?? 0) || compareMemberships(first, second),
@@ -77,10 +77,10 @@ async function getGroupDetail(groupId: string) {
 
 function mapMembershipView(
   membership: EffectiveGroupMembership,
-  memberOptionsById: ReadonlyMap<string, UserLabel>,
+  userDisplayOptionsById: ReadonlyMap<string, UserDisplayOption>,
   positionsById: ReadonlyMap<string, string>,
 ) {
-  const option = memberOptionsById.get(membership.userId)
+  const option = userDisplayOptionsById.get(membership.userId)
   return option
     ? [
         {

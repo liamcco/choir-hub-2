@@ -9,7 +9,7 @@ import { assertValidDatedPeriod, datedPeriodsOverlap, normalizeDatedPeriodInput 
 import { DateOverlapError, EntityDoesNotExistError, InvalidRelationshipError } from './errors'
 import { ensureVoiceCapability } from './voice-capability'
 
-type Period = { startsAt: Date; endsAt: Date | null }
+type DatedPeriod = { startsAt: Date; endsAt: Date | null }
 
 export const homePlacement = {
   listChoirMemberships(input?: { userId?: string }) {
@@ -107,14 +107,14 @@ export const homePlacement = {
   },
 }
 
-function covers(outer: Period, inner: Period) {
+function covers(outer: DatedPeriod, inner: DatedPeriod) {
   return outer.startsAt <= inner.startsAt && (!outer.endsAt || (inner.endsAt ? outer.endsAt >= inner.endsAt : false))
 }
 async function assertUserExists(id: string) {
   if (!(await db.select({ id: user.id }).from(user).where(eq(user.id, id)).limit(1)).length)
     throw new EntityDoesNotExistError('Choose an existing User.')
 }
-async function assertNoOverlap(periods: Period[], period: Period, label: string) {
+async function assertNoOverlap(periods: DatedPeriod[], period: DatedPeriod, label: string) {
   if (periods.some((candidate) => datedPeriodsOverlap(candidate, period)))
     throw new DateOverlapError(`This User already has an overlapping ${label}.`, { field: 'startsAt' })
 }

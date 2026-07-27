@@ -1,7 +1,7 @@
 /** Focused Position Assignment reads and server-side adapters for management workflows. */
 import { listPositions } from '@/core/topology'
 import { organizationService } from '@/features/organization'
-import { buildUserLabels, type UserLabel } from '@/features/organization/core/labels'
+import { buildUserDisplayOptions, type UserDisplayOption } from '@/features/organization/core/labels'
 import { type PositionAssignmentPeriod, resolvePositionAssignmentDetails } from './periods'
 
 export { listPositionAssignmentOptions } from './options'
@@ -9,8 +9,8 @@ export type { PositionAssignmentPeriod } from './periods'
 export { resolvePositionAssignmentDetails } from './periods'
 
 /** Reads Users as stable, consistently formatted options for assignment forms. */
-export async function listPositionAssignmentUsers(): Promise<UserLabel[]> {
-  return buildUserLabels(await organizationService.users.list())
+export async function listPositionAssignmentUsers(): Promise<UserDisplayOption[]> {
+  return buildUserDisplayOptions(await organizationService.users.list())
 }
 
 /** Reads dated Position Assignments with their canonical Position and User details. */

@@ -40,7 +40,6 @@ test('admin can create a user and view its details', async ({ page }) => {
 
   await page.getByLabel('Name').fill('Smoke CRUD User')
   await page.getByLabel('Email').fill('smoke-crud@example.com')
-  await page.getByLabel('Temporary password').fill('smoke-password')
   await page.getByRole('button', { name: 'Create' }).click()
 
   await page.getByRole('button', { name: 'View' }).click()

@@ -2,13 +2,13 @@
 
 import { useActionState, useState } from 'react'
 import { adminUserPath } from '@/core/navigation/site'
-import type { UserLabel } from '@/features/organization/core/labels'
+import type { UserDisplayOption } from '@/features/organization/core/labels'
 import { UserCombobox } from '@/features/organization/management/components/user-combobox'
 import type {
   CreateMembershipAction,
   EndMembershipAction,
 } from '@/features/organization/management/groups/group-membership-controls'
-import { EndGroupUserControl } from '@/features/organization/management/groups/group-membership-controls'
+import { EndGroupMembershipControl } from '@/features/organization/management/groups/group-membership-controls'
 import { formatPeriod } from '@/shared/formatting'
 import { FormMessage } from '@/shared/forms/error-handling'
 import { Badge } from '@/shared/ui/badge'
@@ -32,7 +32,7 @@ export function GroupMembersSection({
   groupKind: 'committee' | 'board'
   groupName: string
   memberships: GroupMembershipView[]
-  users: UserLabel[]
+  users: UserDisplayOption[]
 }) {
   const [isAdding, setIsAdding] = useState(false)
 
@@ -72,7 +72,7 @@ export function GroupMembersSection({
                 </div>
               </div>
               {groupKind === 'committee' ? (
-                <EndGroupUserControl action={endAction} groupName={groupName} membership={membership} />
+                <EndGroupMembershipControl action={endAction} groupName={groupName} membership={membership} />
               ) : null}
             </li>
           ))}
@@ -94,7 +94,7 @@ function InlineGroupMembershipForm({
 }: {
   action: CreateMembershipAction
   groupId: string
-  users: UserLabel[]
+  users: UserDisplayOption[]
   onSuccess: () => void
 }) {
   const [state, formAction, isPending] = useActionState(action, {})

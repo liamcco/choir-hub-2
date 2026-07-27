@@ -1,4 +1,4 @@
-import { getChoir, getGroup, getSection, type PositionScope, TopologyScopeType } from '@/core/topology'
+import { getChoir, getGroup, getSection, type PositionScope, TOPOLOGY_SCOPE_TYPES } from '@/core/topology'
 import type { FineVoice } from '@/core/types'
 
 /**
@@ -8,10 +8,10 @@ import type { FineVoice } from '@/core/types'
 export function formatPositionScopeLabel(scopes: readonly PositionScope[]) {
   return scopes
     .map((scope) => {
-      if (scope.type === TopologyScopeType.CSK) return 'CSK'
-      if (scope.type === TopologyScopeType.CHOIR)
+      if (scope.type === TOPOLOGY_SCOPE_TYPES.CSK) return 'CSK'
+      if (scope.type === TOPOLOGY_SCOPE_TYPES.CHOIR)
         return getChoir(scope.choirId)?.shortName ?? `[Invalid Choir: ${scope.choirId}]`
-      if (scope.type === TopologyScopeType.SECTION) {
+      if (scope.type === TOPOLOGY_SCOPE_TYPES.SECTION) {
         const section = getSection(scope.sectionId)
         const choir = section ? getChoir(section.choirId) : undefined
         return section && choir

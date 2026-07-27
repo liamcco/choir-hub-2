@@ -6,9 +6,9 @@ import { listGroups, listPositions, topology } from '@/core/topology'
 import { type FineVoice, isFineVoice, type Voice } from '@/core/types'
 import { organizationService } from '@/features/organization'
 import {
-  buildUserLabels,
+  buildUserDisplayOptions,
   formatFineGrainedPlacementName,
-  formatGroupPath,
+  formatGroupName,
   formatPositionLabel,
   formatPositionScopeLabel,
 } from '@/features/organization/core/labels'
@@ -21,7 +21,7 @@ async function listCollection() {
   ])
   const choirById = new Map<string, (typeof topology.choirs)[number]>(topology.choirs.map((item) => [item.id, item]))
 
-  return buildUserLabels(users)
+  return buildUserDisplayOptions(users)
     .map(({ user, label }) => {
       return {
         id: user.id,
@@ -66,7 +66,7 @@ async function getDetail(userId: string) {
           {
             id: membership.id,
             groupId: group.id,
-            groupName: formatGroupPath(groups, group),
+            groupName: formatGroupName(groups, group),
             groupKind: group.kind,
             startsAt: membership.startsAt,
             endsAt: membership.endsAt,
@@ -107,7 +107,7 @@ async function getDetail(userId: string) {
         : null,
     },
     groups: listGroups()
-      .map((group) => ({ id: group.id, name: formatGroupPath(groups, group) }))
+      .map((group) => ({ id: group.id, name: formatGroupName(groups, group) }))
       .sort((first, second) => first.name.localeCompare(second.name) || first.id.localeCompare(second.id)),
     positions: listPositions()
       .map((position) => ({
@@ -127,8 +127,8 @@ async function getDetail(userId: string) {
   }
 }
 
-export const listMemberCollection = listCollection
-export const getMemberDetail = getDetail
+export const listUserCollection = listCollection
+export const getUserDetail = getDetail
 
 function formatPlacementLabel(
   placement: { sectionId: string; voice: Voice } | undefined,

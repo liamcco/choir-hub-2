@@ -1,7 +1,7 @@
 /** Pure read-model transformations for dated Group Membership relationships. */
 import type { Group } from '@/core/topology'
 import type { GroupMembership, User } from '@/drizzle/schema'
-import { buildUserLabelMap, formatGroupPath } from '@/features/organization/core/labels'
+import { buildUserDisplayOptionMap, formatGroupName } from '@/features/organization/core/labels'
 
 export type GroupMembershipPeriod = GroupMembership & {
   group: Group
@@ -18,12 +18,12 @@ export function resolveGroupMembershipDetails(
 ): GroupMembershipPeriod[] {
   const groupsById = new Map<string, Group>(groups.map((group) => [group.id, group]))
   const usersById = new Map(users.map((user) => [user.id, user]))
-  const userOptionsById = buildUserLabelMap(users)
+  const userDisplayOptionsById = buildUserDisplayOptionMap(users)
   return memberships
     .map((membership) => {
       const group = groupsById.get(membership.groupId)
       const user = usersById.get(membership.userId)
-      const userOption = userOptionsById.get(membership.userId)
+      const userOption = userDisplayOptionsById.get(membership.userId)
       if (!group || !user || !userOption) {
         throw new Error(
           `Invalid Group Membership ${membership.id}: ${!group ? `unknown Group ${membership.groupId}` : `unknown User ${membership.userId}`}.`,
@@ -34,7 +34,7 @@ export function resolveGroupMembershipDetails(
     .sort(
       (first, second) =>
         first.userLabel.localeCompare(second.userLabel) ||
-        formatGroupPath(groups, first.group).localeCompare(formatGroupPath(groups, second.group)) ||
+        formatGroupName(groups, first.group).localeCompare(formatGroupName(groups, second.group)) ||
         first.startsAt.getTime() - second.startsAt.getTime() ||
         first.id.localeCompare(second.id),
     )

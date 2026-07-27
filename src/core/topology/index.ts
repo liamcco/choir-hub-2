@@ -10,7 +10,7 @@ import type {
   Position as CorePosition,
   Section as CoreSection,
   TopologyScopeType as CoreTopologyScopeType,
-  TopologyStatus,
+  TopologyLifecycleStatus,
 } from '@/core/types'
 import { baseVoice, isBaseVoice, isFineVoice } from '@/core/types'
 import { topologyData } from './data'
@@ -22,7 +22,7 @@ export { DuplicateEntityError, InvalidRelationshipError } from './errors'
 export type { Topology, TopologyData } from './types'
 
 /** Runtime discriminators used by every topology scope. */
-export const TopologyScopeType = {
+export const TOPOLOGY_SCOPE_TYPES = {
   CSK: 'csk',
   CHOIR: 'choir',
   SECTION: 'section',
@@ -36,35 +36,38 @@ export type GroupId = (typeof topologyData.groups)[number]['id']
 export type PositionId = (typeof topologyData.positions)[number]['id']
 export type GroupKind = CoreGroupKind
 /** Stable display order for Choirs in administrative collections. */
-export const ChoirId = { KK: 'kk', MK: 'mk', DK: 'dk' } as const satisfies Record<string, ChoirId>
+export const CHOIR_IDS = { KK: 'kk', MK: 'mk', DK: 'dk' } as const satisfies Record<string, ChoirId>
 
-export type Choir = Omit<CoreChoir, 'id' | 'status'> & { readonly id: ChoirId; readonly status: TopologyStatus }
+export type Choir = Omit<CoreChoir, 'id' | 'status'> & {
+  readonly id: ChoirId
+  readonly status: TopologyLifecycleStatus
+}
 export type Section = Omit<CoreSection, 'id' | 'choirId' | 'status'> & {
   readonly id: SectionId
   readonly choirId: ChoirId
-  readonly status: TopologyStatus
+  readonly status: TopologyLifecycleStatus
 }
 export type GroupScope =
-  | { readonly type: typeof TopologyScopeType.CSK }
-  | { readonly type: typeof TopologyScopeType.CHOIR; readonly choirId: ChoirId }
+  | { readonly type: typeof TOPOLOGY_SCOPE_TYPES.CSK }
+  | { readonly type: typeof TOPOLOGY_SCOPE_TYPES.CHOIR; readonly choirId: ChoirId }
 export type Group = Omit<CoreGroup, 'id' | 'scope' | 'status'> & {
   readonly id: GroupId
   readonly scope: GroupScope
-  readonly status: TopologyStatus
+  readonly status: TopologyLifecycleStatus
 }
 export type PositionScope =
-  | { readonly type: typeof TopologyScopeType.CSK }
-  | { readonly type: typeof TopologyScopeType.CHOIR; readonly choirId: ChoirId }
-  | { readonly type: typeof TopologyScopeType.SECTION; readonly sectionId: SectionId }
-  | { readonly type: typeof TopologyScopeType.GROUP; readonly groupId: GroupId }
+  | { readonly type: typeof TOPOLOGY_SCOPE_TYPES.CSK }
+  | { readonly type: typeof TOPOLOGY_SCOPE_TYPES.CHOIR; readonly choirId: ChoirId }
+  | { readonly type: typeof TOPOLOGY_SCOPE_TYPES.SECTION; readonly sectionId: SectionId }
+  | { readonly type: typeof TOPOLOGY_SCOPE_TYPES.GROUP; readonly groupId: GroupId }
 export type Position = Omit<CorePosition, 'id' | 'scopes' | 'status'> & {
   readonly id: PositionId
   readonly scopes: readonly PositionScope[]
-  readonly status: TopologyStatus
+  readonly status: TopologyLifecycleStatus
 }
 function withDefaultStatus<T extends { readonly id: string }>(
-  entity: T & { readonly status?: TopologyStatus },
-): Omit<T, 'status'> & { readonly status: TopologyStatus } {
+  entity: T & { readonly status?: TopologyLifecycleStatus },
+): Omit<T, 'status'> & { readonly status: TopologyLifecycleStatus } {
   return { ...entity, status: entity.status ?? 'active' }
 }
 
@@ -75,7 +78,7 @@ export const topology: CoreTopology<Choir, Section, Group, Position> = {
   positions: topologyData.positions.map((position) => withDefaultStatus(position)),
 }
 
-export const GroupKind = { COMMITTEE: 'committee', BOARD: 'board' } as const satisfies Record<string, CoreGroupKind>
+export const GROUP_KINDS = { COMMITTEE: 'committee', BOARD: 'board' } as const satisfies Record<string, CoreGroupKind>
 
 const choirsById = new Map<string, Choir>(topology.choirs.map((choir) => [choir.id, choir]))
 const sectionsById = new Map<string, Section>(topology.sections.map((section) => [section.id, section]))
@@ -89,7 +92,7 @@ export function listChoirs(): readonly Choir[] {
 /** Lists active Choirs in the established administrative display order. */
 export function listChoirsInDisplayOrder(): readonly Choir[] {
   const choirsById = new Map(topology.choirs.map((choir) => [choir.id, choir]))
-  return [ChoirId.KK, ChoirId.MK, ChoirId.DK].flatMap((id) => {
+  return [CHOIR_IDS.KK, CHOIR_IDS.MK, CHOIR_IDS.DK].flatMap((id) => {
     const choir = choirsById.get(id)
     return choir?.status === 'active' ? [choir] : []
   })
@@ -155,7 +158,7 @@ export function resolvePosition(rawId: string): Position | undefined {
   return positionsById.get(rawId)
 }
 
-export function isActiveTopologyEntity(entity: { status: TopologyStatus }): boolean {
+export function isActiveTopologyEntity(entity: { status: TopologyLifecycleStatus }): boolean {
   return entity.status === 'active'
 }
 
@@ -191,9 +194,9 @@ export function validateTopology(candidate: CoreTopology = topology): CoreTopolo
     assertStatus(group.status, `Group ${group.id}`)
     if (groupIds.has(group.id)) throw new DuplicateEntityError(`Group identifier is duplicated: ${group.id}.`)
     groupIds.add(group.id)
-    if (group.scope.type === TopologyScopeType.CHOIR && !choirIds.has(group.scope.choirId))
+    if (group.scope.type === TOPOLOGY_SCOPE_TYPES.CHOIR && !choirIds.has(group.scope.choirId))
       throw new InvalidRelationshipError(`Group ${group.id} references an unknown Choir.`)
-    const scopeKey = group.scope.type === TopologyScopeType.CSK ? 'csk' : group.scope.choirId
+    const scopeKey = group.scope.type === TOPOLOGY_SCOPE_TYPES.CSK ? 'csk' : group.scope.choirId
     const nameKey = `${scopeKey}:${group.name}`
     if (groupNames.has(nameKey)) throw new DuplicateEntityError(`Group name is duplicated within scope: ${group.name}.`)
     groupNames.add(nameKey)
@@ -207,11 +210,11 @@ export function validateTopology(candidate: CoreTopology = topology): CoreTopolo
     if (positionIds.has(position.id)) throw new DuplicateEntityError(`Position identifiers must be unique.`)
     positionIds.add(position.id)
     for (const scope of position.scopes) {
-      if (scope.type === TopologyScopeType.CHOIR && !choirIds.has(scope.choirId))
+      if (scope.type === TOPOLOGY_SCOPE_TYPES.CHOIR && !choirIds.has(scope.choirId))
         throw new InvalidRelationshipError(`Position ${position.id} references an unknown Choir.`)
-      if (scope.type === TopologyScopeType.SECTION && !sectionIds.has(scope.sectionId))
+      if (scope.type === TOPOLOGY_SCOPE_TYPES.SECTION && !sectionIds.has(scope.sectionId))
         throw new InvalidRelationshipError(`Position ${position.id} references an unknown Section.`)
-      if (scope.type === TopologyScopeType.GROUP && !groupIds.has(scope.groupId))
+      if (scope.type === TOPOLOGY_SCOPE_TYPES.GROUP && !groupIds.has(scope.groupId))
         throw new InvalidRelationshipError(`Position ${position.id} references an unknown Group.`)
     }
     validatePositionEligibility(position)
@@ -242,7 +245,7 @@ function validatePositionEligibility(position: CorePosition) {
     throw new InvalidRelationshipError(`Position ${position.id} declares Member Status eligibility more than once.`)
 }
 
-function assertStatus(status: string | undefined, label: string): asserts status is TopologyStatus {
+function assertStatus(status: string | undefined, label: string): asserts status is TopologyLifecycleStatus {
   if (status !== 'active' && status !== 'retired') throw new InvalidRelationshipError(`${label} has an invalid status.`)
 }
 

@@ -9,7 +9,7 @@ import { type ChoirId, resolveChoir, resolveSection, type SectionId } from '@/co
 import { type FineVoice, isFineVoice } from '@/core/types'
 import { type MemberStatus, user } from '@/drizzle/schema'
 import { homePlacement } from '@/features/organization/core/home-placement'
-import { users } from '@/features/organization/core/members'
+import { users } from '@/features/organization/core/users'
 import { isEmail } from '@/shared/validation'
 
 const ACTIVATION_PATH = '/activate'

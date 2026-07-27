@@ -21,7 +21,7 @@ mock.module('@/core/logging', () => ({
   audit: { adminActionCompleted, accountAccessChanged },
   logger: { error: loggerError },
 }))
-mock.module('@/features/organization/core/members', () => ({ users: { updateMemberStatus } }))
+mock.module('@/features/organization/core/users', () => ({ users: { updateMemberStatus } }))
 mock.module('@/features/organization/core/home-placement', () => ({
   homePlacement: { startChoirMembership, startSectionPlacement },
 }))

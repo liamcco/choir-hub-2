@@ -1,7 +1,7 @@
 export {
   AddUserGroupControl,
   type CreateMembershipAction,
-  EndGroupUserControl,
+  EndGroupMembershipControl,
   type EndMembershipAction,
 } from './group-membership-controls'
 export { GroupManagementScreen } from './screen'

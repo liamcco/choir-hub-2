@@ -1,7 +1,7 @@
 /** Focused Group Membership reads and server-side adapters for management workflows. */
 import { type Group, listGroups } from '@/core/topology'
 import { organizationService } from '@/features/organization'
-import { buildUserLabels, type UserLabel } from '@/features/organization/core/labels'
+import { buildUserDisplayOptions, type UserDisplayOption } from '@/features/organization/core/labels'
 import { type GroupMembershipPeriod, resolveGroupMembershipDetails } from './periods'
 
 export type { GroupMembershipPeriod } from './periods'
@@ -13,8 +13,8 @@ export function listGroupMembershipGroups(): readonly Group[] {
 }
 
 /** Reads Users as stable, consistently formatted options for membership forms. */
-export async function listGroupMembershipUsers(): Promise<UserLabel[]> {
-  return buildUserLabels(await organizationService.users.list())
+export async function listGroupMembershipUsers(): Promise<UserDisplayOption[]> {
+  return buildUserDisplayOptions(await organizationService.users.list())
 }
 
 /** Reads dated Group Membership records with their canonical Group and User details. */

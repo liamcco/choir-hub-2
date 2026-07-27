@@ -1,13 +1,13 @@
 import { adminUserPath } from '@/core/navigation/site'
 import type { GroupKind } from '@/core/topology'
 import { formatGroupKind } from '@/features/organization/core/group-kind'
-import type { UserLabel } from '@/features/organization/core/labels'
+import type { UserDisplayOption } from '@/features/organization/core/labels'
 import { RelatedDetailLink } from '@/features/organization/management/components/related-detail-link'
 import { formatPeriod } from '@/shared/formatting'
 import { Badge } from '@/shared/ui/badge'
 import {
   type CreateMembershipAction,
-  EndGroupUserControl,
+  EndGroupMembershipControl,
   type EndMembershipAction,
 } from '../group-membership-controls'
 import { GroupMembersSection } from './group-members-section'
@@ -27,7 +27,7 @@ export type GroupDetailView = {
   id: string
   name: string
   kind: GroupKind
-  users: UserLabel[]
+  users: UserDisplayOption[]
   currentMemberships: GroupMembershipView[]
   historicalMemberships: GroupMembershipView[]
 }
@@ -117,7 +117,7 @@ function MembershipList({
             </div>
           </div>
           {showEndControls && endAction ? (
-            <EndGroupUserControl action={endAction} groupName={groupName} membership={membership} />
+            <EndGroupMembershipControl action={endAction} groupName={groupName} membership={membership} />
           ) : null}
         </li>
       ))}

@@ -6,13 +6,13 @@ import { formatGroupKind } from '@/features/organization/core/group-kind'
 import type {
   CreateMembershipAction,
   EndMembershipAction,
-} from '@/features/organization/management/groups/relationships'
-import { EndGroupUserControl } from '@/features/organization/management/groups/relationships'
+} from '@/features/organization/management/groups/group-membership-controls'
+import { EndGroupMembershipControl } from '@/features/organization/management/groups/group-membership-controls'
 import type {
   CreatePositionAssignmentAction,
   EndPositionAssignmentAction,
-} from '@/features/organization/management/position-assignments/relationships'
-import { EndPositionAssignmentForm } from '@/features/organization/management/position-assignments/relationships'
+} from '@/features/organization/management/position-assignments/actions'
+import { EndPositionAssignmentForm } from '@/features/organization/management/position-assignments/assignment-form'
 import { formatDate } from '@/shared/formatting'
 import { FormMessage } from '@/shared/forms/error-handling'
 import type { EntityOption, NamedEntity } from '@/shared/types'
@@ -72,7 +72,7 @@ export function MemberGroupMembershipSection({
                 </p>
               </div>
               {endAction ? (
-                <EndGroupUserControl
+                <EndGroupMembershipControl
                   action={endAction}
                   groupName={membership.groupName}
                   membership={{ ...membership, userId, userLabel: 'this User' }}

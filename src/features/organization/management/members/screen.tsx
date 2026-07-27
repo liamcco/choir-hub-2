@@ -14,7 +14,7 @@ import { MemberDetail as UserDetail } from '@/features/organization/management/m
 import { MemberDetailRoutePresentation as UserDetailRoutePresentation } from '@/features/organization/management/members/detail/member-detail-presentation'
 import { MemberDetailSkeleton as UserDetailSkeleton } from '@/features/organization/management/members/detail/member-detail-skeleton'
 import { MemberImportDialog as UserImportDialog } from '@/features/organization/management/members/import/import-dialog'
-import { getMemberDetail, listMemberCollection } from '@/features/organization/management/members/query'
+import { getUserDetail, listUserCollection } from '@/features/organization/management/members/query'
 import {
   createPositionAssignmentAction,
   endPositionAssignmentAction,
@@ -47,7 +47,7 @@ export function UserManagementScreen({ searchParams }: { searchParams: DetailSea
 }
 
 async function UserCollectionTable() {
-  const users = await listMemberCollection()
+  const users = await listUserCollection()
   return <UserCollection users={users} />
 }
 
@@ -58,7 +58,7 @@ async function UserDetailRoute({ searchParams }: { searchParams: DetailSearchPar
 }
 
 function UserDetailOverlay({ userId }: { userId: string }) {
-  const detailPromise = getMemberDetail(userId)
+  const detailPromise = getUserDetail(userId)
 
   return (
     <UserDetailRoutePresentation
@@ -75,12 +75,12 @@ function UserDetailOverlay({ userId }: { userId: string }) {
   )
 }
 
-async function UserDetailTitle({ detailPromise }: { detailPromise: ReturnType<typeof getMemberDetail> }) {
+async function UserDetailTitle({ detailPromise }: { detailPromise: ReturnType<typeof getUserDetail> }) {
   const user = await detailPromise
   return user?.name ?? 'User'
 }
 
-async function UserDetailContent({ detailPromise }: { detailPromise: ReturnType<typeof getMemberDetail> }) {
+async function UserDetailContent({ detailPromise }: { detailPromise: ReturnType<typeof getUserDetail> }) {
   const user = await detailPromise
   if (!user) return <InvalidDetailLookup collectionPath={ROUTES.adminUsers} resourceName="User" />
 

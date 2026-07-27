@@ -5,11 +5,11 @@ import { formatMemberStatus } from '@/features/organization/core/member-status'
 import type {
   CreateMembershipAction,
   EndMembershipAction,
-} from '@/features/organization/management/groups/relationships'
+} from '@/features/organization/management/groups/group-membership-controls'
 import type {
   CreatePositionAssignmentAction,
   EndPositionAssignmentAction,
-} from '@/features/organization/management/position-assignments/relationships'
+} from '@/features/organization/management/position-assignments/actions'
 import type { EntityOption, NamedEntity } from '@/shared/types'
 import { Badge } from '@/shared/ui/badge'
 import { MemberGroupMembershipSection, MemberPositionAssignmentSection } from './member-relationship-sections'

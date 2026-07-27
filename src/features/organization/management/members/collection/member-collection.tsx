@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { Fragment, useMemo, useState } from 'react'
 import { adminUserPath } from '@/core/navigation/site'
-import { ChoirId, getChoir } from '@/core/topology'
+import { CHOIR_IDS, getChoir } from '@/core/topology'
 import { type FineVoice, isFineVoice, voiceOrder } from '@/core/types'
 import type { MemberStatus } from '@/drizzle/schema'
 import { formatMemberStatus } from '@/features/organization/core/member-status'
@@ -31,7 +31,7 @@ const GROUPING_LABELS: Record<MemberGrouping, string> = {
 }
 
 const STATUS_ORDER: MemberStatus[] = ['ACTIVE', 'PASSIVE', 'FORMER']
-const CHOIR_ORDER = [ChoirId.MK, ChoirId.KK, ChoirId.DK].flatMap((id) => {
+const CHOIR_ORDER = [CHOIR_IDS.MK, CHOIR_IDS.KK, CHOIR_IDS.DK].flatMap((id) => {
   const choir = getChoir(id)
   return choir ? [choir.shortName] : []
 })

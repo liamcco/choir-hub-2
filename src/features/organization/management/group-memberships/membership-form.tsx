@@ -3,7 +3,7 @@
 import { SaveIcon, UserPlusIcon } from 'lucide-react'
 import { useActionState } from 'react'
 
-import { formatGroupPath } from '@/features/organization/core/labels'
+import { formatGroupName } from '@/features/organization/core/labels'
 import { formatDateInput } from '@/shared/formatting'
 import { FormMessage } from '@/shared/forms/error-handling'
 
@@ -65,7 +65,7 @@ export function CreateGroupMembershipForm({
             <NativeSelectOption value="">Choose Group</NativeSelectOption>
             {groups.map((group) => (
               <NativeSelectOption key={group.id} value={group.id}>
-                {formatGroupPath(groups, group)}
+                {formatGroupName(groups, group)}
               </NativeSelectOption>
             ))}
           </NativeSelect>

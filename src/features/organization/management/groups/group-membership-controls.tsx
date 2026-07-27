@@ -79,7 +79,7 @@ export function AddUserGroupControl({
   )
 }
 
-export function EndGroupUserControl({
+export function EndGroupMembershipControl({
   membership,
   groupName,
   action,

@@ -1,14 +1,10 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test'
-import { GroupKind } from '@/core/topology'
+import { GROUP_KINDS } from '@/core/topology'
 import { MemberStatus } from '@/drizzle/schema'
 
 const { cleanup, render, screen } = await import('@testing-library/react')
 mock.module('../../position-assignments/assignment-form', () => ({
   AssignPositionHolderControl: () => <button type="button">Assign holder</button>,
-  AssignUserPositionControl: () => <button type="button">Assign Position</button>,
-  EndPositionAssignmentForm: () => <button type="button">End</button>,
-}))
-mock.module('../../position-assignments/relationships', () => ({
   AssignUserPositionControl: () => <button type="button">Assign Position</button>,
   EndPositionAssignmentForm: () => <button type="button">End</button>,
 }))
@@ -40,7 +36,7 @@ describe('Member detail', () => {
               id: 'membership-1',
               groupId: 'group-1',
               groupName: 'Chamber Choir',
-              groupKind: GroupKind.COMMITTEE,
+              groupKind: GROUP_KINDS.COMMITTEE,
               startsAt: new Date('2024-08-01'),
               endsAt: null,
             },

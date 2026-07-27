@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test'
-import type { UserLabel } from '@/features/organization/core/labels'
+import type { UserDisplayOption } from '@/features/organization/core/labels'
 
 mock.module('../../position-assignments/actions', () => ({
   createPositionAssignmentAction: async () => ({}),
@@ -24,7 +24,7 @@ const basePosition = {
       label: 'Ada Lovelace',
       detail: 'ada@example.com',
     },
-  ] as unknown as UserLabel[],
+  ] as unknown as UserDisplayOption[],
 }
 
 describe('Position detail', () => {

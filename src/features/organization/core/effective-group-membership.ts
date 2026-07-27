@@ -1,6 +1,6 @@
 import { and, eq, inArray, isNotNull, isNull } from 'drizzle-orm'
 import { db } from '@/core/db'
-import { TopologyScopeType, topology } from '@/core/topology'
+import { TOPOLOGY_SCOPE_TYPES, topology } from '@/core/topology'
 import { groupMembership, positionAssignment } from '@/drizzle/schema'
 
 export type EffectiveMembershipSource = { type: 'explicit' | 'position'; id: string; positionId?: string }
@@ -111,7 +111,7 @@ function groupScopedPositionIds(groupId?: string) {
   return topology.positions
     .filter((position) =>
       position.scopes.some(
-        (scope) => scope.type === TopologyScopeType.GROUP && (!groupId || scope.groupId === groupId),
+        (scope) => scope.type === TOPOLOGY_SCOPE_TYPES.GROUP && (!groupId || scope.groupId === groupId),
       ),
     )
     .map((position) => position.id)
@@ -133,7 +133,7 @@ function buildEffectiveMemberships(
     })
   for (const a of assignments) {
     const position = topology.positions.find((candidate) => candidate.id === a.positionId)
-    for (const scope of position?.scopes.filter((candidate) => candidate.type === TopologyScopeType.GROUP) ?? [])
+    for (const scope of position?.scopes.filter((candidate) => candidate.type === TOPOLOGY_SCOPE_TYPES.GROUP) ?? [])
       rows.push({
         userId: a.userId,
         groupId: scope.groupId,

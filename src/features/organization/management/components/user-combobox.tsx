@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import type { UserLabel } from '@/features/organization/core/labels'
+import type { UserDisplayOption } from '@/features/organization/core/labels'
 import {
   Combobox,
   ComboboxContent,
@@ -21,7 +21,7 @@ export function UserCombobox({
 }: {
   id: string
   name: string
-  users: UserLabel[]
+  users: UserDisplayOption[]
   invalid?: boolean
 }) {
   const options: UserOption[] = users.map((user) => ({

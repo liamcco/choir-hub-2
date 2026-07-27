@@ -8,11 +8,15 @@ import {
   type Position,
   type PositionScope,
   resolvePosition,
-  TopologyScopeType,
+  TOPOLOGY_SCOPE_TYPES,
   topology,
 } from '@/core/topology'
 import { organizationService } from '@/features/organization'
-import { buildUserLabels, formatPositionScopeLabel } from '@/features/organization/core/labels'
+import {
+  buildUserDisplayOptionMap,
+  buildUserDisplayOptions,
+  formatPositionScopeLabel,
+} from '@/features/organization/core/labels'
 import { getPositionCollectionGroup } from './position-collection-group'
 
 async function listCollection() {
@@ -21,7 +25,7 @@ async function listCollection() {
   const groups = listGroups()
   const choirs = listChoirs()
   const sections = listSections()
-  const labels = new Map(buildUserLabels(users).map((option) => [option.user.id, option.label]))
+  const userLabelsById = new Map(buildUserDisplayOptions(users).map((option) => [option.user.id, option.label]))
   return listPositions()
     .map((position) => {
       const currentAssignment = assignments.find((assignment) => assignment.positionId === position.id)
@@ -30,7 +34,7 @@ async function listCollection() {
         name: position.name,
         group: getPositionCollectionGroup(position.scopes, groups, choirs, sections),
         scopeLabel: formatPositionScopeLabel(position.scopes),
-        currentHolder: currentAssignment ? (labels.get(currentAssignment.userId) ?? 'Unknown User') : null,
+        currentHolder: currentAssignment ? (userLabelsById.get(currentAssignment.userId) ?? 'Unknown User') : null,
         heldSince: currentAssignment?.startsAt ?? null,
       }
     })
@@ -52,8 +56,8 @@ async function getDetail(positionId: string) {
   const groups = topology.groups
   const choirs = topology.choirs
   const sections = topology.sections
-  const membersById = new Map(buildUserLabels(users).map((option) => [option.user.id, option]))
-  const assignmentViews = assignments.flatMap((assignment) => mapAssignmentView(assignment, membersById))
+  const userDisplayOptionsById = buildUserDisplayOptionMap(users)
+  const assignmentViews = assignments.flatMap((assignment) => mapAssignmentView(assignment, userDisplayOptionsById))
   const compare = (a: (typeof assignmentViews)[number], b: (typeof assignmentViews)[number]) =>
     a.userLabel.localeCompare(b.userLabel) || a.startsAt.getTime() - b.startsAt.getTime() || a.id.localeCompare(b.id)
   return {
@@ -63,22 +67,26 @@ async function getDetail(positionId: string) {
     sections,
     positionScopes: position.scopes,
     scopeLabel: formatPositionScopeLabel(position.scopes),
-    users: [...membersById.values()]
-      .filter((member) => isEligible(member.user.id, position, position.scopes, memberships, placements))
+    users: [...userDisplayOptionsById.values()]
+      .filter((userDisplayOption) =>
+        isEligible(userDisplayOption.user.id, position, position.scopes, memberships, placements),
+      )
       .sort((a, b) => a.label.localeCompare(b.label)),
     currentAssignments: assignmentViews.sort(compare),
     historicalAssignments: previousAssignments
-      .flatMap((assignment) => mapAssignmentView(assignment, membersById))
+      .flatMap((assignment) => mapAssignmentView(assignment, userDisplayOptionsById))
       .sort((a, b) => (b.endsAt?.getTime() ?? 0) - (a.endsAt?.getTime() ?? 0) || compare(a, b)),
   }
 }
 
 function mapAssignmentView(
   assignment: { id: string; userId: string; positionId: string; startsAt: Date; endsAt: Date | null },
-  membersById: ReadonlyMap<string, { label: string; detail: string }>,
+  userDisplayOptionsById: ReadonlyMap<string, { label: string; detail: string }>,
 ) {
-  const member = membersById.get(assignment.userId)
-  return member ? [{ ...assignment, userLabel: member.label, userDetail: member.detail }] : []
+  const userDisplayOption = userDisplayOptionsById.get(assignment.userId)
+  return userDisplayOption
+    ? [{ ...assignment, userLabel: userDisplayOption.label, userDetail: userDisplayOption.detail }]
+    : []
 }
 
 function isEligible(
@@ -89,13 +97,13 @@ function isEligible(
   placements: Array<{ userId: string; sectionId: string; startsAt: Date; endsAt: Date | null }>,
 ) {
   if (position.name === 'Conductor') return true
-  const sectionScopes = scopes.filter((scope) => scope.type === TopologyScopeType.SECTION)
+  const sectionScopes = scopes.filter((scope) => scope.type === TOPOLOGY_SCOPE_TYPES.SECTION)
   if (sectionScopes.length)
     return placements.some(
       (placement) =>
         placement.userId === userId && sectionScopes.some((scope) => scope.sectionId === placement.sectionId),
     )
-  const choirScopes = scopes.filter((scope) => scope.type === TopologyScopeType.CHOIR)
+  const choirScopes = scopes.filter((scope) => scope.type === TOPOLOGY_SCOPE_TYPES.CHOIR)
   if (choirScopes.length && (position.name === 'Master of Concerts' || position.name === 'Master of Gigs'))
     return memberships.some(
       (membership) => membership.userId === userId && choirScopes.some((scope) => scope.choirId === membership.choirId),

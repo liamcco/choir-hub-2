@@ -1,6 +1,6 @@
 /** Focused Position collection reads and pure collection descriptions. */
-import { type Group, getGroup, listGroups, listPositions, type Position, TopologyScopeType } from '@/core/topology'
-import { formatGroupPath, formatPositionScopeLabel } from '@/features/organization/core/labels'
+import { type Group, getGroup, listGroups, listPositions, type Position, TOPOLOGY_SCOPE_TYPES } from '@/core/topology'
+import { formatGroupName, formatPositionScopeLabel } from '@/features/organization/core/labels'
 import { normalizeSearchTerm } from '@/shared/search'
 
 export type PositionDescription = {
@@ -26,13 +26,13 @@ export function describePositions(positions: readonly Position[], groups: readon
 
   return positions.map((position) => {
     const scopeGroups = position.scopes
-      .filter((scope) => scope.type === TopologyScopeType.GROUP)
+      .filter((scope) => scope.type === TOPOLOGY_SCOPE_TYPES.GROUP)
       .flatMap((scope) => {
         const group = getGroup(scope.groupId)
         if (!group) throw new Error(`Invalid Position ${position.id}: unknown Group ${scope.groupId}.`)
         return [group]
       })
-      .sort((first, second) => formatGroupPath(groups, first).localeCompare(formatGroupPath(groups, second)))
+      .sort((first, second) => formatGroupName(groups, first).localeCompare(formatGroupName(groups, second)))
     const scopeLabel = formatPositionScopeLabel(position.scopes)
 
     return {
