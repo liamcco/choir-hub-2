@@ -48,8 +48,8 @@ The previous model treated a Voice as a current membership in a Group of kind Se
 - One Song may have multiple Arrangements, such as SATB and TTBB.
 - An Arrangement owns its musical parts and may contain one undivided bass harmony, B, or split it into B1 and B2.
 - An Arrangement contains explicit Parts, and each Part references one global Voice.
-- A singer's current Section Placement supplies their default Voice automatically.
-- Additional Voice Capabilities record the Voices a singer can generally cover outside their usual Section Placement.
+- Starting a Section Placement atomically ensures that the matching fine-grained Voice Capability is persisted; that capability remains after the Placement ends unless explicitly removed.
+- Additional Voice Capabilities record other fine-grained Voices a singer can generally cover outside their usual Section Placement.
 - A Voice Offer records which Voices a singer is willing to sing for one event; it is distinct from both capability and placement.
 - A User's Event Voice defaults from their current Section Placement, is stored separately from their other Voice Offers, and may be reassigned by an event organizer.
 - Event Voice is event-level registration and reporting data, not a song-specific Part assignment.

@@ -10,6 +10,7 @@ import {
   positionAssignment as positionAssignmentTable,
   sectionPlacement,
   user,
+  voiceCapability,
 } from '@/drizzle/schema'
 import { assertValidDatedPeriod, findOverlappingDatedPeriod, normalizeDatedPeriodInput } from './dated-history'
 import { DateOverlapError, EntityDoesNotExistError, InvalidRelationshipError } from './errors'
@@ -88,10 +89,11 @@ async function assertUserExists(userId: string) {
 }
 
 async function loadEligibilityFacts(userId: string): Promise<PositionAssignmentEligibilityFacts> {
-  const [userRow, memberships, placements] = await Promise.all([
+  const [userRow, memberships, placements, capabilities] = await Promise.all([
     db.select({ status: user.status }).from(user).where(eq(user.id, userId)).limit(1),
     db.select().from(choirMembership).where(eq(choirMembership.userId, userId)),
     db.select().from(sectionPlacement).where(eq(sectionPlacement.userId, userId)),
+    db.select({ voice: voiceCapability.voice }).from(voiceCapability).where(eq(voiceCapability.userId, userId)),
   ])
   const memberStatus = userRow[0]?.status
   if (!memberStatus) throw new EntityDoesNotExistError('Choose an existing User.', { field: 'userId' })
@@ -102,7 +104,10 @@ async function loadEligibilityFacts(userId: string): Promise<PositionAssignmentE
     memberStatus: memberStatus.toUpperCase() as MemberStatus,
     choirMemberships: memberships,
     sectionPlacements: finePlacements,
-    voiceCapabilities: finePlacements.map((placement) => placement.voice),
+    voiceCapabilities: [
+      ...finePlacements.map((placement) => placement.voice),
+      ...capabilities.flatMap(({ voice }) => (isFineVoice(voice) ? [voice] : [])),
+    ],
   }
 }
 

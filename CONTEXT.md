@@ -69,7 +69,7 @@ A fixed, organization-wide classification of choral voice. `Voice` includes the 
 _Avoid_: Section, singer capability, musical part, gender
 
 **Voice Capability**:
-A fine-grained Voice that a User can generally sing, independent of organizational placement or willingness for a particular event. Users select each capability explicitly: selecting B1 also covers an undivided B Part but does not imply B2.
+A fine-grained Voice that a User can generally sing, independent of organizational placement or willingness for a particular event. Starting a Section Placement atomically ensures that the matching Voice Capability is persisted; that capability remains after the Placement ends unless explicitly removed. Users select additional capabilities explicitly: selecting B1 also covers an undivided B Part but does not imply B2.
 _Avoid_: Section Placement, Voice Offer, event assignment
 
 **Treble Voices**:

@@ -7,6 +7,7 @@ import type { FineVoice } from '@/core/types'
 import { choirMembership, sectionPlacement, user } from '@/drizzle/schema'
 import { assertValidDatedPeriod, datedPeriodsOverlap, normalizeDatedPeriodInput } from './dated-history'
 import { DateOverlapError, EntityDoesNotExistError, InvalidRelationshipError } from './errors'
+import { ensureVoiceCapability } from './voice-capability'
 
 type Period = { startsAt: Date; endsAt: Date | null }
 
@@ -70,17 +71,21 @@ export const homePlacement = {
       throw new EntityDoesNotExistError('Choose an existing Section.', { field: 'sectionId' })
     if (!target.allowedVoices.includes(input.voice))
       throw new InvalidRelationshipError('Choose a Voice allowed by the Section.', { field: 'voice' })
-    const memberships = await this.listChoirMemberships({ userId: input.userId })
-    if (!memberships.some((m) => m.choirId === target.choirId && covers(m, period)))
-      throw new InvalidRelationshipError('Section Placement must be covered by a matching Choir Membership.', {
-        field: 'sectionId',
-      })
-    await assertNoOverlap(await this.listSectionPlacements({ userId: input.userId }), period, 'Section Placement')
-    return db
-      .insert(sectionPlacement)
-      .values(period)
-      .returning()
-      .then((r) => r[0])
+    return db.transaction(async (tx) => {
+      await ensureVoiceCapability(tx, { userId: input.userId, voice: input.voice })
+      const memberships = await tx.select().from(choirMembership).where(eq(choirMembership.userId, input.userId))
+      if (!memberships.some((m) => m.choirId === target.choirId && covers(m, period)))
+        throw new InvalidRelationshipError('Section Placement must be covered by a matching Choir Membership.', {
+          field: 'sectionId',
+        })
+      const placements = await tx.select().from(sectionPlacement).where(eq(sectionPlacement.userId, input.userId))
+      await assertNoOverlap(placements, period, 'Section Placement')
+      return tx
+        .insert(sectionPlacement)
+        .values(period)
+        .returning()
+        .then((rows) => rows[0])
+    })
   },
   async endChoirMembership(id: string, endsAt: Date) {
     return endMembership(id, endsAt, true)

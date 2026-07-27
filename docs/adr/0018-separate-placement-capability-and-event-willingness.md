@@ -1,6 +1,6 @@
 # Separate placement, capability, and event willingness
 
-CSK Choir Hub will represent a singer's usual Section Placement, lasting Voice Capabilities, and event-specific Voice Offers as distinct facts. The Voice of the current Section Placement automatically contributes the singer's default capability, additional Voice Capabilities record other Voices they can generally cover, and a Voice Offer records only what they are willing to sing for one event.
+CSK Choir Hub will represent a singer's usual Section Placement, lasting Voice Capabilities, and event-specific Voice Offers as distinct facts. Starting a Section Placement atomically ensures that the matching fine-grained Voice Capability is persisted; that capability remains after the Placement ends unless explicitly removed. Additional Voice Capabilities record other Voices they can generally cover, and a Voice Offer records only what they are willing to sing for one event.
 
 Voice Capabilities and Voice Offers use only fine-grained numbered Voices. Singers select both refinements when they can cover both rather than selecting an ambiguous base voice.
 
