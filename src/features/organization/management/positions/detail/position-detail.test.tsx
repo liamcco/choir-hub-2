@@ -75,5 +75,8 @@ describe('Position detail', () => {
     await user.click(screen.getByRole('button', { name: 'Assign Holder' }))
     expect(screen.getByLabelText('User')).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Assign' })).toBeTruthy()
+    expect(screen.queryByText('Vacant Position')).toBeNull()
+    const currentAssignmentSection = screen.getByRole('heading', { name: 'Current assignment' }).closest('section')
+    expect(currentAssignmentSection?.querySelector('.border-dashed')).toBeNull()
   })
 })

@@ -92,9 +92,12 @@ export function AssignPositionHolderControl({ users, positionId }: { users: User
   const [isAssigning, setIsAssigning] = useState(false)
   if (!isAssigning) {
     return (
-      <Button onClick={() => setIsAssigning(true)} type="button" variant="outline">
-        Assign Holder
-      </Button>
+      <div className="flex flex-col gap-3 rounded-lg border border-dashed p-4 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-sm text-muted-foreground">Vacant Position</p>
+        <Button onClick={() => setIsAssigning(true)} type="button" variant="outline">
+          Assign Holder
+        </Button>
+      </div>
     )
   }
   return <AssignPositionHolderForm users={users} positionId={positionId} onCancel={() => setIsAssigning(false)} />

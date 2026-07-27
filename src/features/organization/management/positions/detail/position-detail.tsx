@@ -40,10 +40,7 @@ export function PositionDetail({ position }: { position: PositionDetailView }) {
         {currentAssignment ? (
           <AssignmentList assignments={[currentAssignment]} showEndControls />
         ) : (
-          <div className="flex flex-col gap-3 rounded-lg border border-dashed p-4 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-muted-foreground">Vacant Position</p>
-            <AssignPositionHolderControl users={position.users} positionId={position.position.id} />
-          </div>
+          <AssignPositionHolderControl users={position.users} positionId={position.position.id} />
         )}
       </section>
       <section aria-labelledby="previous-holders-heading" className="space-y-4">
