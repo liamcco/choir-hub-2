@@ -1,7 +1,8 @@
 import z from 'zod'
+import { requiredText } from '@/shared/validation'
 
 export const PositionFormSchema = z.object({
-  name: z.string().refine((value) => value.trim().length > 0, 'Name is required.'),
+  name: requiredText('Name is required.'),
   description: z.string().nullable().optional(),
   groupIds: z.array(z.string()),
 })

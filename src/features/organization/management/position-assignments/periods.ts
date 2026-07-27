@@ -1,7 +1,7 @@
 /** Pure read-model transformations for dated Position Assignment relationships. */
 import type { Position } from '@/core/topology'
 import type { PositionAssignment, User } from '@/drizzle/schema'
-import { buildUserLabels } from '@/features/organization/core/labels'
+import { buildUserLabelMap } from '@/features/organization/core/labels'
 import { listPositionAssignmentOptions } from './service'
 
 export type PositionAssignmentPeriod = PositionAssignment & {
@@ -11,11 +11,6 @@ export type PositionAssignmentPeriod = PositionAssignment & {
   positionScopeLabel: string
   userLabel: string
   userDetail: string
-}
-
-export type PositionAssignmentPeriodsByState = {
-  currentAssignments: PositionAssignmentPeriod[]
-  historicalAssignments: PositionAssignmentPeriod[]
 }
 
 /** Resolves persisted IDs into domain objects and fails explicitly on invalid references. */
@@ -29,7 +24,7 @@ export function resolvePositionAssignmentDetails(
   const positionOptionsById = new Map<string, ReturnType<typeof listPositionAssignmentOptions>[number]>(
     listPositionAssignmentOptions().map((option) => [option.position.id, option]),
   )
-  const userOptionsById = new Map(buildUserLabels(users).map((option) => [option.user.id, option]))
+  const userOptionsById = buildUserLabelMap(users)
   return assignments.map((assignment) => {
     const position = positionsById.get(assignment.positionId)
     const user = usersById.get(assignment.userId)
@@ -50,15 +45,4 @@ export function resolvePositionAssignmentDetails(
       userDetail: userOption.detail,
     }
   })
-}
-
-/** Categorizes dated Position Assignments relative to one instant without mutating the input. */
-export function splitPositionAssignmentPeriods(
-  currentAssignments: readonly PositionAssignmentPeriod[],
-  historicalAssignments: readonly PositionAssignmentPeriod[],
-): PositionAssignmentPeriodsByState {
-  return {
-    currentAssignments: [...currentAssignments],
-    historicalAssignments: [...historicalAssignments],
-  }
 }

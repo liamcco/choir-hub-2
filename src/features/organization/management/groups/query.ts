@@ -9,7 +9,8 @@ import {
   topology,
 } from '@/core/topology'
 import { organizationService } from '@/features/organization'
-import { buildUserLabels } from '@/features/organization/core/labels'
+import type { EffectiveGroupMembership } from '@/features/organization/core/effective-group-membership'
+import { buildUserLabels, type UserLabel } from '@/features/organization/core/labels'
 
 async function listGroupStructure() {
   const currentMemberships = await organizationService.effectiveGroupMembership.list()
@@ -57,53 +58,44 @@ async function getGroupDetail(groupId: string) {
   )
   const memberOptionsById = new Map(memberOptions.map((option) => [option.user.id, option]))
   const positionsById = new Map<string, string>(positions.map((position) => [position.id, position.name]))
-  const membershipViews = memberships.flatMap((membership) => {
-    const option = memberOptionsById.get(membership.userId)
-    return option
-      ? [
-          {
-            ...membership,
-            id: `${membership.groupId}:${membership.userId}:${membership.startsAt.toISOString()}`,
-            userLabel: option.label,
-            userDetail: option.detail,
-            sourceLabels: membership.sources.map((source) =>
-              source.type === 'explicit'
-                ? 'Explicit membership'
-                : (positionsById.get(source.positionId ?? '') ?? 'Position assignment'),
-            ),
-          },
-        ]
-      : []
-  })
+  const membershipViews = memberships.flatMap((membership) =>
+    mapMembershipView(membership, memberOptionsById, positionsById),
+  )
 
   return {
     ...group,
     users: memberOptions,
     currentMemberships: membershipViews.sort(compareMemberships),
     historicalMemberships: previousMemberships
-      .flatMap((membership) => {
-        const option = memberOptionsById.get(membership.userId)
-        return option
-          ? [
-              {
-                ...membership,
-                id: `${membership.groupId}:${membership.userId}:${membership.startsAt.toISOString()}`,
-                userLabel: option.label,
-                userDetail: option.detail,
-                sourceLabels: membership.sources.map((source) =>
-                  source.type === 'explicit'
-                    ? 'Explicit membership'
-                    : (positionsById.get(source.positionId ?? '') ?? 'Position assignment'),
-                ),
-              },
-            ]
-          : []
-      })
+      .flatMap((membership) => mapMembershipView(membership, memberOptionsById, positionsById))
       .sort(
         (first, second) =>
           (second.endsAt?.getTime() ?? 0) - (first.endsAt?.getTime() ?? 0) || compareMemberships(first, second),
       ),
   }
+}
+
+function mapMembershipView(
+  membership: EffectiveGroupMembership,
+  memberOptionsById: ReadonlyMap<string, UserLabel>,
+  positionsById: ReadonlyMap<string, string>,
+) {
+  const option = memberOptionsById.get(membership.userId)
+  return option
+    ? [
+        {
+          ...membership,
+          id: `${membership.groupId}:${membership.userId}:${membership.startsAt.toISOString()}`,
+          userLabel: option.label,
+          userDetail: option.detail,
+          sourceLabels: membership.sources.map((source) =>
+            source.type === 'explicit'
+              ? 'Explicit membership'
+              : (positionsById.get(source.positionId ?? '') ?? 'Position assignment'),
+          ),
+        },
+      ]
+    : []
 }
 
 export const listGroupCollection = listGroupStructure

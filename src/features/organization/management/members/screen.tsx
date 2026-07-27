@@ -19,9 +19,8 @@ import {
   createPositionAssignmentAction,
   endPositionAssignmentAction,
 } from '@/features/organization/management/position-assignments'
+import type { DetailSearchParams } from '../search-params'
 import { resendInvitationAction } from './onboarding/actions'
-
-type DetailSearchParams = Promise<{ detail?: string | string[] }>
 
 export function UserManagementScreen({ searchParams }: { searchParams: DetailSearchParams }) {
   return (

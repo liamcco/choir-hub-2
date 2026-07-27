@@ -42,6 +42,7 @@ describe('Member detail', () => {
               groupName: 'Chamber Choir',
               groupKind: GroupKind.COMMITTEE,
               startsAt: new Date('2024-08-01'),
+              endsAt: null,
             },
           ],
           currentAssignments: [
@@ -51,6 +52,7 @@ describe('Member detail', () => {
               positionName: 'Chair',
               scopeLabel: 'Board',
               startsAt: new Date('2024-09-01'),
+              endsAt: null,
             },
           ],
         }}

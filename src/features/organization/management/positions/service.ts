@@ -1,6 +1,7 @@
 /** Focused Position collection reads and pure collection descriptions. */
 import { type Group, getGroup, listGroups, listPositions, type Position, TopologyScopeType } from '@/core/topology'
 import { formatGroupPath, formatPositionScopeLabel } from '@/features/organization/core/labels'
+import { normalizeSearchTerm } from '@/shared/search'
 
 export type PositionDescription = {
   position: Position
@@ -45,5 +46,5 @@ export function describePositions(positions: readonly Position[], groups: readon
 }
 
 function normalizeName(value: string) {
-  return value.trim().toLocaleLowerCase()
+  return normalizeSearchTerm(value)
 }

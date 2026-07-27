@@ -5,8 +5,8 @@ import { buildUserLabels, type UserLabel } from '@/features/organization/core/la
 import { type PositionAssignmentPeriod, resolvePositionAssignmentDetails } from './periods'
 
 export { listPositionAssignmentOptions } from './options'
-export type { PositionAssignmentPeriod, PositionAssignmentPeriodsByState } from './periods'
-export { resolvePositionAssignmentDetails, splitPositionAssignmentPeriods } from './periods'
+export type { PositionAssignmentPeriod } from './periods'
+export { resolvePositionAssignmentDetails } from './periods'
 
 /** Reads Users as stable, consistently formatted options for assignment forms. */
 export async function listPositionAssignmentUsers(): Promise<UserLabel[]> {

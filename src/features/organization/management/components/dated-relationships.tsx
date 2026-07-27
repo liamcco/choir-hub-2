@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react'
+import type { DatedRelationship as CoreDatedRelationship } from '@/features/organization/core/dated-history'
 import { formatDate } from '@/shared/formatting'
 
-export type DatedRelationship = { id: string; label: string; startsAt: Date; endsAt?: Date | null; detail?: ReactNode }
+export type DatedRelationship = CoreDatedRelationship & { label: string; detail?: ReactNode }
 
 export function DatedRelationships({
   title,

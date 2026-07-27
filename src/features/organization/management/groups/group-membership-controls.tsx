@@ -3,11 +3,14 @@
 import { SaveIcon, UserPlusIcon } from 'lucide-react'
 import { useActionState, useState } from 'react'
 import type {
+  CreateGroupMembershipAction,
   CreateGroupMembershipFormState,
+  EndGroupMembershipAction,
   EndGroupMembershipFormState,
 } from '@/features/organization/management/group-memberships/actions'
 import { formatDateInput } from '@/shared/formatting'
 import { FormMessage } from '@/shared/forms/error-handling'
+import type { NamedEntity } from '@/shared/types'
 import { Button } from '@/shared/ui/button'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/shared/ui/field'
 import { Input } from '@/shared/ui/input'
@@ -15,15 +18,8 @@ import { NativeSelect, NativeSelectOption } from '@/shared/ui/native-select'
 
 const createInitialState: CreateGroupMembershipFormState = {}
 const endInitialState: EndGroupMembershipFormState = {}
-export type CreateMembershipAction = (
-  previousState: CreateGroupMembershipFormState,
-  formData: FormData,
-) => Promise<CreateGroupMembershipFormState>
-export type EndMembershipAction = (
-  membershipId: string,
-  previousState: EndGroupMembershipFormState,
-  formData: FormData,
-) => Promise<EndGroupMembershipFormState>
+export type CreateMembershipAction = CreateGroupMembershipAction
+export type EndMembershipAction = EndGroupMembershipAction
 
 export function AddUserGroupControl({
   userId,
@@ -31,7 +27,7 @@ export function AddUserGroupControl({
   action,
 }: {
   userId: string
-  groups: { id: string; name: string }[]
+  groups: NamedEntity[]
   action: CreateMembershipAction
 }) {
   const [isOpen, setIsOpen] = useState(false)

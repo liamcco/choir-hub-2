@@ -15,6 +15,8 @@ export type DatedPeriodUpdateInput = {
   endsAt?: Date | null
 }
 
+export type DatedRelationship = DatedPeriod & { id: string }
+
 export function normalizeDatedPeriodInput<T extends DatedPeriodInput>(input: T): T & { endsAt: Date | null } {
   const normalized = {
     ...input,

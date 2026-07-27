@@ -1,4 +1,9 @@
-export type { CreatePositionAssignmentFormState, EndPositionAssignmentFormState } from './actions'
+export type {
+  CreatePositionAssignmentAction,
+  CreatePositionAssignmentFormState,
+  EndPositionAssignmentAction,
+  EndPositionAssignmentFormState,
+} from './actions'
 export {
   AssignUserPositionControl,
   EndPositionAssignmentForm,

@@ -69,7 +69,7 @@ async function getDetail(userId: string) {
             groupName: formatGroupPath(groups, group),
             groupKind: group.kind,
             startsAt: membership.startsAt,
-            endsAt: membership.endsAt ?? undefined,
+            endsAt: membership.endsAt,
           },
         ]
       : []
@@ -84,7 +84,7 @@ async function getDetail(userId: string) {
         positionName: position.name,
         scopeLabel: formatPositionScopeLabel(position.scopes),
         startsAt: assignment.startsAt,
-        endsAt: assignment.endsAt ?? undefined,
+        endsAt: assignment.endsAt,
       },
     ]
   })

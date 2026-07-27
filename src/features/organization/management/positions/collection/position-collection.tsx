@@ -4,6 +4,8 @@ import Link from 'next/link'
 import { Fragment, useState } from 'react'
 import { adminPositionPath } from '@/core/navigation/site'
 import { SearchControl } from '@/features/organization/management/components/search-control'
+import { formatDate } from '@/shared/formatting'
+import { matchesSearchText, normalizeSearchTerm } from '@/shared/search'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 
 const POSITION_GROUP_ORDER = ['Board', 'KK', 'MK', 'DK', 'Other'] as const
@@ -19,10 +21,10 @@ export type PositionCollectionRow = {
 
 export function PositionCollection({ positions }: { positions: PositionCollectionRow[] }) {
   const [query, setQuery] = useState('')
-  const normalizedQuery = query.trim().toLocaleLowerCase()
+  const normalizedQuery = normalizeSearchTerm(query)
   const filteredPositions = !normalizedQuery
     ? positions
-    : positions.filter((position) => searchablePositionText(position).includes(normalizedQuery))
+    : positions.filter((position) => matchesSearchText(searchablePositionText(position), normalizedQuery))
   const groupedPositions = POSITION_GROUP_ORDER.flatMap((group) => {
     const groupPositions = filteredPositions.filter((position) => position.group === group)
     return groupPositions.length ? [{ group, positions: groupPositions }] : []
@@ -100,7 +102,4 @@ function searchablePositionText(position: PositionCollectionRow) {
   ]
     .join(' ')
     .toLocaleLowerCase()
-}
-function formatDate(date: Date) {
-  return new Intl.DateTimeFormat('en', { dateStyle: 'medium' }).format(date)
 }

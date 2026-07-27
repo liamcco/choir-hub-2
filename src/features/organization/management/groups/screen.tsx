@@ -7,16 +7,13 @@ import {
   createGroupMembershipAction,
   endGroupMembershipAction,
 } from '@/features/organization/management/group-memberships/actions'
+import type { DetailSearchParams } from '../search-params'
 import { GroupCollection } from './collection/group-collection'
 import { GroupDetail } from './detail/group-detail'
 import { GroupDetailDialog } from './detail/group-detail-presentation'
 import { GroupDetailSkeleton } from './detail/group-detail-skeleton'
 
-// TODO: naming query vs service. The query is for reading data, the service is for writing data.
-// But the naming is inconsistent and confusing.
 import { getGroupDetail, listGroupCollection } from './query'
-
-type DetailSearchParams = Promise<{ detail?: string | string[] }>
 
 export function GroupManagementScreen({ searchParams }: { searchParams: DetailSearchParams }) {
   return (

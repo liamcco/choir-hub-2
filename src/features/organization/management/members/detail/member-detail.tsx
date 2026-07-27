@@ -1,23 +1,21 @@
 import type { GroupKind } from '@/core/topology'
 import type { MemberStatus } from '@/drizzle/schema'
+import type { DatedPeriod } from '@/features/organization/core/dated-history'
 import { formatMemberStatus } from '@/features/organization/core/member-status'
 import type {
   CreateMembershipAction,
   EndMembershipAction,
 } from '@/features/organization/management/groups/relationships'
 import type {
-  CreatePositionAssignmentFormState,
-  EndPositionAssignmentFormState,
+  CreatePositionAssignmentAction,
+  EndPositionAssignmentAction,
 } from '@/features/organization/management/position-assignments/relationships'
+import type { EntityOption, NamedEntity } from '@/shared/types'
 import { Badge } from '@/shared/ui/badge'
 import { MemberGroupMembershipSection, MemberPositionAssignmentSection } from './member-relationship-sections'
 import { ResendInvitationControl } from './resend-invitation-control'
 
-export type MemberRelationshipPeriod = {
-  id: string
-  startsAt: Date
-  endsAt?: Date
-}
+export type MemberRelationshipPeriod = DatedPeriod & { id: string }
 
 export type MemberMembershipView = MemberRelationshipPeriod & {
   groupId: string
@@ -38,8 +36,8 @@ export type MemberDetailView = {
   emailVerified?: boolean
   status: MemberStatus
   homePlacement?: { choir: { id: string; name: string } | null; section: { id: string; name: string } | null }
-  groups: { id: string; name: string }[]
-  positions: { id: string; label: string }[]
+  groups: NamedEntity[]
+  positions: EntityOption[]
   currentMemberships: MemberMembershipView[]
   currentAssignments: MemberAssignmentView[]
 }
@@ -48,15 +46,8 @@ type MemberDetailActions = {
   resendInvitation?: (userId: string) => Promise<{ success: boolean; message: string }>
   createMembership: CreateMembershipAction
   endMembership: EndMembershipAction
-  createAssignment: (
-    previousState: CreatePositionAssignmentFormState,
-    formData: FormData,
-  ) => Promise<CreatePositionAssignmentFormState>
-  endAssignment: (
-    assignmentId: string,
-    previousState: EndPositionAssignmentFormState,
-    formData: FormData,
-  ) => Promise<EndPositionAssignmentFormState>
+  createAssignment: CreatePositionAssignmentAction
+  endAssignment: EndPositionAssignmentAction
 }
 
 export function MemberDetail({ member, actions }: { member: MemberDetailView; actions?: MemberDetailActions }) {

@@ -4,6 +4,13 @@ import { user } from './auth'
 
 export const voice = pgEnum('Voice', ['S', 'S1', 'S2', 'A', 'A1', 'A2', 'T', 'T1', 'T2', 'B', 'B1', 'B2'])
 
+function datedPeriodColumns() {
+  return {
+    startsAt: timestamp('startsAt').notNull(),
+    endsAt: timestamp('endsAt'),
+  }
+}
+
 export const choirMembership = pgTable(
   'ChoirMembership',
   {
@@ -12,8 +19,7 @@ export const choirMembership = pgTable(
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
     choirId: text('choirId').notNull(),
-    startsAt: timestamp('startsAt').notNull(),
-    endsAt: timestamp('endsAt'),
+    ...datedPeriodColumns(),
   },
   (table) => [
     unique('ChoirMembership_user_id_starts_at_key').on(table.userId, table.startsAt),
@@ -32,8 +38,7 @@ export const sectionPlacement = pgTable(
       .references(() => user.id, { onDelete: 'cascade' }),
     sectionId: text('sectionId').notNull(),
     voice: voice('voice').notNull(),
-    startsAt: timestamp('startsAt').notNull(),
-    endsAt: timestamp('endsAt'),
+    ...datedPeriodColumns(),
   },
   (table) => [
     unique('SectionPlacement_user_id_starts_at_key').on(table.userId, table.startsAt),
@@ -52,8 +57,7 @@ export const groupMembership = pgTable(
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
     groupId: text('groupId').notNull(),
-    startsAt: timestamp('startsAt').notNull(),
-    endsAt: timestamp('endsAt'),
+    ...datedPeriodColumns(),
   },
   (table) => [
     unique('GroupMembership_user_id_group_id_starts_at_key').on(table.userId, table.groupId, table.startsAt),
@@ -71,8 +75,7 @@ export const positionAssignment = pgTable(
     userId: text('userId')
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
-    startsAt: timestamp('startsAt').notNull(),
-    endsAt: timestamp('endsAt'),
+    ...datedPeriodColumns(),
   },
   (table) => [
     unique('PositionAssignment_position_id_starts_at_key').on(table.positionId, table.startsAt),

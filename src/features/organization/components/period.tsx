@@ -1,4 +1,5 @@
 import { CalendarRangeIcon } from 'lucide-react'
+import { formatDate } from '@/shared/formatting'
 
 export function Period({ startsAt, endsAt }: { startsAt: Date; endsAt?: Date | null }) {
   return (
@@ -7,8 +8,4 @@ export function Period({ startsAt, endsAt }: { startsAt: Date; endsAt?: Date | n
       {formatDate(startsAt)} {endsAt ? `to ${formatDate(endsAt)}` : 'onward'}
     </span>
   )
-}
-
-function formatDate(date: Date) {
-  return new Intl.DateTimeFormat('en', { dateStyle: 'medium', timeZone: 'UTC' }).format(date)
 }

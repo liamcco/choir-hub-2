@@ -53,10 +53,7 @@ async function getDetail(positionId: string) {
   const choirs = topology.choirs
   const sections = topology.sections
   const membersById = new Map(buildUserLabels(users).map((option) => [option.user.id, option]))
-  const assignmentViews = assignments.flatMap((assignment) => {
-    const member = membersById.get(assignment.userId)
-    return member ? [{ ...assignment, userLabel: member.label, userDetail: member.detail }] : []
-  })
+  const assignmentViews = assignments.flatMap((assignment) => mapAssignmentView(assignment, membersById))
   const compare = (a: (typeof assignmentViews)[number], b: (typeof assignmentViews)[number]) =>
     a.userLabel.localeCompare(b.userLabel) || a.startsAt.getTime() - b.startsAt.getTime() || a.id.localeCompare(b.id)
   return {
@@ -71,12 +68,17 @@ async function getDetail(positionId: string) {
       .sort((a, b) => a.label.localeCompare(b.label)),
     currentAssignments: assignmentViews.sort(compare),
     historicalAssignments: previousAssignments
-      .flatMap((assignment) => {
-        const member = membersById.get(assignment.userId)
-        return member ? [{ ...assignment, userLabel: member.label, userDetail: member.detail }] : []
-      })
+      .flatMap((assignment) => mapAssignmentView(assignment, membersById))
       .sort((a, b) => (b.endsAt?.getTime() ?? 0) - (a.endsAt?.getTime() ?? 0) || compare(a, b)),
   }
+}
+
+function mapAssignmentView(
+  assignment: { id: string; userId: string; positionId: string; startsAt: Date; endsAt: Date | null },
+  membersById: ReadonlyMap<string, { label: string; detail: string }>,
+) {
+  const member = membersById.get(assignment.userId)
+  return member ? [{ ...assignment, userLabel: member.label, userDetail: member.detail }] : []
 }
 
 function isEligible(

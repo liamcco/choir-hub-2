@@ -1,18 +1,13 @@
 /** Pure read-model transformations for dated Group Membership relationships. */
 import type { Group } from '@/core/topology'
 import type { GroupMembership, User } from '@/drizzle/schema'
-import { buildUserLabels, formatGroupPath } from '@/features/organization/core/labels'
+import { buildUserLabelMap, formatGroupPath } from '@/features/organization/core/labels'
 
 export type GroupMembershipPeriod = GroupMembership & {
   group: Group
   user: User
   userLabel: string
   userDetail: string
-}
-
-export type GroupMembershipPeriodsByState = {
-  currentMemberships: GroupMembershipPeriod[]
-  historicalMemberships: GroupMembershipPeriod[]
 }
 
 /** Resolves persisted IDs into domain objects and preserves invalid-reference rows as errors. */
@@ -23,7 +18,7 @@ export function resolveGroupMembershipDetails(
 ): GroupMembershipPeriod[] {
   const groupsById = new Map<string, Group>(groups.map((group) => [group.id, group]))
   const usersById = new Map(users.map((user) => [user.id, user]))
-  const userOptionsById = new Map(buildUserLabels(users).map((option) => [option.user.id, option]))
+  const userOptionsById = buildUserLabelMap(users)
   return memberships
     .map((membership) => {
       const group = groupsById.get(membership.groupId)
@@ -43,15 +38,4 @@ export function resolveGroupMembershipDetails(
         first.startsAt.getTime() - second.startsAt.getTime() ||
         first.id.localeCompare(second.id),
     )
-}
-
-/** Categorizes dated Group Memberships relative to one instant without mutating the input. */
-export function splitGroupMembershipPeriods(
-  currentMemberships: readonly GroupMembershipPeriod[],
-  historicalMemberships: readonly GroupMembershipPeriod[],
-): GroupMembershipPeriodsByState {
-  return {
-    currentMemberships: [...currentMemberships],
-    historicalMemberships: [...historicalMemberships],
-  }
 }

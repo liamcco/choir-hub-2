@@ -8,6 +8,7 @@ import { type FineVoice, isFineVoice, voiceOrder } from '@/core/types'
 import type { MemberStatus } from '@/drizzle/schema'
 import { formatMemberStatus } from '@/features/organization/core/member-status'
 import { SearchControl } from '@/features/organization/management/components/search-control'
+import { matchesSearchText, normalizeSearchTerm } from '@/shared/search'
 import { Badge } from '@/shared/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 import { cn } from '@/shared/utils'
@@ -38,10 +39,10 @@ const CHOIR_ORDER = [ChoirId.MK, ChoirId.KK, ChoirId.DK].flatMap((id) => {
 export function MemberCollection({ users }: { users: MemberCollectionRow[] }) {
   const [query, setQuery] = useState('')
   const [grouping, setGrouping] = useState<MemberGrouping>('name')
-  const normalizedQuery = query.trim().toLocaleLowerCase()
+  const normalizedQuery = normalizeSearchTerm(query)
   const filteredMembers = !normalizedQuery
     ? users
-    : users.filter((user) => searchableUserText(user).includes(normalizedQuery))
+    : users.filter((user) => matchesSearchText(searchableUserText(user), normalizedQuery))
   const visibleMembers = useMemo(() => sortMembers(filteredMembers), [filteredMembers])
   const groupedMembers = grouping === 'name' ? null : groupMembers(visibleMembers, grouping)
 

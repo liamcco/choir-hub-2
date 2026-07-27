@@ -9,22 +9,20 @@ import type {
 } from '@/features/organization/management/groups/relationships'
 import { EndGroupUserControl } from '@/features/organization/management/groups/relationships'
 import type {
-  CreatePositionAssignmentFormState,
-  EndPositionAssignmentFormState,
+  CreatePositionAssignmentAction,
+  EndPositionAssignmentAction,
 } from '@/features/organization/management/position-assignments/relationships'
 import { EndPositionAssignmentForm } from '@/features/organization/management/position-assignments/relationships'
 import { formatDate } from '@/shared/formatting'
 import { FormMessage } from '@/shared/forms/error-handling'
+import type { EntityOption, NamedEntity } from '@/shared/types'
 import { Button } from '@/shared/ui/button'
 import { Field, FieldError, FieldLabel } from '@/shared/ui/field'
 import { NativeSelect, NativeSelectOption } from '@/shared/ui/native-select'
 import { RelatedDetailLink } from '../../components/related-detail-link'
 import type { MemberAssignmentView, MemberMembershipView } from './member-detail'
 
-type CreateAssignmentAction = (
-  previousState: CreatePositionAssignmentFormState,
-  formData: FormData,
-) => Promise<CreatePositionAssignmentFormState>
+type CreateAssignmentAction = CreatePositionAssignmentAction
 
 export function MemberGroupMembershipSection({
   groups,
@@ -33,7 +31,7 @@ export function MemberGroupMembershipSection({
   action,
   endAction,
 }: {
-  groups: { id: string; name: string }[]
+  groups: NamedEntity[]
   memberships: MemberMembershipView[]
   userId: string
   action?: CreateMembershipAction
@@ -99,18 +97,11 @@ export function MemberPositionAssignmentSection({
   action,
   endAction,
 }: {
-  positions: { id: string; label: string }[]
+  positions: EntityOption[]
   assignments: MemberAssignmentView[]
   userId: string
-  action?: (
-    previousState: CreatePositionAssignmentFormState,
-    formData: FormData,
-  ) => Promise<CreatePositionAssignmentFormState>
-  endAction?: (
-    assignmentId: string,
-    previousState: EndPositionAssignmentFormState,
-    formData: FormData,
-  ) => Promise<EndPositionAssignmentFormState>
+  action?: CreatePositionAssignmentAction
+  endAction?: EndPositionAssignmentAction
 }) {
   const [isAdding, setIsAdding] = useState(false)
 
@@ -177,7 +168,7 @@ function InlineGroupMembershipForm({
   action,
   onSuccess,
 }: {
-  groups: { id: string; name: string }[]
+  groups: NamedEntity[]
   userId: string
   action: CreateMembershipAction
   onSuccess: () => void
@@ -226,7 +217,7 @@ function InlinePositionAssignmentForm({
   action,
   onSuccess,
 }: {
-  positions: { id: string; label: string }[]
+  positions: EntityOption[]
   userId: string
   action: CreateAssignmentAction
   onSuccess: () => void

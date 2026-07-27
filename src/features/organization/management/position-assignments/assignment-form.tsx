@@ -5,7 +5,9 @@ import { useActionState, useState } from 'react'
 import type { UserLabel } from '@/features/organization/core/labels'
 import { UserCombobox } from '@/features/organization/management/components/user-combobox'
 import type {
+  CreatePositionAssignmentAction,
   CreatePositionAssignmentFormState,
+  EndPositionAssignmentAction,
   EndPositionAssignmentFormState,
 } from '@/features/organization/management/position-assignments/actions'
 import {
@@ -15,6 +17,7 @@ import {
 import type { listPositionAssignmentOptions } from '@/features/organization/management/position-assignments/service'
 import { formatDateInput } from '@/shared/formatting'
 import { FormMessage } from '@/shared/forms/error-handling'
+import type { EntityOption } from '@/shared/types'
 import { Button } from '@/shared/ui/button'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/shared/ui/field'
 import { Input } from '@/shared/ui/input'
@@ -24,15 +27,8 @@ const createInitialState: CreatePositionAssignmentFormState = {}
 const endInitialState: EndPositionAssignmentFormState = {}
 type UserOptions = UserLabel[]
 type AssignmentForEnd = { id: string; userId: string; startsAt: Date; userLabel: string }
-type CreateAssignmentAction = (
-  previousState: CreatePositionAssignmentFormState,
-  formData: FormData,
-) => Promise<CreatePositionAssignmentFormState>
-type EndAssignmentAction = (
-  assignmentId: string,
-  previousState: EndPositionAssignmentFormState,
-  formData: FormData,
-) => Promise<EndPositionAssignmentFormState>
+type CreateAssignmentAction = CreatePositionAssignmentAction
+type EndAssignmentAction = EndPositionAssignmentAction
 
 export function CreatePositionAssignmentForm({
   users,
@@ -110,7 +106,7 @@ export function AssignUserPositionControl({
   action = createPositionAssignmentAction,
 }: {
   userId: string
-  positions: { id: string; label: string }[]
+  positions: EntityOption[]
   action?: CreateAssignmentAction
 }) {
   const [isAssigning, setIsAssigning] = useState(false)

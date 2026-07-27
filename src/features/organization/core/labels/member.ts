@@ -10,6 +10,10 @@ export function buildUserLabels(users: readonly User[]): UserLabel[] {
   }))
 }
 
+export function buildUserLabelMap(users: readonly User[]): ReadonlyMap<string, UserLabel> {
+  return new Map(buildUserLabels(users).map((option) => [option.user.id, option]))
+}
+
 export function formatUserFallbackLabel(user: User) {
   return `User ${user.id}`
 }

@@ -13,6 +13,16 @@ import { CreatePositionAssignmentFormSchema, EndPositionAssignmentFormSchema } f
 export type CreatePositionAssignmentFormState = FormState<typeof CreatePositionAssignmentFormSchema>
 export type EndPositionAssignmentFormState = FormState<typeof EndPositionAssignmentFormSchema>
 
+export type CreatePositionAssignmentAction = (
+  previousState: CreatePositionAssignmentFormState,
+  formData: FormData,
+) => Promise<CreatePositionAssignmentFormState>
+export type EndPositionAssignmentAction = (
+  assignmentId: string,
+  previousState: EndPositionAssignmentFormState,
+  formData: FormData,
+) => Promise<EndPositionAssignmentFormState>
+
 export type PositionAssignmentFormState = CreatePositionAssignmentFormState | EndPositionAssignmentFormState
 
 export async function createPositionAssignmentAction(

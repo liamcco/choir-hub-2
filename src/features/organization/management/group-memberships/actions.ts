@@ -13,6 +13,16 @@ import { CreateGroupMembershipFormSchema, EndGroupMembershipFormSchema } from '.
 export type CreateGroupMembershipFormState = FormState<typeof CreateGroupMembershipFormSchema>
 export type EndGroupMembershipFormState = FormState<typeof EndGroupMembershipFormSchema>
 
+export type CreateGroupMembershipAction = (
+  previousState: CreateGroupMembershipFormState,
+  formData: FormData,
+) => Promise<CreateGroupMembershipFormState>
+export type EndGroupMembershipAction = (
+  membershipId: string,
+  previousState: EndGroupMembershipFormState,
+  formData: FormData,
+) => Promise<EndGroupMembershipFormState>
+
 export type GroupMembershipFormState = CreateGroupMembershipFormState | EndGroupMembershipFormState
 
 export async function createGroupMembershipAction(

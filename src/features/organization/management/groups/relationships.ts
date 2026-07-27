@@ -1,3 +1,7 @@
+export type {
+  CreateGroupMembershipAction,
+  EndGroupMembershipAction,
+} from '../group-memberships/actions'
 export {
   AddUserGroupControl,
   type CreateMembershipAction,

@@ -9,7 +9,7 @@ export function buildGroupPathLabels(groups: readonly Group[]) {
   return new Map(groups.map((group) => [group.id, group.name]))
 }
 export type { UserLabel } from '@/features/organization/core/labels/member'
-export { buildUserLabels, formatUserFallbackLabel } from '@/features/organization/core/labels/member'
+export { buildUserLabelMap, buildUserLabels, formatUserFallbackLabel } from '@/features/organization/core/labels/member'
 export {
   formatFineGrainedPlacementName,
   formatPositionLabel,

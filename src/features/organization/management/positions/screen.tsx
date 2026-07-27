@@ -3,13 +3,12 @@ import { ROUTES } from '@/core/navigation/site'
 import { AdminCollectionTableSkeleton } from '@/features/organization/management/components/admin-collection-skeleton'
 import { CollectionFrame } from '@/features/organization/management/components/collection-frame'
 import { InvalidDetailLookup } from '@/features/organization/management/components/invalid-detail-lookup'
+import type { DetailSearchParams } from '../search-params'
 import { PositionCollection } from './collection/position-collection'
 import { PositionDetail } from './detail/position-detail'
 import { PositionDetailRoutePresentation } from './detail/position-detail-presentation'
 import { PositionDetailSkeleton } from './detail/position-detail-skeleton'
 import { getPositionDetail, listPositionCollection } from './query'
-
-type DetailSearchParams = Promise<{ detail?: string | string[] }>
 
 export function PositionManagementScreen({ searchParams }: { searchParams: DetailSearchParams }) {
   return (

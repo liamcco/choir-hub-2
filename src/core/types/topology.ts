@@ -51,3 +51,15 @@ export type Position = {
   readonly eligibility?: PositionAssignmentEligibility
   readonly status?: TopologyStatus
 }
+
+export type TopologyCollections<
+  ChoirType extends Choir = Choir,
+  SectionType extends Section = Section,
+  GroupType extends Group = Group,
+  PositionType extends Position = Position,
+> = {
+  readonly choirs: readonly ChoirType[]
+  readonly sections: readonly SectionType[]
+  readonly groups: readonly GroupType[]
+  readonly positions: readonly PositionType[]
+}

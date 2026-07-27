@@ -11,6 +11,8 @@ export const dateInput = (message: string) =>
     return date
   })
 
+export const requiredText = (message: string) => z.string().refine((value) => value.trim().length > 0, message)
+
 export function isEmail(value: string) {
   return z.email().safeParse(value.trim()).success
 }

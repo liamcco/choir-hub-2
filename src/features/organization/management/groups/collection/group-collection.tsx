@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { adminGroupPath } from '@/core/navigation/site'
 import { listChoirsInDisplayOrder } from '@/core/topology'
 import { SearchControl } from '@/features/organization/management/components/search-control'
+import { matchesSearchText, normalizeSearchTerm } from '@/shared/search'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 
 export type GroupCollectionRow = {
@@ -18,9 +19,9 @@ const scopeOrder = ['CSK', ...listChoirsInDisplayOrder().map((choir) => choir.sh
 
 export function GroupCollection({ groups }: { groups: GroupCollectionRow[] }) {
   const [searchQuery, setSearchQuery] = useState('')
-  const normalizedQuery = searchQuery.trim().toLocaleLowerCase()
+  const normalizedQuery = normalizeSearchTerm(searchQuery)
   const filteredGroups = normalizedQuery
-    ? groups.filter((group) => searchableGroupText(group).includes(normalizedQuery))
+    ? groups.filter((group) => matchesSearchText(searchableGroupText(group), normalizedQuery))
     : groups
   const groupedGroups = scopeOrder.flatMap((scope) => {
     const scopedGroups = filteredGroups

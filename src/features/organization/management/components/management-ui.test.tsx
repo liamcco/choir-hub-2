@@ -22,7 +22,12 @@ describe('composable organization management UI', () => {
       <DatedRelationships
         title="Membership history"
         relationships={[
-          { id: 'current', label: 'Concert Mastery', startsAt: new Date('2025-01-01T00:00:00Z') },
+          {
+            id: 'current',
+            label: 'Concert Mastery',
+            startsAt: new Date('2025-01-01T00:00:00Z'),
+            endsAt: null,
+          },
           {
             id: 'past',
             label: 'Tour Committee',

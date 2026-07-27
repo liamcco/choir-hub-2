@@ -4,8 +4,8 @@ import { organizationService } from '@/features/organization'
 import { buildUserLabels, type UserLabel } from '@/features/organization/core/labels'
 import { type GroupMembershipPeriod, resolveGroupMembershipDetails } from './periods'
 
-export type { GroupMembershipPeriod, GroupMembershipPeriodsByState } from './periods'
-export { resolveGroupMembershipDetails, splitGroupMembershipPeriods } from './periods'
+export type { GroupMembershipPeriod } from './periods'
+export { resolveGroupMembershipDetails } from './periods'
 
 /** Reads the active Groups available for new Group Membership records. */
 export function listGroupMembershipGroups(): readonly Group[] {
