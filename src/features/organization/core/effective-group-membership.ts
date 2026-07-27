@@ -1,4 +1,4 @@
-import { and, eq, isNotNull, isNull } from 'drizzle-orm'
+import { and, eq, inArray, isNotNull, isNull } from 'drizzle-orm'
 import { db } from '@/core/db'
 import { TopologyScopeType, topology } from '@/core/topology'
 import { groupMembership, positionAssignment } from '@/drizzle/schema'
@@ -11,6 +11,9 @@ export type EffectiveGroupMembership = {
   endsAt: Date | null
   sources: EffectiveMembershipSource[]
 }
+
+type EffectiveMembershipListInput = { groupId?: string; userId?: string }
+type RelationshipState = 'current' | 'previous'
 
 export function mergeEffectiveGroupMemberships(rows: EffectiveGroupMembership[]) {
   const merged = new Map<string, EffectiveGroupMembership>()
@@ -29,36 +32,89 @@ export function mergeEffectiveGroupMemberships(rows: EffectiveGroupMembership[])
 }
 
 export const effectiveGroupMembership = {
-  async list(input: { groupId?: string; userId?: string } = {}): Promise<EffectiveGroupMembership[]> {
+  async list(input: EffectiveMembershipListInput = {}): Promise<EffectiveGroupMembership[]> {
     const [explicit, assignments] = await Promise.all([
-      db
-        .select()
-        .from(groupMembership)
-        .where(
-          and(input.groupId ? eq(groupMembership.groupId, input.groupId) : undefined, isNull(groupMembership.endsAt)),
-        ),
-      db.select().from(positionAssignment).where(isNull(positionAssignment.endsAt)),
+      listExplicitMemberships(input, 'current'),
+      listPositionAssignments(input, 'current'),
     ])
     return buildEffectiveMemberships(explicit, assignments, input)
   },
-  async listPrevious(input: { groupId?: string; userId?: string } = {}): Promise<EffectiveGroupMembership[]> {
+  async listPrevious(input: EffectiveMembershipListInput = {}): Promise<EffectiveGroupMembership[]> {
+    const [explicit, assignments] = await Promise.all([
+      listExplicitMemberships(input, 'previous'),
+      listPositionAssignments(input, 'previous'),
+    ])
+    return buildEffectiveMemberships(explicit, assignments, input)
+  },
+  async isMember(input: { userId: string; groupId: string }): Promise<boolean> {
+    const positionIds = groupScopedPositionIds(input.groupId)
     const [explicit, assignments] = await Promise.all([
       db
-        .select()
+        .select({ id: groupMembership.id })
         .from(groupMembership)
         .where(
           and(
-            input.groupId ? eq(groupMembership.groupId, input.groupId) : undefined,
-            isNotNull(groupMembership.endsAt),
+            eq(groupMembership.userId, input.userId),
+            eq(groupMembership.groupId, input.groupId),
+            isNull(groupMembership.endsAt),
           ),
-        ),
-      db.select().from(positionAssignment).where(isNotNull(positionAssignment.endsAt)),
+        )
+        .limit(1),
+      positionIds.length
+        ? db
+            .select({ id: positionAssignment.id })
+            .from(positionAssignment)
+            .where(
+              and(
+                eq(positionAssignment.userId, input.userId),
+                inArray(positionAssignment.positionId, positionIds),
+                isNull(positionAssignment.endsAt),
+              ),
+            )
+            .limit(1)
+        : Promise.resolve([]),
     ])
-    return buildEffectiveMemberships(explicit, assignments, input)
+    return explicit.length > 0 || assignments.length > 0
   },
-  async isMember(input: { userId: string; groupId: string }) {
-    return (await this.list(input)).length > 0
-  },
+}
+
+function listExplicitMemberships(input: EffectiveMembershipListInput, state: RelationshipState) {
+  return db
+    .select()
+    .from(groupMembership)
+    .where(
+      and(
+        input.userId ? eq(groupMembership.userId, input.userId) : undefined,
+        input.groupId ? eq(groupMembership.groupId, input.groupId) : undefined,
+        state === 'current' ? isNull(groupMembership.endsAt) : isNotNull(groupMembership.endsAt),
+      ),
+    )
+}
+
+function listPositionAssignments(input: EffectiveMembershipListInput, state: RelationshipState) {
+  const positionIds = groupScopedPositionIds(input.groupId)
+  if (!positionIds.length) return Promise.resolve([] as Array<typeof positionAssignment.$inferSelect>)
+
+  return db
+    .select()
+    .from(positionAssignment)
+    .where(
+      and(
+        input.userId ? eq(positionAssignment.userId, input.userId) : undefined,
+        inArray(positionAssignment.positionId, positionIds),
+        state === 'current' ? isNull(positionAssignment.endsAt) : isNotNull(positionAssignment.endsAt),
+      ),
+    )
+}
+
+function groupScopedPositionIds(groupId?: string) {
+  return topology.positions
+    .filter((position) =>
+      position.scopes.some(
+        (scope) => scope.type === TopologyScopeType.GROUP && (!groupId || scope.groupId === groupId),
+      ),
+    )
+    .map((position) => position.id)
 }
 
 function buildEffectiveMemberships(
