@@ -91,6 +91,55 @@ export const homePlacement = {
         .then((rows) => rows[0])
     })
   },
+  async transfer(input: { userId: string; choirId: string; sectionId?: string | null; voice?: FineVoice }) {
+    const startsAt = new Date()
+    const targetChoir = resolveChoir(input.choirId)
+    if (targetChoir?.status !== 'active')
+      throw new EntityDoesNotExistError('Choose an existing Choir.', { field: 'choirId' })
+    const targetSection = input.sectionId ? resolveSection(input.sectionId) : null
+    if (input.sectionId && (targetSection?.status !== 'active' || targetSection.choirId !== input.choirId))
+      throw new InvalidRelationshipError('Choose a Section from the selected Choir.', { field: 'sectionId' })
+    if (targetSection && (!input.voice || !targetSection.allowedVoices.includes(input.voice)))
+      throw new InvalidRelationshipError('Choose a Voice allowed by the Section.', { field: 'voice' })
+
+    return db.transaction(async (tx) => {
+      const [memberships, placements] = await Promise.all([
+        tx.select().from(choirMembership).where(eq(choirMembership.userId, input.userId)),
+        tx.select().from(sectionPlacement).where(eq(sectionPlacement.userId, input.userId)),
+      ])
+      const currentMembership = memberships.find((row) => row.endsAt === null)
+      const currentPlacement = placements.find((row) => row.endsAt === null)
+
+      if (currentMembership?.choirId !== input.choirId) {
+        if (currentMembership)
+          await tx.update(choirMembership).set({ endsAt: startsAt }).where(eq(choirMembership.id, currentMembership.id))
+        await tx
+          .insert(choirMembership)
+          .values({ userId: input.userId, choirId: input.choirId, startsAt, endsAt: null })
+      }
+      if (
+        currentPlacement &&
+        (!targetSection || currentPlacement.sectionId !== targetSection.id || currentPlacement.voice !== input.voice)
+      )
+        await tx.update(sectionPlacement).set({ endsAt: startsAt }).where(eq(sectionPlacement.id, currentPlacement.id))
+      if (
+        targetSection &&
+        (!currentPlacement || currentPlacement.sectionId !== targetSection.id || currentPlacement.voice !== input.voice)
+      ) {
+        const voice = input.voice
+        if (!voice) throw new InvalidRelationshipError('Choose a Voice allowed by the Section.', { field: 'voice' })
+        await ensureVoiceCapability(tx, { userId: input.userId, voice })
+        await tx.insert(sectionPlacement).values({
+          userId: input.userId,
+          sectionId: targetSection.id,
+          voice,
+          startsAt,
+          endsAt: null,
+        })
+      }
+      return { userId: input.userId, startsAt }
+    })
+  },
   async endChoirMembership(id: string, endsAt: Date) {
     return endMembership(id, endsAt, true)
   },

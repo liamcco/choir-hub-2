@@ -17,7 +17,7 @@ A dated record that a User belongs to a permanent Choir. A User has at most one 
 _Avoid_: Group Membership, current-only choir property, project participation
 
 **Home Choir**:
-A User's current Choir Membership, if one exists. A former member and any other User without a current Choir Membership has no Home Choir.
+A User's current Choir Membership, if one exists. A Home Choir may temporarily exist without a current Section Placement, although ordinary placement workflows should place the User in a Section by default. A former member and any other User without a current Choir Membership has no Home Choir.
 _Avoid_: Permanent choir property, project ensemble, event participation
 
 **Group**:

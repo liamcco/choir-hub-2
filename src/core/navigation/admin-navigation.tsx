@@ -9,6 +9,7 @@ const ADMIN_RESOURCES = [
   { label: 'Users', href: ROUTES.adminUsers },
   { label: 'Groups', href: ROUTES.adminGroups },
   { label: 'Positions', href: ROUTES.adminPositions },
+  { label: 'Placement', href: ROUTES.adminPlacement },
 ] as const
 
 export function AdminNavigation() {

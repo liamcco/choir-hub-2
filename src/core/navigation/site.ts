@@ -6,6 +6,7 @@ export const ROUTES = {
   adminUsers: '/admin/users',
   adminGroups: '/admin/groups',
   adminPositions: '/admin/positions',
+  adminPlacement: '/admin/placement',
 } as const
 
 export type RouteId = keyof typeof ROUTES
@@ -21,6 +22,10 @@ export function adminGroupPath(groupId: string) {
 
 export function adminPositionPath(positionId: string) {
   return adminDetailPath(ROUTES.adminPositions, positionId)
+}
+
+export function adminPlacementUserPath(userId: string) {
+  return adminDetailPath(ROUTES.adminPlacement, userId)
 }
 
 function adminDetailPath(collectionPath: string, detailId: string) {

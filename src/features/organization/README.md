@@ -9,6 +9,7 @@ The organization feature owns CSK's organization-domain workflows: Choirs, Secti
 - `@/features/organization/management/groups`: Group collection/detail screens and Group Membership controls.
 - `@/features/organization/management/members`: User collection/detail/create screens and member actions.
 - `@/features/organization/management/positions`: Position collection/detail screens and focused Position reads.
+- `@/features/organization/management/placement`: Placement navigation, roster, User detail, status, and transfer workflows.
 - `@/features/organization/management/group-memberships`: Group Membership actions, forms, focused reads, and pure relationship transformations.
 - `@/features/organization/management/position-assignments`: Position Assignment actions, forms, focused reads, and pure relationship transformations.
 
