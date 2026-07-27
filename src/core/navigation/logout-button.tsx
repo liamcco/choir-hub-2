@@ -6,14 +6,14 @@ import { authClient } from '@/core/auth/auth-client'
 import { Button } from '@/shared/ui/button'
 import { ROUTES } from './site'
 
-export function LogoutButton() {
+export function LogoutButton({ isImpersonating = false }: { isImpersonating?: boolean }) {
   const [isPending, setIsPending] = useState(false)
 
   async function handleLogout() {
     setIsPending(true)
     try {
-      const result = await authClient.signOut()
-      if (!result.error) window.location.assign(ROUTES.login)
+      const result = isImpersonating ? await authClient.admin.stopImpersonating() : await authClient.signOut()
+      if (!result.error) window.location.assign(isImpersonating ? ROUTES.home : ROUTES.login)
     } finally {
       setIsPending(false)
     }
@@ -22,7 +22,13 @@ export function LogoutButton() {
   return (
     <Button disabled={isPending} onClick={handleLogout} size="sm" type="button" variant="ghost">
       <LogOutIcon data-icon="inline-start" />
-      {isPending ? 'Logging out…' : 'Logout'}
+      {isPending
+        ? isImpersonating
+          ? 'Stopping impersonation…'
+          : 'Logging out…'
+        : isImpersonating
+          ? 'Stop impersonating'
+          : 'Logout'}
     </Button>
   )
 }

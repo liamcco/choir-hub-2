@@ -1,6 +1,8 @@
+import { headers } from 'next/headers'
 import Link from 'next/link'
 import { connection } from 'next/server'
 import { Suspense } from 'react'
+import { auth } from '@/core/auth/auth'
 import { type NavigationRouteId, ROUTES } from '@/core/navigation/site'
 import { buttonVariants } from '@/shared/ui/button'
 import { cn } from '@/shared/utils'
@@ -43,6 +45,7 @@ export function getNavigationItems(config: NavigationConfig | null): NavigationI
 
 type NavigationConfig = {
   showAdmin: boolean
+  impersonatingUserName?: string
 }
 
 interface AppNavigationTemplateProps {
@@ -68,9 +71,14 @@ export function AppNavigationTemplate({ config }: AppNavigationTemplateProps) {
                 {item.label}
               </Link>
             ))}
-            {config ? <LogoutButton /> : null}
+            {config ? <LogoutButton isImpersonating={Boolean(config.impersonatingUserName)} /> : null}
           </nav>
         </div>
+        {config?.impersonatingUserName ? (
+          <div className="rounded-md border bg-muted/50 px-3 py-1.5 text-sm text-muted-foreground" role="status">
+            Impersonating {config.impersonatingUserName}
+          </div>
+        ) : null}
       </div>
     </header>
   )
@@ -86,6 +94,14 @@ export function AppNavigation() {
 
 export async function RuntimeAppNavigation() {
   await connection()
-  const isAdmin = await isUserAdmin()
-  return <AppNavigationTemplate config={{ showAdmin: isAdmin }} />
+  const session = await auth.api.getSession({ headers: await headers() })
+  const isAdmin = await isUserAdmin(session)
+  return (
+    <AppNavigationTemplate
+      config={{
+        showAdmin: isAdmin,
+        ...(session?.session.impersonatedBy ? { impersonatingUserName: session.user.name } : {}),
+      }}
+    />
+  )
 }

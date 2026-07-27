@@ -12,6 +12,7 @@ import type {
 } from '@/features/organization/management/position-assignments/actions'
 import type { EntityOption, NamedEntity } from '@/shared/types'
 import { Badge } from '@/shared/ui/badge'
+import { ImpersonateUserButton } from './impersonate-user-button'
 import { MemberGroupMembershipSection, MemberPositionAssignmentSection } from './member-relationship-sections'
 import { ResendInvitationControl } from './resend-invitation-control'
 
@@ -34,6 +35,7 @@ export type MemberDetailView = {
   name: string
   email: string
   emailVerified?: boolean
+  isAdmin?: boolean
   status: MemberStatus
   homePlacement?: { choir: { id: string; name: string } | null; section: { id: string; name: string } | null }
   groups: NamedEntity[]
@@ -76,6 +78,7 @@ export function MemberDetail({ member, actions }: { member: MemberDetailView; ac
         {!member.emailVerified && actions?.resendInvitation && (
           <ResendInvitationControl action={actions.resendInvitation} userId={member.id} />
         )}
+        {!member.isAdmin ? <ImpersonateUserButton userId={member.id} userName={member.name} /> : null}
       </section>
 
       <MemberGroupMembershipSection

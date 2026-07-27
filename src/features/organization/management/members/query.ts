@@ -94,6 +94,7 @@ async function getDetail(userId: string) {
     name: account.name,
     email: account.email,
     emailVerified: account.emailVerified,
+    isAdmin: account.role?.split(',').some((role) => role.trim() === 'admin') ?? false,
     status: user.status,
     homePlacement: {
       choir: currentChoir

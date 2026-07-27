@@ -53,4 +53,14 @@ describe('app navigation', () => {
     const items = getNavigationItems({ showAdmin: false })
     expect(items.map((item) => item.href)).toEqual(['/account'])
   })
+
+  test('labels an impersonation session and replaces logout with stop impersonating', () => {
+    const markup = renderToStaticMarkup(
+      <AppNavigationTemplate config={{ showAdmin: false, impersonatingUserName: 'Ada Lovelace' }} />,
+    )
+
+    expect(markup).toContain('Impersonating Ada Lovelace')
+    expect(markup).toContain('Stop impersonating')
+    expect(markup).not.toContain('Logout')
+  })
 })

@@ -129,8 +129,8 @@ function actorIsAdmin(actor: RequestActor | null): boolean {
   return actor?.roles.includes('admin') ?? false
 }
 
-export async function isUserAdmin(): Promise<boolean> {
-  return actorIsAdmin(await getCurrentActor())
+export async function isUserAdmin(session?: { user: { id: string; role?: string | null } } | null): Promise<boolean> {
+  return actorIsAdmin(getActorFromSession(session) ?? (await getCurrentActor()))
 }
 
 export async function requireAdmin(

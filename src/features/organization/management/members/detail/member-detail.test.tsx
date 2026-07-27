@@ -58,6 +58,7 @@ describe('Member detail', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Ada Lovelace' })).toBeTruthy()
     expect(screen.getByText('Active')).toBeTruthy()
     expect(screen.getByText('ada@example.com')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Impersonate' })).toBeTruthy()
     expect(screen.queryByText('member-1')).toBeNull()
     expect(screen.queryByText('user')).toBeNull()
     expect(screen.queryByText('Last updated')).toBeNull()
@@ -100,6 +101,7 @@ describe('Member detail', () => {
           id: 'member-2',
           name: 'Grace Hopper',
           email: 'grace@example.com',
+          isAdmin: true,
           status: MemberStatus.PASSIVE,
           groups: [],
           positions: [],
@@ -111,6 +113,7 @@ describe('Member detail', () => {
 
     expect(screen.getByText('No current Committee Memberships')).toBeTruthy()
     expect(screen.getByText('No current Position Assignments')).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'Impersonate' })).toBeNull()
 
     const userEvent = (await import('@testing-library/user-event')).default
     const user = userEvent.setup()
