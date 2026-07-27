@@ -48,8 +48,8 @@ async function getDetail(userId: string, input?: { at?: Date }) {
   const [account, user, memberships, assignments, choirMemberships, placements] = await Promise.all([
     auth.api.getUser({ headers: requestHeaders, query: { id: userId } }),
     organizationService.users.find({ userId }),
-    organizationService.committeeMembership.list({ userId, at }),
-    organizationService.positionAssignments.list({ userId, at }),
+    organizationService.groupMembership.list({ userId, at }),
+    organizationService.positionAssignment.list({ userId, at }),
     organizationService.homePlacement.listChoirMemberships({ userId, at }),
     organizationService.homePlacement.listSectionPlacements({ userId, at }),
   ])

@@ -5,7 +5,7 @@ import { z } from 'zod'
 import { requireCurrentUserPermission } from '@/core/auth/permissions.server'
 import { audit } from '@/core/logging'
 import { ROUTES } from '@/core/navigation/site'
-import { organizationService } from '@/features/organization'
+import { positionAssignment } from '@/features/organization'
 import { handleFormError } from '@/shared/forms/errors'
 import type { FormState } from '@/shared/forms/types'
 import { CreatePositionAssignmentFormSchema, EndPositionAssignmentFormSchema } from './schemas'
@@ -35,7 +35,7 @@ export async function createPositionAssignmentAction(
 
   // 3. Mutate
   try {
-    const assignment = await organizationService.positionAssignments.create(formInput.data)
+    const assignment = await positionAssignment.start(formInput.data)
     audit.adminActionCompleted({
       actorUserId: actor.userId,
       action: 'positionAssignment.create',
@@ -72,7 +72,7 @@ export async function endPositionAssignmentAction(
 
   // 3. Mutate
   try {
-    await organizationService.positionAssignments.end(assignmentId, formInput.data.endsAt)
+    await positionAssignment.end(assignmentId, formInput.data.endsAt)
     audit.adminActionCompleted({
       actorUserId: actor.userId,
       action: 'positionAssignment.end',

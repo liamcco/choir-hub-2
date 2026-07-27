@@ -33,7 +33,7 @@ test('admin users can access admin routes', async ({ page }) => {
   await expect(page.getByRole('link', { name: 'Groups' })).toBeVisible()
 })
 
-test('admin can create a user and update its member status', async ({ page }) => {
+test('admin can create a user and view its details', async ({ page }) => {
   await signIn(page, e2eUsers.admin)
   await page.goto('/admin/users')
   await page.getByRole('button', { name: 'Create User' }).click()
@@ -46,8 +46,4 @@ test('admin can create a user and update its member status', async ({ page }) =>
   await page.getByRole('button', { name: 'View' }).click()
   await expect(page).toHaveURL(/\/admin\/users\?detail=/)
   await expect(page.getByText('smoke-crud@example.com')).toBeVisible()
-  await page.getByRole('button', { name: 'Edit Member Status' }).click()
-  await page.locator('select[aria-label="Member Status"]').selectOption('PASSIVE')
-  await page.getByRole('button', { name: 'Save Member Status' }).click()
-  await expect(page.getByRole('dialog').getByText('Passive').first()).toBeVisible()
 })

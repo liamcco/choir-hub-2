@@ -21,12 +21,11 @@ mock.module('@/core/logging', () => ({ audit: { adminActionCompleted, accountAcc
 
 mock.module('@/features/organization', () => ({
   OrganizationOperationError,
-  organizationService: {
-    positionAssignments: {
-      create: createPositionAssignment,
-      end: endPositionAssignment,
-    },
+  positionAssignment: {
+    start: createPositionAssignment,
+    end: endPositionAssignment,
   },
+  groupMembership: {},
 }))
 
 const { createPositionAssignmentAction, endPositionAssignmentAction } = await import(

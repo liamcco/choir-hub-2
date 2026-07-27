@@ -27,7 +27,7 @@ export async function listGroupMembershipPeriods(): Promise<GroupMembershipPerio
   const [groups, users, memberships] = await Promise.all([
     Promise.resolve(listGroupMembershipGroups()),
     organizationService.users.list(),
-    organizationService.groupMemberships.list(),
+    organizationService.groupMembership.list(),
   ])
   return resolveGroupMembershipDetails(memberships, groups, users)
 }

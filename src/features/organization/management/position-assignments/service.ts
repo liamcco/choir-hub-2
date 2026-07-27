@@ -22,7 +22,7 @@ export async function listPositionAssignmentUsers(): Promise<UserLabel[]> {
 export async function listPositionAssignmentPeriods(): Promise<PositionAssignmentPeriod[]> {
   const [users, assignments] = await Promise.all([
     organizationService.users.list(),
-    organizationService.positionAssignments.list(),
+    organizationService.positionAssignment.list(),
   ])
   return resolvePositionAssignmentDetails(assignments, listPositions(), users)
 }

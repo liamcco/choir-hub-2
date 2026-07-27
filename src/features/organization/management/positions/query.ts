@@ -20,7 +20,7 @@ import { getPositionCollectionGroup } from './position-collection-group'
 async function listCollection(input?: { at?: Date }) {
   const at = input?.at ?? new Date()
   const [assignments, users] = await Promise.all([
-    organizationService.positionAssignments.list({ at }),
+    organizationService.positionAssignment.list({ at }),
     organizationService.users.list(),
   ])
   const groups = listGroups()
@@ -50,7 +50,7 @@ async function getDetail(positionId: string, input?: { at?: Date }) {
   await connection()
   const at = input?.at ?? new Date()
   const [assignments, users, memberships, placements] = await Promise.all([
-    organizationService.positionAssignments.list({ positionId }),
+    organizationService.positionAssignment.list({ positionId }),
     organizationService.users.list(),
     organizationService.homePlacement.listChoirMemberships(),
     organizationService.homePlacement.listSectionPlacements(),

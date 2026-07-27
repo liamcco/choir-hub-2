@@ -80,12 +80,14 @@ The current implementation and admin-management specification conflict with this
 - `User` is the unified Better Auth identity and choir person; every User has a `MemberStatus`.
 - Choir profile and contact fields are deferred until concrete workflows need them.
 - `MemberStatus` describes a User's overall choir relationship as active, passive, or former, independent of how many choirs or Groups they belong to.
-- `GroupMembership` tracks historical Committee membership with `startsAt` and optional `endsAt`; there is no separate status concept for a Group Membership.
+- `GroupMembership` tracks historical explicit membership in an eligible non-Board Group with `startsAt` and optional `endsAt`; there is no separate status concept for a Group Membership.
 - Effective Group Membership at a point in time is the union of explicit Group Memberships and Position Assignments whose Positions are scoped to that Group.
 - Position-derived Group Membership retains the Position Assignment interval, so historical Board and Committee rosters remain answerable.
 - `Position` represents a fixed office or role that may have multiple Position Scopes.
 - `Position.name` is display text, not a globally unique domain key; distinct scoped Positions may share the same name.
 - `PositionScope` references one first-class standing target where a Position has relevance: CSK, a Choir, a Section, or a Group.
+- A Choir Position Scope implicitly requires matching Choir Membership, and a Section Position Scope implicitly requires current Section Placement when the Assignment starts; these requirements are not repeated as explicit Position Assignment Eligibility declarations. Positions normally have at most one Choir or Section scope; if multiple such scopes ever exist, matching any one scoped target is sufficient.
+- Conductor Positions are Choir-scoped without a Section scope, so they require Choir Membership but not Section Placement.
 - Each Choir has its own Conductor, Master of Concerts, and Master of Gigs Positions.
 - Each choir-scoped Master of Concerts is also associated with Concert Mastery, and each choir-scoped Master of Gigs is also associated with Gig Mastery.
 - Party Mistress is a distinct vice Master of Parties Position scoped only to Party Mastery, not the Board.
@@ -96,9 +98,8 @@ The current implementation and admin-management specification conflict with this
 - The canonical term for a section leadership Position is Voice Parent, not Section Leader.
 - MK and DK each have one Voice Parent Position per Section.
 - KK has four Voice Parent Positions, scoped respectively to S1+S2, A1+A2, T1+T2, and B1+B2.
-- A Voice Parent Assignment requires the holder to have a current Section Placement in at least one scoped Section throughout the Assignment.
-- Choir-scoped Master of Concerts and Master of Gigs Assignments require the holder to maintain a matching Choir Membership throughout.
-- Conductor Assignments do not require Choir Membership; a Conductor may serve a Choir without singing in it.
+- Member Status is a mandatory Position Assignment Eligibility baseline: Active and Passive are allowed by default, while Former requires the explicit `Former allowed` declaration. Voice Capability is the other explicit eligibility dimension; a requirement may name one or more accepted Voices and any one match is sufficient. No current topology Position adds either requirement beyond the default Member Status allowance of Active and Passive.
+- Later changes to Member Status, Voice Capability, Choir Membership, or Section Placement do not invalidate an existing Position Assignment.
 - The Tour Committee has its own Treasurer Position.
 - `PositionAssignment` tracks historical holders of a Position. A Position can only be held by one User at a time.
 - Permanent Choirs, Sections, Groups, and Positions are code-controlled members of the Permanent Organization Topology with stable identifiers; they are not ordinary database data.

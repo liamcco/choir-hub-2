@@ -5,7 +5,7 @@ import { z } from 'zod'
 import { requireCurrentUserPermission } from '@/core/auth/permissions.server'
 import { audit } from '@/core/logging'
 import { ROUTES } from '@/core/navigation/site'
-import { organizationService } from '@/features/organization'
+import { groupMembership } from '@/features/organization'
 import { handleFormError } from '@/shared/forms/errors'
 import type { FormState } from '@/shared/forms/types'
 import { CreateGroupMembershipFormSchema, EndGroupMembershipFormSchema } from './schemas'
@@ -35,7 +35,7 @@ export async function createGroupMembershipAction(
 
   // 3. Mutate
   try {
-    const membership = await organizationService.committeeMembership.start(formInput.data)
+    const membership = await groupMembership.start(formInput.data)
     audit.adminActionCompleted({
       actorUserId: actor.userId,
       action: 'groupMembership.create',
@@ -71,7 +71,7 @@ export async function endGroupMembershipAction(
 
   // 3. Mutate
   try {
-    await organizationService.committeeMembership.end(membershipId, formInput.data.endsAt)
+    await groupMembership.end(membershipId, formInput.data.endsAt)
     audit.adminActionCompleted({
       actorUserId: actor.userId,
       action: 'groupMembership.end',

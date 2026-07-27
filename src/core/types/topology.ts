@@ -1,4 +1,4 @@
-import type { FineVoice } from './voice'
+import type { FineVoice, Voice } from './voice'
 
 export type TopologyStatus = 'active' | 'retired'
 export type TopologyScopeType = 'csk' | 'choir' | 'section' | 'group'
@@ -35,9 +35,19 @@ export type PositionScope =
   | { readonly type: 'section'; readonly sectionId: string }
   | { readonly type: 'group'; readonly groupId: string }
 
+export type PositionAssignmentEligibilityRequirement =
+  | { readonly type: 'memberStatus'; readonly value: 'activeOnly' | 'formerAllowed' }
+  | { readonly type: 'voiceCapability'; readonly voices: readonly Voice[] }
+
+export type PositionAssignmentEligibility = {
+  readonly mode: 'all' | 'any'
+  readonly requirements: readonly PositionAssignmentEligibilityRequirement[]
+}
+
 export type Position = {
   readonly id: string
   readonly name: string
   readonly scopes: readonly PositionScope[]
+  readonly eligibility?: PositionAssignmentEligibility
   readonly status?: TopologyStatus
 }

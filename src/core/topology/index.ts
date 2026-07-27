@@ -12,7 +12,7 @@ import type {
   TopologyScopeType as CoreTopologyScopeType,
   TopologyStatus,
 } from '@/core/types'
-import { baseVoice, isFineVoice } from '@/core/types'
+import { baseVoice, isBaseVoice, isFineVoice } from '@/core/types'
 import { topologyData } from './data'
 import { DuplicateEntityError, InvalidRelationshipError } from './errors'
 import type { Topology as CoreTopology } from './types'
@@ -214,8 +214,32 @@ export function validateTopology(candidate: CoreTopology = topology): CoreTopolo
       if (scope.type === TopologyScopeType.GROUP && !groupIds.has(scope.groupId))
         throw new InvalidRelationshipError(`Position ${position.id} references an unknown Group.`)
     }
+    validatePositionEligibility(position)
   }
   return candidate
+}
+
+function validatePositionEligibility(position: CorePosition) {
+  const eligibility = position.eligibility
+  if (!eligibility) return
+  if (eligibility.mode !== 'all' && eligibility.mode !== 'any')
+    throw new InvalidRelationshipError(`Position ${position.id} uses an invalid eligibility mode.`)
+
+  let memberStatusRequirements = 0
+  for (const requirement of eligibility.requirements) {
+    if (requirement.type === 'memberStatus') {
+      memberStatusRequirements += 1
+      if (requirement.value !== 'activeOnly' && requirement.value !== 'formerAllowed')
+        throw new InvalidRelationshipError(`Position ${position.id} uses an invalid Member Status requirement.`)
+      continue
+    }
+    if (requirement.voices.length === 0)
+      throw new InvalidRelationshipError(`Position ${position.id} must name at least one Voice Capability.`)
+    if (!requirement.voices.every((voice) => isBaseVoice(voice) || isFineVoice(voice)))
+      throw new InvalidRelationshipError(`Position ${position.id} uses an invalid Voice Capability.`)
+  }
+  if (memberStatusRequirements > 1)
+    throw new InvalidRelationshipError(`Position ${position.id} declares Member Status eligibility more than once.`)
 }
 
 function assertStatus(status: string | undefined, label: string): asserts status is TopologyStatus {

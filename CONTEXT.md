@@ -45,7 +45,7 @@ A User's overall relationship to CSK, currently active, passive, or former. Memb
 _Avoid_: Relationship status, auth role
 
 **Group Membership**:
-A dated record that a User belongs to a Committee for a period of time. Group Membership has no separate status; Board Membership is derived separately from Board Position Assignments.
+A dated record that a User belongs explicitly to a Group other than the Board for a period of time. Group Membership has no separate status; Board Membership is derived separately from Board Position Assignments, regardless of which Group Kinds exist.
 _Avoid_: Board Membership, current-only group link, group membership status
 
 **Effective Group Membership**:
@@ -117,12 +117,16 @@ The relationship between a Position and one standing target where it has relevan
 _Avoid_: Position ownership, Group-only scope
 
 **Voice Parent**:
-A fixed Position responsible for one or more Sections. The holder must have a current Section Placement in at least one scoped Section throughout the Assignment; KK Voice Parents each own one of KK's four Sections: KKS, KKA, KKT, or KKB.
+A fixed Position responsible for one or more Sections. The holder must have a current Section Placement in at least one scoped Section when the Assignment starts; KK Voice Parents each own one of KK's four Sections: KKS, KKA, KKT, or KKB.
 _Avoid_: Section Leader, Voice Group leader
 
 **Position Assignment**:
 A dated record that a User held a Position for a period of time. Position Assignment history is kept so the platform can answer who held a position at a past date.
 _Avoid_: Current holder field
+
+**Position Assignment Eligibility**:
+The topology-defined requirements a User must satisfy when a dated Position Assignment starts. A Position scoped to a Choir implicitly requires matching Choir Membership, and a Position scoped to a Section implicitly requires current Section Placement; these scope-derived requirements are not duplicated as explicit declarations and are always mandatory. Positions normally have at most one Choir or Section scope; if multiple such scopes ever exist, matching any one scoped Choir or Section is sufficient. Each Position combines its explicit requirements with one top-level mode: `all` requires every requirement, while `any` requires at least one; explicit requirements may inspect Member Status or Voice Capability. Member Status is a mandatory baseline: it defaults to Active and Passive, may be stated as Active only, or may be stated as Former allowed, which permits Active, Passive, and Former. A Voice Capability requirement may name one or more accepted Voices; matching any one is sufficient. A named base Voice matches any explicit fine Voice in that category, while a named fine Voice matches exactly. Later changes do not invalidate an existing Assignment.
+_Avoid_: Position Scope, Voice Capability, Access Role
 
 **Access Role**:
 A Better Auth-backed global authorization role assigned to a User by the app's auth system. In v1, Access Roles are intentionally separate from choir Groups, Positions, and Member Status.
