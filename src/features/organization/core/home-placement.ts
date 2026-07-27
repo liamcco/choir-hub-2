@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { and, asc, eq, gt, isNull, lte, or } from 'drizzle-orm'
+import { and, asc, eq, gt, isNotNull, isNull, lte, or } from 'drizzle-orm'
 import { db } from '@/core/db'
 import { resolveChoir, resolveSection } from '@/core/topology'
 import type { FineVoice } from '@/core/types'
@@ -12,37 +12,37 @@ import { ensureVoiceCapability } from './voice-capability'
 type Period = { startsAt: Date; endsAt: Date | null }
 
 export const homePlacement = {
-  listChoirMemberships(input?: { userId?: string; at?: Date }) {
+  listChoirMemberships(input?: { userId?: string }) {
+    return db
+      .select()
+      .from(choirMembership)
+      .where(and(input?.userId ? eq(choirMembership.userId, input.userId) : undefined, isNull(choirMembership.endsAt)))
+      .orderBy(asc(choirMembership.startsAt))
+  },
+  listPreviousChoirMemberships(input?: { userId?: string }) {
     return db
       .select()
       .from(choirMembership)
       .where(
-        and(
-          input?.userId ? eq(choirMembership.userId, input.userId) : undefined,
-          input?.at
-            ? and(
-                lte(choirMembership.startsAt, input.at),
-                or(isNull(choirMembership.endsAt), gt(choirMembership.endsAt, input.at)),
-              )
-            : undefined,
-        ),
+        and(input?.userId ? eq(choirMembership.userId, input.userId) : undefined, isNotNull(choirMembership.endsAt)),
       )
       .orderBy(asc(choirMembership.startsAt))
   },
-  listSectionPlacements(input?: { userId?: string; at?: Date }) {
+  listSectionPlacements(input?: { userId?: string }) {
     return db
       .select()
       .from(sectionPlacement)
       .where(
-        and(
-          input?.userId ? eq(sectionPlacement.userId, input.userId) : undefined,
-          input?.at
-            ? and(
-                lte(sectionPlacement.startsAt, input.at),
-                or(isNull(sectionPlacement.endsAt), gt(sectionPlacement.endsAt, input.at)),
-              )
-            : undefined,
-        ),
+        and(input?.userId ? eq(sectionPlacement.userId, input.userId) : undefined, isNull(sectionPlacement.endsAt)),
+      )
+      .orderBy(asc(sectionPlacement.startsAt))
+  },
+  listPreviousSectionPlacements(input?: { userId?: string }) {
+    return db
+      .select()
+      .from(sectionPlacement)
+      .where(
+        and(input?.userId ? eq(sectionPlacement.userId, input.userId) : undefined, isNotNull(sectionPlacement.endsAt)),
       )
       .orderBy(asc(sectionPlacement.startsAt))
   },
@@ -51,7 +51,11 @@ export const homePlacement = {
     await assertUserExists(input.userId)
     const target = resolveChoir(input.choirId)
     if (target?.status !== 'active') throw new EntityDoesNotExistError('Choose an existing Choir.')
-    await assertNoOverlap(await this.listChoirMemberships({ userId: input.userId }), period, 'Choir Membership')
+    const [active, previous] = await Promise.all([
+      this.listChoirMemberships({ userId: input.userId }),
+      this.listPreviousChoirMemberships({ userId: input.userId }),
+    ])
+    await assertNoOverlap([...active, ...previous], period, 'Choir Membership')
     return db
       .insert(choirMembership)
       .values(period)

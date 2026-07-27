@@ -52,6 +52,10 @@ _Avoid_: Relationship status, auth role
 A dated record that a User belongs explicitly to a Group other than the Board for a period of time. Group Membership has no separate status; Board Membership is derived separately from Board Position Assignments, regardless of which Group Kinds exist.
 _Avoid_: Board Membership, current-only group link, group membership status
 
+**Dated Relationship**:
+A Choir Membership, Section Placement, Group Membership, or Position Assignment with an inclusive start and exclusive end. A relationship is active when it has no end; an ended relationship is historical. New relationships begin immediately, while their dates may later be corrected retrospectively.
+_Avoid_: Scheduled relationship, current-only relationship
+
 **Effective Group Membership**:
 A User's membership in a Group at a point in time, produced by either an explicit Group Membership or an active Position Assignment whose Position is scoped to that Group. Effective membership retains the dates of its source.
 _Avoid_: Stored aggregate membership, authorization role

@@ -1,7 +1,6 @@
 /** Pure read-model transformations for dated Position Assignment relationships. */
 import type { Position } from '@/core/topology'
 import type { PositionAssignment, User } from '@/drizzle/schema'
-import { isCurrentDatedPeriod, isHistoricalDatedPeriod } from '@/features/organization/core/dated-history'
 import { buildUserLabels } from '@/features/organization/core/labels'
 import { listPositionAssignmentOptions } from './service'
 
@@ -14,7 +13,7 @@ export type PositionAssignmentPeriod = PositionAssignment & {
   userDetail: string
 }
 
-export type PositionAssignmentPeriodsByDate = {
+export type PositionAssignmentPeriodsByState = {
   currentAssignments: PositionAssignmentPeriod[]
   historicalAssignments: PositionAssignmentPeriod[]
 }
@@ -54,12 +53,12 @@ export function resolvePositionAssignmentDetails(
 }
 
 /** Categorizes dated Position Assignments relative to one instant without mutating the input. */
-export function categorizePositionAssignmentPeriods(
-  periods: readonly PositionAssignmentPeriod[],
-  at: Date,
-): PositionAssignmentPeriodsByDate {
+export function splitPositionAssignmentPeriods(
+  currentAssignments: readonly PositionAssignmentPeriod[],
+  historicalAssignments: readonly PositionAssignmentPeriod[],
+): PositionAssignmentPeriodsByState {
   return {
-    currentAssignments: periods.filter((assignment) => isCurrentDatedPeriod(assignment, at)),
-    historicalAssignments: periods.filter((assignment) => isHistoricalDatedPeriod(assignment, at)),
+    currentAssignments: [...currentAssignments],
+    historicalAssignments: [...historicalAssignments],
   }
 }

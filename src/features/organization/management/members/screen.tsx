@@ -1,4 +1,3 @@
-import { connection } from 'next/server'
 import { Suspense } from 'react'
 import { ROUTES } from '@/core/navigation/site'
 import { AdminCollectionTableSkeleton } from '@/features/organization/management/components/admin-collection-skeleton'
@@ -49,7 +48,6 @@ export function UserManagementScreen({ searchParams }: { searchParams: DetailSea
 }
 
 async function UserCollectionTable() {
-  await connection()
   const users = await listMemberCollection()
   return <UserCollection users={users} />
 }

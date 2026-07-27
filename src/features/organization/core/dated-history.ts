@@ -33,6 +33,13 @@ export function normalizeDatedPeriodUpdate<T extends DatedPeriodUpdateInput>(inp
 }
 
 export function assertValidDatedPeriod(period: DatedPeriod) {
+  const now = new Date()
+  if (period.startsAt > now) {
+    throw new InvalidDatePeriodError('The start date cannot be in the future.', { field: 'startsAt' })
+  }
+  if (period.endsAt && period.endsAt > now) {
+    throw new InvalidDatePeriodError('The end date cannot be in the future.', { field: 'endsAt' })
+  }
   if (period.endsAt && period.endsAt <= period.startsAt) {
     throw new InvalidDatePeriodError('The end date must be after the start date.', {
       field: 'endsAt',
@@ -46,10 +53,6 @@ export function isCurrentDatedPeriod(period: DatedPeriod, at: Date) {
 
 export function isHistoricalDatedPeriod(period: DatedPeriod, at: Date) {
   return !!period.endsAt && period.endsAt <= at
-}
-
-export function isScheduledDatedPeriod(period: Pick<DatedPeriod, 'startsAt'>, at: Date) {
-  return period.startsAt > at
 }
 
 export function datedPeriodsOverlap(first: DatedPeriod, second: DatedPeriod) {

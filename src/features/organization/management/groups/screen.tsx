@@ -1,4 +1,3 @@
-import { connection } from 'next/server'
 import { Suspense } from 'react'
 import { ROUTES } from '@/core/navigation/site'
 import { AdminCollectionTableSkeleton } from '@/features/organization/management/components/admin-collection-skeleton'
@@ -39,7 +38,6 @@ export function GroupManagementScreen({ searchParams }: { searchParams: DetailSe
 }
 
 async function GroupCollectionTable() {
-  await connection()
   const groups = await listGroupCollection()
   return <GroupCollection groups={groups} />
 }

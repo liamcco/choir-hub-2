@@ -3,7 +3,6 @@ import {
   findOverlappingDatedPeriod,
   isCurrentDatedPeriod,
   isHistoricalDatedPeriod,
-  isScheduledDatedPeriod,
   normalizeDatedPeriodInput,
   normalizeDatedPeriodUpdate,
 } from '@/features/organization/core/dated-history'
@@ -25,6 +24,18 @@ describe('dated history', () => {
         endsAt: date('2026-01-01'),
       }),
     ).toThrow('The end date must be after the start date.')
+
+    expect(() =>
+      normalizeDatedPeriodInput({
+        startsAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      }),
+    ).toThrow('The start date cannot be in the future.')
+    expect(() =>
+      normalizeDatedPeriodInput({
+        startsAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
+        endsAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      }),
+    ).toThrow('The end date cannot be in the future.')
   })
 
   test('normalizes update inputs without turning omitted end dates into clearing writes', () => {
@@ -59,7 +70,6 @@ describe('dated history', () => {
     expect(isCurrentDatedPeriod(period, date('2026-01-01'))).toBe(true)
     expect(isCurrentDatedPeriod(period, date('2026-02-01'))).toBe(false)
     expect(isHistoricalDatedPeriod(period, date('2026-02-01'))).toBe(true)
-    expect(isScheduledDatedPeriod(period, date('2025-12-31'))).toBe(true)
   })
 
   test('detects overlapping periods while allowing adjacent periods', () => {

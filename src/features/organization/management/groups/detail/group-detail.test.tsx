@@ -11,7 +11,6 @@ const base = {
   name: 'Board',
   kind: 'board' as const,
   users: [],
-  scheduledMemberships: [],
   historicalMemberships: [],
 }
 

@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { and, asc, eq, gt, isNull, lte, or } from 'drizzle-orm'
+import { and, asc, eq, isNotNull, isNull } from 'drizzle-orm'
 import { db } from '@/core/db'
 import { resolveGroup } from '@/core/topology'
 import { groupMembership as groupMembershipTable, user } from '@/drizzle/schema'
@@ -8,7 +8,7 @@ import { assertValidDatedPeriod, findOverlappingDatedPeriod, normalizeDatedPerio
 import { DateOverlapError, EntityDoesNotExistError, InvalidRelationshipError } from './errors'
 
 export const groupMembership = {
-  list(input: { userId?: string; groupId?: string; at?: Date } = {}) {
+  list(input: { userId?: string; groupId?: string } = {}) {
     return db
       .select()
       .from(groupMembershipTable)
@@ -16,12 +16,21 @@ export const groupMembership = {
         and(
           input.userId ? eq(groupMembershipTable.userId, input.userId) : undefined,
           input.groupId ? eq(groupMembershipTable.groupId, input.groupId) : undefined,
-          input.at
-            ? and(
-                lte(groupMembershipTable.startsAt, input.at),
-                or(isNull(groupMembershipTable.endsAt), gt(groupMembershipTable.endsAt, input.at)),
-              )
-            : undefined,
+          isNull(groupMembershipTable.endsAt),
+        ),
+      )
+      .orderBy(asc(groupMembershipTable.groupId), asc(groupMembershipTable.userId), asc(groupMembershipTable.startsAt))
+  },
+
+  listPrevious(input: { userId?: string; groupId?: string } = {}) {
+    return db
+      .select()
+      .from(groupMembershipTable)
+      .where(
+        and(
+          input.userId ? eq(groupMembershipTable.userId, input.userId) : undefined,
+          input.groupId ? eq(groupMembershipTable.groupId, input.groupId) : undefined,
+          isNotNull(groupMembershipTable.endsAt),
         ),
       )
       .orderBy(asc(groupMembershipTable.groupId), asc(groupMembershipTable.userId), asc(groupMembershipTable.startsAt))
@@ -76,7 +85,7 @@ async function assertNoOverlap(
 ) {
   if (
     findOverlappingDatedPeriod(
-      await groupMembership.list({ userId: input.userId, groupId: input.groupId }),
+      await listAll({ userId: input.userId, groupId: input.groupId }),
       input,
       excludingMembershipId,
     )
@@ -84,4 +93,9 @@ async function assertNoOverlap(
     throw new DateOverlapError('This User already has a Group Membership in this Group during that period.', {
       field: 'startsAt',
     })
+}
+
+async function listAll(input: { userId?: string; groupId?: string }) {
+  const [active, previous] = await Promise.all([groupMembership.list(input), groupMembership.listPrevious(input)])
+  return [...active, ...previous]
 }

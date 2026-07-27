@@ -1,6 +1,5 @@
 import 'server-only'
 
-import { connection } from 'next/server'
 import {
   getChoir,
   listChoirsInDisplayOrder,
@@ -10,16 +9,10 @@ import {
   topology,
 } from '@/core/topology'
 import { organizationService } from '@/features/organization'
-import {
-  isCurrentDatedPeriod,
-  isHistoricalDatedPeriod,
-  isScheduledDatedPeriod,
-} from '@/features/organization/core/dated-history'
 import { buildUserLabels } from '@/features/organization/core/labels'
 
-async function listGroupStructure(input?: { at?: Date }) {
-  const at = input?.at ?? new Date()
-  const [currentMemberships] = await Promise.all([organizationService.effectiveGroupMembership.list({ at })])
+async function listGroupStructure() {
+  const currentMemberships = await organizationService.effectiveGroupMembership.list()
   const memberIds = new Map<string, Set<string>>()
   for (const membership of currentMemberships) {
     let memberIdsForGroup = memberIds.get(membership.groupId)
@@ -49,11 +42,10 @@ async function listGroupStructure(input?: { at?: Date }) {
     )
 }
 
-async function getGroupDetail(groupId: string, input?: { at?: Date }) {
-  await connection()
-  const at = input?.at ?? new Date()
-  const [memberships, users, positions] = await Promise.all([
+async function getGroupDetail(groupId: string) {
+  const [memberships, previousMemberships, users, positions] = await Promise.all([
     organizationService.effectiveGroupMembership.list({ groupId }),
+    organizationService.effectiveGroupMembership.listPrevious({ groupId }),
     organizationService.users.list(),
     Promise.resolve(topology.positions),
   ])
@@ -87,14 +79,26 @@ async function getGroupDetail(groupId: string, input?: { at?: Date }) {
   return {
     ...group,
     users: memberOptions,
-    currentMemberships: membershipViews
-      .filter((membership) => isCurrentDatedPeriod(membership, at))
-      .sort(compareMemberships),
-    scheduledMemberships: membershipViews
-      .filter((membership) => isScheduledDatedPeriod(membership, at))
-      .sort(compareMemberships),
-    historicalMemberships: membershipViews
-      .filter((membership) => isHistoricalDatedPeriod(membership, at))
+    currentMemberships: membershipViews.sort(compareMemberships),
+    historicalMemberships: previousMemberships
+      .flatMap((membership) => {
+        const option = memberOptionsById.get(membership.userId)
+        return option
+          ? [
+              {
+                ...membership,
+                id: `${membership.groupId}:${membership.userId}:${membership.startsAt.toISOString()}`,
+                userLabel: option.label,
+                userDetail: option.detail,
+                sourceLabels: membership.sources.map((source) =>
+                  source.type === 'explicit'
+                    ? 'Explicit membership'
+                    : (positionsById.get(source.positionId ?? '') ?? 'Position assignment'),
+                ),
+              },
+            ]
+          : []
+      })
       .sort(
         (first, second) =>
           (second.endsAt?.getTime() ?? 0) - (first.endsAt?.getTime() ?? 0) || compareMemberships(first, second),

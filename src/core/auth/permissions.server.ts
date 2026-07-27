@@ -189,7 +189,7 @@ export async function isCurrentUserInGroup(input: { groupId: string }): Promise<
     return false
   }
 
-  return effectiveGroupMembership.isMember({ userId, groupId: input.groupId, at: new Date() })
+  return effectiveGroupMembership.isMember({ userId, groupId: input.groupId })
 }
 
 export async function requireCurrentUserInGroup(input: { groupId: string }): Promise<void> {

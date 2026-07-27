@@ -4,12 +4,12 @@ export {
   AssignUserPositionControl,
   EndPositionAssignmentForm,
 } from './assignment-form'
-export type { PositionAssignmentPeriod, PositionAssignmentPeriodsByDate } from './service'
+export type { PositionAssignmentPeriod, PositionAssignmentPeriodsByState } from './service'
 export {
-  categorizePositionAssignmentPeriods,
   listPositionAssignmentOptions,
   listPositionAssignmentPeriods,
-  listPositionAssignmentPeriodsByDate,
   listPositionAssignmentUsers,
+  listPreviousPositionAssignmentPeriods,
   resolvePositionAssignmentDetails,
+  splitPositionAssignmentPeriods,
 } from './service'

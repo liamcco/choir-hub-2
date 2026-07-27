@@ -1,7 +1,7 @@
+import { and, eq, isNotNull, isNull } from 'drizzle-orm'
 import { db } from '@/core/db'
 import { TopologyScopeType, topology } from '@/core/topology'
 import { groupMembership, positionAssignment } from '@/drizzle/schema'
-import { isCurrentDatedPeriod } from './dated-history'
 
 export type EffectiveMembershipSource = { type: 'explicit' | 'position'; id: string; positionId?: string }
 export type EffectiveGroupMembership = {
@@ -29,41 +29,64 @@ export function mergeEffectiveGroupMemberships(rows: EffectiveGroupMembership[])
 }
 
 export const effectiveGroupMembership = {
-  async list(input: { at?: Date; groupId?: string; userId?: string } = {}): Promise<EffectiveGroupMembership[]> {
-    const at = input.at
+  async list(input: { groupId?: string; userId?: string } = {}): Promise<EffectiveGroupMembership[]> {
     const [explicit, assignments] = await Promise.all([
-      db.select().from(groupMembership),
-      db.select().from(positionAssignment),
+      db
+        .select()
+        .from(groupMembership)
+        .where(
+          and(input.groupId ? eq(groupMembership.groupId, input.groupId) : undefined, isNull(groupMembership.endsAt)),
+        ),
+      db.select().from(positionAssignment).where(isNull(positionAssignment.endsAt)),
     ])
-    const rows: EffectiveGroupMembership[] = []
-    for (const m of explicit)
-      rows.push({
-        userId: m.userId,
-        groupId: m.groupId,
-        startsAt: m.startsAt,
-        endsAt: m.endsAt,
-        sources: [{ type: 'explicit', id: m.id }],
-      })
-    for (const a of assignments) {
-      const position = topology.positions.find((candidate) => candidate.id === a.positionId)
-      for (const scope of position?.scopes.filter((candidate) => candidate.type === TopologyScopeType.GROUP) ?? [])
-        rows.push({
-          userId: a.userId,
-          groupId: scope.groupId,
-          startsAt: a.startsAt,
-          endsAt: a.endsAt,
-          sources: [{ type: 'position', id: a.id, positionId: a.positionId }],
-        })
-    }
-    const filtered = rows.filter(
-      (r) =>
-        (!input.groupId || r.groupId === input.groupId) &&
-        (!input.userId || r.userId === input.userId) &&
-        (!at || isCurrentDatedPeriod(r, at)),
-    )
-    return mergeEffectiveGroupMemberships(filtered)
+    return buildEffectiveMemberships(explicit, assignments, input)
   },
-  async isMember(input: { userId: string; groupId: string; at?: Date }) {
+  async listPrevious(input: { groupId?: string; userId?: string } = {}): Promise<EffectiveGroupMembership[]> {
+    const [explicit, assignments] = await Promise.all([
+      db
+        .select()
+        .from(groupMembership)
+        .where(
+          and(
+            input.groupId ? eq(groupMembership.groupId, input.groupId) : undefined,
+            isNotNull(groupMembership.endsAt),
+          ),
+        ),
+      db.select().from(positionAssignment).where(isNotNull(positionAssignment.endsAt)),
+    ])
+    return buildEffectiveMemberships(explicit, assignments, input)
+  },
+  async isMember(input: { userId: string; groupId: string }) {
     return (await this.list(input)).length > 0
   },
+}
+
+function buildEffectiveMemberships(
+  explicit: Array<typeof groupMembership.$inferSelect>,
+  assignments: Array<typeof positionAssignment.$inferSelect>,
+  input: { groupId?: string; userId?: string },
+) {
+  const rows: EffectiveGroupMembership[] = []
+  for (const m of explicit)
+    rows.push({
+      userId: m.userId,
+      groupId: m.groupId,
+      startsAt: m.startsAt,
+      endsAt: m.endsAt,
+      sources: [{ type: 'explicit', id: m.id }],
+    })
+  for (const a of assignments) {
+    const position = topology.positions.find((candidate) => candidate.id === a.positionId)
+    for (const scope of position?.scopes.filter((candidate) => candidate.type === TopologyScopeType.GROUP) ?? [])
+      rows.push({
+        userId: a.userId,
+        groupId: scope.groupId,
+        startsAt: a.startsAt,
+        endsAt: a.endsAt,
+        sources: [{ type: 'position', id: a.id, positionId: a.positionId }],
+      })
+  }
+  return mergeEffectiveGroupMemberships(
+    rows.filter((r) => (!input.groupId || r.groupId === input.groupId) && (!input.userId || r.userId === input.userId)),
+  )
 }

@@ -1,6 +1,5 @@
 import 'server-only'
 
-import { connection } from 'next/server'
 import {
   listChoirs,
   listGroups,
@@ -13,25 +12,19 @@ import {
   topology,
 } from '@/core/topology'
 import { organizationService } from '@/features/organization'
-import { isCurrentDatedPeriod, isHistoricalDatedPeriod } from '@/features/organization/core/dated-history'
 import { buildUserLabels, formatPositionScopeLabel } from '@/features/organization/core/labels'
 import { getPositionCollectionGroup } from './position-collection-group'
 
-async function listCollection(input?: { at?: Date }) {
-  const at = input?.at ?? new Date()
-  const [assignments, users] = await Promise.all([
-    organizationService.positionAssignment.list({ at }),
-    organizationService.users.list(),
-  ])
+async function listCollection() {
+  const assignments = await organizationService.positionAssignment.list()
+  const users = await organizationService.users.list()
   const groups = listGroups()
   const choirs = listChoirs()
   const sections = listSections()
   const labels = new Map(buildUserLabels(users).map((option) => [option.user.id, option.label]))
   return listPositions()
     .map((position) => {
-      const currentAssignment = assignments.find(
-        (assignment) => assignment.positionId === position.id && isCurrentDatedPeriod(assignment, at),
-      )
+      const currentAssignment = assignments.find((assignment) => assignment.positionId === position.id)
       return {
         id: position.id,
         name: position.name,
@@ -46,11 +39,10 @@ async function listCollection(input?: { at?: Date }) {
     )
 }
 
-async function getDetail(positionId: string, input?: { at?: Date }) {
-  await connection()
-  const at = input?.at ?? new Date()
-  const [assignments, users, memberships, placements] = await Promise.all([
+async function getDetail(positionId: string) {
+  const [assignments, previousAssignments, users, memberships, placements] = await Promise.all([
     organizationService.positionAssignment.list({ positionId }),
+    organizationService.positionAssignment.listPrevious({ positionId }),
     organizationService.users.list(),
     organizationService.homePlacement.listChoirMemberships(),
     organizationService.homePlacement.listSectionPlacements(),
@@ -75,11 +67,14 @@ async function getDetail(positionId: string, input?: { at?: Date }) {
     positionScopes: position.scopes,
     scopeLabel: formatPositionScopeLabel(position.scopes),
     users: [...membersById.values()]
-      .filter((member) => isEligible(member.user.id, position, position.scopes, memberships, placements, at))
+      .filter((member) => isEligible(member.user.id, position, position.scopes, memberships, placements))
       .sort((a, b) => a.label.localeCompare(b.label)),
-    currentAssignments: assignmentViews.filter((a) => isCurrentDatedPeriod(a, at)).sort(compare),
-    historicalAssignments: assignmentViews
-      .filter((a) => isHistoricalDatedPeriod(a, at))
+    currentAssignments: assignmentViews.sort(compare),
+    historicalAssignments: previousAssignments
+      .flatMap((assignment) => {
+        const member = membersById.get(assignment.userId)
+        return member ? [{ ...assignment, userLabel: member.label, userDetail: member.detail }] : []
+      })
       .sort((a, b) => (b.endsAt?.getTime() ?? 0) - (a.endsAt?.getTime() ?? 0) || compare(a, b)),
   }
 }
@@ -90,26 +85,18 @@ function isEligible(
   scopes: readonly PositionScope[],
   memberships: Array<{ userId: string; choirId: string; startsAt: Date; endsAt: Date | null }>,
   placements: Array<{ userId: string; sectionId: string; startsAt: Date; endsAt: Date | null }>,
-  at: Date,
 ) {
-  const current = (period: { startsAt: Date; endsAt: Date | null }) =>
-    period.startsAt <= at && (!period.endsAt || period.endsAt > at)
   if (position.name === 'Conductor') return true
   const sectionScopes = scopes.filter((scope) => scope.type === TopologyScopeType.SECTION)
   if (sectionScopes.length)
     return placements.some(
       (placement) =>
-        placement.userId === userId &&
-        current(placement) &&
-        sectionScopes.some((scope) => scope.sectionId === placement.sectionId),
+        placement.userId === userId && sectionScopes.some((scope) => scope.sectionId === placement.sectionId),
     )
   const choirScopes = scopes.filter((scope) => scope.type === TopologyScopeType.CHOIR)
   if (choirScopes.length && (position.name === 'Master of Concerts' || position.name === 'Master of Gigs'))
     return memberships.some(
-      (membership) =>
-        membership.userId === userId &&
-        current(membership) &&
-        choirScopes.some((scope) => scope.choirId === membership.choirId),
+      (membership) => membership.userId === userId && choirScopes.some((scope) => scope.choirId === membership.choirId),
     )
   return true
 }

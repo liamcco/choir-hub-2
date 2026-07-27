@@ -29,7 +29,6 @@ export type GroupDetailView = {
   kind: GroupKind
   users: UserLabel[]
   currentMemberships: GroupMembershipView[]
-  scheduledMemberships: GroupMembershipView[]
   historicalMemberships: GroupMembershipView[]
 }
 
@@ -70,20 +69,6 @@ export function GroupDetail({ group, actions }: { group: GroupDetailView; action
           memberships={group.historicalMemberships}
         />
       </section>
-
-      {group.scheduledMemberships.length ? (
-        <section aria-labelledby="scheduled-group-memberships-heading" className="space-y-3">
-          <h2 className="text-lg font-semibold" id="scheduled-group-memberships-heading">
-            Scheduled Group Memberships
-          </h2>
-          <MembershipList
-            endAction={actions.endMembership}
-            groupName={group.name}
-            memberships={group.scheduledMemberships}
-            showEndControls
-          />
-        </section>
-      ) : null}
     </article>
   )
 }

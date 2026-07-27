@@ -1,11 +1,6 @@
 /** Pure read-model transformations for dated Group Membership relationships. */
 import type { Group } from '@/core/topology'
 import type { GroupMembership, User } from '@/drizzle/schema'
-import {
-  isCurrentDatedPeriod,
-  isHistoricalDatedPeriod,
-  isScheduledDatedPeriod,
-} from '@/features/organization/core/dated-history'
 import { buildUserLabels, formatGroupPath } from '@/features/organization/core/labels'
 
 export type GroupMembershipPeriod = GroupMembership & {
@@ -15,9 +10,8 @@ export type GroupMembershipPeriod = GroupMembership & {
   userDetail: string
 }
 
-export type GroupMembershipPeriodsByDate = {
+export type GroupMembershipPeriodsByState = {
   currentMemberships: GroupMembershipPeriod[]
-  scheduledMemberships: GroupMembershipPeriod[]
   historicalMemberships: GroupMembershipPeriod[]
 }
 
@@ -52,13 +46,12 @@ export function resolveGroupMembershipDetails(
 }
 
 /** Categorizes dated Group Memberships relative to one instant without mutating the input. */
-export function categorizeGroupMembershipPeriods(
-  periods: readonly GroupMembershipPeriod[],
-  at: Date,
-): GroupMembershipPeriodsByDate {
+export function splitGroupMembershipPeriods(
+  currentMemberships: readonly GroupMembershipPeriod[],
+  historicalMemberships: readonly GroupMembershipPeriod[],
+): GroupMembershipPeriodsByState {
   return {
-    currentMemberships: periods.filter((membership) => isCurrentDatedPeriod(membership, at)),
-    scheduledMemberships: periods.filter((membership) => isScheduledDatedPeriod(membership, at)),
-    historicalMemberships: periods.filter((membership) => isHistoricalDatedPeriod(membership, at)),
+    currentMemberships: [...currentMemberships],
+    historicalMemberships: [...historicalMemberships],
   }
 }

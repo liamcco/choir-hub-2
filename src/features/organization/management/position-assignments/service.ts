@@ -2,16 +2,11 @@
 import { listPositions } from '@/core/topology'
 import { organizationService } from '@/features/organization'
 import { buildUserLabels, type UserLabel } from '@/features/organization/core/labels'
-import {
-  categorizePositionAssignmentPeriods,
-  type PositionAssignmentPeriod,
-  type PositionAssignmentPeriodsByDate,
-  resolvePositionAssignmentDetails,
-} from './periods'
+import { type PositionAssignmentPeriod, resolvePositionAssignmentDetails } from './periods'
 
 export { listPositionAssignmentOptions } from './options'
-export type { PositionAssignmentPeriod, PositionAssignmentPeriodsByDate } from './periods'
-export { categorizePositionAssignmentPeriods, resolvePositionAssignmentDetails } from './periods'
+export type { PositionAssignmentPeriod, PositionAssignmentPeriodsByState } from './periods'
+export { resolvePositionAssignmentDetails, splitPositionAssignmentPeriods } from './periods'
 
 /** Reads Users as stable, consistently formatted options for assignment forms. */
 export async function listPositionAssignmentUsers(): Promise<UserLabel[]> {
@@ -27,10 +22,11 @@ export async function listPositionAssignmentPeriods(): Promise<PositionAssignmen
   return resolvePositionAssignmentDetails(assignments, listPositions(), users)
 }
 
-/** Reads and categorizes all Position Assignments for one point in time. */
-export async function listPositionAssignmentPeriodsByDate(input?: {
-  at?: Date
-}): Promise<PositionAssignmentPeriodsByDate> {
-  const periods = await listPositionAssignmentPeriods()
-  return categorizePositionAssignmentPeriods(periods, input?.at ?? new Date())
+/** Reads ended Position Assignments with their canonical Position and User details. */
+export async function listPreviousPositionAssignmentPeriods(): Promise<PositionAssignmentPeriod[]> {
+  const [users, assignments] = await Promise.all([
+    organizationService.users.list(),
+    organizationService.positionAssignment.listPrevious(),
+  ])
+  return resolvePositionAssignmentDetails(assignments, listPositions(), users)
 }

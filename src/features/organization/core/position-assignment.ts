@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { and, asc, eq, gt, isNull, lte, or } from 'drizzle-orm'
+import { and, asc, eq, isNotNull, isNull } from 'drizzle-orm'
 import { db } from '@/core/db'
 import { resolvePosition } from '@/core/topology'
 import { type FineVoice, isFineVoice } from '@/core/types'
@@ -42,7 +42,7 @@ export const positionAssignment = {
       .then((rows) => rows[0])
   },
 
-  list(input: { positionId?: string; userId?: string; at?: Date } = {}) {
+  list(input: { positionId?: string; userId?: string } = {}) {
     return db
       .select()
       .from(positionAssignmentTable)
@@ -50,12 +50,21 @@ export const positionAssignment = {
         and(
           input.positionId ? eq(positionAssignmentTable.positionId, input.positionId) : undefined,
           input.userId ? eq(positionAssignmentTable.userId, input.userId) : undefined,
-          input.at
-            ? and(
-                lte(positionAssignmentTable.startsAt, input.at),
-                or(isNull(positionAssignmentTable.endsAt), gt(positionAssignmentTable.endsAt, input.at)),
-              )
-            : undefined,
+          isNull(positionAssignmentTable.endsAt),
+        ),
+      )
+      .orderBy(asc(positionAssignmentTable.positionId), asc(positionAssignmentTable.startsAt))
+  },
+
+  listPrevious(input: { positionId?: string; userId?: string } = {}) {
+    return db
+      .select()
+      .from(positionAssignmentTable)
+      .where(
+        and(
+          input.positionId ? eq(positionAssignmentTable.positionId, input.positionId) : undefined,
+          input.userId ? eq(positionAssignmentTable.userId, input.userId) : undefined,
+          isNotNull(positionAssignmentTable.endsAt),
         ),
       )
       .orderBy(asc(positionAssignmentTable.positionId), asc(positionAssignmentTable.startsAt))
@@ -115,12 +124,11 @@ async function assertNoOverlap(
   input: { positionId: string; startsAt: Date; endsAt: Date | null },
   excludingAssignmentId?: string,
 ) {
-  if (
-    findOverlappingDatedPeriod(
-      await positionAssignment.list({ positionId: input.positionId }),
-      input,
-      excludingAssignmentId,
-    )
-  )
+  if (findOverlappingDatedPeriod(await listAll({ positionId: input.positionId }), input, excludingAssignmentId))
     throw new DateOverlapError('This Position already has an assignment during that period.', { field: 'startsAt' })
+}
+
+async function listAll(input: { positionId?: string; userId?: string }) {
+  const [active, previous] = await Promise.all([positionAssignment.list(input), positionAssignment.listPrevious(input)])
+  return [...active, ...previous]
 }
