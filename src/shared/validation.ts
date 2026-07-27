@@ -10,3 +10,7 @@ export const dateInput = (message: string) =>
     }
     return date
   })
+
+export function isEmail(value: string) {
+  return z.email().safeParse(value.trim()).success
+}

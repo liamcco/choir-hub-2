@@ -1,5 +1,6 @@
-import { topology } from '@/core/topology'
+import { type ChoirId, type SectionId, topology } from '@/core/topology'
 import type { FineVoice } from '@/core/types'
+import { isEmail } from '@/shared/validation'
 
 export const MAX_IMPORTED_USERS = 50
 const REQUIRED_HEADERS = ['name', 'email'] as const
@@ -8,7 +9,7 @@ export type ImportedUser = {
   row: number
   name: string
   email: string
-  placement: { choirId: string; sectionId: string; voice: FineVoice; label: string } | null
+  placement: { choirId: ChoirId; sectionId: SectionId; voice: FineVoice; label: string } | null
 }
 
 export type ImportError = { row?: number; message: string }
@@ -56,7 +57,7 @@ export function parseUserImportCsv(input: string): CsvImportResult {
     const section = valueAt(record, sectionIndex).trim().toUpperCase()
     const rowErrors: string[] = []
     if (!name) rowErrors.push('Name is required.')
-    if (!email || !/^\S+@\S+\.\S+$/.test(email)) rowErrors.push('A valid email address is required.')
+    if (!email || !isEmail(email)) rowErrors.push('A valid email address is required.')
     if (emails.has(email)) rowErrors.push(`Email is duplicated with row ${emails.get(email)}.`)
     else if (email) emails.set(email, row)
 

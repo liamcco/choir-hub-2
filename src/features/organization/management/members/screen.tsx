@@ -14,13 +14,13 @@ import { MemberCreateDialog as UserCreateDialog } from '@/features/organization/
 import { MemberDetail as UserDetail } from '@/features/organization/management/members/detail/member-detail'
 import { MemberDetailRoutePresentation as UserDetailRoutePresentation } from '@/features/organization/management/members/detail/member-detail-presentation'
 import { MemberDetailSkeleton as UserDetailSkeleton } from '@/features/organization/management/members/detail/member-detail-skeleton'
-import { resendInvitationAction } from '@/features/organization/management/members/import/actions'
 import { MemberImportDialog as UserImportDialog } from '@/features/organization/management/members/import/import-dialog'
 import { getMemberDetail, listMemberCollection } from '@/features/organization/management/members/query'
 import {
   createPositionAssignmentAction,
   endPositionAssignmentAction,
 } from '@/features/organization/management/position-assignments'
+import { resendInvitationAction } from './onboarding/actions'
 
 type DetailSearchParams = Promise<{ detail?: string | string[] }>
 

@@ -15,7 +15,11 @@ export function MemberImportDialog() {
   const [csv, setCsv] = useState('')
   const [fileName, setFileName] = useState('')
   const [validation, setValidation] = useState<ValidationState>(null)
-  const [result, setResult] = useState<{ count: number; failedEmails: string[] } | null>(null)
+  const [result, setResult] = useState<{
+    count: number
+    failedEmails: string[]
+    failedRows: { row?: number; email: string; message: string; cleanup: 'not-needed' | 'completed' | 'failed' }[]
+  } | null>(null)
   const [validationState, validate, validating] = useActionState(validateUserImportAction, null)
   const [createState, create, creating] = useActionState(createImportedUsersAction, null)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -24,7 +28,12 @@ export function MemberImportDialog() {
     if (validationState) setValidation(validationState)
   }, [validationState])
   useEffect(() => {
-    if (createState?.success === true) setResult({ count: createState.count, failedEmails: createState.failedEmails })
+    if (createState?.success === true)
+      setResult({
+        count: createState.count,
+        failedEmails: createState.failedEmails,
+        failedRows: createState.failedRows,
+      })
   }, [createState])
 
   function onFileChange(event: React.ChangeEvent<HTMLInputElement>) {
@@ -164,11 +173,33 @@ function ValidationPreview({
   )
 }
 
-function ImportResult({ result }: { result: { count: number; failedEmails: string[] } }) {
+function ImportResult({
+  result,
+}: {
+  result: {
+    count: number
+    failedEmails: string[]
+    failedRows: { row?: number; email: string; message: string; cleanup: 'not-needed' | 'completed' | 'failed' }[]
+  }
+}) {
   return (
     <section className="space-y-3" aria-live="polite">
       <h2 className="text-lg font-semibold">Users created</h2>
       <p>{result.count} users were created.</p>
+      {result.failedRows.length > 0 && (
+        <div className="rounded-lg border border-destructive/50 p-3 text-sm">
+          <p className="font-medium">{result.failedRows.length} users could not be onboarded.</p>
+          <ul className="mt-2 list-disc space-y-1 pl-5">
+            {result.failedRows.map((failure) => (
+              <li key={`${failure.row ?? failure.email}-${failure.email}`}>
+                {failure.row ? `Row ${failure.row}: ` : ''}
+                {failure.email}: {failure.message}
+                {failure.cleanup === 'failed' && ' Cleanup is required.'}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       {result.failedEmails.length > 0 && (
         <div className="rounded-lg border border-destructive/50 p-3 text-sm">
           <p className="font-medium">{result.failedEmails.length} users did not get their invitation email.</p>

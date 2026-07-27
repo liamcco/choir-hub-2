@@ -25,14 +25,12 @@ describe('Member account form', () => {
 
     await user.type(screen.getByLabelText('Name'), 'Ada Lovelace')
     await user.type(screen.getByLabelText('Email'), 'ada@example.com')
-    await user.type(screen.getByLabelText('Temporary password'), 'correct horse battery staple')
     await user.click(screen.getByRole('button', { name: 'Create' }))
 
     await waitFor(() => expect(screen.getByRole('alert')).toBeTruthy())
 
     expect((screen.getByLabelText('Name') as HTMLInputElement).value).toBe('Ada Lovelace')
     expect((screen.getByLabelText('Email') as HTMLInputElement).value).toBe('ada@example.com')
-    expect((screen.getByLabelText('Temporary password') as HTMLInputElement).value).toBe('correct horse battery staple')
     expect(screen.getByLabelText('Email').getAttribute('aria-invalid')).toBe('true')
     expect(screen.getByRole('alert').textContent).toBe('Email already taken')
   })

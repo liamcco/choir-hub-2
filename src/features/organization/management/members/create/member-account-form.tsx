@@ -14,14 +14,12 @@ const initialState: UserFormState = {}
 const initialValues: MemberAccountFormValues = {
   name: '',
   email: '',
-  password: '',
   status: 'ACTIVE',
 }
 
 type MemberAccountFormValues = {
   name: string
   email: string
-  password: string
   status: MemberStatus
 }
 
@@ -68,20 +66,6 @@ export function MemberAccountForm({
             aria-invalid={!!state.fieldErrors?.email}
           />
           <FieldError>{state.fieldErrors?.email}</FieldError>
-        </Field>
-        <Field>
-          <FieldLabel htmlFor="password">Temporary password</FieldLabel>
-          <Input
-            id="password"
-            name="password"
-            type="password"
-            minLength={8}
-            required
-            value={values.password}
-            onChange={(event) => setValues((current) => ({ ...current, password: event.target.value }))}
-            aria-invalid={!!state.fieldErrors?.password}
-          />
-          <FieldError>{state.fieldErrors?.password}</FieldError>
         </Field>
         <Field>
           <FieldLabel htmlFor="status">Member Status</FieldLabel>

@@ -40,6 +40,10 @@ _Avoid_: Configurable organization, tenant configuration, reference records
 A person represented in the choir domain and their login identity, managed by Better Auth. Every User is a choir person from creation and has one overall status, regardless of how many Groups they belong to.
 _Avoid_: Auth User, Member, account
 
+**User Onboarding**:
+An administrative workflow that creates a User and establishes any initial Member Status, Home Choir, Section Placement, and activation-link delivery. It can onboard one User or a batch of Users and reports each outcome separately.
+_Avoid_: User import, account provisioning
+
 **Member Status**:
 A User's overall relationship to CSK, currently active, passive, or former. Member Status is independent of dated Choir Membership, Section Placement, Group Membership, Position Assignment, login state, and authorization.
 _Avoid_: Relationship status, auth role

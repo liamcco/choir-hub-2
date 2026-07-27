@@ -1,3 +1,3 @@
 export { MemberCreate } from './create/member-create'
-export { resendInvitationAction } from './import/actions'
+export { resendInvitationAction } from './onboarding/actions'
 export { UserManagementScreen } from './screen'
