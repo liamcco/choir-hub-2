@@ -63,4 +63,98 @@ export async function seedDemo(database: typeof db): Promise<void> {
       .values({ id: membership.id, userId, groupId: membership.groupId, startsAt })
       .onConflictDoUpdate({ target: groupMembership.id, set: { userId, startsAt, endsAt: null } })
   }
+
+  for (const membership of demoSeedData.historicalChoirMemberships) {
+    const userId = userIds.get(membership.personKey)
+    if (!userId) throw new Error(`Demo seed references an unknown person: ${membership.personKey}.`)
+    await database
+      .insert(choirMembership)
+      .values({
+        id: membership.id,
+        userId,
+        choirId: membership.choirId,
+        startsAt: new Date(membership.startsAt),
+        endsAt: new Date(membership.endsAt),
+      })
+      .onConflictDoUpdate({
+        target: choirMembership.id,
+        set: {
+          userId,
+          choirId: membership.choirId,
+          startsAt: new Date(membership.startsAt),
+          endsAt: new Date(membership.endsAt),
+        },
+      })
+  }
+
+  for (const placement of demoSeedData.historicalSectionPlacements) {
+    const userId = userIds.get(placement.personKey)
+    if (!userId) throw new Error(`Demo seed references an unknown person: ${placement.personKey}.`)
+    await database
+      .insert(sectionPlacement)
+      .values({
+        id: `demo-history-placement-${placement.personKey}`,
+        userId,
+        sectionId: placement.sectionId,
+        voice: placement.voice,
+        startsAt: new Date(placement.startsAt),
+        endsAt: new Date(placement.endsAt),
+      })
+      .onConflictDoUpdate({
+        target: sectionPlacement.id,
+        set: {
+          userId,
+          sectionId: placement.sectionId,
+          voice: placement.voice,
+          startsAt: new Date(placement.startsAt),
+          endsAt: new Date(placement.endsAt),
+        },
+      })
+  }
+
+  for (const membership of demoSeedData.historicalGroupMemberships) {
+    const userId = userIds.get(membership.personKey)
+    if (!userId) throw new Error(`Demo seed references an unknown person: ${membership.personKey}.`)
+    await database
+      .insert(groupMembership)
+      .values({
+        id: membership.id,
+        userId,
+        groupId: membership.targetId,
+        startsAt: new Date(membership.startsAt),
+        endsAt: new Date(membership.endsAt),
+      })
+      .onConflictDoUpdate({
+        target: groupMembership.id,
+        set: {
+          userId,
+          groupId: membership.targetId,
+          startsAt: new Date(membership.startsAt),
+          endsAt: new Date(membership.endsAt),
+        },
+      })
+  }
+
+  for (const assignment of demoSeedData.historicalPositionAssignments) {
+    const userId = userIds.get(assignment.personKey)
+    if (!userId) throw new Error(`Demo seed references an unknown person: ${assignment.personKey}.`)
+    await database
+      .insert(positionAssignment)
+      .values({
+        id: assignment.id,
+        positionId: assignment.targetId,
+        userId,
+        startsAt: new Date(assignment.startsAt),
+        endsAt: new Date(assignment.endsAt),
+      })
+      .onConflictDoUpdate({
+        target: positionAssignment.id,
+        set: {
+          userId,
+          positionId: assignment.targetId,
+          startsAt: new Date(assignment.startsAt),
+          endsAt: new Date(assignment.endsAt),
+        },
+      })
+  }
 }

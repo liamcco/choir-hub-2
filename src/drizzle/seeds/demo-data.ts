@@ -17,6 +17,27 @@ type ChoirSection = {
   passiveCount: number
 }
 
+type HistoricalChoirMembership = {
+  id: string
+  personKey: string
+  choirId: string
+  startsAt: string
+  endsAt: string
+}
+
+type HistoricalSectionPlacement = HistoricalChoirMembership & {
+  sectionId: string
+  voice: DemoVoice
+}
+
+type HistoricalRelationship = {
+  id: string
+  personKey: string
+  targetId: string
+  startsAt: string
+  endsAt: string
+}
+
 const choirSections: ChoirSection[] = topology.sections.map((section, index) => ({
   choirId: section.choirId,
   sectionId: section.id,
@@ -126,6 +147,121 @@ const groupMemberships = committeeDefinitions.flatMap(({ groupId, choirId }) => 
   }))
 })
 
+// Keep a small, readable slice of the old roster so the demo exercises the
+// historical views as well as the current roster. Former Users deliberately
+// keep these ended relationships: Member Status describes the User today,
+// while dated relationships describe what was true during the period.
+const formerHistoricalChoirMemberships: readonly HistoricalChoirMembership[] = [
+  {
+    id: 'demo-history-choir-former-01',
+    personKey: 'former-01',
+    choirId: 'mk',
+    startsAt: '2022-01-01',
+    endsAt: '2023-06-30',
+  },
+  {
+    id: 'demo-history-choir-former-02',
+    personKey: 'former-02',
+    choirId: 'kk',
+    startsAt: '2021-01-01',
+    endsAt: '2024-06-30',
+  },
+  {
+    id: 'demo-history-choir-former-03',
+    personKey: 'former-03',
+    choirId: 'dk',
+    startsAt: '2023-01-01',
+    endsAt: '2025-06-30',
+  },
+  {
+    id: 'demo-history-choir-former-04',
+    personKey: 'former-04',
+    choirId: 'kk',
+    startsAt: '2020-01-01',
+    endsAt: '2022-06-30',
+  },
+  {
+    id: 'demo-history-choir-former-05',
+    personKey: 'former-05',
+    choirId: 'mk',
+    startsAt: '2024-01-01',
+    endsAt: '2025-06-30',
+  },
+]
+
+const historicalPeriodByPerson = new Map(
+  [...singers, ...conductors].map((person, index) => [
+    person.key,
+    {
+      startsAt: `${2015 + (index % 5)}-01-01`,
+      endsAt: '2026-01-01',
+    },
+  ]),
+)
+
+const generatedHistoricalChoirMemberships = singers.map((person) => {
+  const period = historicalPeriodByPerson.get(person.key)
+  if (!period) throw new Error(`Missing historical period for ${person.key}.`)
+  return {
+    id: `demo-history-choir-${person.key}`,
+    personKey: person.key,
+    choirId: person.choirId,
+    ...period,
+  }
+})
+const generatedHistoricalChoirMembershipByPerson = new Map(
+  generatedHistoricalChoirMemberships.map((membership) => [membership.personKey, membership]),
+)
+
+const historicalChoirMemberships: readonly HistoricalChoirMembership[] = [
+  ...formerHistoricalChoirMemberships,
+  ...generatedHistoricalChoirMemberships,
+]
+
+const historicalSectionPlacements: readonly HistoricalSectionPlacement[] = [
+  { ...formerHistoricalChoirMemberships[0], sectionId: 'mk-t1', voice: 'T1' },
+  { ...formerHistoricalChoirMemberships[1], sectionId: 'kk-a', voice: 'A1' },
+  { ...formerHistoricalChoirMemberships[2], sectionId: 'dk-s1', voice: 'S1' },
+  { ...formerHistoricalChoirMemberships[3], sectionId: 'kk-t', voice: 'T1' },
+  { ...formerHistoricalChoirMemberships[4], sectionId: 'mk-b1', voice: 'B1' },
+  ...singers.map((person) => {
+    const membership = generatedHistoricalChoirMembershipByPerson.get(person.key)
+    if (!membership) throw new Error(`Missing generated historical membership for ${person.key}.`)
+    return { ...membership, sectionId: person.sectionId, voice: person.voice }
+  }),
+]
+
+const historicalGroupMemberships: readonly HistoricalRelationship[] = [
+  {
+    id: 'demo-history-group-former-01',
+    personKey: 'former-01',
+    targetId: 'mk-party',
+    startsAt: '2022-01-01',
+    endsAt: '2023-06-30',
+  },
+  {
+    id: 'demo-history-group-former-02',
+    personKey: 'former-02',
+    targetId: 'recruitment-committee',
+    startsAt: '2021-01-01',
+    endsAt: '2024-06-30',
+  },
+  {
+    id: 'demo-history-group-former-03',
+    personKey: 'former-03',
+    targetId: 'dk-concert',
+    startsAt: '2023-01-01',
+    endsAt: '2025-06-30',
+  },
+  ...groupMemberships.map((membership, index) => ({
+    id: `demo-history-${membership.id}`,
+    personKey: membership.personKey,
+    targetId: membership.groupId,
+    startsAt: `${2015 + (index % 5)}-01-01`,
+    endsAt: '2026-01-01',
+  })),
+]
+
 const activeSingers = singers.filter((person) => person.status === 'active')
 const groupScopes: Map<string, string> = new Map(
   topology.groups.flatMap((group) => (group.scope.type === 'choir' ? [[group.id, group.scope.choirId] as const] : [])),
@@ -158,21 +294,76 @@ const additionalPositionAssignments = positionsToAssign.map((position, index) =>
   return { positionId: position.id, personKey: person.key }
 })
 
+const positionAssignments = [
+  ...boardPositionIds.map((positionId, index) => ({ positionId, personKey: boardPersonKeys[index] })),
+  { positionId: 'mk-conductor', personKey: 'conductor-mk' },
+  { positionId: 'kk-conductor', personKey: 'conductor-kk' },
+  { positionId: 'dk-conductor', personKey: 'conductor-dk' },
+  ...additionalPositionAssignments,
+]
+
+const historicalPositionAssignments = [
+  {
+    id: 'demo-history-assignment-former-01',
+    targetId: 'secretary',
+    personKey: 'former-01',
+    startsAt: '2022-01-01',
+    endsAt: '2023-06-30',
+  },
+  {
+    id: 'demo-history-assignment-former-02',
+    targetId: 'kk-conductor',
+    personKey: 'former-02',
+    startsAt: '2021-01-01',
+    endsAt: '2024-06-30',
+  },
+  {
+    id: 'demo-history-assignment-former-03',
+    targetId: 'dk-master-of-concerts',
+    personKey: 'former-03',
+    startsAt: '2023-01-01',
+    endsAt: '2025-06-30',
+  },
+  {
+    id: 'demo-history-assignment-former-04',
+    targetId: 'treasurer',
+    personKey: 'former-04',
+    startsAt: '2020-01-01',
+    endsAt: '2022-06-30',
+  },
+  {
+    id: 'demo-history-assignment-former-05',
+    targetId: 'mk-t1-voice-parent',
+    personKey: 'former-05',
+    startsAt: '2024-01-01',
+    endsAt: '2025-06-30',
+  },
+  ...positionAssignments.map((assignment) => {
+    const period = historicalPeriodByPerson.get(assignment.personKey)
+    if (!period) throw new Error(`Missing historical period for ${assignment.personKey}.`)
+    return {
+      id: `demo-history-assignment-${assignment.positionId}`,
+      targetId: assignment.positionId,
+      personKey: assignment.personKey,
+      startsAt: period.startsAt,
+      endsAt: '2020-01-01',
+    }
+  }),
+]
+
 export const demoSeedData = {
   userPassword: 'password',
   startsAt: '2026-01-01T00:00:00.000Z',
 
   people: [...singers, ...formerMembers, ...conductors],
 
-  positionAssignments: [
-    ...boardPositionIds.map((positionId, index) => ({ positionId, personKey: boardPersonKeys[index] })),
-    { positionId: 'mk-conductor', personKey: 'conductor-mk' },
-    { positionId: 'kk-conductor', personKey: 'conductor-kk' },
-    { positionId: 'dk-conductor', personKey: 'conductor-dk' },
-    ...additionalPositionAssignments,
-  ],
+  positionAssignments,
 
   groupMemberships,
+  historicalChoirMemberships,
+  historicalSectionPlacements,
+  historicalGroupMemberships,
+  historicalPositionAssignments,
 } as const
 
 export const demoSeedSummary = {
@@ -183,4 +374,8 @@ export const demoSeedSummary = {
   boardCount: boardPersonKeys.length,
   additionalPositionAssignmentCount: additionalPositionAssignments.length,
   committeeMembershipCount: groupMemberships.length,
+  historicalChoirMembershipCount: historicalChoirMemberships.length,
+  historicalSectionPlacementCount: historicalSectionPlacements.length,
+  historicalGroupMembershipCount: historicalGroupMemberships.length,
+  historicalPositionAssignmentCount: historicalPositionAssignments.length,
 }
