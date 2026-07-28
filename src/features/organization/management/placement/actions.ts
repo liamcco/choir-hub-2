@@ -8,25 +8,25 @@ import { ROUTES } from '@/core/navigation/site'
 import { MemberStatus } from '@/drizzle/schema'
 import { organizationService } from '@/features/organization'
 import { handleFormError } from '@/shared/forms/errors'
+import { transferSchema } from './schemas'
 
-const transferSchema = z.object({
-  userId: z.string().min(1),
-  choirId: z.string().min(1),
-  sectionId: z.string().optional(),
-  voice: z.enum(['S1', 'S2', 'A1', 'A2', 'T1', 'T2', 'B1', 'B2']).optional(),
-})
+function parseTransferFormData(formData: FormData) {
+  return transferSchema.safeParse({
+    userId: String(formData.get('userId')),
+    choirId: String(formData.get('choirId')),
+    sectionId: normalizeOptionalFormValue(formData.get('sectionId')),
+    voice: normalizeOptionalFormValue(formData.get('voice')),
+  })
+}
+
+function normalizeOptionalFormValue(value: FormDataEntryValue | null) {
+  const stringValue = String(value ?? '')
+  return stringValue === '' || stringValue === 'none' ? undefined : stringValue
+}
 
 export async function transferPlacementAction(_previous: unknown, formData: FormData) {
   const actor = await requireCurrentUserPermission({ resource: 'user', action: 'update' })
-  const parsed = transferSchema.safeParse({
-    userId: String(formData.get('userId')),
-    choirId: String(formData.get('choirId')),
-    sectionId:
-      String(formData.get('sectionId') ?? '') === 'none'
-        ? undefined
-        : String(formData.get('sectionId') ?? '') || undefined,
-    voice: String(formData.get('voice') ?? '') || undefined,
-  })
+  const parsed = parseTransferFormData(formData)
   if (!parsed.success) return { success: false, message: z.prettifyError(parsed.error) }
   try {
     await organizationService.homePlacement.transfer(parsed.data)

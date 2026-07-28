@@ -96,11 +96,9 @@ export function PlacementDetail({ detail }: { detail: Detail }) {
       {editingPlacement ? (
         <TransferForm
           detail={detail}
-          allSections={listSections()}
           action={transferAction}
           pending={transferPending}
           state={transferState}
-          choirs={listChoirs()}
           currentChoir={currentChoir}
           currentSection={currentSection}
           onCancel={() => setEditingPlacement(false)}
@@ -146,30 +144,25 @@ export function PlacementDetail({ detail }: { detail: Detail }) {
 
 function TransferForm({
   detail,
-  allSections,
   action,
   pending,
   state,
-  choirs,
   currentChoir,
   currentSection,
   onCancel,
 }: {
   detail: Detail
-  allSections: ReturnType<typeof listSections>
   action: (formData: FormData) => void | Promise<void>
   pending: boolean
   state: ActionState
-  choirs: ReturnType<typeof listChoirs>
   currentChoir: string
   currentSection: string
   onCancel: () => void
 }) {
   const [choirId, setChoirId] = useState(currentChoir)
   const [sectionId, setSectionId] = useState(currentSection)
-  const sections = allSections.filter((section) => section.choirId === choirId)
-  const selectedSection = sections.find((section) => section.id === sectionId)
-  const voices = selectedSection?.allowedVoices ?? []
+  const sections = getSectionsForChoir(choirId)
+  const voices = getVoicesForSection(sectionId)
   return (
     <form action={action} className="space-y-4 rounded-xl border p-4">
       <h3 className="font-heading text-lg font-semibold">Transfer</h3>
@@ -188,7 +181,7 @@ function TransferForm({
             <SelectValue placeholder="Choose Choir" />
           </SelectTrigger>
           <SelectContent>
-            {choirs.map((choir) => (
+            {listChoirs().map((choir) => (
               <SelectItem key={choir.id} value={choir.id}>
                 {choir.name}
               </SelectItem>
@@ -248,4 +241,12 @@ function TransferForm({
       {state?.message ? <p className="text-sm text-muted-foreground">{state.message}</p> : null}
     </form>
   )
+}
+
+function getSectionsForChoir(choirId: string) {
+  return listSections().filter((section) => section.choirId === choirId)
+}
+
+function getVoicesForSection(sectionId: string) {
+  return listSections().find((section) => section.id === sectionId)?.allowedVoices ?? []
 }
