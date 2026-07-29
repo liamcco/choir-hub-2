@@ -14,9 +14,27 @@ describe('app navigation', () => {
   })
 
   test('decides route access from authentication only', async () => {
-    expect(await getRouteAccessDecision('/admin/users', null)).toEqual({ kind: 'redirect', location: '/login' })
-    expect(await getRouteAccessDecision('/account', null)).toEqual({ kind: 'redirect', location: '/login' })
+    expect(await getRouteAccessDecision('/admin/users', null)).toEqual({
+      kind: 'redirect',
+      location: '/login?returnTo=%2Fadmin%2Fusers',
+    })
+    expect(await getRouteAccessDecision('/account', null)).toEqual({
+      kind: 'redirect',
+      location: '/login?returnTo=%2Faccount',
+    })
+    expect(await getRouteAccessDecision('/admin/users', null, '/admin/users?detail=user-1')).toEqual({
+      kind: 'redirect',
+      location: '/login?returnTo=%2Fadmin%2Fusers%3Fdetail%3Duser-1',
+    })
     expect(await getRouteAccessDecision('/login', null)).toEqual({ kind: 'allow' })
+    expect(await getRouteAccessDecision('/login', { user: { id: 'user', role: 'user' } })).toEqual({
+      kind: 'redirect',
+      location: '/',
+    })
+    expect(await getRouteAccessDecision('/login', { user: { id: 'admin', role: 'admin' } })).toEqual({
+      kind: 'redirect',
+      location: '/admin',
+    })
     expect(await getRouteAccessDecision('/admin/users', { user: { id: 'user', role: 'user' } })).toEqual({
       kind: 'forbidden',
     })

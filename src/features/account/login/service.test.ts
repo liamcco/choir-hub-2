@@ -17,6 +17,7 @@ describe('login service', () => {
       signInWithEmailPassword({
         email: 'member@example.com',
         password: 'correct horse battery staple',
+        rememberMe: true,
       }),
     ).resolves.toEqual({
       success: true,
@@ -37,6 +38,7 @@ describe('login service', () => {
       signInWithEmailPassword({
         email: 'admin@example.com',
         password: 'correct horse battery staple',
+        rememberMe: true,
       }),
     ).resolves.toEqual({
       success: true,
@@ -51,6 +53,38 @@ describe('login service', () => {
     })
   })
 
+  test('uses a safe requested destination after sign-in', async () => {
+    signInEmail.mockResolvedValue({ data: { user: { id: 'user-member', role: 'user' } }, error: null })
+
+    await expect(
+      signInWithEmailPassword({
+        email: 'member@example.com',
+        password: 'correct horse battery staple',
+        rememberMe: false,
+        returnTo: '/account?tab=password',
+      }),
+    ).resolves.toEqual({
+      success: true,
+      redirectTo: '/account?tab=password',
+    })
+  })
+
+  test('rejects external requested destinations', async () => {
+    signInEmail.mockResolvedValue({ data: { user: { id: 'user-member', role: 'user' } }, error: null })
+
+    await expect(
+      signInWithEmailPassword({
+        email: 'member@example.com',
+        password: 'correct horse battery staple',
+        rememberMe: false,
+        returnTo: 'https://example.com/steal-session',
+      }),
+    ).resolves.toEqual({
+      success: true,
+      redirectTo: '/',
+    })
+  })
+
   test('returns clear sign-in errors from the auth client', async () => {
     signInEmail.mockResolvedValue({
       data: { user: { id: 'user-member', role: 'user' } },
@@ -60,10 +94,28 @@ describe('login service', () => {
       signInWithEmailPassword({
         email: 'member@example.com',
         password: 'wrong password',
+        rememberMe: false,
       }),
     ).resolves.toEqual({
       success: false,
-      error: 'Invalid email or password.',
+      kind: 'invalid-credentials',
+      error: 'Unable to sign in. Check your email and password and try again.',
+    })
+  })
+
+  test('normalizes unexpected auth failures', async () => {
+    signInEmail.mockRejectedValue(new Error('database details should not reach the client'))
+
+    await expect(
+      signInWithEmailPassword({
+        email: 'member@example.com',
+        password: 'correct horse battery staple',
+        rememberMe: false,
+      }),
+    ).resolves.toEqual({
+      success: false,
+      kind: 'network',
+      error: 'Unable to sign in right now. Check your connection and try again.',
     })
   })
 })

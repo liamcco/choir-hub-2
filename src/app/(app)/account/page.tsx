@@ -12,7 +12,7 @@ export default async function AccountPage() {
     redirect(ROUTES.login)
   }
 
-  const email = session?.user?.email ?? ''
+  const email = session?.user?.email
 
   return <AccountSelfServiceScreen userEmail={email} />
 }
