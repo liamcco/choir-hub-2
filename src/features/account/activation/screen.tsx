@@ -28,7 +28,7 @@ export function ActivationForm({ token: _token }: { token?: string }) {
         <FieldGroup>
           <Field>
             <FieldLabel htmlFor="activation-password">Password</FieldLabel>
-            <Input id="activation-password" name="password" type="password" minLength={8} required />
+            <Input id="activation-password" name="password" type="password" />
             <FieldError>{state.error}</FieldError>
           </Field>
         </FieldGroup>

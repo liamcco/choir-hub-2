@@ -62,19 +62,12 @@ export function LoginForm({ returnTo }: { returnTo?: string }) {
             onChange={(event) => {
               setEmail(event.target.value)
             }}
-            data-invalid={!!emailError}
           />
           <FieldError>{emailError}</FieldError>
         </Field>
         <Field data-invalid={!!passwordError}>
           <FieldLabel htmlFor="password">Password</FieldLabel>
-          <Input
-            id="password"
-            name="password"
-            type="password"
-            autoComplete="current-password"
-            data-invalid={!!passwordError}
-          />
+          <Input id="password" name="password" type="password" autoComplete="current-password" />
           <FieldError>{passwordError}</FieldError>
         </Field>
         <Field orientation="horizontal">

@@ -40,6 +40,8 @@ export function PasswordResetRequestScreen() {
 
   const [state, formAction, isPending] = useActionState(submitRequest, initialState)
 
+  const emailError = state.fieldErrors?.email?.[0]
+
   return (
     <main className="mx-auto flex min-h-svh w-full max-w-sm flex-col justify-center px-4 py-8">
       <div className="flex flex-col gap-6">
@@ -59,7 +61,7 @@ export function PasswordResetRequestScreen() {
         ) : (
           <form action={formAction} noValidate aria-busy={isPending} className="flex flex-col gap-4">
             <FieldGroup>
-              <Field data-invalid={!!state.fieldErrors?.email?.[0]}>
+              <Field data-invalid={!!emailError}>
                 <FieldLabel htmlFor="reset-email">Email</FieldLabel>
                 <Input
                   id="reset-email"
@@ -70,9 +72,8 @@ export function PasswordResetRequestScreen() {
                   onChange={(event) => {
                     setEmail(event.target.value)
                   }}
-                  data-invalid={!!state.fieldErrors?.email?.[0]}
                 />
-                <FieldError>{state.fieldErrors?.email?.[0]}</FieldError>
+                <FieldError>{emailError}</FieldError>
               </Field>
               <FieldError>{state.message}</FieldError>
             </FieldGroup>
@@ -130,6 +131,9 @@ export function PasswordResetScreen({ token }: { token?: string }) {
     )
   }
 
+  const passwordError = state.fieldErrors?.password?.[0]
+  const confirmPasswordError = state.fieldErrors?.confirmPassword?.[0]
+
   return (
     <main className="mx-auto flex min-h-svh w-full max-w-sm flex-col justify-center px-4 py-8">
       <div className="flex flex-col gap-6">
@@ -139,27 +143,15 @@ export function PasswordResetScreen({ token }: { token?: string }) {
         </div>
         <form action={formAction} noValidate aria-busy={isPending} className="flex flex-col gap-4">
           <FieldGroup>
-            <Field data-invalid={!!state.fieldErrors?.password?.[0]}>
+            <Field data-invalid={!!passwordError}>
               <FieldLabel htmlFor="reset-password">New password</FieldLabel>
-              <Input
-                id="reset-password"
-                name="password"
-                type="password"
-                autoComplete="new-password"
-                data-invalid={!!state.fieldErrors?.password?.[0]}
-              />
-              <FieldError>{state.fieldErrors?.password?.[0]}</FieldError>
+              <Input id="reset-password" name="password" type="password" autoComplete="new-password" />
+              <FieldError>{passwordError}</FieldError>
             </Field>
-            <Field data-invalid={!!state.fieldErrors?.confirmPassword?.[0]}>
+            <Field data-invalid={!!confirmPasswordError}>
               <FieldLabel htmlFor="reset-password-confirm">Confirm new password</FieldLabel>
-              <Input
-                id="reset-password-confirm"
-                name="confirmPassword"
-                type="password"
-                autoComplete="new-password"
-                data-invalid={!!state.fieldErrors?.confirmPassword?.[0]}
-              />
-              <FieldError>{state.fieldErrors?.confirmPassword?.[0]}</FieldError>
+              <Input id="reset-password-confirm" name="confirmPassword" type="password" autoComplete="new-password" />
+              <FieldError>{confirmPasswordError}</FieldError>
             </Field>
             <FieldError>{state.message}</FieldError>
           </FieldGroup>
