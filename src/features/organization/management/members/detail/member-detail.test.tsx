@@ -3,10 +3,14 @@ import { GROUP_KINDS } from '@/core/topology'
 import { MemberStatus } from '@/drizzle/schema'
 
 const { cleanup, render, screen } = await import('@testing-library/react')
+const endPositionAssignmentForm = mock(({ immediate }: { immediate?: boolean }) => (
+  <button type="button">{immediate ? 'End' : 'Save end date'}</button>
+))
+
 mock.module('../../position-assignments/assignment-form', () => ({
   AssignPositionHolderControl: () => <button type="button">Assign holder</button>,
   AssignUserPositionControl: () => <button type="button">Assign Position</button>,
-  EndPositionAssignmentForm: () => <button type="button">End</button>,
+  EndPositionAssignmentForm: endPositionAssignmentForm,
 }))
 const { MemberDetail } = await import('./member-detail')
 
@@ -66,6 +70,8 @@ describe('Member detail', () => {
     expect(screen.getByText('Chamber Choir')).toBeTruthy()
     expect(screen.getByRole('heading', { name: 'Position Assignments' })).toBeTruthy()
     expect(screen.getByText('Chair')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'End' })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'Save end date' })).toBeNull()
     expect(screen.queryByRole('heading', { name: 'Membership' })).toBeNull()
     expect(screen.queryByRole('heading', { name: 'Contact information' })).toBeNull()
     expect(screen.queryByRole('button', { name: /edit member status/i })).toBeNull()

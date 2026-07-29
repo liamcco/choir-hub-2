@@ -148,6 +148,7 @@ export function MemberPositionAssignmentSection({
                     userLabel: 'this User',
                     position: { name: assignment.positionName },
                   }}
+                  immediate
                 />
               ) : null}
             </li>
