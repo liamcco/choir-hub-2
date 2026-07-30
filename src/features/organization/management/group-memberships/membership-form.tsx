@@ -5,7 +5,7 @@ import { useActionState } from 'react'
 
 import { formatGroupName } from '@/features/organization/core/labels'
 import { formatDateInput } from '@/shared/formatting'
-import { FormMessage } from '@/shared/forms/error-handling'
+import { FormMessageToast } from '@/shared/forms/error-handling'
 
 import { Button } from '@/shared/ui/button'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/shared/ui/field'
@@ -76,7 +76,7 @@ export function CreateGroupMembershipForm({
         <UserPlusIcon data-icon="inline-start" />
         {isPending ? 'Adding' : 'Add'}
       </Button>
-      <FormMessage state={state} />
+      <FormMessageToast state={state} />
     </form>
   )
 }
@@ -99,7 +99,7 @@ export function EndGroupMembershipForm({ membership }: { membership: GroupMember
           required
         />
         <FieldError>{state.fieldErrors?.endsAt}</FieldError>
-        <FormMessage state={state} />
+        <FormMessageToast state={state} />
       </div>
       <Button type="submit" variant="outline" size="icon-sm" aria-label="Save end date" disabled={isPending}>
         <SaveIcon />

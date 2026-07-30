@@ -9,7 +9,7 @@ import type {
   EndGroupMembershipFormState,
 } from '@/features/organization/management/group-memberships/actions'
 import { formatDateInput } from '@/shared/formatting'
-import { FormMessage } from '@/shared/forms/error-handling'
+import { FormMessageToast } from '@/shared/forms/error-handling'
 import type { NamedEntity } from '@/shared/types'
 import { Button } from '@/shared/ui/button'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/shared/ui/field'
@@ -74,7 +74,7 @@ export function AddUserGroupControl({
       <Button disabled={isPending} type="submit">
         {isPending ? 'Adding' : 'Add Membership'}
       </Button>
-      <FormMessage state={state} />
+      <FormMessageToast state={state} />
     </form>
   )
 }
@@ -128,7 +128,7 @@ export function EndGroupMembershipControl({
           Cancel
         </Button>
       </div>
-      <FormMessage state={state} />
+      <FormMessageToast state={state} />
     </form>
   )
 }

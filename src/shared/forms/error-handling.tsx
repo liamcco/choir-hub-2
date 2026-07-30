@@ -2,10 +2,11 @@
 
 import { useEffect, useRef } from 'react'
 import type { z } from 'zod'
-import type { FormState } from '@/shared/forms/types'
+import type { AnyFormState, FormState } from '@/shared/forms/types'
 import { toast } from '@/shared/ui/toast'
+import { Alert, AlertDescription } from '../ui/alert'
 
-export function FormMessage<T extends FormState<K>, K extends z.ZodType>({
+export function FormMessageToast<T extends FormState<K>, K extends z.ZodType>({
   state,
   onSuccess,
   successAction,
@@ -39,4 +40,12 @@ export function FormMessage<T extends FormState<K>, K extends z.ZodType>({
   }, [onSuccess, state, successAction])
 
   return null
+}
+
+export function FormMessageAlert({ state }: { state: AnyFormState }) {
+  return state.message ? (
+    <Alert variant={state.success ? 'default' : 'destructive'}>
+      <AlertDescription>{state.message}</AlertDescription>
+    </Alert>
+  ) : null
 }

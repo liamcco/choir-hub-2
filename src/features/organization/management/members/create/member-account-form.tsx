@@ -4,7 +4,7 @@ import { UserPlusIcon } from 'lucide-react'
 import { useActionState, useEffect, useState } from 'react'
 import type { MemberStatus } from '@/drizzle/schema'
 import { createUserAction, type UserFormState } from '@/features/organization/management/members/actions'
-import { FormMessage } from '@/shared/forms/error-handling'
+import { FormMessageToast } from '@/shared/forms/error-handling'
 import { Button } from '@/shared/ui/button'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/shared/ui/field'
 import { Input } from '@/shared/ui/input'
@@ -87,7 +87,7 @@ export function MemberAccountForm({
         <UserPlusIcon data-icon="inline-start" />
         {isPending ? 'Creating' : 'Create'}
       </Button>
-      <FormMessage
+      <FormMessageToast
         state={state}
         onSuccess={onSuccess}
         successAction={

@@ -14,7 +14,7 @@ import type {
 } from '@/features/organization/management/position-assignments/actions'
 import { EndPositionAssignmentForm } from '@/features/organization/management/position-assignments/assignment-form'
 import { formatDate } from '@/shared/formatting'
-import { FormMessage } from '@/shared/forms/error-handling'
+import { FormMessageToast } from '@/shared/forms/error-handling'
 import type { EntityOption, NamedEntity } from '@/shared/types'
 import { Button } from '@/shared/ui/button'
 import { Field, FieldError, FieldLabel } from '@/shared/ui/field'
@@ -206,7 +206,7 @@ function InlineGroupMembershipForm({
             {isPending ? 'Adding…' : 'Confirm'}
           </Button>
         </div>
-        <FormMessage onSuccess={onSuccess} state={state} />
+        <FormMessageToast onSuccess={onSuccess} state={state} />
       </form>
     </li>
   )
@@ -255,7 +255,7 @@ function InlinePositionAssignmentForm({
             {isPending ? 'Assigning…' : 'Confirm'}
           </Button>
         </div>
-        <FormMessage onSuccess={onSuccess} state={state} />
+        <FormMessageToast onSuccess={onSuccess} state={state} />
       </form>
     </li>
   )

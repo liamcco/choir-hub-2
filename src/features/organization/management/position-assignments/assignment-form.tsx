@@ -16,7 +16,7 @@ import {
 } from '@/features/organization/management/position-assignments/actions'
 import type { listPositionAssignmentOptions } from '@/features/organization/management/position-assignments/service'
 import { formatDateInput } from '@/shared/formatting'
-import { FormMessage } from '@/shared/forms/error-handling'
+import { FormMessageToast } from '@/shared/forms/error-handling'
 import type { EntityOption } from '@/shared/types'
 import { Button } from '@/shared/ui/button'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/shared/ui/field'
@@ -83,7 +83,7 @@ export function CreatePositionAssignmentForm({
         <UserRoundCheckIcon data-icon="inline-start" />
         {isPending ? 'Assigning' : 'Assign'}
       </Button>
-      <FormMessage state={state} />
+      <FormMessageToast state={state} />
     </form>
   )
 }
@@ -153,7 +153,7 @@ export function AssignUserPositionControl({
       <Button disabled={isPending} type="submit">
         {isPending ? 'Assigning' : 'Assign'}
       </Button>
-      <FormMessage state={state} />
+      <FormMessageToast state={state} />
     </form>
   )
 }
@@ -192,7 +192,7 @@ function AssignPositionHolderForm({
           Cancel
         </Button>
       </div>
-      <FormMessage state={state} />
+      <FormMessageToast state={state} />
     </form>
   )
 }
@@ -218,7 +218,7 @@ export function EndPositionAssignmentForm({
         <Button type="submit" variant="outline" disabled={isPending}>
           {isPending ? 'Ending' : 'End'}
         </Button>
-        <FormMessage state={state} />
+        <FormMessageToast state={state} />
       </form>
     )
   }
@@ -236,7 +236,7 @@ export function EndPositionAssignmentForm({
           required
         />
         <FieldError>{state.fieldErrors?.endsAt}</FieldError>
-        <FormMessage state={state} />
+        <FormMessageToast state={state} />
       </div>
       <Button type="submit" variant="outline" size="icon-sm" aria-label="Save end date" disabled={isPending}>
         <SaveIcon />

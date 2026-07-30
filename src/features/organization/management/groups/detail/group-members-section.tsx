@@ -10,7 +10,7 @@ import type {
 } from '@/features/organization/management/groups/group-membership-controls'
 import { EndGroupMembershipControl } from '@/features/organization/management/groups/group-membership-controls'
 import { formatPeriod } from '@/shared/formatting'
-import { FormMessage } from '@/shared/forms/error-handling'
+import { FormMessageToast } from '@/shared/forms/error-handling'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Field, FieldError, FieldLabel } from '@/shared/ui/field'
@@ -121,7 +121,7 @@ function InlineGroupMembershipForm({
             {isPending ? 'Adding…' : 'Confirm'}
           </Button>
         </div>
-        <FormMessage onSuccess={onSuccess} state={state} />
+        <FormMessageToast onSuccess={onSuccess} state={state} />
       </form>
     </li>
   )

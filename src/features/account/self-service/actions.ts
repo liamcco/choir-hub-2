@@ -1,11 +1,11 @@
 'use server'
 
-import { z } from 'zod'
+import { parseFormData } from '@/shared/forms/parsing'
 import type { FormState } from '@/shared/forms/types'
 import { PasswordChangeInputSchema } from './schemas'
 import { changePassword } from './service'
 
-export type PasswordChangeFormState = FormState<typeof PasswordChangeInputSchema>
+type PasswordChangeFormState = FormState<typeof PasswordChangeInputSchema>
 
 export async function changePasswordAction(
   _previousState: PasswordChangeFormState,
@@ -14,20 +14,16 @@ export async function changePasswordAction(
   // 1. Authenticate
 
   // 2. Validate form data
-  const formInput = PasswordChangeInputSchema.safeParse({
-    currentPassword: String(formData.get('currentPassword')),
-    newPassword: String(formData.get('newPassword')),
-    confirmPassword: String(formData.get('confirmPassword')),
-  })
+  const validatedFormData = parseFormData(PasswordChangeInputSchema, formData)
 
-  if (!formInput.success) {
-    return { success: false, fieldErrors: z.flattenError(formInput.error).fieldErrors }
+  if (!validatedFormData.success) {
+    return { success: false, fieldErrors: validatedFormData.fieldErrors }
   }
 
   // 3. Mutate
   const result = await changePassword({
-    currentPassword: formInput.data.currentPassword,
-    newPassword: formInput.data.newPassword,
+    currentPassword: validatedFormData.data.currentPassword,
+    newPassword: validatedFormData.data.newPassword,
   })
   return { success: true, message: result.message }
 

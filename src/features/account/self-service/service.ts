@@ -9,10 +9,6 @@ export type PasswordChangeInput = {
   revokeOtherSessions?: boolean
 }
 
-export type PasswordChangeResult = {
-  message: string
-}
-
 export async function changePassword(input: PasswordChangeInput) {
   const result = await auth.api.changePassword({
     headers: await headers(),

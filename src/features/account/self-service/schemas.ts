@@ -1,8 +1,6 @@
 import { z } from 'zod'
 import { passwordField } from '@/features/account/password-policy'
 
-export { passwordPolicy as passwordChangePolicy } from '@/features/account/password-policy'
-
 export const PasswordChangeInputSchema = z
   .object({
     currentPassword: passwordField('Current password'),

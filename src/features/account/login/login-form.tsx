@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useActionState, useState } from 'react'
 import { ROUTES } from '@/core/navigation/site'
+import { FormMessageAlert } from '@/shared/forms/error-handling'
 import { focusField } from '@/shared/forms/focus'
 import { parseFormData } from '@/shared/forms/parsing'
 import type { FormState } from '@/shared/forms/types'
@@ -15,7 +16,6 @@ import { loginSchema } from './schemas'
 import { signInWithEmailPassword } from './service'
 
 type LoginFormState = FormState<typeof loginSchema>
-const initialState: LoginFormState = {}
 
 export function LoginForm({ returnTo }: { returnTo?: string }) {
   const router = useRouter()
@@ -41,10 +41,10 @@ export function LoginForm({ returnTo }: { returnTo?: string }) {
     }
 
     router.replace(result.redirectTo)
-    return initialState
+    return { success: true }
   }
 
-  const [state, formAction, isPending] = useActionState<LoginFormState, FormData>(submitLogin, initialState)
+  const [state, formAction, isPending] = useActionState<LoginFormState, FormData>(submitLogin, {})
   const emailError = state.fieldErrors?.email?.[0]
   const passwordError = state.fieldErrors?.password?.[0]
 
@@ -76,12 +76,8 @@ export function LoginForm({ returnTo }: { returnTo?: string }) {
             Keep me signed in
           </FieldLabel>
         </Field>
-        {state.message ? (
-          <Field>
-            <FieldError id="login-error">{state.message}</FieldError>
-          </Field>
-        ) : null}
       </FieldGroup>
+      <FormMessageAlert state={state} />
       <Button type="submit" disabled={isPending}>
         {isPending ? 'Signing in...' : 'Sign in'}
       </Button>

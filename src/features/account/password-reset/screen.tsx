@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useActionState, useState } from 'react'
 import { ROUTES } from '@/core/navigation/site'
 import { passwordPolicy } from '@/features/account/password-policy'
+import { FormMessageAlert } from '@/shared/forms/error-handling'
 import { focusField } from '@/shared/forms/focus'
 import { parseFormData } from '@/shared/forms/parsing'
 import type { FormState } from '@/shared/forms/types'
@@ -15,7 +16,6 @@ import { passwordResetRequestSchema, passwordResetSchema } from './schemas'
 import { requestPasswordReset, resetPassword } from './service'
 
 type PasswordResetRequestState = FormState<typeof passwordResetRequestSchema>
-const initialState: PasswordResetRequestState = {}
 
 export function PasswordResetRequestScreen() {
   const [email, setEmail] = useState('')
@@ -38,7 +38,7 @@ export function PasswordResetRequestScreen() {
     return { success: true }
   }
 
-  const [state, formAction, isPending] = useActionState(submitRequest, initialState)
+  const [state, formAction, isPending] = useActionState(submitRequest, {})
 
   const emailError = state.fieldErrors?.email?.[0]
 
@@ -60,23 +60,21 @@ export function PasswordResetRequestScreen() {
           </div>
         ) : (
           <form action={formAction} noValidate aria-busy={isPending} className="flex flex-col gap-4">
-            <FieldGroup>
-              <Field data-invalid={!!emailError}>
-                <FieldLabel htmlFor="reset-email">Email</FieldLabel>
-                <Input
-                  id="reset-email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  value={email}
-                  onChange={(event) => {
-                    setEmail(event.target.value)
-                  }}
-                />
-                <FieldError>{emailError}</FieldError>
-              </Field>
-              <FieldError>{state.message}</FieldError>
-            </FieldGroup>
+            <Field data-invalid={!!emailError}>
+              <FieldLabel htmlFor="reset-email">Email</FieldLabel>
+              <Input
+                id="reset-email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                value={email}
+                onChange={(event) => {
+                  setEmail(event.target.value)
+                }}
+              />
+              <FieldError>{emailError}</FieldError>
+            </Field>
+            <FormMessageAlert state={state} />
             <Button type="submit" disabled={isPending}>
               {isPending ? 'Sending...' : 'Send reset link'}
             </Button>
@@ -91,12 +89,11 @@ export function PasswordResetRequestScreen() {
 }
 
 type PasswordResetState = FormState<typeof passwordResetSchema>
+const initialState = (token?: string): PasswordResetState =>
+  token ? {} : { success: false, message: 'This reset link is missing or invalid.' }
 
 export function PasswordResetScreen({ token }: { token?: string }) {
   const router = useRouter()
-  const initialState: PasswordResetState = token
-    ? {}
-    : { success: false, message: 'This reset link is missing or invalid.' }
 
   async function submitReset(_previousState: PasswordResetState, formData: FormData): Promise<PasswordResetState> {
     if (!token) return { success: false, message: 'This reset link is missing or invalid.' }
@@ -115,7 +112,7 @@ export function PasswordResetScreen({ token }: { token?: string }) {
     return { success: true }
   }
 
-  const [state, formAction, isPending] = useActionState(submitReset, initialState)
+  const [state, formAction, isPending] = useActionState(submitReset, initialState(token))
 
   if (state.success) {
     return (
@@ -153,8 +150,8 @@ export function PasswordResetScreen({ token }: { token?: string }) {
               <Input id="reset-password-confirm" name="confirmPassword" type="password" autoComplete="new-password" />
               <FieldError>{confirmPasswordError}</FieldError>
             </Field>
-            <FieldError>{state.message}</FieldError>
           </FieldGroup>
+          <FormMessageAlert state={state} />
           <Button type="submit" disabled={isPending || !token}>
             {isPending ? 'Updating...' : 'Update password'}
           </Button>
