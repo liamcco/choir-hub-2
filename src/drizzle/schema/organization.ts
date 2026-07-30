@@ -2,6 +2,7 @@ import { sql } from 'drizzle-orm'
 import { check, index, pgEnum, pgTable, text, timestamp, unique } from 'drizzle-orm/pg-core'
 import { user } from './auth'
 
+// TODO: Consider seperating into baseVoice / fineVoice
 export const voice = pgEnum('Voice', ['S', 'S1', 'S2', 'A', 'A1', 'A2', 'T', 'T1', 'T2', 'B', 'B1', 'B2'])
 
 function datedPeriodColumns() {

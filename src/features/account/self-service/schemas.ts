@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { passwordField } from '@/features/account/password-policy'
+import { passwordField } from '@/shared/forms/schemas'
 
 export const PasswordChangeInputSchema = z
   .object({

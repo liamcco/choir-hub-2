@@ -1,6 +1,7 @@
 import z from 'zod'
+import { normalizedEmailField, passwordField } from '@/shared/forms/schemas'
 
 export const loginSchema = z.object({
-  email: z.string().trim().pipe(z.email()),
-  password: z.string().min(1, 'Enter your password.'),
+  email: normalizedEmailField('Email'),
+  password: passwordField('Password'),
 })

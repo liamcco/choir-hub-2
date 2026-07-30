@@ -1,8 +1,8 @@
 import { z } from 'zod'
-import { passwordField } from '@/features/account/password-policy'
+import { passwordField } from '@/shared/forms/schemas'
 
 export const passwordResetRequestSchema = z.object({
-  email: z.email().trim(),
+  email: z.email(),
 })
 
 export const passwordResetSchema = z

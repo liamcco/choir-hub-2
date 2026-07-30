@@ -3,7 +3,7 @@
 import { headers } from 'next/headers'
 import { z } from 'zod'
 import { auth } from '@/core/auth/auth'
-import { passwordField } from '@/features/account/password-policy'
+import { passwordField } from '@/shared/forms/schemas'
 
 export type ActivationState = { error?: string; success?: boolean }
 

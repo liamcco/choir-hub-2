@@ -9,6 +9,7 @@ import { EmailClient } from '@/core/email/smtp-email'
 import { isProduction } from '@/core/environment/environment'
 import { audit, logger } from '@/core/logging'
 import { adminPluginOptions } from './permissions'
+import { passwordPolicy } from './policy'
 
 export const BASE_URL = env.BETTER_AUTH_URL
 if (!BASE_URL) {
@@ -26,7 +27,7 @@ export const authOptions = {
     enabled: true,
     disableSignUp: true,
     requireEmailVerification: isProduction,
-    minPasswordLength: 8,
+    minPasswordLength: passwordPolicy.minPasswordLength,
     maxPasswordLength: 128,
     autoSignIn: true,
     sendResetPassword: async ({ user, url }) => {

@@ -12,9 +12,8 @@ export default async function proxy(req: NextRequest) {
   const decision = await getRouteAccessDecision(path, session, requestedPath)
 
   if (decision.kind === 'redirect') {
-    const url = req.nextUrl.clone()
-    url.pathname = decision.location
-    return NextResponse.redirect(url)
+    const redirectUrl = new URL(decision.location, req.url)
+    return NextResponse.redirect(redirectUrl)
   }
 
   if (decision.kind === 'forbidden') return new NextResponse(null, { status: 403 })

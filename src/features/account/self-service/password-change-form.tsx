@@ -1,7 +1,7 @@
 'use client'
 
 import { useActionState } from 'react'
-import { passwordPolicy } from '@/features/account/password-policy'
+import { passwordPolicy } from '@/core/auth/policy'
 import { changePasswordAction } from '@/features/account/self-service/actions'
 import { FormMessageAlert } from '@/shared/forms/error-handling'
 import { Button } from '@/shared/ui/button'

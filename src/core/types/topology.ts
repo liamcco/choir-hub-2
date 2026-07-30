@@ -2,6 +2,7 @@ import type { FineVoice, Voice } from './voice'
 
 export type TopologyLifecycleStatus = 'active' | 'retired'
 export type TopologyScopeType = 'csk' | 'choir' | 'section' | 'group'
+// TODO: Extend to more group types
 export type GroupKind = 'committee' | 'board'
 
 export type Choir = {

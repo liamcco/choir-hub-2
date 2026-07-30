@@ -4,7 +4,11 @@ import { LoginScreen } from './screen'
 
 describe('login page', () => {
   test('renders email password login without public self-registration', () => {
-    const markup = renderToStaticMarkup(<LoginScreen form={<div>Email Password Sign in</div>} />)
+    const markup = renderToStaticMarkup(
+      <LoginScreen>
+        <div>Email Password Sign in</div>
+      </LoginScreen>,
+    )
 
     expect(markup).toContain('Sign in')
     expect(markup).toContain('Email')

@@ -3,8 +3,8 @@
 import { useEffect, useRef } from 'react'
 import type { z } from 'zod'
 import type { AnyFormState, FormState } from '@/shared/forms/types'
+import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { toast } from '@/shared/ui/toast'
-import { Alert, AlertDescription } from '../ui/alert'
 
 export function FormMessageToast<T extends FormState<K>, K extends z.ZodType>({
   state,

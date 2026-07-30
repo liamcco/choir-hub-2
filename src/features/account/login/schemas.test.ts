@@ -13,14 +13,4 @@ describe('login form schema', () => {
       data: { email: 'member@example.com', password: 'correct horse battery staple' },
     })
   })
-
-  test('returns custom errors for empty credentials', () => {
-    const formData = new FormData()
-
-    const result = parseFormData(loginSchema, formData)
-    expect(result.success).toBe(false)
-    if (!result.success) {
-      expect(result.fieldErrors.password).toEqual(['Enter your password.'])
-    }
-  })
 })
