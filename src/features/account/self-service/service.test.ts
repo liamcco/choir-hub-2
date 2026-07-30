@@ -17,6 +17,7 @@ mock.module('@/core/auth/auth', () => ({
 }))
 
 const { changePassword } = await import('@/features/account/self-service/service')
+const { changePasswordAction, initialPasswordChangeState } = await import('@/features/account/self-service/actions')
 
 beforeEach(() => {
   headers.mockClear()
@@ -31,7 +32,7 @@ describe('account self-service password changes', () => {
         newPassword: 'new-password',
         revokeOtherSessions: true,
       }),
-    ).resolves.toEqual({ message: 'Password changed successfully.' })
+    ).resolves.toEqual({ success: true, message: 'Password changed successfully.' })
 
     expect(headers).toHaveBeenCalledTimes(1)
     expect(authChangePassword).toHaveBeenCalledWith({
@@ -41,6 +42,33 @@ describe('account self-service password changes', () => {
         newPassword: 'new-password',
         revokeOtherSessions: true,
       },
+    })
+  })
+
+  test('returns a safe error when Better Auth rejects the password change', async () => {
+    authChangePassword.mockRejectedValueOnce(new Error('Invalid password'))
+
+    await expect(
+      changePassword({
+        currentPassword: 'wrong-password',
+        newPassword: 'new-password',
+      }),
+    ).resolves.toEqual({
+      success: false,
+      message: 'Unable to change your password. Check your current password and try again.',
+    })
+  })
+
+  test('returns the password-change error through the server action state', async () => {
+    authChangePassword.mockRejectedValueOnce(new Error('Invalid password'))
+    const formData = new FormData()
+    formData.set('currentPassword', 'wrong-password')
+    formData.set('newPassword', 'new-password')
+    formData.set('confirmPassword', 'new-password')
+
+    await expect(changePasswordAction(initialPasswordChangeState, formData)).resolves.toMatchObject({
+      success: false,
+      message: 'Unable to change your password. Check your current password and try again.',
     })
   })
 })

@@ -1,7 +1,5 @@
 import { authClient } from '@/core/auth/auth-client'
-import { logger } from '@/core/logging'
 import { getPostLoginPath, ROUTES } from '@/core/navigation/site'
-import { getErrorCode, getErrorName } from '@/shared/errors'
 
 export type EmailPasswordSignInInput = {
   email: string
@@ -25,7 +23,6 @@ export async function signInWithEmailPassword(input: EmailPasswordSignInInput): 
     })
 
     if (result.error) {
-      logger.warn('auth.login.failed', { kind: 'invalid-credentials', errorCode: getErrorCode(result.error) })
       return {
         success: false,
         kind: 'invalid-credentials',
@@ -34,8 +31,7 @@ export async function signInWithEmailPassword(input: EmailPasswordSignInInput): 
     }
 
     return { success: true, redirectTo: getPostLoginPath(result.data.user?.role, input.returnTo) }
-  } catch (error) {
-    logger.error('auth.login.unexpected-failure', { kind: 'network', errorName: getErrorName(error) })
+  } catch {
     return {
       success: false,
       kind: 'network',

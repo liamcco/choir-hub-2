@@ -1,8 +1,8 @@
 import { z } from 'zod'
-import { passwordField } from '@/shared/forms/schemas'
+import { normalizedEmailField, passwordField } from '@/shared/forms/schemas'
 
 export const passwordResetRequestSchema = z.object({
-  email: z.email(),
+  email: normalizedEmailField('Email'),
 })
 
 export const passwordResetSchema = z
