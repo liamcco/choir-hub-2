@@ -2,164 +2,54 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useActionState, useState } from 'react'
-import { passwordPolicy } from '@/core/auth/policy'
+import { useState } from 'react'
 import { ROUTES } from '@/core/navigation/site'
-import { FormMessageAlert } from '@/shared/forms/error-handling'
-import { focusField } from '@/shared/forms/focus'
-import { parseFormData } from '@/shared/forms/parsing'
-import type { FormState } from '@/shared/forms/types'
 import { Button } from '@/shared/ui/button'
-import { Field, FieldError, FieldGroup, FieldLabel } from '@/shared/ui/field'
-import { Input } from '@/shared/ui/input'
-import { passwordResetRequestSchema, passwordResetSchema } from './schemas'
-import { requestPasswordReset, resetPassword } from './service'
-
-type PasswordResetRequestState = FormState<typeof passwordResetRequestSchema>
+import { PasswordResetForm } from './password-reset-form'
+import { PasswordResetRequestForm } from './password-reset-request-form'
+import { PasswordResetScreenLayout } from './password-reset-screen-layout'
 
 export function PasswordResetRequestScreen() {
-  const [email, setEmail] = useState('')
-
-  async function submitRequest(
-    _previousState: PasswordResetRequestState,
-    formData: FormData,
-  ): Promise<PasswordResetRequestState> {
-    const validatedForm = parseFormData(passwordResetRequestSchema, formData)
-    if (!validatedForm.success) {
-      focusField('reset-email')
-      return { fieldErrors: { email: ['Enter a valid email address.'] } }
-    }
-
-    const result = await requestPasswordReset(validatedForm.data.email)
-    if (!result.success) {
-      return { success: false, message: result.error }
-    }
-
-    return { success: true }
-  }
-
-  const [state, formAction, isPending] = useActionState(submitRequest, {})
-
-  const emailError = state.fieldErrors?.email?.[0]
+  const [isComplete, setIsComplete] = useState(false)
 
   return (
-    <main className="mx-auto flex min-h-svh w-full max-w-sm flex-col justify-center px-4 py-8">
-      <div className="flex flex-col gap-6">
-        <div className="flex flex-col gap-1">
-          <h1 className="font-semibold text-2xl tracking-normal">Reset your password</h1>
-          <p className="text-muted-foreground text-sm">
-            Enter your account email and we&apos;ll send you a password reset link.
-          </p>
+    <PasswordResetScreenLayout
+      title={isComplete ? 'Check your email' : 'Reset your password'}
+      description={
+        isComplete
+          ? 'If an account exists for that email, you’ll receive a reset link shortly.'
+          : 'Enter your account email and we’ll send you a password reset link.'
+      }
+    >
+      {isComplete ? (
+        <div role="status">
+          <Link href={ROUTES.login} className="text-sm underline underline-offset-4">
+            Return to sign in
+          </Link>
         </div>
-        {state.success ? (
-          <div role="status" className="flex flex-col gap-4 text-sm">
-            <p>If an account exists for that email, you&apos;ll receive a reset link shortly.</p>
-            <Link href={ROUTES.login} className="underline underline-offset-4">
-              Return to sign in
-            </Link>
-          </div>
-        ) : (
-          <form action={formAction} noValidate aria-busy={isPending} className="flex flex-col gap-4">
-            <Field data-invalid={!!emailError}>
-              <FieldLabel htmlFor="reset-email">Email</FieldLabel>
-              <Input
-                id="reset-email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                value={email}
-                onChange={(event) => {
-                  setEmail(event.target.value)
-                }}
-              />
-              <FieldError>{emailError}</FieldError>
-            </Field>
-            <FormMessageAlert state={state} />
-            <Button type="submit" disabled={isPending}>
-              {isPending ? 'Sending...' : 'Send reset link'}
-            </Button>
-            <Link href={ROUTES.login} className="text-center text-sm underline underline-offset-4">
-              Return to sign in
-            </Link>
-          </form>
-        )}
-      </div>
-    </main>
+      ) : (
+        <PasswordResetRequestForm onSuccess={() => setIsComplete(true)} />
+      )}
+    </PasswordResetScreenLayout>
   )
 }
 
-type PasswordResetState = FormState<typeof passwordResetSchema>
-const initialState = (token?: string): PasswordResetState =>
-  token ? {} : { success: false, message: 'This reset link is missing or invalid.' }
-
 export function PasswordResetScreen({ token }: { token?: string }) {
   const router = useRouter()
-
-  async function submitReset(_previousState: PasswordResetState, formData: FormData): Promise<PasswordResetState> {
-    if (!token) return { success: false, message: 'This reset link is missing or invalid.' }
-
-    const validatedForm = parseFormData(passwordResetSchema, formData)
-    if (!validatedForm.success) {
-      focusField(validatedForm.fieldErrors.password ? 'reset-password' : 'reset-password-confirm')
-      return { success: false, fieldErrors: validatedForm.fieldErrors }
-    }
-
-    const result = await resetPassword(token, validatedForm.data.password)
-    if (!result.success) {
-      return { success: false, message: result.error }
-    }
-
-    return { success: true }
-  }
-
-  const [state, formAction, isPending] = useActionState(submitReset, initialState(token))
-
-  if (state.success) {
-    return (
-      <main className="mx-auto flex min-h-svh w-full max-w-sm flex-col justify-center px-4 py-8">
-        <div className="flex flex-col gap-4">
-          <h1 className="font-semibold text-2xl tracking-normal">Password reset</h1>
-          <p className="text-muted-foreground text-sm">Your password has been updated.</p>
-          <Button type="button" onClick={() => router.replace(ROUTES.login)}>
-            Return to sign in
-          </Button>
-        </div>
-      </main>
-    )
-  }
-
-  const passwordError = state.fieldErrors?.password?.[0]
-  const confirmPasswordError = state.fieldErrors?.confirmPassword?.[0]
+  const [isComplete, setIsComplete] = useState(false)
 
   return (
-    <main className="mx-auto flex min-h-svh w-full max-w-sm flex-col justify-center px-4 py-8">
-      <div className="flex flex-col gap-6">
-        <div className="flex flex-col gap-1">
-          <h1 className="font-semibold text-2xl tracking-normal">Choose a new password</h1>
-          <p className="text-muted-foreground text-sm">{passwordPolicy.minPasswordLengthHint}</p>
-        </div>
-        <form action={formAction} noValidate aria-busy={isPending} className="flex flex-col gap-4">
-          <FieldGroup>
-            <Field data-invalid={!!passwordError}>
-              <FieldLabel htmlFor="reset-password">New password</FieldLabel>
-              <Input id="reset-password" name="password" type="password" autoComplete="new-password" />
-              <FieldError>{passwordError}</FieldError>
-            </Field>
-            <Field data-invalid={!!confirmPasswordError}>
-              <FieldLabel htmlFor="reset-password-confirm">Confirm new password</FieldLabel>
-              <Input id="reset-password-confirm" name="confirmPassword" type="password" autoComplete="new-password" />
-              <FieldError>{confirmPasswordError}</FieldError>
-            </Field>
-          </FieldGroup>
-          <FormMessageAlert state={state} />
-          <Button type="submit" disabled={isPending || !token}>
-            {isPending ? 'Updating...' : 'Update password'}
-          </Button>
-          <Link href={ROUTES.login} className="text-center text-sm underline underline-offset-4">
-            Return to sign in
-          </Link>
-        </form>
-      </div>
-    </main>
+    <PasswordResetScreenLayout
+      title={isComplete ? 'Password reset' : 'Choose a new password'}
+      description={isComplete ? 'Your password has been updated.' : 'Enter and confirm your new password.'}
+    >
+      {isComplete ? (
+        <Button type="button" onClick={() => router.replace(ROUTES.login)}>
+          Return to sign in
+        </Button>
+      ) : (
+        <PasswordResetForm token={token} onSuccess={() => setIsComplete(true)} />
+      )}
+    </PasswordResetScreenLayout>
   )
 }
