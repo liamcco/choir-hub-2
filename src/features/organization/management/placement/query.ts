@@ -3,7 +3,7 @@ import 'server-only'
 import { isNull } from 'drizzle-orm'
 import { db } from '@/core/db'
 import { listChoirsInDisplayOrder, listSections, topology } from '@/core/topology'
-import { choirMembership, sectionPlacement } from '@/drizzle/schema'
+import { choirMembership, type MemberStatus, sectionPlacement } from '@/drizzle/schema'
 import { organizationService } from '@/features/organization'
 import { buildUserDisplayOptions } from '@/features/organization/core/labels'
 
@@ -11,7 +11,7 @@ export type PlacementUser = {
   id: string
   name: string
   email: string
-  status: 'ACTIVE' | 'PASSIVE' | 'FORMER'
+  status: MemberStatus
   choirId: string | null
   sectionId: string | null
   voice: string | null
@@ -73,6 +73,8 @@ export async function getPlacementDetail(userId: string) {
     ].sort((a, b) => b.startsAt.getTime() - a.startsAt.getTime()),
   }
 }
+
+export type PlacementDetail = NonNullable<Awaited<ReturnType<typeof getPlacementDetail>>>
 
 export function placementNavigation() {
   return listChoirsInDisplayOrder().map((choir) => ({

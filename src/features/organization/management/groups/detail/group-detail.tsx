@@ -3,13 +3,9 @@ import type { GroupKind } from '@/core/topology'
 import { formatGroupKind } from '@/features/organization/core/group-kind'
 import type { UserDisplayOption } from '@/features/organization/core/labels'
 import { RelatedDetailLink } from '@/features/organization/management/components/related-detail-link'
+import { EndGroupMembershipControl } from '@/features/organization/management/groups/group-membership-controls'
 import { formatPeriod } from '@/shared/formatting'
 import { Badge } from '@/shared/ui/badge'
-import {
-  type CreateMembershipAction,
-  EndGroupMembershipControl,
-  type EndMembershipAction,
-} from '../group-membership-controls'
 import { GroupMembersSection } from './group-members-section'
 
 export type GroupMembershipView = {
@@ -32,12 +28,7 @@ export type GroupDetailView = {
   historicalMemberships: GroupMembershipView[]
 }
 
-export type GroupDetailActions = {
-  createMembership: CreateMembershipAction
-  endMembership: EndMembershipAction
-}
-
-export function GroupDetail({ group, actions }: { group: GroupDetailView; actions: GroupDetailActions }) {
+export function GroupDetail({ group }: { group: GroupDetailView }) {
   return (
     <article className="mx-auto flex w-full max-w-xl flex-col gap-6">
       <section aria-labelledby="group-information-heading">
@@ -50,8 +41,6 @@ export function GroupDetail({ group, actions }: { group: GroupDetailView; action
       </section>
 
       <GroupMembersSection
-        action={actions.createMembership}
-        endAction={actions.endMembership}
         groupId={group.id}
         groupKind={group.kind}
         groupName={group.name}
@@ -87,13 +76,11 @@ function MembershipList({
   groupName,
   emptyText,
   showEndControls = false,
-  endAction,
 }: {
   memberships: GroupMembershipView[]
   groupName: string
   emptyText?: string
   showEndControls?: boolean
-  endAction?: EndMembershipAction
 }) {
   if (!memberships.length) {
     return emptyText ? (
@@ -116,9 +103,7 @@ function MembershipList({
               ))}
             </div>
           </div>
-          {showEndControls && endAction ? (
-            <EndGroupMembershipControl action={endAction} groupName={groupName} membership={membership} />
-          ) : null}
+          {showEndControls ? <EndGroupMembershipControl groupName={groupName} membership={membership} /> : null}
         </li>
       ))}
     </ul>

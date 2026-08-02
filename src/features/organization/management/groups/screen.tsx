@@ -3,10 +3,6 @@ import { ROUTES } from '@/core/navigation/site'
 import { AdminCollectionTableSkeleton } from '@/features/organization/management/components/admin-collection-skeleton'
 import { CollectionFrame } from '@/features/organization/management/components/collection-frame'
 import { InvalidDetailLookup } from '@/features/organization/management/components/invalid-detail-lookup'
-import {
-  createGroupMembershipAction,
-  endGroupMembershipAction,
-} from '@/features/organization/management/group-memberships/actions'
 import type { DetailSearchParams } from '../search-params'
 import { GroupCollection } from './collection/group-collection'
 import { GroupDetail } from './detail/group-detail'
@@ -72,10 +68,5 @@ async function GroupDetailContent({ detailPromise }: { detailPromise: ReturnType
   const group = await detailPromise
   if (!group) return <InvalidDetailLookup collectionPath={ROUTES.adminGroups} resourceName="Group" />
 
-  return (
-    <GroupDetail
-      actions={{ createMembership: createGroupMembershipAction, endMembership: endGroupMembershipAction }}
-      group={group}
-    />
-  )
+  return <GroupDetail group={group} />
 }

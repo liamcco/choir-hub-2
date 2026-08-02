@@ -18,24 +18,34 @@ export function UserCombobox({
   name,
   users,
   invalid = false,
+  value,
+  onValueChange,
 }: {
   id: string
   name: string
   users: UserDisplayOption[]
   invalid?: boolean
+  value?: string
+  onValueChange?: (value: string) => void
 }) {
   const options: UserOption[] = users.map((user) => ({
     value: user.user.id,
     label: user.label,
   }))
-  const [value, setValue] = useState<UserOption | null>(null)
+  const [internalValue, setInternalValue] = useState<UserOption | null>(null)
+  const selectedValue = value === undefined ? internalValue : (options.find((option) => option.value === value) ?? null)
+
+  function handleValueChange(option: UserOption | null) {
+    if (value === undefined) setInternalValue(option)
+    onValueChange?.(option?.value ?? '')
+  }
 
   return (
     <>
       <Combobox
         items={options}
-        value={value}
-        onValueChange={setValue}
+        value={selectedValue}
+        onValueChange={handleValueChange}
         itemToStringLabel={(option) => option?.label ?? ''}
       >
         <ComboboxInput aria-invalid={invalid} className="w-full" id={id} placeholder="Choose User" required showClear />
@@ -50,7 +60,7 @@ export function UserCombobox({
           </ComboboxList>
         </ComboboxContent>
       </Combobox>
-      <input name={name} type="hidden" value={value?.value ?? ''} />
+      <input name={name} type="hidden" value={selectedValue?.value ?? ''} />
     </>
   )
 }

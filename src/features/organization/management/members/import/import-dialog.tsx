@@ -1,49 +1,24 @@
 'use client'
 
 import { FileUpIcon } from 'lucide-react'
-import { useActionState, useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/shared/ui/dialog'
-import { Field, FieldGroup, FieldLabel } from '@/shared/ui/field'
-import { Input } from '@/shared/ui/input'
-import { createImportedUsersAction, validateUserImportAction } from './actions'
+import type { validateUserImportAction } from './actions'
+import { CreateImportedUsersForm, ValidateMemberImportForm } from './member-import-forms'
 
 type ValidationState = Awaited<ReturnType<typeof validateUserImportAction>> | null
+type ImportResultData = {
+  count: number
+  failedEmails: string[]
+  failedRows: { row?: number; email: string; message: string; cleanup: 'not-needed' | 'completed' | 'failed' }[]
+}
 
 export function MemberImportDialog() {
   const [open, setOpen] = useState(false)
   const [csv, setCsv] = useState('')
-  const [fileName, setFileName] = useState('')
   const [validation, setValidation] = useState<ValidationState>(null)
-  const [result, setResult] = useState<{
-    count: number
-    failedEmails: string[]
-    failedRows: { row?: number; email: string; message: string; cleanup: 'not-needed' | 'completed' | 'failed' }[]
-  } | null>(null)
-  const [validationState, validate, validating] = useActionState(validateUserImportAction, null)
-  const [createState, create, creating] = useActionState(createImportedUsersAction, null)
-  const inputRef = useRef<HTMLInputElement>(null)
-
-  useEffect(() => {
-    if (validationState) setValidation(validationState)
-  }, [validationState])
-  useEffect(() => {
-    if (createState?.success === true)
-      setResult({
-        count: createState.count,
-        failedEmails: createState.failedEmails,
-        failedRows: createState.failedRows,
-      })
-  }, [createState])
-
-  function onFileChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0]
-    if (!file) return
-    setFileName(file.name)
-    file.text().then(setCsv)
-    setValidation(null)
-    setResult(null)
-  }
+  const [result, setResult] = useState<ImportResultData | null>(null)
 
   return (
     <Dialog
@@ -54,7 +29,6 @@ export function MemberImportDialog() {
           setCsv('')
           setValidation(null)
           setResult(null)
-          setFileName('')
         }
       }}
     >
@@ -75,29 +49,17 @@ export function MemberImportDialog() {
           <ImportResult result={result} />
         ) : (
           <>
-            <form action={validate} className="space-y-4">
-              <FieldGroup>
-                <Field>
-                  <FieldLabel htmlFor="user-import-file">CSV file</FieldLabel>
-                  <Input
-                    ref={inputRef}
-                    id="user-import-file"
-                    type="file"
-                    accept=".csv,text/csv"
-                    onChange={onFileChange}
-                    required
-                  />
-                  <p className="text-sm text-muted-foreground">
-                    {fileName || 'Maximum 50 users. Extra columns are ignored.'}
-                  </p>
-                </Field>
-              </FieldGroup>
-              <input type="hidden" name="csv" value={csv} readOnly />
-              <Button type="submit" disabled={validating || !csv}>
-                {validating ? 'Checking CSV' : 'Validate CSV'}
-              </Button>
-            </form>
-            {validation && <ValidationPreview validation={validation} csv={csv} action={create} creating={creating} />}
+            <ValidateMemberImportForm
+              onFileSelected={() => {
+                setValidation(null)
+                setResult(null)
+              }}
+              onValidated={(nextValidation, selectedCsv) => {
+                setValidation(nextValidation)
+                setCsv(selectedCsv)
+              }}
+            />
+            {validation && <ValidationPreview validation={validation} csv={csv} onResult={setResult} />}
           </>
         )}
       </DialogContent>
@@ -108,13 +70,11 @@ export function MemberImportDialog() {
 function ValidationPreview({
   validation,
   csv,
-  action,
-  creating,
+  onResult,
 }: {
   validation: NonNullable<ValidationState>
   csv: string
-  action: (formData: FormData) => void
-  creating: boolean
+  onResult: (result: ImportResultData) => void
 }) {
   const valid = validation.errors.length === 0
   return (
@@ -161,27 +121,25 @@ function ValidationPreview({
           <p className="text-sm text-muted-foreground">
             Users will be active and receive an activation email after creation.
           </p>
-          <form action={action}>
-            <input type="hidden" name="csv" value={csv} readOnly />
-            <Button type="submit" disabled={creating}>
-              {creating ? 'Creating users' : 'Create users'}
-            </Button>
-          </form>
+          <CreateImportedUsersForm
+            csv={csv}
+            onComplete={(createState) => {
+              if (createState.success) {
+                onResult({
+                  count: createState.count,
+                  failedEmails: createState.failedEmails,
+                  failedRows: createState.failedRows,
+                })
+              }
+            }}
+          />
         </>
       )}
     </section>
   )
 }
 
-function ImportResult({
-  result,
-}: {
-  result: {
-    count: number
-    failedEmails: string[]
-    failedRows: { row?: number; email: string; message: string; cleanup: 'not-needed' | 'completed' | 'failed' }[]
-  }
-}) {
+function ImportResult({ result }: { result: ImportResultData }) {
   return (
     <section className="space-y-3" aria-live="polite">
       <h2 className="text-lg font-semibold">Users created</h2>

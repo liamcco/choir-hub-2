@@ -1,33 +1,23 @@
 'use client'
 
-import { useActionState, useState } from 'react'
+import { useState } from 'react'
 import { adminUserPath } from '@/core/navigation/site'
 import type { UserDisplayOption } from '@/features/organization/core/labels'
-import { UserCombobox } from '@/features/organization/management/components/user-combobox'
-import type {
-  CreateMembershipAction,
-  EndMembershipAction,
-} from '@/features/organization/management/groups/group-membership-controls'
 import { EndGroupMembershipControl } from '@/features/organization/management/groups/group-membership-controls'
 import { formatPeriod } from '@/shared/formatting'
-import { FormMessageToast } from '@/shared/forms/error-handling'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
-import { Field, FieldError, FieldLabel } from '@/shared/ui/field'
 import { RelatedDetailLink } from '../../components/related-detail-link'
 import type { GroupMembershipView } from './group-detail'
+import { InlineGroupMembershipForm } from './inline-group-membership-form'
 
 export function GroupMembersSection({
-  action,
-  endAction,
   groupId,
   groupKind,
   groupName,
   memberships,
   users,
 }: {
-  action: CreateMembershipAction
-  endAction: EndMembershipAction
   groupId: string
   groupKind: 'committee' | 'board'
   groupName: string
@@ -52,7 +42,6 @@ export function GroupMembersSection({
         <ul className="divide-y rounded-lg border">
           {isAdding ? (
             <InlineGroupMembershipForm
-              action={action}
               groupId={groupId}
               users={users}
               onSuccess={() => setIsAdding(false)}
@@ -72,7 +61,7 @@ export function GroupMembersSection({
                 </div>
               </div>
               {groupKind === 'committee' ? (
-                <EndGroupMembershipControl action={endAction} groupName={groupName} membership={membership} />
+                <EndGroupMembershipControl groupName={groupName} membership={membership} />
               ) : null}
             </li>
           ))}
@@ -83,46 +72,5 @@ export function GroupMembersSection({
         </p>
       )}
     </section>
-  )
-}
-
-function InlineGroupMembershipForm({
-  action,
-  groupId,
-  users,
-  onSuccess,
-}: {
-  action: CreateMembershipAction
-  groupId: string
-  users: UserDisplayOption[]
-  onSuccess: () => void
-}) {
-  const [state, formAction, isPending] = useActionState(action, {})
-
-  return (
-    <li className="p-4">
-      <form action={formAction} className="flex flex-col gap-3 sm:flex-row sm:items-end">
-        <input name="groupId" type="hidden" value={groupId} />
-        <Field className="min-w-0 flex-1">
-          <FieldLabel htmlFor={`group-${groupId}-user`}>User</FieldLabel>
-          <UserCombobox
-            id={`group-${groupId}-user`}
-            invalid={!!state.fieldErrors?.userId}
-            name="userId"
-            users={users}
-          />
-          <FieldError>{state.fieldErrors?.userId}</FieldError>
-        </Field>
-        <div className="flex shrink-0 gap-2">
-          <Button onClick={onSuccess} type="button" variant="ghost">
-            Cancel
-          </Button>
-          <Button disabled={isPending} type="submit">
-            {isPending ? 'Adding…' : 'Confirm'}
-          </Button>
-        </div>
-        <FormMessageToast onSuccess={onSuccess} state={state} />
-      </form>
-    </li>
   )
 }

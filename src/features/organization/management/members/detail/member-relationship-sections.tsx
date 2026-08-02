@@ -1,6 +1,6 @@
 'use client'
 
-import { useActionState, useState } from 'react'
+import { useState } from 'react'
 import { adminGroupPath, adminPositionPath } from '@/core/navigation/site'
 import { formatGroupKind } from '@/features/organization/core/group-kind'
 import type {
@@ -14,15 +14,11 @@ import type {
 } from '@/features/organization/management/position-assignments/actions'
 import { EndPositionAssignmentForm } from '@/features/organization/management/position-assignments/assignment-form'
 import { formatDate } from '@/shared/formatting'
-import { FormMessageToast } from '@/shared/forms/error-handling'
 import type { EntityOption, NamedEntity } from '@/shared/types'
 import { Button } from '@/shared/ui/button'
-import { Field, FieldError, FieldLabel } from '@/shared/ui/field'
-import { NativeSelect, NativeSelectOption } from '@/shared/ui/native-select'
 import { RelatedDetailLink } from '../../components/related-detail-link'
+import { InlineMemberGroupMembershipForm, InlineMemberPositionAssignmentForm } from './inline-relationship-forms'
 import type { MemberAssignmentView, MemberMembershipView } from './member-detail'
-
-type CreateAssignmentAction = CreatePositionAssignmentAction
 
 export function MemberGroupMembershipSection({
   groups,
@@ -55,7 +51,7 @@ export function MemberGroupMembershipSection({
         <ul className="divide-y rounded-lg border">
           {isAdding ? (
             action ? (
-              <InlineGroupMembershipForm
+              <InlineMemberGroupMembershipForm
                 action={action}
                 groups={groups}
                 userId={userId}
@@ -121,7 +117,7 @@ export function MemberPositionAssignmentSection({
         <ul className="divide-y rounded-lg border">
           {isAdding ? (
             action ? (
-              <InlinePositionAssignmentForm
+              <InlineMemberPositionAssignmentForm
                 action={action}
                 positions={positions}
                 userId={userId}
@@ -160,103 +156,5 @@ export function MemberPositionAssignmentSection({
         </p>
       )}
     </section>
-  )
-}
-
-function InlineGroupMembershipForm({
-  groups,
-  userId,
-  action,
-  onSuccess,
-}: {
-  groups: NamedEntity[]
-  userId: string
-  action: CreateMembershipAction
-  onSuccess: () => void
-}) {
-  const [state, formAction, isPending] = useActionState(action, {})
-
-  return (
-    <li className="p-4">
-      <form action={formAction} className="flex flex-col gap-3 sm:flex-row sm:items-end">
-        <input name="userId" type="hidden" value={userId} />
-        <Field className="min-w-0 flex-1">
-          <FieldLabel htmlFor={`user-${userId}-inline-group`}>Group</FieldLabel>
-          <NativeSelect
-            aria-invalid={!!state.fieldErrors?.groupId}
-            className="w-full"
-            id={`user-${userId}-inline-group`}
-            name="groupId"
-            required
-          >
-            <NativeSelectOption value="">Choose Group</NativeSelectOption>
-            {groups.map((group) => (
-              <NativeSelectOption key={group.id} value={group.id}>
-                {group.name}
-              </NativeSelectOption>
-            ))}
-          </NativeSelect>
-          <FieldError>{state.fieldErrors?.groupId}</FieldError>
-        </Field>
-        <div className="flex shrink-0 gap-2">
-          <Button onClick={onSuccess} type="button" variant="ghost">
-            Cancel
-          </Button>
-          <Button disabled={isPending} type="submit">
-            {isPending ? 'Adding…' : 'Confirm'}
-          </Button>
-        </div>
-        <FormMessageToast onSuccess={onSuccess} state={state} />
-      </form>
-    </li>
-  )
-}
-
-function InlinePositionAssignmentForm({
-  positions,
-  userId,
-  action,
-  onSuccess,
-}: {
-  positions: EntityOption[]
-  userId: string
-  action: CreateAssignmentAction
-  onSuccess: () => void
-}) {
-  const [state, formAction, isPending] = useActionState(action, {})
-
-  return (
-    <li className="p-4">
-      <form action={formAction} className="flex flex-col gap-3 sm:flex-row sm:items-end">
-        <input name="userId" type="hidden" value={userId} />
-        <Field className="min-w-0 flex-1">
-          <FieldLabel htmlFor={`user-${userId}-inline-position`}>Position</FieldLabel>
-          <NativeSelect
-            aria-invalid={!!state.fieldErrors?.positionId}
-            className="w-full"
-            id={`user-${userId}-inline-position`}
-            name="positionId"
-            required
-          >
-            <NativeSelectOption value="">Choose Position</NativeSelectOption>
-            {positions.map((position) => (
-              <NativeSelectOption key={position.id} value={position.id}>
-                {position.label}
-              </NativeSelectOption>
-            ))}
-          </NativeSelect>
-          <FieldError>{state.fieldErrors?.positionId}</FieldError>
-        </Field>
-        <div className="flex shrink-0 gap-2">
-          <Button onClick={onSuccess} type="button" variant="ghost">
-            Cancel
-          </Button>
-          <Button disabled={isPending} type="submit">
-            {isPending ? 'Assigning…' : 'Confirm'}
-          </Button>
-        </div>
-        <FormMessageToast onSuccess={onSuccess} state={state} />
-      </form>
-    </li>
   )
 }

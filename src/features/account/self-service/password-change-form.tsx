@@ -1,32 +1,26 @@
 'use client'
 
-import { formOptions, initialFormState, mergeForm, useForm, useTransform } from '@tanstack/react-form-nextjs'
 import { useActionState } from 'react'
 import { passwordPolicy } from '@/core/auth/policy'
-import { changePasswordAction, type PasswordChangeActionState } from '@/features/account/self-service/actions'
+import { changePasswordAction, initialPasswordChangeState } from '@/features/account/self-service/actions'
 import { FormMessageAlert } from '@/shared/forms/error-handling'
+import { useServerActionForm } from '@/shared/forms/tanstack'
 import { Button } from '@/shared/ui/button'
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/shared/ui/field'
 import { Input } from '@/shared/ui/input'
 import { PasswordChangeInputSchema } from './schemas'
 
-export const formOpts = formOptions({
-  defaultValues: {
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: '',
-  },
-})
-
 export function PasswordChangeForm() {
-  const [state, action, isPending] = useActionState(changePasswordAction, initialFormState as PasswordChangeActionState)
+  const [state, action, isPending] = useActionState(changePasswordAction, initialPasswordChangeState)
 
-  const form = useForm({
-    ...formOpts,
-    validators: {
-      onSubmit: PasswordChangeInputSchema,
+  const form = useServerActionForm({
+    schema: PasswordChangeInputSchema,
+    defaultValues: {
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: '',
     },
-    transform: useTransform((baseForm) => mergeForm(baseForm, state), [state]),
+    state,
   })
 
   return (
@@ -40,7 +34,7 @@ export function PasswordChangeForm() {
     >
       <form.Field name="currentPassword">
         {(field) => {
-          const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
+          const isInvalid = !field.state.meta.isValid
           return (
             <Field data-invalid={isInvalid}>
               <FieldLabel htmlFor={field.name}>Current password</FieldLabel>
@@ -62,7 +56,7 @@ export function PasswordChangeForm() {
       <FieldGroup>
         <form.Field name="newPassword">
           {(field) => {
-            const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
+            const isInvalid = !field.state.meta.isValid
             return (
               <Field data-invalid={isInvalid}>
                 <FieldLabel htmlFor={field.name}>New password</FieldLabel>
@@ -85,7 +79,7 @@ export function PasswordChangeForm() {
         </form.Field>
         <form.Field name="confirmPassword">
           {(field) => {
-            const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
+            const isInvalid = !field.state.meta.isValid
 
             return (
               <Field data-invalid={isInvalid}>

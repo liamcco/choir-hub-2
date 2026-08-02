@@ -1,36 +1,32 @@
 'use server'
 
-import { createServerValidate, initialFormState } from '@tanstack/react-form-nextjs'
-import { formOpts } from './password-change-form'
+import { parseFormData } from '@/shared/forms/parsing'
+import type { FormState } from '@/shared/forms/types'
 import { PasswordChangeInputSchema } from './schemas'
 import { changePassword } from './service'
 
-const serverValidate = createServerValidate({
-  ...formOpts,
-  onServerValidate: PasswordChangeInputSchema,
-})
-
-export type PasswordChangeActionState = {
-  message?: string
-  success?: boolean
-} & typeof initialFormState
+export type PasswordChangeActionState = FormState<typeof PasswordChangeInputSchema>
+export const initialPasswordChangeState: PasswordChangeActionState = {}
 
 export async function changePasswordAction(
   _previousState: PasswordChangeActionState,
   formData: FormData,
 ): Promise<PasswordChangeActionState> {
-  try {
-    const validatedData = await serverValidate(formData)
-    const result = await changePassword({
-      currentPassword: validatedData.currentPassword,
-      newPassword: validatedData.newPassword,
-    })
+  // 1. Authenticate
 
-    return { ...initialFormState, ...result }
-  } catch {
-    return {
-      ...initialFormState,
-      success: false,
-    }
+  // 2. Validate form data
+  const validatedFormData = parseFormData(PasswordChangeInputSchema, formData)
+
+  if (!validatedFormData.success) {
+    return { success: false, fieldErrors: validatedFormData.fieldErrors }
   }
+
+  // 3. Mutate
+  return changePassword({
+    currentPassword: validatedFormData.data.currentPassword,
+    newPassword: validatedFormData.data.newPassword,
+  })
+
+  // 4. Invalidate
+  // 5. Navigate
 }
