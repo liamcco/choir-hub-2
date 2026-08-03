@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { filterPlacementUsers, placementCounts } from './model'
+import { filterPlacementUsers, placementCounts, sortPlacementUsers, visiblePlacementUsers } from './model'
 import type { PlacementUser } from './query'
 
 const users: PlacementUser[] = [
@@ -60,7 +60,16 @@ describe('Placement roster model', () => {
     const counts = placementCounts(users)
     expect(counts.get('kk')).toBe(1)
     expect(counts.get('kk-b')).toBe(1)
-    expect(counts.get('others')).toBe(2)
-    expect(counts.get('others-no-choir')).toBe(1)
+    expect(counts.get('others')).toBe(1)
+    expect(counts.get('others-no-choir')).toBe(0)
+  })
+
+  test('hides former members and sorts active voices before passive voices', () => {
+    expect(visiblePlacementUsers(users).map((user) => user.id)).toEqual(['active-kk', 'passive-kk', 'no-section'])
+    expect(sortPlacementUsers(visiblePlacementUsers(users)).map((user) => user.id)).toEqual([
+      'active-kk',
+      'no-section',
+      'passive-kk',
+    ])
   })
 })

@@ -17,6 +17,7 @@ export const TransferPlacementFormSchema = z.object({
     .union([SectionIdSchema, z.literal(''), z.literal('none'), z.undefined()])
     .transform((value) => (value === '' || value === 'none' ? undefined : value)),
   voice: z
-    .union([FineVoiceSchema, z.literal(''), z.undefined()])
+    .union([FineVoiceSchema, z.literal('')])
+    .optional()
     .transform((value) => (value === '' ? undefined : value)),
 })

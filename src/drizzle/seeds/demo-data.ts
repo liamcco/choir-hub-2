@@ -92,9 +92,9 @@ const boardPeople = new Set(boardPersonKeys)
 const nonBoardSingerKeys = placedSingerKeys.filter((key) => !boardPeople.has(key))
 
 const conductors = [
-  { key: 'conductor-mk', email: 'demo-conductor-mk@example.com', name: 'MK Conductor' },
-  { key: 'conductor-kk', email: 'demo-conductor-kk@example.com', name: 'KK Conductor' },
-  { key: 'conductor-dk', email: 'demo-conductor-dk@example.com', name: 'DK Conductor' },
+  { key: 'conductor-mk', email: 'demo-conductor-mk@example.com', name: 'MK Conductor', choirId: 'mk' },
+  { key: 'conductor-kk', email: 'demo-conductor-kk@example.com', name: 'KK Conductor', choirId: 'kk' },
+  { key: 'conductor-dk', email: 'demo-conductor-dk@example.com', name: 'DK Conductor', choirId: 'dk' },
 ].map((person) => ({ ...person, status: 'active' as const }))
 
 const formerMembers = Array.from({ length: 10 }, (_, index) => ({

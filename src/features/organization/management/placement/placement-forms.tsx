@@ -8,15 +8,11 @@ import type { MemberStatus } from '@/drizzle/schema'
 import { formatMemberStatus } from '@/features/organization/core/member-status'
 import { FormMessageAlert } from '@/shared/forms/error-handling'
 import { useServerActionForm } from '@/shared/forms/tanstack'
+import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Field, FieldError, FieldLabel } from '@/shared/ui/field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
-import {
-  type PlacementStatusFormState,
-  type TransferPlacementFormState,
-  transferPlacementAction,
-  updatePlacementStatusAction,
-} from './actions'
+import { transferPlacementAction, updatePlacementStatusAction } from './actions'
 import { PlacementStatusFormSchema, TransferPlacementFormSchema } from './schemas'
 
 export function PlacementStatusForm({
@@ -28,10 +24,7 @@ export function PlacementStatusForm({
   initialStatus: MemberStatus
   onSuccess: () => void
 }) {
-  const [state, formAction, isPending] = useActionState(
-    updatePlacementStatusAction.bind(null, userId),
-    {} satisfies PlacementStatusFormState,
-  )
+  const [state, formAction, isPending] = useActionState(updatePlacementStatusAction.bind(null, userId), {})
   const form = useServerActionForm({
     schema: PlacementStatusFormSchema,
     defaultValues: { status: initialStatus },
@@ -96,10 +89,7 @@ export function TransferPlacementForm({
   onCancel: () => void
   onSuccess: () => void
 }) {
-  const [state, formAction, isPending] = useActionState(
-    transferPlacementAction,
-    {} satisfies TransferPlacementFormState,
-  )
+  const [state, formAction, isPending] = useActionState(transferPlacementAction, {})
   const form = useServerActionForm({
     schema: TransferPlacementFormSchema,
     defaultValues: {
@@ -159,56 +149,72 @@ export function TransferPlacementForm({
         }}
       </form.Field>
       <form.Field name="sectionId">
-        {(field) => (
-          <Field>
-            <FieldLabel htmlFor="transfer-section">Section</FieldLabel>
-            <Select
-              name={field.name}
-              value={field.state.value}
-              onValueChange={(value) => {
-                field.handleChange(value === 'none' ? 'none' : value ? (resolveSection(value)?.id ?? '') : '')
-                form.setFieldValue('voice', undefined)
-              }}
-              key={values.choirId}
-            >
-              <SelectTrigger id="transfer-section" className="w-full">
-                <SelectValue placeholder="No Section for now" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">No Section for now</SelectItem>
-                {sections.map((section) => (
-                  <SelectItem key={section.id} value={section.id}>
-                    {section.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </Field>
-        )}
-      </form.Field>
-      {voices.length > 1 ? (
-        <form.Field name="voice">
-          {(field) => (
-            <Field>
-              <FieldLabel htmlFor="transfer-voice">Voice</FieldLabel>
+        {(field) => {
+          const isInvalid = !field.state.meta.isValid
+          return (
+            <Field data-invalid={isInvalid}>
+              <FieldLabel htmlFor="transfer-section">Section</FieldLabel>
               <Select
                 name={field.name}
                 value={field.state.value}
-                onValueChange={(value) => field.handleChange(value && isFineVoice(value) ? value : undefined)}
+                onValueChange={(value) => {
+                  field.handleChange(value === 'none' ? 'none' : value ? (resolveSection(value)?.id ?? '') : '')
+                  form.setFieldValue('voice', undefined)
+                }}
+                key={values.choirId}
               >
-                <SelectTrigger id="transfer-voice" className="w-full">
-                  <SelectValue placeholder="Choose Voice" />
+                <SelectTrigger id="transfer-section" className="w-full" aria-invalid={isInvalid}>
+                  <SelectValue placeholder="No Section for now" />
                 </SelectTrigger>
                 <SelectContent>
-                  {voices.map((voice) => (
-                    <SelectItem key={voice} value={voice}>
-                      {voice}
+                  <SelectItem value="none">No Section for now</SelectItem>
+                  {sections.map((section) => (
+                    <SelectItem key={section.id} value={section.id}>
+                      {section.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              {isInvalid && <FieldError errors={field.state.meta.errors} />}
             </Field>
-          )}
+          )
+        }}
+      </form.Field>
+      {values.choirId && (!values.sectionId || values.sectionId === 'none') ? (
+        <Alert className="border-amber-500/50 bg-amber-500/10">
+          <AlertDescription>
+            No section is selected. This will transfer the User to the Choir without a Section Placement; you can assign
+            a section later.
+          </AlertDescription>
+        </Alert>
+      ) : null}
+      {voices.length > 1 ? (
+        <form.Field name="voice">
+          {(field) => {
+            const isInvalid = !field.state.meta.isValid
+            return (
+              <Field data-invalid={isInvalid}>
+                <FieldLabel htmlFor="transfer-voice">Voice</FieldLabel>
+                <Select
+                  name={field.name}
+                  value={field.state.value}
+                  onValueChange={(value) => field.handleChange(value && isFineVoice(value) ? value : undefined)}
+                >
+                  <SelectTrigger id="transfer-voice" className="w-full" aria-invalid={isInvalid}>
+                    <SelectValue placeholder="Choose Voice" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {voices.map((voice) => (
+                      <SelectItem key={voice} value={voice}>
+                        {voice}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {isInvalid && <FieldError errors={field.state.meta.errors} />}
+              </Field>
+            )
+          }}
         </form.Field>
       ) : voices.length === 1 ? (
         <input name="voice" type="hidden" value={voices[0]} />

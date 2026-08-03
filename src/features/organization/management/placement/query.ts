@@ -84,5 +84,5 @@ export function placementNavigation() {
 }
 
 export function placementLabels() {
-  return { choirs: topology.choirs, sections: topology.sections }
+  return { choirs: listChoirsInDisplayOrder(), sections: listSections() }
 }

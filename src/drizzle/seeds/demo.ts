@@ -22,7 +22,7 @@ export async function seedDemo(database: typeof db): Promise<void> {
     userIds.set(person.key, userId)
     await database.update(user).set({ name: person.name, status: person.status }).where(eq(user.id, userId))
 
-    if ('choirId' in person && 'sectionId' in person && 'voice' in person) {
+    if ('choirId' in person) {
       await database
         .insert(choirMembership)
         .values({ id: `demo-choir-membership-${index}`, userId, choirId: person.choirId, startsAt })
@@ -30,6 +30,8 @@ export async function seedDemo(database: typeof db): Promise<void> {
           target: choirMembership.id,
           set: { userId, choirId: person.choirId, startsAt, endsAt: null },
         })
+    }
+    if ('sectionId' in person && 'voice' in person) {
       await database
         .insert(sectionPlacement)
         .values({

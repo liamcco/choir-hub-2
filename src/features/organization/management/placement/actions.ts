@@ -19,7 +19,12 @@ export async function transferPlacementAction(
 ): Promise<TransferPlacementFormState> {
   const actor = await requireCurrentUserPermission({ resource: 'user', action: 'update' })
   const parsed = parseFormData(TransferPlacementFormSchema, formData)
-  if (!parsed.success) return { success: false, fieldErrors: parsed.fieldErrors }
+  if (!parsed.success) {
+    return {
+      success: false,
+      fieldErrors: parsed.fieldErrors,
+    }
+  }
 
   try {
     await organizationService.homePlacement.transfer(parsed.data)
