@@ -2,7 +2,7 @@ import 'server-only'
 
 import { and, asc, eq, gt, isNotNull, isNull, lte, or } from 'drizzle-orm'
 import { db } from '@/core/db'
-import { resolveChoir, resolveSection } from '@/core/topology'
+import { type ChoirId, resolveChoir, resolveSection, type SectionId } from '@/core/topology'
 import type { FineVoice } from '@/core/types'
 import { choirMembership, sectionPlacement, user } from '@/drizzle/schema'
 import { assertValidDatedPeriod, datedPeriodsOverlap, normalizeDatedPeriodInput } from './dated-history'
@@ -46,7 +46,7 @@ export const homePlacement = {
       )
       .orderBy(asc(sectionPlacement.startsAt))
   },
-  async startChoirMembership(input: { userId: string; choirId: string; startsAt?: Date; endsAt?: Date | null }) {
+  async startChoirMembership(input: { userId: string; choirId: ChoirId; startsAt?: Date; endsAt?: Date | null }) {
     const period = normalizeDatedPeriodInput({ ...input, startsAt: input.startsAt ?? new Date() })
     await assertUserExists(input.userId)
     const target = resolveChoir(input.choirId)
@@ -64,7 +64,7 @@ export const homePlacement = {
   },
   async startSectionPlacement(input: {
     userId: string
-    sectionId: string
+    sectionId: SectionId
     voice: FineVoice
     startsAt?: Date
     endsAt?: Date | null
@@ -91,7 +91,7 @@ export const homePlacement = {
         .then((rows) => rows[0])
     })
   },
-  async transfer(input: { userId: string; choirId: string; sectionId?: string | null; voice?: FineVoice }) {
+  async transfer(input: { userId: string; choirId: ChoirId; sectionId?: SectionId; voice?: FineVoice }) {
     const startsAt = new Date()
     const targetChoir = resolveChoir(input.choirId)
     if (targetChoir?.status !== 'active')

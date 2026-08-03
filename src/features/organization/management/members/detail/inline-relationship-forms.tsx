@@ -1,15 +1,10 @@
 'use client'
 
 import { useActionState } from 'react'
-import type {
-  CreateGroupMembershipAction,
-  CreateGroupMembershipFormState,
-} from '@/features/organization/management/group-memberships/actions'
+import { type GroupId, type PositionId, resolveGroup, resolvePosition } from '@/core/topology'
+import { createGroupMembershipAction } from '@/features/organization/management/group-memberships/actions'
 import { CreateGroupMembershipFormSchema } from '@/features/organization/management/group-memberships/schemas'
-import type {
-  CreatePositionAssignmentAction,
-  CreatePositionAssignmentFormState,
-} from '@/features/organization/management/position-assignments/actions'
+import { createPositionAssignmentAction } from '@/features/organization/management/position-assignments/actions'
 import { CreatePositionAssignmentFormSchema } from '@/features/organization/management/position-assignments/schemas'
 import { FormMessageToast } from '@/shared/forms/error-handling'
 import { useServerActionForm } from '@/shared/forms/tanstack'
@@ -18,21 +13,16 @@ import { Button } from '@/shared/ui/button'
 import { Field, FieldError, FieldLabel } from '@/shared/ui/field'
 import { NativeSelect, NativeSelectOption } from '@/shared/ui/native-select'
 
-const membershipInitialState: CreateGroupMembershipFormState = {}
-const assignmentInitialState: CreatePositionAssignmentFormState = {}
-
 export function InlineMemberGroupMembershipForm({
   groups,
   userId,
-  action,
   onSuccess,
 }: {
-  groups: NamedEntity[]
+  groups: NamedEntity<GroupId>[]
   userId: string
-  action: CreateGroupMembershipAction
   onSuccess: () => void
 }) {
-  const [state, formAction, isPending] = useActionState(action, membershipInitialState)
+  const [state, formAction, isPending] = useActionState(createGroupMembershipAction, {})
   const form = useServerActionForm({
     schema: CreateGroupMembershipFormSchema,
     defaultValues: { userId, groupId: '' },
@@ -61,7 +51,7 @@ export function InlineMemberGroupMembershipForm({
                   name={field.name}
                   value={field.state.value}
                   onBlur={field.handleBlur}
-                  onChange={(event) => field.handleChange(event.target.value)}
+                  onChange={(event) => field.handleChange(resolveGroup(event.target.value)?.id ?? '')}
                 >
                   <NativeSelectOption value="">Choose Group</NativeSelectOption>
                   {groups.map((group) => (
@@ -85,15 +75,13 @@ export function InlineMemberGroupMembershipForm({
 export function InlineMemberPositionAssignmentForm({
   positions,
   userId,
-  action,
   onSuccess,
 }: {
-  positions: EntityOption[]
+  positions: EntityOption<PositionId>[]
   userId: string
-  action: CreatePositionAssignmentAction
   onSuccess: () => void
 }) {
-  const [state, formAction, isPending] = useActionState(action, assignmentInitialState)
+  const [state, formAction, isPending] = useActionState(createPositionAssignmentAction, {})
   const form = useServerActionForm({
     schema: CreatePositionAssignmentFormSchema,
     defaultValues: { userId, positionId: '' },
@@ -122,7 +110,7 @@ export function InlineMemberPositionAssignmentForm({
                   name={field.name}
                   value={field.state.value}
                   onBlur={field.handleBlur}
-                  onChange={(event) => field.handleChange(event.target.value)}
+                  onChange={(event) => field.handleChange(resolvePosition(event.target.value)?.id ?? '')}
                 >
                   <NativeSelectOption value="">Choose Position</NativeSelectOption>
                   {positions.map((position) => (

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { adminUserPath } from '@/core/navigation/site'
+import type { GroupId } from '@/core/topology'
 import type { UserDisplayOption } from '@/features/organization/core/labels'
 import { EndGroupMembershipControl } from '@/features/organization/management/groups/group-membership-controls'
 import { formatPeriod } from '@/shared/formatting'
@@ -18,7 +19,7 @@ export function GroupMembersSection({
   memberships,
   users,
 }: {
-  groupId: string
+  groupId: GroupId
   groupKind: 'committee' | 'board'
   groupName: string
   memberships: GroupMembershipView[]
@@ -41,11 +42,7 @@ export function GroupMembersSection({
       {memberships.length || isAdding ? (
         <ul className="divide-y rounded-lg border">
           {isAdding ? (
-            <InlineGroupMembershipForm
-              groupId={groupId}
-              users={users}
-              onSuccess={() => setIsAdding(false)}
-            />
+            <InlineGroupMembershipForm groupId={groupId} users={users} onSuccess={() => setIsAdding(false)} />
           ) : null}
           {memberships.map((membership) => (
             <li className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between" key={membership.id}>

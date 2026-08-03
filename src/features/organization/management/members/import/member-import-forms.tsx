@@ -1,6 +1,6 @@
 'use client'
 
-import { useForm, useStore } from '@tanstack/react-form'
+import { useForm, useSelector } from '@tanstack/react-form'
 import { useRef, useState } from 'react'
 import { z } from 'zod'
 import { Button } from '@/shared/ui/button'
@@ -28,7 +28,7 @@ export function ValidateMemberImportForm({
       onValidated(await validateUserImportAction(null, formData), value.csv)
     },
   })
-  const csv = useStore(form.store, (state) => state.values.csv)
+  const csv = useSelector(form.store, (state) => state.values.csv)
 
   async function onFileChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0]

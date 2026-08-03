@@ -1,12 +1,12 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { z } from 'zod'
 import { requireCurrentUserPermission } from '@/core/auth/permissions.server'
 import { audit } from '@/core/logging'
 import { ROUTES } from '@/core/navigation/site'
 import { groupMembership } from '@/features/organization'
 import { handleFormError } from '@/shared/forms/errors'
+import { parseFormData } from '@/shared/forms/parsing'
 import type { FormState } from '@/shared/forms/types'
 import { CreateGroupMembershipFormSchema, EndGroupMembershipFormSchema } from './schemas'
 
@@ -26,21 +26,17 @@ export type EndGroupMembershipAction = (
 export type GroupMembershipFormState = CreateGroupMembershipFormState | EndGroupMembershipFormState
 
 export async function createGroupMembershipAction(
-  _previousState: GroupMembershipFormState,
+  _previousState: CreateGroupMembershipFormState,
   formData: FormData,
 ): Promise<CreateGroupMembershipFormState> {
   // 1. Authenticate
   const actor = await requireCurrentUserPermission({ resource: 'groupMembership', action: 'create' })
 
   // 2. Validate form data
-  const formInput = CreateGroupMembershipFormSchema.safeParse({
-    userId: String(formData.get('userId')),
-    groupId: String(formData.get('groupId')),
-    startsAt: String(formData.get('startsAt')),
-  })
+  const formInput = parseFormData(CreateGroupMembershipFormSchema, formData)
 
   if (!formInput.success) {
-    return { success: false, fieldErrors: z.flattenError(formInput.error).fieldErrors }
+    return { success: false, fieldErrors: formInput.fieldErrors }
   }
 
   // 3. Mutate
@@ -65,18 +61,16 @@ export async function createGroupMembershipAction(
 
 export async function endGroupMembershipAction(
   membershipId: string,
-  _previousState: GroupMembershipFormState,
+  _previousState: EndGroupMembershipFormState,
   formData: FormData,
 ): Promise<EndGroupMembershipFormState> {
   // 1. Authenticate
   const actor = await requireCurrentUserPermission({ resource: 'groupMembership', action: 'delete' })
 
   // 2. Validate form data
-  const formInput = EndGroupMembershipFormSchema.safeParse({
-    endsAt: String(formData.get('endsAt')),
-  })
+  const formInput = parseFormData(EndGroupMembershipFormSchema, formData)
   if (!formInput.success) {
-    return { success: false, fieldErrors: z.flattenError(formInput.error).fieldErrors }
+    return { success: false, fieldErrors: formInput.fieldErrors }
   }
 
   // 3. Mutate

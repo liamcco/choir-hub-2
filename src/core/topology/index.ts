@@ -37,6 +37,11 @@ export type PositionId = (typeof topologyData.positions)[number]['id']
 export type GroupKind = CoreGroupKind
 /** Stable display order for Choirs in administrative collections. */
 export const CHOIR_IDS = { KK: 'kk', MK: 'mk', DK: 'dk' } as const satisfies Record<string, ChoirId>
+/** Runtime identifier vocabularies for narrowing untrusted topology references. */
+export const CHOIR_ID_VALUES: readonly ChoirId[] = topologyData.choirs.map(({ id }) => id)
+export const SECTION_ID_VALUES: readonly SectionId[] = topologyData.sections.map(({ id }) => id)
+export const GROUP_ID_VALUES: readonly GroupId[] = topologyData.groups.map(({ id }) => id)
+export const POSITION_ID_VALUES: readonly PositionId[] = topologyData.positions.map(({ id }) => id)
 
 export type Choir = Omit<CoreChoir, 'id' | 'status'> & {
   readonly id: ChoirId

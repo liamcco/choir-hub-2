@@ -2,6 +2,7 @@
 
 import { SaveIcon, UserRoundCheckIcon } from 'lucide-react'
 import { useActionState, useState } from 'react'
+import { type PositionId, resolvePosition } from '@/core/topology'
 import type { UserDisplayOption } from '@/features/organization/core/labels'
 import { UserCombobox } from '@/features/organization/management/components/user-combobox'
 import {
@@ -55,7 +56,7 @@ export function CreatePositionAssignmentForm({
                   aria-invalid={isInvalid}
                   value={field.state.value}
                   onBlur={field.handleBlur}
-                  onChange={(event) => field.handleChange(event.target.value)}
+                  onChange={(event) => field.handleChange(resolvePosition(event.target.value)?.id ?? '')}
                 >
                   <NativeSelectOption value="">Choose Position</NativeSelectOption>
                   {positions.map((option) => (
@@ -106,7 +107,7 @@ export function CreatePositionAssignmentForm({
   )
 }
 
-export function AssignPositionHolderControl({ users, positionId }: { users: UserOptions; positionId: string }) {
+export function AssignPositionHolderControl({ users, positionId }: { users: UserOptions; positionId: PositionId }) {
   const [isAssigning, setIsAssigning] = useState(false)
   if (!isAssigning) {
     return (
@@ -121,7 +122,13 @@ export function AssignPositionHolderControl({ users, positionId }: { users: User
   return <AssignPositionHolderForm users={users} positionId={positionId} onCancel={() => setIsAssigning(false)} />
 }
 
-export function AssignUserPositionControl({ userId, positions }: { userId: string; positions: EntityOption[] }) {
+export function AssignUserPositionControl({
+  userId,
+  positions,
+}: {
+  userId: string
+  positions: EntityOption<PositionId>[]
+}) {
   const [isAssigning, setIsAssigning] = useState(false)
   const [state, formAction, isPending] = useActionState(createPositionAssignmentAction, {})
   const form = useServerActionForm({
@@ -164,7 +171,7 @@ export function AssignUserPositionControl({ userId, positions }: { userId: strin
                   name={field.name}
                   value={field.state.value}
                   onBlur={field.handleBlur}
-                  onChange={(event) => field.handleChange(event.target.value)}
+                  onChange={(event) => field.handleChange(resolvePosition(event.target.value)?.id ?? '')}
                 >
                   <NativeSelectOption value="">Choose Position</NativeSelectOption>
                   {positions.map((position) => (
@@ -193,7 +200,7 @@ function AssignPositionHolderForm({
   onCancel,
 }: {
   users: UserOptions
-  positionId: string
+  positionId: PositionId
   onCancel: () => void
 }) {
   const [state, formAction, isPending] = useActionState(createPositionAssignmentAction, {})

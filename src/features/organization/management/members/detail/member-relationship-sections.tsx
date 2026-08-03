@@ -2,16 +2,9 @@
 
 import { useState } from 'react'
 import { adminGroupPath, adminPositionPath } from '@/core/navigation/site'
+import type { GroupId, PositionId } from '@/core/topology'
 import { formatGroupKind } from '@/features/organization/core/group-kind'
-import type {
-  CreateMembershipAction,
-  EndMembershipAction,
-} from '@/features/organization/management/groups/group-membership-controls'
 import { EndGroupMembershipControl } from '@/features/organization/management/groups/group-membership-controls'
-import type {
-  CreatePositionAssignmentAction,
-  EndPositionAssignmentAction,
-} from '@/features/organization/management/position-assignments/actions'
 import { EndPositionAssignmentForm } from '@/features/organization/management/position-assignments/assignment-form'
 import { formatDate } from '@/shared/formatting'
 import type { EntityOption, NamedEntity } from '@/shared/types'
@@ -24,14 +17,10 @@ export function MemberGroupMembershipSection({
   groups,
   memberships,
   userId,
-  action,
-  endAction,
 }: {
-  groups: NamedEntity[]
+  groups: NamedEntity<GroupId>[]
   memberships: MemberMembershipView[]
   userId: string
-  action?: CreateMembershipAction
-  endAction?: EndMembershipAction
 }) {
   const [isAdding, setIsAdding] = useState(false)
 
@@ -41,7 +30,7 @@ export function MemberGroupMembershipSection({
         <h2 className="text-lg font-semibold" id="group-memberships-heading">
           Committee Memberships
         </h2>
-        {action && !isAdding ? (
+        {!isAdding ? (
           <Button onClick={() => setIsAdding(true)} type="button" variant="outline">
             Add Group
           </Button>
@@ -50,14 +39,7 @@ export function MemberGroupMembershipSection({
       {memberships.length || isAdding ? (
         <ul className="divide-y rounded-lg border">
           {isAdding ? (
-            action ? (
-              <InlineMemberGroupMembershipForm
-                action={action}
-                groups={groups}
-                userId={userId}
-                onSuccess={() => setIsAdding(false)}
-              />
-            ) : null
+            <InlineMemberGroupMembershipForm groups={groups} userId={userId} onSuccess={() => setIsAdding(false)} />
           ) : null}
           {memberships.map((membership) => (
             <li className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between" key={membership.id}>
@@ -67,13 +49,10 @@ export function MemberGroupMembershipSection({
                   {formatGroupKind(membership.groupKind)} · Since {formatDate(membership.startsAt)}
                 </p>
               </div>
-              {endAction ? (
-                <EndGroupMembershipControl
-                  action={endAction}
-                  groupName={membership.groupName}
-                  membership={{ ...membership, userId, userLabel: 'this User' }}
-                />
-              ) : null}
+              <EndGroupMembershipControl
+                groupName={membership.groupName}
+                membership={{ ...membership, userId, userLabel: 'this User' }}
+              />
             </li>
           ))}
         </ul>
@@ -90,14 +69,10 @@ export function MemberPositionAssignmentSection({
   positions,
   assignments,
   userId,
-  action,
-  endAction,
 }: {
-  positions: EntityOption[]
+  positions: EntityOption<PositionId>[]
   assignments: MemberAssignmentView[]
   userId: string
-  action?: CreatePositionAssignmentAction
-  endAction?: EndPositionAssignmentAction
 }) {
   const [isAdding, setIsAdding] = useState(false)
 
@@ -107,7 +82,7 @@ export function MemberPositionAssignmentSection({
         <h2 className="text-lg font-semibold" id="position-assignments-heading">
           Position Assignments
         </h2>
-        {action && !isAdding ? (
+        {!isAdding ? (
           <Button onClick={() => setIsAdding(true)} type="button" variant="outline">
             Assign Position
           </Button>
@@ -116,14 +91,11 @@ export function MemberPositionAssignmentSection({
       {assignments.length || isAdding ? (
         <ul className="divide-y rounded-lg border">
           {isAdding ? (
-            action ? (
-              <InlineMemberPositionAssignmentForm
-                action={action}
-                positions={positions}
-                userId={userId}
-                onSuccess={() => setIsAdding(false)}
-              />
-            ) : null
+            <InlineMemberPositionAssignmentForm
+              positions={positions}
+              userId={userId}
+              onSuccess={() => setIsAdding(false)}
+            />
           ) : null}
           {assignments.map((assignment) => (
             <li className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between" key={assignment.id}>
@@ -135,18 +107,16 @@ export function MemberPositionAssignmentSection({
                   {assignment.scopeLabel} · Since {formatDate(assignment.startsAt)}
                 </p>
               </div>
-              {endAction ? (
-                <EndPositionAssignmentForm
-                  action={endAction}
-                  assignment={{
-                    ...assignment,
-                    userId,
-                    userLabel: 'this User',
-                    position: { name: assignment.positionName },
-                  }}
-                  immediate
-                />
-              ) : null}
+
+              <EndPositionAssignmentForm
+                assignment={{
+                  ...assignment,
+                  userId,
+                  userLabel: 'this User',
+                  position: { name: assignment.positionName },
+                }}
+                immediate
+              />
             </li>
           ))}
         </ul>

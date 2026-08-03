@@ -7,7 +7,7 @@ const { GroupDetail } = await import('./group-detail')
 beforeEach(cleanup)
 
 const base = {
-  id: 'board',
+  id: 'board' as const,
   name: 'Board',
   kind: 'board' as const,
   users: [],
@@ -33,7 +33,6 @@ describe('flat Group detail', () => {
             },
           ],
         }}
-        actions={{ createMembership: async () => ({}), endMembership: async () => ({}) }}
       />,
     )
     expect(screen.queryByRole('heading', { name: 'Board' })).toBeNull()
@@ -53,12 +52,13 @@ describe('flat Group detail', () => {
       <GroupDetail
         group={{
           ...base,
+          id: 'concert-mastery',
           kind: 'committee',
           name: 'Concert Mastery',
           currentMemberships: [
             {
               id: 'm',
-              groupId: 'g',
+              groupId: 'concert-mastery',
               userId: 'u',
               userLabel: 'Ada',
               userDetail: 'ada@example.com',
@@ -68,7 +68,6 @@ describe('flat Group detail', () => {
             },
           ],
         }}
-        actions={{ createMembership: async () => ({}), endMembership: async () => ({}) }}
       />,
     )
     expect(screen.getByText('Explicit membership')).toBeTruthy()
@@ -82,11 +81,11 @@ describe('flat Group detail', () => {
       <GroupDetail
         group={{
           ...base,
+          id: 'concert-mastery',
           kind: 'committee',
           name: 'Concert Mastery',
           currentMemberships: [],
         }}
-        actions={{ createMembership: async () => ({}), endMembership: async () => ({}) }}
       />,
     )
 
@@ -102,13 +101,14 @@ describe('flat Group detail', () => {
       <GroupDetail
         group={{
           ...base,
+          id: 'concert-mastery',
           kind: 'committee',
           name: 'Concert Mastery',
           currentMemberships: [],
           historicalMemberships: [
             {
               id: 'former-membership',
-              groupId: 'committee',
+              groupId: 'concert-mastery',
               userId: 'former-user',
               userLabel: 'Grace',
               userDetail: 'grace@example.com',
@@ -118,7 +118,6 @@ describe('flat Group detail', () => {
             },
           ],
         }}
-        actions={{ createMembership: async () => ({}), endMembership: async () => ({}) }}
       />,
     )
 

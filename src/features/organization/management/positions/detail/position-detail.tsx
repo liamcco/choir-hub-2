@@ -1,5 +1,5 @@
 import { adminUserPath } from '@/core/navigation/site'
-import type { Choir, Group, PositionScope, Section } from '@/core/topology'
+import type { Choir, Group, PositionId, PositionScope, Section } from '@/core/topology'
 import type { PositionAssignment } from '@/drizzle/schema'
 import type { UserDisplayOption } from '@/features/organization/core/labels'
 import { RelatedDetailLink } from '@/features/organization/management/components/related-detail-link'
@@ -11,7 +11,7 @@ import { formatDate } from '@/shared/formatting'
 
 export type PositionAssignmentView = PositionAssignment & { userLabel: string; userDetail: string }
 export type PositionDetailView = {
-  position: { id: string; name: string }
+  position: { id: PositionId; name: string }
   groups: readonly Group[]
   choirs: readonly Choir[]
   sections: readonly Section[]

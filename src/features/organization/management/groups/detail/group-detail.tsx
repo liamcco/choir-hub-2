@@ -1,5 +1,5 @@
 import { adminUserPath } from '@/core/navigation/site'
-import type { GroupKind } from '@/core/topology'
+import type { GroupId, GroupKind } from '@/core/topology'
 import { formatGroupKind } from '@/features/organization/core/group-kind'
 import type { UserDisplayOption } from '@/features/organization/core/labels'
 import { RelatedDetailLink } from '@/features/organization/management/components/related-detail-link'
@@ -10,7 +10,7 @@ import { GroupMembersSection } from './group-members-section'
 
 export type GroupMembershipView = {
   id: string
-  groupId: string
+  groupId: GroupId
   userId: string
   userLabel: string
   userDetail: string
@@ -20,7 +20,7 @@ export type GroupMembershipView = {
 }
 
 export type GroupDetailView = {
-  id: string
+  id: GroupId
   name: string
   kind: GroupKind
   users: UserDisplayOption[]

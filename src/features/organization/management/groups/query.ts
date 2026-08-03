@@ -1,6 +1,7 @@
 import 'server-only'
 
 import {
+  type GroupId,
   getChoir,
   listChoirsInDisplayOrder,
   listGroups,
@@ -59,7 +60,7 @@ async function getGroupDetail(groupId: string) {
   const userDisplayOptionsById = new Map(userDisplayOptions.map((option) => [option.user.id, option]))
   const positionsById = new Map<string, string>(positions.map((position) => [position.id, position.name]))
   const membershipViews = memberships.flatMap((membership) =>
-    mapMembershipView(membership, userDisplayOptionsById, positionsById),
+    mapMembershipView(membership, group.id, userDisplayOptionsById, positionsById),
   )
 
   return {
@@ -67,7 +68,7 @@ async function getGroupDetail(groupId: string) {
     users: userDisplayOptions,
     currentMemberships: membershipViews.sort(compareMemberships),
     historicalMemberships: previousMemberships
-      .flatMap((membership) => mapMembershipView(membership, userDisplayOptionsById, positionsById))
+      .flatMap((membership) => mapMembershipView(membership, group.id, userDisplayOptionsById, positionsById))
       .sort(
         (first, second) =>
           (second.endsAt?.getTime() ?? 0) - (first.endsAt?.getTime() ?? 0) || compareMemberships(first, second),
@@ -77,6 +78,7 @@ async function getGroupDetail(groupId: string) {
 
 function mapMembershipView(
   membership: EffectiveGroupMembership,
+  groupId: GroupId,
   userDisplayOptionsById: ReadonlyMap<string, UserDisplayOption>,
   positionsById: ReadonlyMap<string, string>,
 ) {
@@ -85,6 +87,7 @@ function mapMembershipView(
     ? [
         {
           ...membership,
+          groupId,
           id: `${membership.groupId}:${membership.userId}:${membership.startsAt.toISOString()}`,
           userLabel: option.label,
           userDetail: option.detail,

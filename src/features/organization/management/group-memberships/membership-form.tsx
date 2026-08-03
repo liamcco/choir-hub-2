@@ -3,6 +3,7 @@
 import { SaveIcon, UserPlusIcon } from 'lucide-react'
 import { useActionState } from 'react'
 
+import { resolveGroup } from '@/core/topology'
 import { formatGroupName } from '@/features/organization/core/labels'
 import { formatDateInput } from '@/shared/formatting'
 import { FormMessageToast } from '@/shared/forms/error-handling'
@@ -73,7 +74,7 @@ export function CreateGroupMembershipForm({
                   className="w-full"
                   value={field.state.value}
                   onBlur={field.handleBlur}
-                  onChange={(event) => field.handleChange(event.target.value)}
+                  onChange={(event) => field.handleChange(resolveGroup(event.target.value)?.id ?? '')}
                   aria-invalid={isInvalid}
                 >
                   <NativeSelectOption value="">Choose Group</NativeSelectOption>

@@ -2,6 +2,7 @@
 
 import { SaveIcon } from 'lucide-react'
 import { useActionState } from 'react'
+import { type GroupId, resolveGroup } from '@/core/topology'
 import {
   createGroupMembershipAction,
   endGroupMembershipAction,
@@ -25,7 +26,7 @@ export function AddUserGroupForm({
   onCancel,
 }: {
   userId: string
-  groups: NamedEntity[]
+  groups: NamedEntity<GroupId>[]
   onCancel: () => void
 }) {
   const [state, formAction, isPending] = useActionState(createGroupMembershipAction, {})
@@ -63,7 +64,7 @@ export function AddUserGroupForm({
                   name={field.name}
                   value={field.state.value}
                   onBlur={field.handleBlur}
-                  onChange={(event) => field.handleChange(event.target.value)}
+                  onChange={(event) => field.handleChange(resolveGroup(event.target.value)?.id ?? '')}
                 >
                   <NativeSelectOption value="">Choose Group</NativeSelectOption>
                   {groups.map((group) => (
@@ -91,7 +92,7 @@ export function EndGroupMembershipForm({
   groupName,
   onCancel,
 }: {
-  membership: { id: string; groupId: string; userId: string; userLabel: string; startsAt: Date }
+  membership: { id: string; groupId: GroupId; userId: string; userLabel: string; startsAt: Date }
   groupName: string
   onCancel: () => void
 }) {

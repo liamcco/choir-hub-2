@@ -44,7 +44,7 @@ describe('admin Position Assignment management actions', () => {
   test('creates a Position Assignment from form data and revalidates the admin workflow', async () => {
     const formData = createAssignmentFormData({
       userId: 'user-1',
-      positionId: 'position-1',
+      positionId: 'president',
     })
 
     await expect(createPositionAssignmentAction({}, formData)).resolves.toEqual({
@@ -53,7 +53,7 @@ describe('admin Position Assignment management actions', () => {
     })
     expect(createPositionAssignment).toHaveBeenCalledWith({
       userId: 'user-1',
-      positionId: 'position-1',
+      positionId: 'president',
     })
     expect(revalidatePath).toHaveBeenCalledWith('/admin/positions')
     expect(adminActionCompleted).toHaveBeenCalledWith({

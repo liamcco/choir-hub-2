@@ -12,7 +12,7 @@ const { PositionDetail } = await import('./position-detail')
 beforeEach(cleanup)
 
 const basePosition = {
-  position: { id: 'position-1', name: 'President' },
+  position: { id: 'president' as const, name: 'President' },
   groups: [],
   choirs: [],
   sections: [],

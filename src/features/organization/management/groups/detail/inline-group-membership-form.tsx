@@ -1,6 +1,7 @@
 'use client'
 
 import { useActionState } from 'react'
+import type { GroupId } from '@/core/topology'
 import type { UserDisplayOption } from '@/features/organization/core/labels'
 import { UserCombobox } from '@/features/organization/management/components/user-combobox'
 import { createGroupMembershipAction } from '@/features/organization/management/group-memberships/actions'
@@ -15,7 +16,7 @@ export function InlineGroupMembershipForm({
   users,
   onSuccess,
 }: {
-  groupId: string
+  groupId: GroupId
   users: UserDisplayOption[]
   onSuccess: () => void
 }) {

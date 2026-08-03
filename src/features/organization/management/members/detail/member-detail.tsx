@@ -1,15 +1,7 @@
-import type { GroupKind } from '@/core/topology'
+import type { ChoirId, GroupId, GroupKind, PositionId, SectionId } from '@/core/topology'
 import type { MemberStatus } from '@/drizzle/schema'
 import type { DatedPeriod } from '@/features/organization/core/dated-history'
 import { formatMemberStatus } from '@/features/organization/core/member-status'
-import type {
-  CreateMembershipAction,
-  EndMembershipAction,
-} from '@/features/organization/management/groups/group-membership-controls'
-import type {
-  CreatePositionAssignmentAction,
-  EndPositionAssignmentAction,
-} from '@/features/organization/management/position-assignments/actions'
 import type { EntityOption, NamedEntity } from '@/shared/types'
 import { Badge } from '@/shared/ui/badge'
 import { ImpersonateUserButton } from './impersonate-user-button'
@@ -19,13 +11,13 @@ import { ResendInvitationControl } from './resend-invitation-control'
 export type MemberRelationshipPeriod = DatedPeriod & { id: string }
 
 export type MemberMembershipView = MemberRelationshipPeriod & {
-  groupId: string
+  groupId: GroupId
   groupName: string
   groupKind: GroupKind
 }
 
 export type MemberAssignmentView = MemberRelationshipPeriod & {
-  positionId: string
+  positionId: PositionId
   positionName: string
   scopeLabel: string
 }
@@ -37,19 +29,18 @@ export type MemberDetailView = {
   emailVerified?: boolean
   isAdmin?: boolean
   status: MemberStatus
-  homePlacement?: { choir: { id: string; name: string } | null; section: { id: string; name: string } | null }
-  groups: NamedEntity[]
-  positions: EntityOption[]
+  homePlacement?: {
+    choir: { id: ChoirId; name: string } | null
+    section: { id: SectionId; name: string } | null
+  }
+  groups: NamedEntity<GroupId>[]
+  positions: EntityOption<PositionId>[]
   currentMemberships: MemberMembershipView[]
   currentAssignments: MemberAssignmentView[]
 }
 
 type MemberDetailActions = {
   resendInvitation?: (userId: string) => Promise<{ success: boolean; message: string }>
-  createMembership: CreateMembershipAction
-  endMembership: EndMembershipAction
-  createAssignment: CreatePositionAssignmentAction
-  endAssignment: EndPositionAssignmentAction
 }
 
 export function MemberDetail({ member, actions }: { member: MemberDetailView; actions?: MemberDetailActions }) {
@@ -81,18 +72,10 @@ export function MemberDetail({ member, actions }: { member: MemberDetailView; ac
         {!member.isAdmin ? <ImpersonateUserButton userId={member.id} userName={member.name} /> : null}
       </section>
 
-      <MemberGroupMembershipSection
-        action={actions?.createMembership}
-        endAction={actions?.endMembership}
-        groups={member.groups}
-        memberships={member.currentMemberships}
-        userId={member.id}
-      />
+      <MemberGroupMembershipSection groups={member.groups} memberships={member.currentMemberships} userId={member.id} />
 
       <MemberPositionAssignmentSection
-        action={actions?.createAssignment}
         assignments={member.currentAssignments}
-        endAction={actions?.endAssignment}
         positions={member.positions}
         userId={member.id}
       />

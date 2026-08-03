@@ -54,6 +54,8 @@ async function getDetail(userId: string) {
   const sectionById = new Map<string, (typeof topology.sections)[number]>(sections.map((item) => [item.id, item]))
   const currentChoir = choirMemberships[0]
   const currentSection = placements[0]
+  const currentChoirDefinition = currentChoir ? choirById.get(currentChoir.choirId) : undefined
+  const currentSectionDefinition = currentSection ? sectionById.get(currentSection.sectionId) : undefined
 
   const groupsById = new Map<string, (typeof topology.groups)[number]>(groups.map((group) => [group.id, group]))
   const positionsById = new Map<string, (typeof topology.positions)[number]>(
@@ -97,12 +99,10 @@ async function getDetail(userId: string) {
     isAdmin: account.role?.split(',').some((role) => role.trim() === 'admin') ?? false,
     status: user.status,
     homePlacement: {
-      choir: currentChoir
-        ? { id: currentChoir.choirId, name: choirById.get(currentChoir.choirId)?.name ?? 'Unknown Choir' }
-        : null,
-      section: currentSection
+      choir: currentChoirDefinition ? { id: currentChoirDefinition.id, name: currentChoirDefinition.name } : null,
+      section: currentSectionDefinition
         ? {
-            id: currentSection.sectionId,
+            id: currentSectionDefinition.id,
             name: formatPlacementLabel(currentSection, sectionById, choirById) ?? 'Unknown Section',
           }
         : null,

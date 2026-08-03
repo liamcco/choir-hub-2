@@ -5,18 +5,19 @@ import { requireAdmin, requireCurrentUserPermission } from '@/core/auth/permissi
 import { audit } from '@/core/logging'
 import { ROUTES } from '@/core/navigation/site'
 import { users } from '@/features/organization/core/users'
+import { parseFormData } from '@/shared/forms/parsing'
 import type { FormState } from '@/shared/forms/types'
 import { userOnboarding } from './onboarding'
 import { CreateMemberAccountFormSchema, MemberStatusSchema } from './schemas'
+
 export type UserFormState = FormState<typeof CreateMemberAccountFormSchema> & { createdId?: string }
+
 export async function createUserAction(_previousState: UserFormState, formData: FormData): Promise<UserFormState> {
   const actor = await requireAdmin()
-  const input = CreateMemberAccountFormSchema.safeParse({
-    name: String(formData.get('name')),
-    email: String(formData.get('email')),
-    status: String(formData.get('status')),
-  })
-  if (!input.success) return { success: false, fieldErrors: z.flattenError(input.error).fieldErrors }
+  const input = parseFormData(CreateMemberAccountFormSchema, formData)
+
+  if (!input.success) return { success: false, fieldErrors: input.fieldErrors }
+
   const result = await userOnboarding.onboardBatch(
     [{ name: input.data.name, email: input.data.email, status: input.data.status, placement: null }],
     actor.userId,
@@ -28,6 +29,7 @@ export async function createUserAction(_previousState: UserFormState, formData: 
     if (outcome?.status === 'failed' && outcome.cleanup === 'failed') revalidatePath(ROUTES.adminUsers)
     return outcome ? toUserFormState(outcome) : { success: false, message: 'The User could not be onboarded.' }
   }
+
   revalidatePath(ROUTES.adminUsers)
   return { success: true, message: 'User successfully created.', createdId: outcome.id }
 }

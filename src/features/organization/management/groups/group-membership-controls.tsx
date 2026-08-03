@@ -2,11 +2,12 @@
 
 import { UserPlusIcon } from 'lucide-react'
 import { useState } from 'react'
+import type { GroupId } from '@/core/topology'
 import type { NamedEntity } from '@/shared/types'
 import { Button } from '@/shared/ui/button'
 import { AddUserGroupForm, EndGroupMembershipForm } from './group-membership-control-forms'
 
-export function AddUserGroupControl({ userId, groups }: { userId: string; groups: NamedEntity[] }) {
+export function AddUserGroupControl({ userId, groups }: { userId: string; groups: NamedEntity<GroupId>[] }) {
   const [isOpen, setIsOpen] = useState(false)
 
   if (!isOpen) {
@@ -25,7 +26,7 @@ export function EndGroupMembershipControl({
   membership,
   groupName,
 }: {
-  membership: { id: string; groupId: string; userId: string; userLabel: string; startsAt: Date }
+  membership: { id: string; groupId: GroupId; userId: string; userLabel: string; startsAt: Date }
   groupName: string
 }) {
   const [isOpen, setIsOpen] = useState(false)

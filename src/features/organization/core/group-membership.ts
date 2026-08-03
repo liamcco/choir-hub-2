@@ -2,7 +2,7 @@ import 'server-only'
 
 import { and, asc, eq, isNotNull, isNull } from 'drizzle-orm'
 import { db } from '@/core/db'
-import { resolveGroup } from '@/core/topology'
+import { type GroupId, resolveGroup } from '@/core/topology'
 import { groupMembership as groupMembershipTable, user } from '@/drizzle/schema'
 import { assertValidDatedPeriod, findOverlappingDatedPeriod, normalizeDatedPeriodInput } from './dated-history'
 import { DateOverlapError, EntityDoesNotExistError, InvalidRelationshipError } from './errors'
@@ -36,7 +36,7 @@ export const groupMembership = {
       .orderBy(asc(groupMembershipTable.groupId), asc(groupMembershipTable.userId), asc(groupMembershipTable.startsAt))
   },
 
-  async start(input: { userId: string; groupId: string; startsAt?: Date; endsAt?: Date | null }) {
+  async start(input: { userId: string; groupId: GroupId; startsAt?: Date; endsAt?: Date | null }) {
     const membership = normalizeDatedPeriodInput({ ...input, startsAt: input.startsAt ?? new Date() })
     await assertUserExists(membership.userId)
     await assertGroupEligible(membership.groupId)
@@ -72,7 +72,7 @@ async function assertUserExists(userId: string) {
     throw new EntityDoesNotExistError('Choose an existing User.', { field: 'userId' })
 }
 
-async function assertGroupEligible(groupId: string) {
+async function assertGroupEligible(groupId: GroupId) {
   const target = resolveGroup(groupId)
   if (target?.status !== 'active') throw new EntityDoesNotExistError('Choose an existing Group.', { field: 'groupId' })
   if (target.kind === 'board')

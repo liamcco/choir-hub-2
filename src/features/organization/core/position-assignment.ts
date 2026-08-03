@@ -2,7 +2,7 @@ import 'server-only'
 
 import { and, asc, eq, isNotNull, isNull } from 'drizzle-orm'
 import { db } from '@/core/db'
-import { resolvePosition } from '@/core/topology'
+import { type PositionId, resolvePosition } from '@/core/topology'
 import { type FineVoice, isFineVoice } from '@/core/types'
 import {
   choirMembership,
@@ -20,7 +20,7 @@ import {
 } from './position-assignment-eligibility'
 
 export const positionAssignment = {
-  async start(input: { positionId: string; userId: string; startsAt?: Date; endsAt?: Date | null }) {
+  async start(input: { positionId: PositionId; userId: string; startsAt?: Date; endsAt?: Date | null }) {
     const assignment = normalizeDatedPeriodInput({ ...input, startsAt: input.startsAt ?? new Date() })
     const target = assertPositionExists(assignment.positionId)
     await assertUserExists(assignment.userId)
@@ -85,7 +85,7 @@ export const positionAssignment = {
   },
 }
 
-function assertPositionExists(positionId: string) {
+function assertPositionExists(positionId: PositionId) {
   const target = resolvePosition(positionId)
   if (target?.status !== 'active')
     throw new EntityDoesNotExistError('Choose an existing Position.', { field: 'positionId' })

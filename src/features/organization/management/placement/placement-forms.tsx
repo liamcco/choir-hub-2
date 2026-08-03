@@ -1,18 +1,23 @@
 'use client'
 
-import { useStore } from '@tanstack/react-form-nextjs'
+import { useSelector } from '@tanstack/react-form-nextjs'
 import { useActionState, useEffect } from 'react'
-import { listChoirs, listSections } from '@/core/topology'
+import { type ChoirId, listChoirs, listSections, resolveChoir, resolveSection, type SectionId } from '@/core/topology'
+import { type FineVoice, isFineVoice } from '@/core/types/voice'
+import type { MemberStatus } from '@/drizzle/schema'
 import { formatMemberStatus } from '@/features/organization/core/member-status'
 import { FormMessageAlert } from '@/shared/forms/error-handling'
 import { useServerActionForm } from '@/shared/forms/tanstack'
 import { Button } from '@/shared/ui/button'
 import { Field, FieldError, FieldLabel } from '@/shared/ui/field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
-import { transferPlacementAction, updatePlacementStatusAction } from './actions'
+import {
+  type PlacementStatusFormState,
+  type TransferPlacementFormState,
+  transferPlacementAction,
+  updatePlacementStatusAction,
+} from './actions'
 import { PlacementStatusFormSchema, TransferPlacementFormSchema } from './schemas'
-
-export type PlacementActionState = { success?: boolean; message?: string } | null
 
 export function PlacementStatusForm({
   userId,
@@ -20,12 +25,12 @@ export function PlacementStatusForm({
   onSuccess,
 }: {
   userId: string
-  initialStatus: 'ACTIVE' | 'PASSIVE' | 'FORMER'
+  initialStatus: MemberStatus
   onSuccess: () => void
 }) {
-  const [state, formAction, isPending] = useActionState<PlacementActionState, FormData>(
-    (previous, formData) => updatePlacementStatusAction(userId, previous, formData),
-    null,
+  const [state, formAction, isPending] = useActionState(
+    updatePlacementStatusAction.bind(null, userId),
+    {} satisfies PlacementStatusFormState,
   )
   const form = useServerActionForm({
     schema: PlacementStatusFormSchema,
@@ -71,7 +76,7 @@ export function PlacementStatusForm({
           )
         }}
       </form.Field>
-      <FormMessageAlert state={state ?? {}} />
+      <FormMessageAlert state={state} />
     </form>
   )
 }
@@ -85,24 +90,27 @@ export function TransferPlacementForm({
   onSuccess,
 }: {
   userId: string
-  currentChoir: string
-  currentSection: string
-  currentVoice?: string
+  currentChoir?: ChoirId
+  currentSection?: SectionId
+  currentVoice?: FineVoice
   onCancel: () => void
   onSuccess: () => void
 }) {
-  const [state, formAction, isPending] = useActionState<PlacementActionState, FormData>(transferPlacementAction, null)
+  const [state, formAction, isPending] = useActionState(
+    transferPlacementAction,
+    {} satisfies TransferPlacementFormState,
+  )
   const form = useServerActionForm({
     schema: TransferPlacementFormSchema,
     defaultValues: {
       userId,
-      choirId: currentChoir,
-      sectionId: currentSection,
-      voice: currentVoice ?? '',
+      choirId: currentChoir ?? '',
+      sectionId: currentSection ?? 'none',
+      voice: currentVoice,
     },
     state,
   })
-  const values = useStore(form.store, (formState) => formState.values)
+  const values = useSelector(form.store, (formState) => formState.values)
   const sections = getSectionsForChoir(values.choirId)
   const voices = getVoicesForSection(values.sectionId)
 
@@ -129,9 +137,9 @@ export function TransferPlacementForm({
                 name={field.name}
                 value={field.state.value}
                 onValueChange={(value) => {
-                  field.handleChange(value ?? '')
-                  form.setFieldValue('sectionId', '')
-                  form.setFieldValue('voice', '')
+                  field.handleChange(value ? (resolveChoir(value)?.id ?? '') : '')
+                  form.setFieldValue('sectionId', 'none')
+                  form.setFieldValue('voice', undefined)
                 }}
               >
                 <SelectTrigger id="transfer-choir" className="w-full" aria-invalid={isInvalid}>
@@ -158,8 +166,8 @@ export function TransferPlacementForm({
               name={field.name}
               value={field.state.value}
               onValueChange={(value) => {
-                field.handleChange(value ?? '')
-                form.setFieldValue('voice', '')
+                field.handleChange(value === 'none' ? 'none' : value ? (resolveSection(value)?.id ?? '') : '')
+                form.setFieldValue('voice', undefined)
               }}
               key={values.choirId}
             >
@@ -186,7 +194,7 @@ export function TransferPlacementForm({
               <Select
                 name={field.name}
                 value={field.state.value}
-                onValueChange={(value) => field.handleChange(value ?? '')}
+                onValueChange={(value) => field.handleChange(value && isFineVoice(value) ? value : undefined)}
               >
                 <SelectTrigger id="transfer-voice" className="w-full">
                   <SelectValue placeholder="Choose Voice" />
@@ -213,15 +221,15 @@ export function TransferPlacementForm({
           Cancel
         </Button>
       </div>
-      <FormMessageAlert state={state ?? {}} />
+      <FormMessageAlert state={state} />
     </form>
   )
 }
 
-function getSectionsForChoir(choirId: string) {
+function getSectionsForChoir(choirId: ChoirId | '') {
   return listSections().filter((section) => section.choirId === choirId)
 }
 
-function getVoicesForSection(sectionId: string) {
-  return listSections().find((section) => section.id === sectionId)?.allowedVoices ?? []
+function getVoicesForSection(sectionId: SectionId | '' | 'none' | undefined) {
+  return sectionId && sectionId !== 'none' ? (resolveSection(sectionId)?.allowedVoices ?? []) : []
 }

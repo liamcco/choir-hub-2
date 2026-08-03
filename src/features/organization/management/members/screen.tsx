@@ -4,10 +4,6 @@ import { AdminCollectionTableSkeleton } from '@/features/organization/management
 import { CollectionFrame } from '@/features/organization/management/components/collection-frame'
 import { InvalidDetailLookup } from '@/features/organization/management/components/invalid-detail-lookup'
 import { PageHeaderActions } from '@/features/organization/management/components/page-header-action'
-import {
-  createGroupMembershipAction,
-  endGroupMembershipAction,
-} from '@/features/organization/management/group-memberships'
 import { MemberCollection as UserCollection } from '@/features/organization/management/members/collection/member-collection'
 import { MemberCreateDialog as UserCreateDialog } from '@/features/organization/management/members/create/member-create-dialog'
 import { MemberDetail as UserDetail } from '@/features/organization/management/members/detail/member-detail'
@@ -15,10 +11,6 @@ import { MemberDetailRoutePresentation as UserDetailRoutePresentation } from '@/
 import { MemberDetailSkeleton as UserDetailSkeleton } from '@/features/organization/management/members/detail/member-detail-skeleton'
 import { MemberImportDialog as UserImportDialog } from '@/features/organization/management/members/import/import-dialog'
 import { getUserDetail, listUserCollection } from '@/features/organization/management/members/query'
-import {
-  createPositionAssignmentAction,
-  endPositionAssignmentAction,
-} from '@/features/organization/management/position-assignments'
 import type { DetailSearchParams } from '../search-params'
 import { resendInvitationAction } from './onboarding/actions'
 
@@ -87,11 +79,6 @@ async function UserDetailContent({ detailPromise }: { detailPromise: ReturnType<
   return <UserDetail actions={userDetailActions} member={user} />
 }
 
-// TODO what da hell
 const userDetailActions = {
   resendInvitation: resendInvitationAction,
-  createMembership: createGroupMembershipAction,
-  endMembership: endGroupMembershipAction,
-  createAssignment: createPositionAssignmentAction,
-  endAssignment: endPositionAssignmentAction,
 }

@@ -22,23 +22,17 @@ describe('Member detail', () => {
     const user = userEvent.setup()
     render(
       <MemberDetail
-        actions={{
-          createMembership: async () => ({}),
-          endMembership: async () => ({}),
-          createAssignment: async () => ({}),
-          endAssignment: async () => ({}),
-        }}
         member={{
           id: 'member-1',
           name: 'Ada Lovelace',
           email: 'ada@example.com',
           status: MemberStatus.ACTIVE,
-          groups: [{ id: 'group-1', name: 'Chamber Choir' }],
-          positions: [{ id: 'position-1', label: 'Chair · Board' }],
+          groups: [{ id: 'concert-mastery', name: 'Chamber Choir' }],
+          positions: [{ id: 'president', label: 'Chair · Board' }],
           currentMemberships: [
             {
               id: 'membership-1',
-              groupId: 'group-1',
+              groupId: 'concert-mastery',
               groupName: 'Chamber Choir',
               groupKind: GROUP_KINDS.COMMITTEE,
               startsAt: new Date('2024-08-01'),
@@ -48,7 +42,7 @@ describe('Member detail', () => {
           currentAssignments: [
             {
               id: 'assignment-1',
-              positionId: 'position-1',
+              positionId: 'president',
               positionName: 'Chair',
               scopeLabel: 'Board',
               startsAt: new Date('2024-09-01'),
@@ -94,15 +88,8 @@ describe('Member detail', () => {
   })
 
   test('omits History when the Member has no ended relationships', async () => {
-    const actions = {
-      createMembership: async () => ({}),
-      endMembership: async () => ({}),
-      createAssignment: async () => ({}),
-      endAssignment: async () => ({}),
-    }
     render(
       <MemberDetail
-        actions={actions}
         member={{
           id: 'member-2',
           name: 'Grace Hopper',

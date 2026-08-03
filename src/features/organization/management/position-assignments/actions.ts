@@ -1,12 +1,12 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { z } from 'zod'
 import { requireCurrentUserPermission } from '@/core/auth/permissions.server'
 import { audit } from '@/core/logging'
 import { ROUTES } from '@/core/navigation/site'
 import { positionAssignment } from '@/features/organization'
 import { handleFormError } from '@/shared/forms/errors'
+import { parseFormData } from '@/shared/forms/parsing'
 import type { FormState } from '@/shared/forms/types'
 import { CreatePositionAssignmentFormSchema, EndPositionAssignmentFormSchema } from './schemas'
 
@@ -26,21 +26,17 @@ export type EndPositionAssignmentAction = (
 export type PositionAssignmentFormState = CreatePositionAssignmentFormState | EndPositionAssignmentFormState
 
 export async function createPositionAssignmentAction(
-  _previousState: PositionAssignmentFormState,
+  _previousState: CreatePositionAssignmentFormState,
   formData: FormData,
 ): Promise<CreatePositionAssignmentFormState> {
   // 1. Authenticate
   const actor = await requireCurrentUserPermission({ resource: 'positionAssignment', action: 'create' })
 
   // 2. Validate form data
-  const formInput = CreatePositionAssignmentFormSchema.safeParse({
-    userId: String(formData.get('userId')),
-    positionId: String(formData.get('positionId')),
-    startsAt: String(formData.get('startsAt')),
-  })
+  const formInput = parseFormData(CreatePositionAssignmentFormSchema, formData)
 
   if (!formInput.success) {
-    return { success: false, fieldErrors: z.flattenError(formInput.error).fieldErrors }
+    return { success: false, fieldErrors: formInput.fieldErrors }
   }
 
   // 3. Mutate
@@ -65,19 +61,17 @@ export async function createPositionAssignmentAction(
 
 export async function endPositionAssignmentAction(
   assignmentId: string,
-  _previousState: PositionAssignmentFormState,
+  _previousState: EndPositionAssignmentFormState,
   formData: FormData,
 ): Promise<EndPositionAssignmentFormState> {
   // 1. Authenticate
   const actor = await requireCurrentUserPermission({ resource: 'positionAssignment', action: 'delete' })
 
   // 2. Validate form data
-  const formInput = EndPositionAssignmentFormSchema.safeParse({
-    endsAt: String(formData.get('endsAt')),
-  })
+  const formInput = parseFormData(EndPositionAssignmentFormSchema, formData)
 
   if (!formInput.success) {
-    return { success: false, fieldErrors: z.flattenError(formInput.error).fieldErrors }
+    return { success: false, fieldErrors: formInput.fieldErrors }
   }
 
   // 3. Mutate

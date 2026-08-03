@@ -13,8 +13,8 @@ import type { PlacementDetail as Detail } from './query'
 export function PlacementDetail({ detail }: { detail: Detail }) {
   const [editingStatus, setEditingStatus] = useState(false)
   const [editingPlacement, setEditingPlacement] = useState(false)
-  const currentChoir = detail.currentChoir?.id ?? ''
-  const currentSection = detail.currentSection?.id ?? ''
+  const currentChoir = detail.currentChoir?.id
+  const currentSection = detail.currentSection?.id
   const currentPlacement =
     detail.currentChoir && detail.voice && isFineVoice(detail.voice)
       ? formatFineGrainedPlacementName(detail.currentChoir.shortName, detail.voice)
