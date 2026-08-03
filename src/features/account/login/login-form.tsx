@@ -11,11 +11,26 @@ import { Checkbox } from '@/shared/ui/checkbox'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/shared/ui/field'
 import { Input } from '@/shared/ui/input'
 import { loginSchema } from './schemas'
-import { signInWithEmailPassword } from './service'
+import { signInWithEmailPassword, signInWithPasskey } from './service'
 
 export function LoginForm({ returnTo }: { returnTo?: string }) {
   const router = useRouter()
   const [formError, setFormError] = useState<string | null>(null)
+  const [isPasskeySubmitting, setIsPasskeySubmitting] = useState(false)
+
+  async function handlePasskeySignIn() {
+    setFormError(null)
+    setIsPasskeySubmitting(true)
+    const result = await signInWithPasskey({ returnTo })
+    setIsPasskeySubmitting(false)
+
+    if (!result.success) {
+      setFormError(result.error)
+      return
+    }
+
+    router.replace(result.redirectTo)
+  }
 
   const form = useForm({
     defaultValues: {
@@ -121,6 +136,18 @@ export function LoginForm({ returnTo }: { returnTo?: string }) {
       )}
       <Button type="submit" disabled={form.state.isSubmitting}>
         {form.state.isSubmitting ? 'Signing in...' : 'Sign in'}
+      </Button>
+      <div className="relative flex items-center justify-center">
+        <span className="absolute inset-x-0 border-t" />
+        <span className="relative bg-background px-2 text-muted-foreground text-xs">or</span>
+      </div>
+      <Button
+        type="button"
+        variant="outline"
+        onClick={handlePasskeySignIn}
+        disabled={form.state.isSubmitting || isPasskeySubmitting}
+      >
+        {isPasskeySubmitting ? 'Waiting for passkey...' : 'Sign in with a passkey'}
       </Button>
       <Link href={ROUTES.forgotPassword} className="text-center text-sm underline underline-offset-4">
         Forgot your password?

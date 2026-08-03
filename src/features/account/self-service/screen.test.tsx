@@ -13,6 +13,8 @@ describe('account self-service screen', () => {
     expect(markup).toContain('Current password')
     expect(markup).toContain('New password')
     expect(markup).toContain('Update password')
+    expect(markup).toContain('Passkeys')
+    expect(markup).toContain('Add passkey')
     expect(markup).not.toContain('Create account')
     expect(markup).not.toContain('Member Status')
     expect(markup).not.toContain('Disable')

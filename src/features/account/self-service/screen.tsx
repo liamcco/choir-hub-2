@@ -1,4 +1,5 @@
 import { KeyRoundIcon } from 'lucide-react'
+import { PasskeyCard } from '@/features/account/self-service/passkey-card'
 import { PasswordChangeForm } from '@/features/account/self-service/password-change-form'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
 
@@ -20,6 +21,19 @@ export function AccountSelfServiceScreen({ userEmail }: { userEmail: string }) {
         </CardHeader>
         <CardContent>
           <PasswordChangeForm />
+        </CardContent>
+      </Card>
+
+      <Card className="rounded-lg">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <KeyRoundIcon className="size-4 text-muted-foreground" aria-hidden="true" />
+            <CardTitle>Passkeys</CardTitle>
+          </div>
+          <CardDescription>Add a secure, passwordless way to sign in to your account.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <PasskeyCard />
         </CardContent>
       </Card>
     </main>
