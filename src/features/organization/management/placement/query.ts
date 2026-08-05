@@ -3,9 +3,10 @@ import 'server-only'
 import { isNull } from 'drizzle-orm'
 import { db } from '@/core/db'
 import { listChoirsInDisplayOrder, listSections, topology } from '@/core/topology'
+import { isFineVoice } from '@/core/types'
 import { choirMembership, type MemberStatus, sectionPlacement } from '@/drizzle/schema'
 import { organizationService } from '@/features/organization'
-import { buildUserDisplayOptions } from '@/features/organization/core/labels'
+import { buildUserDisplayOptions, formatFineGrainedPlacementName } from '@/features/organization/core/labels'
 
 export type PlacementUser = {
   id: string
@@ -43,9 +44,8 @@ export async function getPlacementDetail(userId: string) {
   const users = await listPlacementUsers()
   const item = users.find((candidate) => candidate.id === userId)
   if (!item) return null
-  const [currentMemberships, previousMemberships, currentPlacements, previousPlacements] = await Promise.all([
+  const [currentMemberships, currentPlacements, previousPlacements] = await Promise.all([
     organizationService.homePlacement.listChoirMemberships({ userId }),
-    organizationService.homePlacement.listPreviousChoirMemberships({ userId }),
     organizationService.homePlacement.listSectionPlacements({ userId }),
     organizationService.homePlacement.listPreviousSectionPlacements({ userId }),
   ])
@@ -57,20 +57,21 @@ export async function getPlacementDetail(userId: string) {
     ...item,
     currentChoir: currentMemberships[0] ? (choirs.get(currentMemberships[0].choirId) ?? null) : null,
     currentSection: currentPlacements[0] ? (sections.get(currentPlacements[0].sectionId) ?? null) : null,
-    history: [
-      ...previousMemberships.map((entry) => ({
-        kind: 'Choir Membership' as const,
-        label: choirs.get(entry.choirId)?.name ?? entry.choirId,
-        startsAt: entry.startsAt,
-        endsAt: entry.endsAt,
-      })),
-      ...previousPlacements.map((entry) => ({
-        kind: 'Section Placement' as const,
-        label: sections.get(entry.sectionId)?.name ?? entry.sectionId,
-        startsAt: entry.startsAt,
-        endsAt: entry.endsAt,
-      })),
-    ].sort((a, b) => b.startsAt.getTime() - a.startsAt.getTime()),
+    currentPlacementStartsAt: currentPlacements[0]?.startsAt ?? currentMemberships[0]?.startsAt ?? null,
+    history: previousPlacements
+      .map((entry) => {
+        const section = sections.get(entry.sectionId)
+        const choir = section ? choirs.get(section.choirId) : undefined
+        return {
+          label:
+            choir && isFineVoice(entry.voice)
+              ? formatFineGrainedPlacementName(choir.shortName, entry.voice)
+              : entry.sectionId,
+          startsAt: entry.startsAt,
+          endsAt: entry.endsAt,
+        }
+      })
+      .sort((a, b) => b.startsAt.getTime() - a.startsAt.getTime()),
   }
 }
 

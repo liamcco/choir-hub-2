@@ -45,9 +45,8 @@ async function listGroupStructure() {
 }
 
 async function getGroupDetail(groupId: string) {
-  const [memberships, previousMemberships, users, positions] = await Promise.all([
+  const [memberships, users, positions] = await Promise.all([
     organizationService.effectiveGroupMembership.list({ groupId }),
-    organizationService.effectiveGroupMembership.listPrevious({ groupId }),
     organizationService.users.list(),
     Promise.resolve(topology.positions),
   ])
@@ -67,12 +66,6 @@ async function getGroupDetail(groupId: string) {
     ...group,
     users: userDisplayOptions,
     currentMemberships: membershipViews.sort(compareMemberships),
-    historicalMemberships: previousMemberships
-      .flatMap((membership) => mapMembershipView(membership, group.id, userDisplayOptionsById, positionsById))
-      .sort(
-        (first, second) =>
-          (second.endsAt?.getTime() ?? 0) - (first.endsAt?.getTime() ?? 0) || compareMemberships(first, second),
-      ),
   }
 }
 

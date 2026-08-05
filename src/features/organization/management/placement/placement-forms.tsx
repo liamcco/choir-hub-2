@@ -2,8 +2,8 @@
 
 import { useSelector } from '@tanstack/react-form-nextjs'
 import { useActionState, useEffect } from 'react'
-import { type ChoirId, listChoirs, listSections, resolveChoir, resolveSection, type SectionId } from '@/core/topology'
-import { type FineVoice, isFineVoice } from '@/core/types/voice'
+import { type ChoirId, listChoirs, listSections, resolveChoir, type SectionId } from '@/core/topology'
+import type { FineVoice } from '@/core/types/voice'
 import type { MemberStatus } from '@/drizzle/schema'
 import { formatMemberStatus } from '@/features/organization/core/member-status'
 import { FormMessageAlert } from '@/shared/forms/error-handling'
@@ -101,8 +101,6 @@ export function TransferPlacementForm({
     state,
   })
   const values = useSelector(form.store, (formState) => formState.values)
-  const sections = getSectionsForChoir(values.choirId)
-  const voices = getVoicesForSection(values.sectionId)
 
   useEffect(() => {
     if (state?.success) onSuccess()
@@ -126,6 +124,7 @@ export function TransferPlacementForm({
               <Select
                 name={field.name}
                 value={field.state.value}
+                itemToStringLabel={(value) => resolveChoir(value)?.shortName ?? ''}
                 onValueChange={(value) => {
                   field.handleChange(value ? (resolveChoir(value)?.id ?? '') : '')
                   form.setFieldValue('sectionId', 'none')
@@ -138,7 +137,7 @@ export function TransferPlacementForm({
                 <SelectContent>
                   {listChoirs().map((choir) => (
                     <SelectItem key={choir.id} value={choir.id}>
-                      {choir.name}
+                      {choir.shortName}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -151,30 +150,39 @@ export function TransferPlacementForm({
       <form.Field name="sectionId">
         {(field) => {
           const isInvalid = !field.state.meta.isValid
+          const placementChoices = getPlacementChoices(values.choirId)
+          const selectedPlacement = getPlacementChoiceValue(field.state.value, values.voice, placementChoices)
           return (
             <Field data-invalid={isInvalid}>
-              <FieldLabel htmlFor="transfer-section">Section</FieldLabel>
+              <FieldLabel htmlFor="transfer-placement">Section</FieldLabel>
               <Select
-                name={field.name}
-                value={field.state.value}
+                value={selectedPlacement}
+                itemToStringLabel={(value) =>
+                  value === 'none'
+                    ? 'No Section for now'
+                    : (placementChoices.find((choice) => choice.value === value)?.voice ?? '')
+                }
                 onValueChange={(value) => {
-                  field.handleChange(value === 'none' ? 'none' : value ? (resolveSection(value)?.id ?? '') : '')
-                  form.setFieldValue('voice', undefined)
+                  const choice = placementChoices.find((candidate) => candidate.value === value)
+                  field.handleChange(choice?.sectionId ?? 'none')
+                  form.setFieldValue('voice', choice?.voice)
                 }}
                 key={values.choirId}
               >
-                <SelectTrigger id="transfer-section" className="w-full" aria-invalid={isInvalid}>
-                  <SelectValue placeholder="No Section for now" />
+                <SelectTrigger id="transfer-placement" className="w-full" aria-invalid={isInvalid}>
+                  <SelectValue placeholder="Choose Section" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">No Section for now</SelectItem>
-                  {sections.map((section) => (
-                    <SelectItem key={section.id} value={section.id}>
-                      {section.name}
+                  {placementChoices.map((choice) => (
+                    <SelectItem key={choice.value} value={choice.value}>
+                      {choice.voice}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              <input name="sectionId" type="hidden" value={field.state.value === 'none' ? '' : field.state.value} />
+              <input name="voice" type="hidden" value={values.voice ?? ''} />
               {isInvalid && <FieldError errors={field.state.meta.errors} />}
             </Field>
           )
@@ -187,37 +195,6 @@ export function TransferPlacementForm({
             a section later.
           </AlertDescription>
         </Alert>
-      ) : null}
-      {voices.length > 1 ? (
-        <form.Field name="voice">
-          {(field) => {
-            const isInvalid = !field.state.meta.isValid
-            return (
-              <Field data-invalid={isInvalid}>
-                <FieldLabel htmlFor="transfer-voice">Voice</FieldLabel>
-                <Select
-                  name={field.name}
-                  value={field.state.value}
-                  onValueChange={(value) => field.handleChange(value && isFineVoice(value) ? value : undefined)}
-                >
-                  <SelectTrigger id="transfer-voice" className="w-full" aria-invalid={isInvalid}>
-                    <SelectValue placeholder="Choose Voice" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {voices.map((voice) => (
-                      <SelectItem key={voice} value={voice}>
-                        {voice}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {isInvalid && <FieldError errors={field.state.meta.errors} />}
-              </Field>
-            )
-          }}
-        </form.Field>
-      ) : voices.length === 1 ? (
-        <input name="voice" type="hidden" value={voices[0]} />
       ) : null}
       <div className="flex items-center gap-2">
         <Button disabled={isPending || form.state.isSubmitting} type="submit">
@@ -236,6 +213,21 @@ function getSectionsForChoir(choirId: ChoirId | '') {
   return listSections().filter((section) => section.choirId === choirId)
 }
 
-function getVoicesForSection(sectionId: SectionId | '' | 'none' | undefined) {
-  return sectionId && sectionId !== 'none' ? (resolveSection(sectionId)?.allowedVoices ?? []) : []
+function getPlacementChoices(choirId: ChoirId | '') {
+  return getSectionsForChoir(choirId).flatMap((section) =>
+    section.allowedVoices.map((voice) => ({
+      value: `${section.id}:${voice}`,
+      sectionId: section.id,
+      voice,
+    })),
+  )
+}
+
+function getPlacementChoiceValue(
+  sectionId: SectionId | '' | 'none' | undefined,
+  voice: FineVoice | '' | undefined,
+  choices: ReturnType<typeof getPlacementChoices>,
+) {
+  if (!sectionId || sectionId === 'none') return 'none'
+  return choices.find((choice) => choice.sectionId === sectionId && choice.voice === voice)?.value ?? ''
 }

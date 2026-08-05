@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { adminGroupPath, adminPositionPath } from '@/core/navigation/site'
 import type { GroupId, PositionId } from '@/core/topology'
 import { formatGroupKind } from '@/features/organization/core/group-kind'
-import { EndGroupMembershipControl } from '@/features/organization/management/groups/group-membership-controls'
 import { EndPositionAssignmentForm } from '@/features/organization/management/position-assignments/assignment-form'
 import { formatDate } from '@/shared/formatting'
 import type { EntityOption, NamedEntity } from '@/shared/types'
@@ -49,10 +48,6 @@ export function MemberGroupMembershipSection({
                   {formatGroupKind(membership.groupKind)} · Since {formatDate(membership.startsAt)}
                 </p>
               </div>
-              <EndGroupMembershipControl
-                groupName={membership.groupName}
-                membership={{ ...membership, userId, userLabel: 'this User' }}
-              />
             </li>
           ))}
         </ul>

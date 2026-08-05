@@ -65,6 +65,7 @@ describe('Member detail', () => {
     expect(screen.getByRole('heading', { name: 'Position Assignments' })).toBeTruthy()
     expect(screen.getByText('Chair')).toBeTruthy()
     expect(screen.getByRole('button', { name: 'End' })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'End this User membership' })).toBeNull()
     expect(screen.queryByRole('button', { name: 'Save end date' })).toBeNull()
     expect(screen.queryByRole('heading', { name: 'Membership' })).toBeNull()
     expect(screen.queryByRole('heading', { name: 'Contact information' })).toBeNull()

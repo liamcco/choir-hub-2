@@ -65,6 +65,11 @@ export function PlacementDetail({ detail }: { detail: Detail }) {
             <div>
               <p className="text-sm text-muted-foreground">Current placement</p>
               <p className="font-medium">{currentPlacement}</p>
+              {detail.currentPlacementStartsAt ? (
+                <p className="text-sm text-muted-foreground">
+                  since {detail.currentPlacementStartsAt.toLocaleDateString()}
+                </p>
+              ) : null}
             </div>
             <Button onClick={() => setEditingPlacement(true)} type="button" variant="outline">
               Transfer
@@ -72,28 +77,24 @@ export function PlacementDetail({ detail }: { detail: Detail }) {
           </div>
         </section>
       )}
-      <section className="space-y-3">
-        <h3 className="font-heading text-lg font-semibold">History</h3>
-        {detail.history.length ? (
+      {detail.history.length ? (
+        <section className="space-y-3">
+          <h3 className="font-heading text-lg font-semibold">History</h3>
           <div className="divide-y rounded-xl border">
             {detail.history.map((entry, index) => (
               <div
                 className="flex justify-between gap-4 px-4 py-3 text-sm"
-                key={`${entry.kind}-${entry.startsAt.toISOString()}-${index}`}
+                key={`${entry.startsAt.toISOString()}-${index}`}
               >
-                <span>
-                  {entry.kind}: {entry.label}
-                </span>
+                <span>{entry.label}</span>
                 <span className="text-muted-foreground">
                   {entry.startsAt.toLocaleDateString()} – {entry.endsAt?.toLocaleDateString() ?? 'Current'}
                 </span>
               </div>
             ))}
           </div>
-        ) : (
-          <p className="text-sm text-muted-foreground">No previous placement history.</p>
-        )}
-      </section>
+        </section>
+      ) : null}
     </article>
   )
 }

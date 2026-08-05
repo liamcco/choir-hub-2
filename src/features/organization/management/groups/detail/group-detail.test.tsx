@@ -11,7 +11,6 @@ const base = {
   name: 'Board',
   kind: 'board' as const,
   users: [],
-  historicalMemberships: [],
 }
 
 describe('flat Group detail', () => {
@@ -38,6 +37,7 @@ describe('flat Group detail', () => {
     expect(screen.queryByRole('heading', { name: 'Board' })).toBeNull()
     expect(screen.getByText('Board', { selector: 'dd' })).toBeTruthy()
     expect(screen.getByRole('heading', { name: 'Members (1)' })).toBeTruthy()
+    expect(screen.queryByRole('heading', { name: 'Previous members' })).toBeNull()
     expect(screen.queryByText('CSK-wide')).toBeNull()
     expect(screen.queryByText('Group Kind')).toBeNull()
     expect(screen.queryByText('Scope')).toBeNull()
@@ -94,36 +94,5 @@ describe('flat Group detail', () => {
     expect(screen.getByLabelText('User')).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Confirm' })).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeTruthy()
-  })
-
-  test('shows previous members below the effective member section without email addresses', () => {
-    render(
-      <GroupDetail
-        group={{
-          ...base,
-          id: 'concert-mastery',
-          kind: 'committee',
-          name: 'Concert Mastery',
-          currentMemberships: [],
-          historicalMemberships: [
-            {
-              id: 'former-membership',
-              groupId: 'concert-mastery',
-              userId: 'former-user',
-              userLabel: 'Grace',
-              userDetail: 'grace@example.com',
-              startsAt: new Date('2024-01-01'),
-              endsAt: new Date('2024-12-31'),
-              sourceLabels: ['Explicit membership'],
-            },
-          ],
-        }}
-      />,
-    )
-
-    expect(screen.getByRole('heading', { name: 'Previous members' })).toBeTruthy()
-    expect(screen.getByText('Grace')).toBeTruthy()
-    expect(screen.getByText('Jan 1, 2024 - Dec 31, 2024')).toBeTruthy()
-    expect(screen.queryByText('grace@example.com')).toBeNull()
   })
 })
