@@ -1,20 +1,31 @@
-import { describe, expect, test } from 'bun:test'
+import { describe, expect, mock, test } from 'bun:test'
 import { fireEvent, render, waitFor } from '@testing-library/react'
 import { renderToStaticMarkup } from 'react-dom/server'
+
+mock.module('next/navigation', () => ({
+  useRouter: () => ({ refresh: mock() }),
+}))
+
 import { PasswordChangeForm } from '@/features/account/self-service/password-change-form'
 import { AccountSelfServiceScreen } from '@/features/account/self-service/screen'
 
 describe('account self-service screen', () => {
   test('renders password self-service without admin account management controls', () => {
-    const markup = renderToStaticMarkup(<AccountSelfServiceScreen userEmail="member@example.com" />)
+    const markup = renderToStaticMarkup(
+      <AccountSelfServiceScreen user={{ name: 'Member Name', email: 'member@example.com', username: 'member' }} />,
+    )
 
     expect(markup).toContain('Account')
     expect(markup).toContain('member@example.com')
+    expect(markup).toContain('Member Name')
+    expect(markup).toContain('@member')
     expect(markup).toContain('Current password')
     expect(markup).toContain('New password')
     expect(markup).toContain('Update password')
     expect(markup).toContain('Passkeys')
     expect(markup).toContain('Add passkey')
+    expect(markup).toContain('Username')
+    expect(markup).toContain('Update username')
     expect(markup).not.toContain('Create account')
     expect(markup).not.toContain('Member Status')
     expect(markup).not.toContain('Disable')

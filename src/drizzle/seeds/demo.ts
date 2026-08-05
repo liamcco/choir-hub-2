@@ -20,7 +20,10 @@ export async function seedDemo(database: typeof db): Promise<void> {
       ).user.id
 
     userIds.set(person.key, userId)
-    await database.update(user).set({ name: person.name, status: person.status }).where(eq(user.id, userId))
+    await database
+      .update(user)
+      .set({ name: person.name, status: person.status, emailVerified: true })
+      .where(eq(user.id, userId))
 
     if ('choirId' in person) {
       await database

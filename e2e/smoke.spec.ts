@@ -3,9 +3,9 @@ import { e2eUsers } from '../src/drizzle/seeds/e2e'
 
 async function signIn(page: Page, user: { email: string; password: string }) {
   await page.goto('/login')
-  await page.getByLabel('Email').fill(user.email)
+  await page.getByLabel('Email or username').fill(user.email)
   await page.getByLabel('Password').fill(user.password)
-  await page.getByRole('button', { name: 'Sign in' }).click()
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click()
   await expect(page).toHaveURL('/')
 }
 

@@ -4,13 +4,41 @@ const signInEmail = mock(async () => ({
   data: { user: { id: 'user-member', role: 'user' } },
   error: null as null | { message: string },
 }))
-mock.module('@/core/auth/auth-client', () => ({ authClient: { signIn: { email: signInEmail } } }))
+const signInUsername = mock(async () => ({
+  data: { user: { id: 'user-member', role: 'user' } },
+  error: null as null | { message: string },
+}))
+mock.module('@/core/auth/auth-client', () => ({
+  authClient: { signIn: { email: signInEmail, username: signInUsername } },
+}))
 
-import { signInWithEmailPassword } from './service'
+import { signInWithEmailPassword, signInWithIdentifier } from './service'
 
-beforeEach(() => signInEmail.mockReset())
+beforeEach(() => {
+  signInEmail.mockReset()
+  signInUsername.mockReset()
+})
 
 describe('login service', () => {
+  test('signs in with a username when the identifier is not an email', async () => {
+    signInUsername.mockResolvedValue({ data: { user: { id: 'user-member', role: 'user' } }, error: null })
+
+    await expect(
+      signInWithIdentifier({
+        identifier: 'member_name',
+        password: 'correct horse battery staple',
+        rememberMe: true,
+      }),
+    ).resolves.toEqual({ success: true, redirectTo: '/' })
+
+    expect(signInUsername).toHaveBeenCalledWith({
+      username: 'member_name',
+      password: 'correct horse battery staple',
+      callbackURL: '/',
+      rememberMe: true,
+    })
+  })
+
   test('signs in member accounts with the organizational post-login destination', async () => {
     signInEmail.mockResolvedValue({ data: { user: { id: 'user-member', role: 'user' } }, error: null })
     await expect(

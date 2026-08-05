@@ -8,6 +8,9 @@ export type EmailPasswordSignInInput = {
   returnTo?: string
 }
 
+export type UsernamePasswordSignInInput = Omit<EmailPasswordSignInInput, 'email'> & { username: string }
+export type IdentifierPasswordSignInInput = Omit<EmailPasswordSignInInput, 'email'> & { identifier: string }
+
 export type PasskeySignInInput = {
   returnTo?: string
 }
@@ -42,6 +45,41 @@ export async function signInWithEmailPassword(input: EmailPasswordSignInInput): 
       error: 'Unable to sign in right now. Check your connection and try again.',
     }
   }
+}
+
+export async function signInWithUsernamePassword(input: UsernamePasswordSignInInput): Promise<LoginResult> {
+  try {
+    const result = await authClient.signIn.username({
+      username: input.username,
+      password: input.password,
+      callbackURL: ROUTES.home,
+      rememberMe: input.rememberMe,
+    })
+
+    if (result.error) {
+      return {
+        success: false,
+        kind: 'invalid-credentials',
+        error: 'Unable to sign in. Check your email or username and password and try again.',
+      }
+    }
+
+    return { success: true, redirectTo: getPostLoginPath(result.data.user?.role, input.returnTo) }
+  } catch {
+    return {
+      success: false,
+      kind: 'network',
+      error: 'Unable to sign in right now. Check your connection and try again.',
+    }
+  }
+}
+
+export function signInWithIdentifier(input: IdentifierPasswordSignInInput): Promise<LoginResult> {
+  if (input.identifier.includes('@')) {
+    return signInWithEmailPassword({ ...input, email: input.identifier })
+  }
+
+  return signInWithUsernamePassword({ ...input, username: input.identifier })
 }
 
 export async function signInWithPasskey(input: PasskeySignInInput): Promise<LoginResult> {

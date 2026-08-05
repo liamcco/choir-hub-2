@@ -2,15 +2,15 @@ import { describe, expect, test } from 'bun:test'
 import { loginSchema } from './schemas'
 
 describe('login form schema', () => {
-  test('trims the email before authentication', () => {
+  test('trims the email or username before authentication', () => {
     expect(
       loginSchema.parse({
-        email: ' member@example.com ',
+        identifier: ' member@example.com ',
         password: 'correct horse battery staple',
         rememberMe: false,
       }),
     ).toEqual({
-      email: 'member@example.com',
+      identifier: 'member@example.com',
       password: 'correct horse battery staple',
       rememberMe: false,
     })

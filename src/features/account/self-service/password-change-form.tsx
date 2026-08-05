@@ -2,7 +2,7 @@
 
 import { useActionState } from 'react'
 import { passwordPolicy } from '@/core/auth/policy'
-import { changePasswordAction, initialPasswordChangeState } from '@/features/account/self-service/actions'
+import { changePasswordAction } from '@/features/account/self-service/actions'
 import { FormMessageAlert } from '@/shared/forms/error-handling'
 import { useServerActionForm } from '@/shared/forms/tanstack'
 import { Button } from '@/shared/ui/button'
@@ -11,7 +11,7 @@ import { Input } from '@/shared/ui/input'
 import { PasswordChangeInputSchema } from './schemas'
 
 export function PasswordChangeForm() {
-  const [state, action, isPending] = useActionState(changePasswordAction, initialPasswordChangeState)
+  const [state, action, isPending] = useActionState(changePasswordAction, {})
 
   const form = useServerActionForm({
     schema: PasswordChangeInputSchema,

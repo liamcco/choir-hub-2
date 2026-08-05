@@ -11,7 +11,7 @@ import { Checkbox } from '@/shared/ui/checkbox'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/shared/ui/field'
 import { Input } from '@/shared/ui/input'
 import { loginSchema } from './schemas'
-import { signInWithEmailPassword, signInWithPasskey } from './service'
+import { signInWithIdentifier, signInWithPasskey } from './service'
 
 export function LoginForm({ returnTo }: { returnTo?: string }) {
   const router = useRouter()
@@ -34,7 +34,7 @@ export function LoginForm({ returnTo }: { returnTo?: string }) {
 
   const form = useForm({
     defaultValues: {
-      email: '',
+      identifier: '',
       password: '',
       rememberMe: false,
     },
@@ -42,8 +42,8 @@ export function LoginForm({ returnTo }: { returnTo?: string }) {
       onSubmit: loginSchema,
     },
     onSubmit: async ({ value }) => {
-      const result = await signInWithEmailPassword({
-        email: value.email,
+      const result = await signInWithIdentifier({
+        identifier: value.identifier,
         password: value.password,
         rememberMe: value.rememberMe,
         returnTo,
@@ -68,12 +68,12 @@ export function LoginForm({ returnTo }: { returnTo?: string }) {
       className="flex flex-col gap-4"
     >
       <FieldGroup>
-        <form.Field name="email">
+        <form.Field name="identifier">
           {(field) => {
             const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
             return (
               <Field data-invalid={isInvalid}>
-                <FieldLabel htmlFor={field.name}>Email</FieldLabel>
+                <FieldLabel htmlFor={field.name}>Email or username</FieldLabel>
                 <Input
                   id={field.name}
                   name={field.name}
@@ -81,8 +81,8 @@ export function LoginForm({ returnTo }: { returnTo?: string }) {
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
                   aria-invalid={isInvalid}
-                  placeholder="Email"
-                  autoComplete="off"
+                  placeholder="Email or username"
+                  autoComplete="username"
                 />
                 {isInvalid && <FieldError errors={field.state.meta.errors} />}
               </Field>

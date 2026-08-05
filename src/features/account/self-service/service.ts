@@ -12,6 +12,8 @@ export type PasswordChangeInput = {
 
 export type PasswordChangeResult = { success: true; message: string } | { success: false; message: string }
 
+export type UsernameChangeInput = { username: string }
+
 export async function changePassword(input: PasswordChangeInput): Promise<PasswordChangeResult> {
   let result: Awaited<ReturnType<typeof auth.api.changePassword>>
 
@@ -38,4 +40,33 @@ export async function changePassword(input: PasswordChangeInput): Promise<Passwo
   })
 
   return { success: true, message: 'Password changed successfully.' }
+}
+
+export async function changeUsername(input: UsernameChangeInput): Promise<PasswordChangeResult> {
+  const requestHeaders = await headers()
+  const session = await auth.api.getSession({ headers: requestHeaders })
+  if (!session?.user) {
+    return { success: false, message: 'Unable to update your username. Please sign in again and try again.' }
+  }
+
+  try {
+    await auth.api.updateUser({
+      headers: requestHeaders,
+      body: { username: input.username, displayUsername: input.username },
+    })
+  } catch (error) {
+    logger.warn('auth.username-change.failed', { errorName: getErrorName(error) })
+    return {
+      success: false,
+      message: 'Unable to update your username. It may already be in use or be invalid.',
+    }
+  }
+
+  audit.accountAccessChanged({
+    actorUserId: session.user.id,
+    action: 'username.change',
+    subjectUserId: session.user.id,
+  })
+
+  return { success: true, message: 'Username updated successfully.' }
 }
