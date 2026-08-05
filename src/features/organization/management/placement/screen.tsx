@@ -3,7 +3,7 @@ import { CollectionFrame } from '@/features/organization/management/components/c
 import { placementCounts } from './model'
 import { PlacementNavigation } from './navigation'
 import { PlacementOverlay } from './overlay'
-import { getPlacementDetail, listPlacementUsers, placementLabels } from './query'
+import { getPlacementDetail, getPlacementLabels, listPlacementUsers } from './query'
 import { PlacementRoster } from './roster'
 import { PlacementSearch } from './search'
 import { PlacementSkeleton } from './skeleton'
@@ -31,7 +31,7 @@ async function PlacementContent({
   const area = typeof params.area === 'string' ? params.area : undefined
   const detail = typeof params.detail === 'string' ? params.detail : undefined
   const users = await listPlacementUsers()
-  const { choirs, sections } = placementLabels()
+  const { choirs, sections } = getPlacementLabels()
   const activeCounts = placementCounts(users)
   const rosterQuery = new URLSearchParams()
   if (area) rosterQuery.set('area', area)

@@ -77,13 +77,6 @@ export async function getPlacementDetail(userId: string) {
 
 export type PlacementDetail = NonNullable<Awaited<ReturnType<typeof getPlacementDetail>>>
 
-export function placementNavigation() {
-  return listChoirsInDisplayOrder().map((choir) => ({
-    choir,
-    sections: listSections().filter((section) => section.choirId === choir.id),
-  }))
-}
-
-export function placementLabels() {
+export function getPlacementLabels() {
   return { choirs: listChoirsInDisplayOrder(), sections: listSections() }
 }

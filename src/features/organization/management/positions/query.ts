@@ -19,7 +19,7 @@ import {
 } from '@/features/organization/core/labels'
 import { getPositionCollectionGroup } from './position-collection-group'
 
-async function listCollection() {
+export async function listPositionCollection() {
   const assignments = await organizationService.positionAssignment.list()
   const users = await organizationService.users.list()
   const groups = listGroups()
@@ -43,7 +43,7 @@ async function listCollection() {
     )
 }
 
-async function getDetail(positionId: string) {
+export async function getPositionDetail(positionId: string) {
   const [assignments, previousAssignments, users, memberships, placements] = await Promise.all([
     organizationService.positionAssignment.list({ positionId }),
     organizationService.positionAssignment.listPrevious({ positionId }),
@@ -110,6 +110,3 @@ function isEligible(
     )
   return true
 }
-
-export const listPositionCollection = listCollection
-export const getPositionDetail = getDetail

@@ -3,10 +3,8 @@ import type { Choir, Group, PositionId, PositionScope, Section } from '@/core/to
 import type { PositionAssignment } from '@/drizzle/schema'
 import type { UserDisplayOption } from '@/features/organization/core/labels'
 import { RelatedDetailLink } from '@/features/organization/management/components/related-detail-link'
-import {
-  AssignPositionHolderControl,
-  EndPositionAssignmentForm,
-} from '@/features/organization/management/position-assignments/assignment-form'
+import { AssignPositionHolderControl } from '@/features/organization/management/position-assignments/assignment-form'
+import { EndPositionAssignmentForm } from '@/features/organization/management/position-assignments/end-form'
 import { formatDate } from '@/shared/formatting'
 
 export type PositionAssignmentView = PositionAssignment & { userLabel: string; userDetail: string }

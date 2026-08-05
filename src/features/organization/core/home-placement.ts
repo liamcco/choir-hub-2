@@ -93,38 +93,41 @@ export const homePlacement = {
   },
   async transfer(input: { userId: string; choirId: ChoirId; sectionId?: SectionId; voice?: FineVoice }) {
     const startsAt = new Date()
-    const targetChoir = resolveChoir(input.choirId)
-    if (targetChoir?.status !== 'active')
-      throw new EntityDoesNotExistError('Choose an existing Choir.', { field: 'choirId' })
-    const targetSection = input.sectionId ? resolveSection(input.sectionId) : null
-    if (input.sectionId && (targetSection?.status !== 'active' || targetSection.choirId !== input.choirId))
-      throw new InvalidRelationshipError('Choose a Section from the selected Choir.', { field: 'sectionId' })
-    if (targetSection && (!input.voice || !targetSection.allowedVoices.includes(input.voice)))
-      throw new InvalidRelationshipError('Choose a Voice allowed by the Section.', { field: 'voice' })
+    const targetSection = validateTransferTarget(input)
 
     return db.transaction(async (tx) => {
       const [memberships, placements] = await Promise.all([
         tx.select().from(choirMembership).where(eq(choirMembership.userId, input.userId)),
         tx.select().from(sectionPlacement).where(eq(sectionPlacement.userId, input.userId)),
       ])
-      const currentMembership = memberships.find((row) => row.endsAt === null)
-      const currentPlacement = placements.find((row) => row.endsAt === null)
+      const currentChoirMembership = memberships.find((row) => row.endsAt === null)
+      const currentSectionPlacement = placements.find((row) => row.endsAt === null)
 
-      if (currentMembership?.choirId !== input.choirId) {
-        if (currentMembership)
-          await tx.update(choirMembership).set({ endsAt: startsAt }).where(eq(choirMembership.id, currentMembership.id))
+      if (currentChoirMembership?.choirId !== input.choirId) {
+        if (currentChoirMembership)
+          await tx
+            .update(choirMembership)
+            .set({ endsAt: startsAt })
+            .where(eq(choirMembership.id, currentChoirMembership.id))
         await tx
           .insert(choirMembership)
           .values({ userId: input.userId, choirId: input.choirId, startsAt, endsAt: null })
       }
       if (
-        currentPlacement &&
-        (!targetSection || currentPlacement.sectionId !== targetSection.id || currentPlacement.voice !== input.voice)
+        currentSectionPlacement &&
+        (!targetSection ||
+          currentSectionPlacement.sectionId !== targetSection.id ||
+          currentSectionPlacement.voice !== input.voice)
       )
-        await tx.update(sectionPlacement).set({ endsAt: startsAt }).where(eq(sectionPlacement.id, currentPlacement.id))
+        await tx
+          .update(sectionPlacement)
+          .set({ endsAt: startsAt })
+          .where(eq(sectionPlacement.id, currentSectionPlacement.id))
       if (
         targetSection &&
-        (!currentPlacement || currentPlacement.sectionId !== targetSection.id || currentPlacement.voice !== input.voice)
+        (!currentSectionPlacement ||
+          currentSectionPlacement.sectionId !== targetSection.id ||
+          currentSectionPlacement.voice !== input.voice)
       ) {
         const voice = input.voice
         if (!voice) throw new InvalidRelationshipError('Choose a Voice allowed by the Section.', { field: 'voice' })
@@ -154,6 +157,20 @@ export const homePlacement = {
       .returning()
       .then((r) => r[0])
   },
+}
+
+function validateTransferTarget(input: { choirId: ChoirId; sectionId?: SectionId; voice?: FineVoice }) {
+  const targetChoir = resolveChoir(input.choirId)
+  if (targetChoir?.status !== 'active')
+    throw new EntityDoesNotExistError('Choose an existing Choir.', { field: 'choirId' })
+
+  const targetSection = input.sectionId ? resolveSection(input.sectionId) : null
+  if (input.sectionId && (targetSection?.status !== 'active' || targetSection.choirId !== input.choirId))
+    throw new InvalidRelationshipError('Choose a Section from the selected Choir.', { field: 'sectionId' })
+  if (targetSection && (!input.voice || !targetSection.allowedVoices.includes(input.voice)))
+    throw new InvalidRelationshipError('Choose a Voice allowed by the Section.', { field: 'voice' })
+
+  return targetSection
 }
 
 function covers(outer: DatedPeriod, inner: DatedPeriod) {

@@ -5,10 +5,8 @@ export type {
   EndPositionAssignmentFormState,
 } from './actions'
 export { createPositionAssignmentAction, endPositionAssignmentAction } from './actions'
-export {
-  AssignUserPositionControl,
-  EndPositionAssignmentForm,
-} from './assignment-form'
+export { AssignUserPositionControl } from './assignment-form'
+export { EndPositionAssignmentForm } from './end-form'
 export type { PositionAssignmentPeriod } from './service'
 export {
   listPositionAssignmentOptions,

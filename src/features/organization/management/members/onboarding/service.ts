@@ -74,13 +74,20 @@ export const userOnboarding = {
 
 async function validateBatch(input: readonly UserOnboardingPlan[]): Promise<OnboardingValidation> {
   const plans = input.map(normalizePlan)
+  const errors = validatePlans(plans)
+  if (errors.length === 0) errors.push(...(await validateExistingEmails(plans)))
+
+  return { plans, errors }
+}
+
+function validatePlans(plans: readonly UserOnboardingPlan[]): OnboardingValidationError[] {
   const errors: OnboardingValidationError[] = []
   const emails = new Map<string, number | undefined>()
 
   if (plans.length === 0) errors.push({ message: 'The onboarding batch contains no Users.' })
 
   for (const plan of plans) {
-    const row = plan.row === undefined ? {} : { row: plan.row }
+    const row = rowContext(plan)
     if (!plan.name) errors.push({ ...row, field: 'name', message: 'Name is required.' })
     if (!isEmail(plan.email)) errors.push({ ...row, field: 'email', message: 'A valid email address is required.' })
 
@@ -100,21 +107,17 @@ async function validateBatch(input: readonly UserOnboardingPlan[]): Promise<Onbo
     if (plan.placement) errors.push(...validatePlacement(plan.placement, row))
   }
 
-  if (errors.length === 0) {
-    const existing = await db.select({ email: user.email }).from(user)
-    const existingEmails = new Set(existing.map((item) => item.email.toLowerCase()))
-    for (const plan of plans) {
-      if (existingEmails.has(plan.email)) {
-        errors.push({
-          ...(plan.row === undefined ? {} : { row: plan.row }),
-          field: 'email',
-          message: 'Email is already registered.',
-        })
-      }
-    }
-  }
+  return errors
+}
 
-  return { plans, errors }
+async function validateExistingEmails(plans: readonly UserOnboardingPlan[]): Promise<OnboardingValidationError[]> {
+  const existing = await db.select({ email: user.email }).from(user)
+  const existingEmails = new Set(existing.map((item) => item.email.toLowerCase()))
+  return plans.flatMap((plan) =>
+    existingEmails.has(plan.email)
+      ? [{ ...rowContext(plan), field: 'email' as const, message: 'Email is already registered.' }]
+      : [],
+  )
 }
 
 async function onboardBatch(
@@ -214,26 +217,12 @@ async function onboardOne(plan: UserOnboardingPlan, actorUserId: string): Promis
       invitationSent,
     }
   } catch (error) {
-    let cleanupStatus: 'not-needed' | 'completed' | 'failed' = 'not-needed'
-    if (createdUserId) {
-      try {
-        await auth.api.removeUser({ headers: await headers(), body: { userId: createdUserId } })
-        cleanupStatus = 'completed'
-      } catch (cleanupError) {
-        cleanupStatus = 'failed'
-        logger.error('organization.user.onboarding.cleanup.failed', {
-          actorUserId,
-          userId: createdUserId,
-          phase,
-          error: errorMessage(cleanupError),
-        })
-      }
-    }
+    const cleanupStatus = await cleanupCreatedUser(createdUserId, actorUserId, phase)
 
     const message = errorMessage(error)
     logger.error('organization.user.onboarding.failed', {
       actorUserId,
-      ...(plan.row === undefined ? {} : { row: plan.row }),
+      ...rowContext(plan),
       email: plan.email,
       phase,
       cleanup: cleanupStatus,
@@ -241,7 +230,7 @@ async function onboardOne(plan: UserOnboardingPlan, actorUserId: string): Promis
     })
     return {
       status: 'failed',
-      ...(plan.row === undefined ? {} : { row: plan.row }),
+      ...rowContext(plan),
       name: plan.name,
       email: plan.email,
       message: cleanupStatus === 'failed' ? `${message} The newly created User could not be removed.` : message,
@@ -249,6 +238,26 @@ async function onboardOne(plan: UserOnboardingPlan, actorUserId: string): Promis
       cleanup: cleanupStatus,
       ...(cleanupStatus === 'failed' && createdUserId ? { userId: createdUserId } : {}),
     }
+  }
+}
+
+async function cleanupCreatedUser(
+  userId: string | undefined,
+  actorUserId: string,
+  phase: string,
+): Promise<'not-needed' | 'completed' | 'failed'> {
+  if (!userId) return 'not-needed'
+  try {
+    await auth.api.removeUser({ headers: await headers(), body: { userId } })
+    return 'completed'
+  } catch (cleanupError) {
+    logger.error('organization.user.onboarding.cleanup.failed', {
+      actorUserId,
+      userId,
+      phase,
+      error: errorMessage(cleanupError),
+    })
+    return 'failed'
   }
 }
 
@@ -295,6 +304,10 @@ function normalizePlan(plan: UserOnboardingPlan): UserOnboardingPlan {
     name: plan.name.trim(),
     email: plan.email.trim().toLowerCase(),
   }
+}
+
+function rowContext(plan: Pick<UserOnboardingPlan, 'row'>) {
+  return plan.row === undefined ? {} : { row: plan.row }
 }
 
 function fieldForPhase(phase: string): 'name' | 'email' | 'status' | 'placement' | undefined {

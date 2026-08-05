@@ -169,18 +169,29 @@ export function isActiveTopologyEntity(entity: { status: TopologyLifecycleStatus
 
 export function validateTopology(candidate: CoreTopology = topology): CoreTopology {
   const ids = new Set<string>()
-  const addId = (id: string) => {
-    if (ids.has(id)) throw new DuplicateEntityError(`Topology identifier is duplicated: ${id}.`)
-    ids.add(id)
-  }
   const choirIds = new Set(candidate.choirs.map((choir) => choir.id))
-  for (const choir of candidate.choirs) {
-    addId(choir.id)
+  validateChoirs(candidate.choirs, ids)
+  validateSections(candidate.sections, choirIds, ids)
+  const groupIds = validateGroups(candidate.groups, choirIds, ids)
+  const sectionIds = new Set(candidate.sections.map((section) => section.id))
+  validatePositions(candidate.positions, choirIds, sectionIds, groupIds, ids)
+  return candidate
+}
+
+function validateChoirs(choirs: readonly CoreTopology['choirs'][number][], ids: Set<string>) {
+  for (const choir of choirs) {
+    assertUniqueId(choir.id, ids)
     assertStatus(choir.status, `Choir ${choir.id}`)
   }
+}
 
-  for (const section of candidate.sections) {
-    addId(section.id)
+function validateSections(
+  sections: readonly CoreTopology['sections'][number][],
+  choirIds: ReadonlySet<string>,
+  ids: Set<string>,
+) {
+  for (const section of sections) {
+    assertUniqueId(section.id, ids)
     assertStatus(section.status, `Section ${section.id}`)
     if (!choirIds.has(section.choirId))
       throw new InvalidRelationshipError(`Section ${section.id} references an unknown Choir.`)
@@ -191,13 +202,18 @@ export function validateTopology(candidate: CoreTopology = topology): CoreTopolo
     if (new Set(section.allowedVoices.map(baseVoice)).size !== 1)
       throw new InvalidRelationshipError(`Section ${section.id} allows a mismatched Voice family.`)
   }
+}
 
+function validateGroups(
+  groups: readonly CoreTopology['groups'][number][],
+  choirIds: ReadonlySet<string>,
+  ids: Set<string>,
+) {
   const groupIds = new Set<string>()
   const groupNames = new Set<string>()
-  for (const group of candidate.groups) {
-    addId(group.id)
+  for (const group of groups) {
+    assertUniqueId(group.id, ids)
     assertStatus(group.status, `Group ${group.id}`)
-    if (groupIds.has(group.id)) throw new DuplicateEntityError(`Group identifier is duplicated: ${group.id}.`)
     groupIds.add(group.id)
     if (group.scope.type === TOPOLOGY_SCOPE_TYPES.CHOIR && !choirIds.has(group.scope.choirId))
       throw new InvalidRelationshipError(`Group ${group.id} references an unknown Choir.`)
@@ -206,14 +222,19 @@ export function validateTopology(candidate: CoreTopology = topology): CoreTopolo
     if (groupNames.has(nameKey)) throw new DuplicateEntityError(`Group name is duplicated within scope: ${group.name}.`)
     groupNames.add(nameKey)
   }
+  return groupIds
+}
 
-  const sectionIds = new Set(candidate.sections.map((section) => section.id))
-  const positionIds = new Set<string>()
-  for (const position of candidate.positions) {
-    addId(position.id)
+function validatePositions(
+  positions: readonly CoreTopology['positions'][number][],
+  choirIds: ReadonlySet<string>,
+  sectionIds: ReadonlySet<string>,
+  groupIds: ReadonlySet<string>,
+  ids: Set<string>,
+) {
+  for (const position of positions) {
+    assertUniqueId(position.id, ids)
     assertStatus(position.status, `Position ${position.id}`)
-    if (positionIds.has(position.id)) throw new DuplicateEntityError(`Position identifiers must be unique.`)
-    positionIds.add(position.id)
     for (const scope of position.scopes) {
       if (scope.type === TOPOLOGY_SCOPE_TYPES.CHOIR && !choirIds.has(scope.choirId))
         throw new InvalidRelationshipError(`Position ${position.id} references an unknown Choir.`)
@@ -224,7 +245,11 @@ export function validateTopology(candidate: CoreTopology = topology): CoreTopolo
     }
     validatePositionEligibility(position)
   }
-  return candidate
+}
+
+function assertUniqueId(id: string, ids: Set<string>) {
+  if (ids.has(id)) throw new DuplicateEntityError(`Topology identifier is duplicated: ${id}.`)
+  ids.add(id)
 }
 
 function validatePositionEligibility(position: CorePosition) {

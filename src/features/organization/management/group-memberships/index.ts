@@ -6,7 +6,6 @@ export {
 } from './actions'
 export type { GroupMembershipPeriod } from './service'
 export {
-  listGroupMembershipGroups,
   listGroupMembershipPeriods,
   listGroupMembershipUsers,
   listPreviousGroupMembershipPeriods,

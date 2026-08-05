@@ -48,7 +48,7 @@ async function getGroupDetail(groupId: string) {
   const [memberships, users, positions] = await Promise.all([
     organizationService.effectiveGroupMembership.list({ groupId }),
     organizationService.users.list(),
-    Promise.resolve(topology.positions),
+    topology.positions,
   ])
   const group = resolveGroup(groupId)
   if (!group) return null

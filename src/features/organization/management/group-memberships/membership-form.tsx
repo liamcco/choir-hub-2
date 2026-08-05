@@ -3,7 +3,7 @@
 import { SaveIcon, UserPlusIcon } from 'lucide-react'
 import { useActionState } from 'react'
 
-import { resolveGroup } from '@/core/topology'
+import { type Group, resolveGroup } from '@/core/topology'
 import { formatGroupName } from '@/features/organization/core/labels'
 import { formatDateInput } from '@/shared/formatting'
 import { FormMessageToast } from '@/shared/forms/error-handling'
@@ -16,13 +16,13 @@ import { NativeSelect, NativeSelectOption } from '@/shared/ui/native-select'
 
 import { createGroupMembershipAction, endGroupMembershipAction } from './actions'
 import { CreateGroupMembershipFormSchema, EndGroupMembershipFormSchema } from './schemas'
-import type { GroupMembershipPeriod, listGroupMembershipGroups, listGroupMembershipUsers } from './service'
+import type { GroupMembershipPeriod, listGroupMembershipUsers } from './service'
 
 export function CreateGroupMembershipForm({
   groups,
   users,
 }: {
-  groups: ReturnType<typeof listGroupMembershipGroups>
+  groups: readonly Group[]
   users: Awaited<ReturnType<typeof listGroupMembershipUsers>>
 }) {
   const [state, formAction, isPending] = useActionState(createGroupMembershipAction, {})

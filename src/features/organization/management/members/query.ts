@@ -13,7 +13,7 @@ import {
   formatPositionScopeLabel,
 } from '@/features/organization/core/labels'
 
-async function listCollection() {
+export async function listUserCollection() {
   const [users, choirMemberships, placements] = await Promise.all([
     organizationService.users.list(),
     organizationService.homePlacement.listChoirMemberships(),
@@ -34,7 +34,7 @@ async function listCollection() {
     .sort((first, second) => first.name.localeCompare(second.name) || first.id.localeCompare(second.id))
 }
 
-async function getDetail(userId: string) {
+export async function getUserDetail(userId: string) {
   const requestHeaders = await headers()
   const [account, user, memberships, assignments, choirMemberships, placements] = await Promise.all([
     auth.api.getUser({ headers: requestHeaders, query: { id: userId } }),
@@ -127,9 +127,6 @@ async function getDetail(userId: string) {
     ),
   }
 }
-
-export const listUserCollection = listCollection
-export const getUserDetail = getDetail
 
 function formatPlacementLabel(
   placement: { sectionId: string; voice: Voice } | undefined,
